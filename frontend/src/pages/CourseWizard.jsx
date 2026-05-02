@@ -25,7 +25,8 @@ const CourseWizard = () => {
             quizFrequency: 3,
             xpMultiplier: 1.0,
             leaderboardEnabled: true,
-            files: []
+            syllabus: [],
+            materials: []
         }
     });
     const [currentStep, setCurrentStep] = useState(0);
@@ -64,10 +65,15 @@ const CourseWizard = () => {
                 leaderboardEnabled: data.leaderboardEnabled
             }));
 
-            // Append files
-            if (data.files && data.files.length > 0) {
-                Array.from(data.files).forEach(file => {
-                    formData.append('files', file);
+            // Append syllabus
+            if (data.syllabus && data.syllabus.length > 0) {
+                formData.append('syllabus', data.syllabus[0]);
+            }
+
+            // Append course materials
+            if (data.materials && data.materials.length > 0) {
+                Array.from(data.materials).forEach(file => {
+                    formData.append('materials', file);
                 });
             }
 

@@ -38,13 +38,14 @@ services:
       JWT_EXPIRES_IN: 7d
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
-      GOOGLE_CALLBACK_URL: http://localhost:5000/api/auth/google/callback
+      GOOGLE_CALLBACK_URL: http://localhost:5001/api/auth/google/callback
       CLIENT_URL: http://localhost:5173
       AI_SERVICE_URL: ${AI_SERVICE_URL:-http://ai-engine:8000}
       AI_SERVICE_API_KEY: ${AI_SERVICE_API_KEY:-}
       STORAGE_TYPE: local
       UPLOAD_DIR: ./uploads
       MAX_FILE_SIZE: 52428800
+      MAX_MATERIALS_COUNT: ${MAX_MATERIALS_COUNT:-20}
     depends_on:
       mongo:
         condition: service_healthy

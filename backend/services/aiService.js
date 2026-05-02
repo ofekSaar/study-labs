@@ -15,7 +15,8 @@ const AI_SERVICE_API_KEY = process.env.AI_SERVICE_API_KEY || '';
  * @param {string} params.courseId - Course ID
  * @param {string} params.title - Course title
  * @param {string} params.description - Course description
- * @param {Array} params.materials - Array of material objects from Mongoose (containing storagePath)
+ * @param {string} params.syllabus - Storage path for the syllabus
+ * @param {Array} params.materials - Array of storage paths for materials
  * @param {object} params.aiConfig - AI configuration (nodeCount, quizFrequency)
  * @returns {Promise<Array>} - Generated course nodes
  */
@@ -23,19 +24,19 @@ export const generateRoadmap = async ({
   courseId,
   title,
   description,
+  syllabus,
   materials,
   aiConfig,
 }) => {
-  // Extract paths from the materials array
-  // Assuming materials is an array of objects like { originalName: '...', storagePath: '...' }
-  // We need to identify the syllabus vs materials.
-  // The first material is treated as syllabus, the rest as materials.
-  if (!materials || materials.length === 0) {
-    throw new Error('No materials provided for course generation.');
+  if (!syllabus) {
+    throw new Error('Syllabus is required for course generation.');
   }
 
-  const syllabusPath = path.resolve(materials[0].storagePath);
-  const materialsPaths = materials.slice(1).map(m => path.resolve(m.storagePath));
+  const uploadDir = process.env.UPLOAD_DIR || './uploads';
+  const syllabusPath = path.resolve(uploadDir, syllabus);
+  const materialsPaths = materials && materials.length > 0 
+    ? materials.map(m => path.resolve(uploadDir, m)) 
+    : [];
 
   const response = await fetch(`${AI_SERVICE_URL}/api/generate-course/`, {
     method: 'POST',
