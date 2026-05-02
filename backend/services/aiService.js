@@ -38,6 +38,10 @@ export const generateRoadmap = async ({
     ? materials.map(m => path.resolve(uploadDir, m)) 
     : [];
 
+  console.log(`[AI Service] Sending course generation request for Course ID: ${courseId}`);
+  console.log(`[AI Service] Syllabus: ${syllabusPath}`);
+  console.log(`[AI Service] Materials: ${materialsPaths.length} files attached.`);
+
   const response = await fetch(`${AI_SERVICE_URL}/api/generate-course/`, {
     method: 'POST',
     headers: {
@@ -53,10 +57,12 @@ export const generateRoadmap = async ({
 
   if (!response.ok) {
      const errText = await response.text();
+     console.error(`[AI Service] Error response: ${errText}`);
      throw new Error(`AI Service Error: ${errText}`);
   }
 
   const data = await response.json();
+  console.log(`[AI Service] Course successfully generated with ID: ${data.course_id}`);
   
   // Transform the response (course_structure) into the flat nodes array expected by the rest of the backend
   const nodes = [];

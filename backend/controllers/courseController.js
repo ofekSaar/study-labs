@@ -12,7 +12,11 @@ import { generateRoadmap } from '../services/aiService.js';
  */
 export const listCourses = async (req, res, next) => {
   try {
-    const courses = await Course.find({ isPublished: true })
+    const query = req.user?.role === 'instructor' 
+      ? { instructor: req.user._id } 
+      : { isPublished: true };
+
+    const courses = await Course.find(query)
       .populate('instructor', 'name email avatar')
       .select('-materials')
       .sort({ createdAt: -1 });

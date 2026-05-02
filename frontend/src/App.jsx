@@ -7,6 +7,7 @@ import LessonQuiz from './pages/LessonQuiz';
 import CourseMap from './pages/CourseMap';
 import InstructorDashboard from './pages/InstructorDashboard';
 import CourseWizard from './pages/CourseWizard';
+import ManagedCourses from './pages/ManagedCourses';
 import MyEnrollments from './pages/MyEnrollments';
 import EnrollmentRequests from './pages/EnrollmentRequests';
 import AuthCallback from './pages/AuthCallback';
@@ -96,6 +97,14 @@ function App() {
           element={
             <ProtectedRoute allowedRole="instructor">
               <EnrollmentRequests />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/instructor/managed" 
+          element={
+            <ProtectedRoute allowedRole="instructor">
+              <ManagedCourses />
             </ProtectedRoute>
           } 
         />

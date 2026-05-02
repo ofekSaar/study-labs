@@ -58,20 +58,13 @@ const InstructorLayout = ({ children, title }) => {
                         <span className="text-sm">Enrollment Requests</span>
                     </button>
 
-                    <div className="mt-8 mb-2 px-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Managed Courses</div>
-                    
-                    <div className="space-y-1">
-                        {courses.map(course => (
-                            <button
-                                key={course.id}
-                                onClick={() => navigate(`/instructor/course/${course.id}`)}
-                                className={`w-full text-left flex items-center gap-3 px-4 py-2 rounded-lg transition-colors ${location.pathname === `/instructor/course/${course.id}` ? 'bg-gray-100 text-gray-900 font-bold' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'}`}
-                            >
-                                <BookOpen size={16} className={location.pathname === `/instructor/course/${course.id}` ? 'text-purple-600' : 'text-gray-400'} />
-                                <span className="text-sm truncate">{course.title}</span>
-                            </button>
-                        ))}
-                    </div>
+                    <button
+                        onClick={() => navigate('/instructor/managed')}
+                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${location.pathname.includes('/instructor/managed') ? 'bg-purple-50 text-purple-700 font-bold' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900 font-medium'}`}
+                    >
+                        <BookOpen size={20} />
+                        <span className="text-sm">Managed Courses</span>
+                    </button>
 
                 </div>
 
