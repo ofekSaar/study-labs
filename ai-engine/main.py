@@ -109,7 +109,9 @@ async def generate_course(request: GenerateCourseRequest, req: Request):
         
         # 3. Run Pipeline
         logger.info("Starting AI pipeline to generate course structure. This may take a few minutes...")
-        course, _ = await create_course_pipeline(syllabus_text, materials_text)
+        syllabus_name = os.path.basename(request.syllabusPath)
+        materials_names = [os.path.basename(p) for p in request.materialsPaths if os.path.exists(p)]
+        course, _ = await create_course_pipeline(syllabus_text, materials_text, syllabus_name=syllabus_name, materials_names=materials_names)
         logger.info("AI pipeline finished generating course structure.")
         
         # 4. Save to DB
@@ -118,17 +120,17 @@ async def generate_course(request: GenerateCourseRequest, req: Request):
         course_id_str = course_doc["_id"]
         db_structure = course_doc["course_structure"]
         
-        # 5. Transform Routes
+        # 5. Transform Routes — keep IDs for Node backend to fetch content directly
         base_url = str(req.base_url)
         def structure_to_routes(node):
             for key, value in node.items():
                 if isinstance(value, dict):
                     if "quiz_id" in value or "summary_id" in value:
                          if "quiz_id" in value:
-                             qid = value.pop("quiz_id")
+                             qid = value["quiz_id"]  # Keep the ID, don't pop
                              value["quiz_route"] = f"{base_url}api/quizzes/{qid}/"
                          if "summary_id" in value:
-                             sid = value.pop("summary_id")
+                             sid = value["summary_id"]  # Keep the ID, don't pop
                              value["summary_route"] = f"{base_url}api/summaries/{sid}/"
                     else:
                         structure_to_routes(value)

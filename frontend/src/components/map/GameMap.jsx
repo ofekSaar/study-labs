@@ -35,6 +35,16 @@ const MapNode = ({ status, x, y, label, onClick }) => {
             >
                 {getIcon()}
             </button>
+
+            {/* Stars */}
+            {status === 'completed' && (
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 flex gap-0.5 pointer-events-none">
+                    {[1, 2, 3].map(i => (
+                        <Star key={i} size={10} className="fill-yellow-400 text-yellow-500" />
+                    ))}
+                </div>
+            )}
+
             <span className={`text-xs font-bold px-2 py-1 rounded bg-black/40 backdrop-blur-sm text-white max-w-[120px] text-center ${status === 'locked' ? 'opacity-50' : 'opacity-100'}`}>
                 {label}
             </span>

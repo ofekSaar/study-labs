@@ -16,13 +16,15 @@ export const getQuizQuestions = async (req, res, next) => {
       throw createError(400, 'This node does not have quiz data');
     }
 
-    // Verify enrollment
-    const enrollment = await Enrollment.findOne({
-      student: req.user._id,
-      course: node.course,
-      status: 'approved',
-    });
-    if (!enrollment) throw createError(403, 'You are not enrolled in this course');
+    // Verify enrollment if student
+    if (req.user.role === 'student') {
+      const enrollment = await Enrollment.findOne({
+        student: req.user._id,
+        course: node.course,
+        status: 'approved',
+      });
+      if (!enrollment) throw createError(403, 'You are not enrolled in this course');
+    }
 
     // Return questions without correct answers for MCQs
     const questions = node.quizData.map((q, index) => {
@@ -34,7 +36,8 @@ export const getQuizQuestions = async (req, res, next) => {
 
       if (q.type === 'mcq') {
         question.options = q.options;
-        // Don't send correctAnswerIndex to client
+        question.correctAnswerIndex = q.correctAnswerIndex;
+        question.explanation = q.explanation;
       }
       if (q.type === 'summary') {
         question.content = q.content;

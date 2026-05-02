@@ -9,6 +9,7 @@ import InstructorDashboard from './pages/InstructorDashboard';
 import CourseWizard from './pages/CourseWizard';
 import ManagedCourses from './pages/ManagedCourses';
 import MyEnrollments from './pages/MyEnrollments';
+import MyCourses from './pages/MyCourses';
 import EnrollmentRequests from './pages/EnrollmentRequests';
 import AuthCallback from './pages/AuthCallback';
 import RoleSelectPage from './pages/RoleSelectPage';
@@ -51,6 +52,14 @@ function App() {
           } 
         />
         <Route 
+          path="/my-courses" 
+          element={
+            <ProtectedRoute allowedRole="student">
+              <MyCourses />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
           path="/enrollments" 
           element={
             <ProtectedRoute allowedRole="student">
@@ -67,9 +76,9 @@ function App() {
           } 
         />
         <Route 
-          path="/lesson/:id/quiz" 
+          path="/course/:courseId/lesson/:id" 
           element={
-            <ProtectedRoute allowedRole="student">
+            <ProtectedRoute>
               <LessonQuiz />
             </ProtectedRoute>
           } 

@@ -103,14 +103,39 @@ const useCourseStore = create((set, get) => ({
     fetchCourseNodes: async (courseId) => {
         try {
             const { data } = await api.get(`/api/courses/${courseId}/nodes`);
-            // Update the course in state with nodes
-            set((state) => ({
-                courses: state.courses.map((c) =>
-                    c.id === courseId
-                        ? { ...c, nodes: data.nodes || [] }
-                        : c
-                ),
-            }));
+            const nodes = data.nodes || [];
+            const courseMeta = data.course || {};
+
+            set((state) => {
+                const exists = state.courses.some(c => c.id === courseId || c._id === courseId);
+                
+                if (exists) {
+                    // Update existing course with fetched nodes
+                    return {
+                        courses: state.courses.map((c) =>
+                            (c.id === courseId || c._id === courseId)
+                                ? { ...c, nodes }
+                                : c
+                        ),
+                    };
+                } else {
+                    // Course not in store yet — add it with the metadata from the response
+                    return {
+                        courses: [
+                            ...state.courses,
+                            {
+                                id: courseId,
+                                _id: courseId,
+                                title: courseMeta.title || 'Untitled Course',
+                                level: courseMeta.level || 'Beginner',
+                                color: courseMeta.color || 'bg-studylabs-blue',
+                                progress: 0,
+                                nodes,
+                            },
+                        ],
+                    };
+                }
+            });
             return data;
         } catch (error) {
             console.error('Failed to fetch nodes:', error);

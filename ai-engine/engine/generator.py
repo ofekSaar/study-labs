@@ -2,15 +2,12 @@ from typing import List
 from engine.pydantic_models import Course, Lesson, Topic, Question
 
 from llama_index.core.program import LLMTextCompletionProgram
-# from llama_index.core.llms import MockLLM # REMOVED Mock logic
 from llama_index.llms.openai import OpenAI
 
-# Initialize LLM
-# In production, use OpenAI(model="gpt-4") or similar robust model.
-# Defaults to standard OpenAI setup if env var is set.
-# Handles OpenRouter and Gemini as alternatives.
 import os
+import asyncio
 import logging
+import random
 from dotenv import load_dotenv
 from llama_index.llms.gemini import Gemini
 from llama_index.llms.openai import OpenAI
@@ -18,6 +15,30 @@ from llama_index.llms.openai import OpenAI
 logger = logging.getLogger(__name__)
 
 load_dotenv()
+
+# ── Rate Limiting ────────────────────────────────────────
+# Max concurrent API calls to avoid 429 errors
+MAX_CONCURRENT_CALLS = int(os.environ.get("MAX_CONCURRENT_AI_CALLS", "3"))
+_api_semaphore = asyncio.Semaphore(MAX_CONCURRENT_CALLS)
+
+async def retry_with_backoff(coro_fn, max_retries=3, base_delay=2.0):
+    """
+    Retries an async function with exponential backoff + jitter.
+    Specifically handles 429 rate limit errors.
+    """
+    for attempt in range(max_retries + 1):
+        try:
+            return await coro_fn()
+        except Exception as e:
+            error_str = str(e).lower()
+            is_rate_limit = '429' in error_str or 'rate' in error_str or 'too many' in error_str
+            
+            if attempt == max_retries or not is_rate_limit:
+                raise  # Out of retries or not a rate limit error
+            
+            delay = base_delay * (2 ** attempt) + random.uniform(0, 1)
+            logger.warning(f"Rate limited (attempt {attempt + 1}/{max_retries + 1}). Retrying in {delay:.1f}s...")
+            await asyncio.sleep(delay)
 
 # Initialize LLMs list in priority order
 LLMS = []
@@ -33,18 +54,18 @@ if os.environ.get("GEMINI_API_KEY"):
     LLMS.append(("Gemini", Gemini(model="models/gemini-flash-latest", api_key=os.environ.get("GEMINI_API_KEY"))))
 
 if os.environ.get("OPENAI_API_KEY"):
-    LLMS.append(("OpenAI", OpenAI(model="gpt-4o")))
+    LLMS.append(("OpenAI", OpenAI(model="gpt-4o-mini", request_timeout=180.0, max_retries=3)))
     
 if not LLMS:
     logger.warning("No API Keys found. AI features will fail unless Mock Mode is active.")
 
-def parse_syllabus(syllabus_text: str) -> Course:
+def parse_syllabus(syllabus_text: str, syllabus_name: str = "Unknown") -> Course:
     """
     Parses raw syllabus text into a structured Course object.
     """
     # Check for MOCK mode to allow testing without valid API keys
     if os.environ.get("USE_MOCK_AI") == "True":
-        logger.info("Using MOCK AI Mode for parsing syllabus...")
+        logger.info(f"Using MOCK AI Mode for parsing syllabus: {syllabus_name}")
         return Course(
             title="Mock Course (Demo)", 
             lessons=[
@@ -64,7 +85,7 @@ def parse_syllabus(syllabus_text: str) -> Course:
 
     for provider_name, llm_instance in LLMS:
         try:
-            logger.info(f"Attempting parse_syllabus with {provider_name}...")
+            logger.info(f"Attempting parse_syllabus for '{syllabus_name}' with {provider_name}...")
             program = LLMTextCompletionProgram.from_defaults(
                 output_cls=Course,
                 prompt_template_str="""
@@ -129,6 +150,7 @@ def tag_materials_to_topic(topic: Topic, materials: List[str]) -> List[str]:
 async def generate_questions_for_topic(topic: Topic) -> List[Question]:
     """
     Generates questions based on the topic and its matched materials.
+    Uses semaphore for rate limiting and retry for 429 errors.
     """
     from pydantic import BaseModel
     class QuestionList(BaseModel):
@@ -141,10 +163,8 @@ async def generate_questions_for_topic(topic: Topic) -> List[Question]:
         "Topic: {topic_title}\n"
         "Material content:\n"
         "{matched_content}\n"
+        "IMPORTANT: You must output strictly valid JSON. Properly escape all internal quotes, backslashes, and newlines so the parser does not fail."
     )
-    
-    # Simulate async if library is sync-only, or assume LLM library has async methods
-    # For LlamaIndex, `program.__call__` is sync. `program.acall` is async.
     
     for provider_name, llm_instance in LLMS:
         try:
@@ -153,9 +173,11 @@ async def generate_questions_for_topic(topic: Topic) -> List[Question]:
                 prompt_template_str=prompt_template_str,
                 llm=llm_instance
             )
-            # Use async call if available, otherwise wrap in sync_to_async or just run
-            # Note: LlamaIndex `acall` takes kwargs.
-            result = await program.acall(topic_title=topic.title, matched_content=matched_content)
+            async def _call():
+                async with _api_semaphore:
+                    return await program.acall(topic_title=topic.title, matched_content=matched_content)
+            
+            result = await retry_with_backoff(_call)
             return result.questions
         except Exception as e:
             logger.warning(f"Error in generate_questions_for_topic with {provider_name}: {e}")
@@ -183,32 +205,28 @@ def generate_questions(course: Course) -> Course:
 async def generate_summary_for_topic(topic: Topic) -> str:
     """
     Generates a study summary (Markdown) for the topic based on matched materials.
+    Uses semaphore for rate limiting and retry for 429 errors.
     """
-    from pydantic import BaseModel
-    class SummaryResult(BaseModel):
-        summary_markdown: str
-
     matched_content = "\n".join(topic.matched_materials)
     
-    prompt_template_str = (
+    prompt = (
         "You are an expert tutor creating a study card/summary for a student.\n"
-        "Topic: {topic_title}\n"
-        "Description: {topic_desc}\n"
+        f"Topic: {topic.title}\n"
+        f"Description: {topic.description or ''}\n"
         "Material content:\n"
-        "{matched_content}\n"
+        f"{matched_content}\n"
         "Generate a concise but comprehensive study summary in Markdown format. "
         "Include key concepts, definitions, and important points."
     )
     
     for provider_name, llm_instance in LLMS:
         try:
-            program = LLMTextCompletionProgram.from_defaults(
-                output_cls=SummaryResult,
-                prompt_template_str=prompt_template_str,
-                llm=llm_instance
-            )
-            result = await program.acall(topic_title=topic.title, topic_desc=topic.description or "", matched_content=matched_content)
-            return result.summary_markdown
+            async def _call():
+                async with _api_semaphore:
+                    return await llm_instance.acomplete(prompt)
+            
+            response = await retry_with_backoff(_call)
+            return response.text
         except Exception as e:
             logger.warning(f"Error in generate_summary_for_topic with {provider_name}: {e}")
             continue
@@ -227,9 +245,9 @@ def sanitize_filename(name: str) -> str:
 
 
 
-import asyncio
+# asyncio already imported at top
 
-async def create_course_pipeline(syllabus_text: str, materials: List[str]) -> tuple[Course, dict]:
+async def create_course_pipeline(syllabus_text: str, materials: List[str], syllabus_name: str = "Unknown", materials_names: List[str] = None) -> tuple[Course, dict]:
     """
     Orchestrates the course generation pipeline (Async Version).
     """
@@ -239,28 +257,36 @@ async def create_course_pipeline(syllabus_text: str, materials: List[str]) -> tu
     # Wrap sync call if needed but parse_syllabus uses sync program() call.
     # ideally we update parse_syllabus to be async or run in executor.
     # For now, let's assume parse_syllabus remains sync but fast enough
-    course = parse_syllabus(syllabus_text)
+    course = parse_syllabus(syllabus_text, syllabus_name=syllabus_name)
     
     # Step 2: Tag Materials (Sync for now)
-    logger.info("Pipeline Step 2/3: Tagging materials...")
+    if materials_names:
+        logger.info(f"Pipeline Step 2/3: Tagging {len(materials)} materials: {', '.join(materials_names)}")
+    else:
+        logger.info("Pipeline Step 2/3: Tagging materials...")
     course = tag_materials(course, materials)
     
     # Step 3: Generate Questions & Summaries (PARALLEL)
-    logger.info("Pipeline Step 3/3: Generating content (questions & summaries) in PARALLEL...")
+    total_topics = sum(len(lesson.topics) for lesson in course.lessons)
+    logger.info(f"Pipeline Step 3/3: Generating content (questions & summaries) for {total_topics} topics in PARALLEL...")
     
     tasks = []
     
-    async def process_topic(t):
+    async def process_topic(lesson_title, t):
         # Run both gen tasks for this topic
+        logger.info(f"  → Generating content for: {lesson_title} / {t.title}")
         q_task = generate_questions_for_topic(t)
         s_task = generate_summary_for_topic(t)
         t.questions, t.summary = await asyncio.gather(q_task, s_task)
+        logger.info(f"  ✓ Finished: {lesson_title} / {t.title} ({len(t.questions)} questions)")
 
     for lesson in course.lessons:
         for topic in lesson.topics:
-            tasks.append(process_topic(topic))
+            tasks.append(process_topic(lesson.title, topic))
             
     await asyncio.gather(*tasks)
+    
+    logger.info(f"Pipeline COMPLETE. Generated content for {total_topics} topics across {len(course.lessons)} lessons.")
     
     return course, {}
 

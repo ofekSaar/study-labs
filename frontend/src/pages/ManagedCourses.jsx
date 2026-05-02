@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import InstructorLayout from '../components/layout/InstructorLayout';
 import useCourseStore from '../store/courseStore';
-import { Search, BookOpen, Clock, Users, ArrowRight } from 'lucide-react';
+import { Search, BookOpen, Clock, Users, ArrowRight, Loader2, AlertCircle } from 'lucide-react';
 
 const ManagedCourses = () => {
     const navigate = useNavigate();
@@ -65,8 +65,16 @@ const ManagedCourses = () => {
                                     <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${course.color || 'bg-blue-100 text-blue-600'}`}>
                                         <BookOpen size={24} />
                                     </div>
-                                    <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${course.isPublished ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
-                                        {course.isPublished ? 'Published' : 'Draft / Processing'}
+                                    <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide flex items-center gap-1 ${
+                                        course.generationStatus === 'generating' ? 'bg-studylabs-blue/10 text-studylabs-blue' :
+                                        course.generationStatus === 'failed' ? 'bg-red-100 text-red-700' :
+                                        course.isPublished ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'
+                                    }`}>
+                                        {course.generationStatus === 'generating' && <Loader2 size={12} className="animate-spin" />}
+                                        {course.generationStatus === 'failed' && <AlertCircle size={12} />}
+                                        {course.generationStatus === 'generating' ? 'Generating AI' :
+                                         course.generationStatus === 'failed' ? 'Failed' :
+                                         course.isPublished ? 'Published' : 'Draft'}
                                     </span>
                                 </div>
                                 
