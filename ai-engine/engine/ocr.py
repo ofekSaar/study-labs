@@ -2,14 +2,30 @@ import fitz  # PyMuPDF
 import io
 from PIL import Image
 import pytesseract
+from pptx import Presentation
 
 def extract_text_from_bytes(file_bytes, filename=None):
     """
-    Extracts text from PDF bytes.
+    Extracts text from PDF or PPTX bytes.
     Handles standard text-based PDFs and falls back to OCR for image-based pages.
+    Extracts text from PPTX slides.
     """
     print(f"OCR Service: Processing {filename or 'bytes'}...")
     text_content = []
+    
+    if filename and filename.lower().endswith('.pptx'):
+        try:
+            prs = Presentation(io.BytesIO(file_bytes))
+            for slide_num, slide in enumerate(prs.slides):
+                slide_text = []
+                for shape in slide.shapes:
+                    if hasattr(shape, "text"):
+                        slide_text.append(shape.text)
+                text_content.append(f"--- Slide {slide_num + 1} ---\n" + "\n".join(slide_text))
+            return "\n\n".join(text_content)
+        except Exception as e:
+            print(f"PPTX Extraction Error: {e}")
+            return ""
     
     try:
         doc = fitz.open(stream=file_bytes, filetype="pdf")
