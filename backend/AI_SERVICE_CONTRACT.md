@@ -17,14 +17,14 @@ Content-Type: application/json
 
 ---
 
-## Endpoint 1: Generate Course Roadmap
+## Endpoint 1: Generate Course
 
-Generates a structured learning path (nodes) from course materials.
+Generates a structured learning path (nodes) from course materials. Note that the AI service reads files directly from a shared Docker volume.
 
 ### Request
 
 ```
-POST /api/generate-roadmap
+POST /api/generate-course/
 ```
 
 **Body:**
@@ -32,74 +32,37 @@ POST /api/generate-roadmap
 ```json
 {
   "courseId": "663a1b...",
-  "title": "Data Structures",
-  "description": "A comprehensive course on data structures and algorithms",
-  "materials": ["materials/uuid-syllabus.pdf", "materials/uuid-lecture1.mp4"],
-  "aiConfig": {
-    "nodeCount": 10,
-    "quizFrequency": 3
-  }
+  "syllabusPath": "/app/uploads/syllabus.pdf",
+  "materialsPaths": [
+    "/app/uploads/lecture1.pdf",
+    "/app/uploads/presentation.pptx"
+  ]
 }
 ```
 
-| Field                    | Type     | Required | Description                                  |
-| ------------------------ | -------- | -------- | -------------------------------------------- |
-| `courseId`               | string   | Yes      | MongoDB ObjectId of the course               |
-| `title`                  | string   | Yes      | Course title                                 |
-| `description`            | string   | Yes      | Course description                           |
-| `materials`              | string[] | No       | Array of storage paths to uploaded materials |
-| `aiConfig.nodeCount`     | number   | Yes      | Desired number of learning nodes (5-25)      |
-| `aiConfig.quizFrequency` | number   | Yes      | Insert a quiz every N nodes (1-5)            |
+| Field            | Type     | Required | Description                                  |
+| ---------------- | -------- | -------- | -------------------------------------------- |
+| `courseId`       | string   | Yes      | MongoDB ObjectId of the course               |
+| `syllabusPath`   | string   | Yes      | Absolute path to the syllabus file in the shared volume |
+| `materialsPaths` | string[] | Yes      | Array of absolute paths to the material files in the shared volume |
 
 ### Expected Response
 
+The AI Engine returns a nested `course_structure` object, which the backend then transforms into a flat array of nodes.
+
 ```json
 {
-  "nodes": [
-    {
-      "title": "Introduction to Data Structures",
-      "type": "lesson",
-      "order": 0,
-      "estimatedMinutes": 45,
-      "xpReward": 150,
-      "lessonContent": "# Introduction to Data Structures\n\n## Overview\n\nData structures are fundamental...\n\n## Key Concepts\n\n- **Abstract Data Types (ADTs)**\n- **Time Complexity**\n- **Space Complexity**\n"
-    },
-    {
-      "title": "Arrays & Strings",
-      "type": "lesson",
-      "order": 1,
-      "estimatedMinutes": 50,
-      "xpReward": 150,
-      "lessonContent": "# Arrays & Strings\n\n## Arrays\n\nAn array is a contiguous block of memory..."
-    },
-    {
-      "title": "Quiz 1: Foundations",
-      "type": "quiz",
-      "order": 2,
-      "estimatedMinutes": 20,
-      "xpReward": 200,
-      "quizData": [
-        {
-          "type": "summary",
-          "question": "Lesson Summary",
-          "content": "Review the key concepts from Introduction and Arrays & Strings."
-        },
-        {
-          "type": "mcq",
-          "question": "What is the time complexity of accessing an element in an array by index?",
-          "options": ["O(1)", "O(n)", "O(log n)", "O(n²)"],
-          "correctAnswerIndex": 0,
-          "explanation": "Array access by index is O(1) because arrays use contiguous memory."
-        },
-        {
-          "type": "open",
-          "question": "Explain the difference between an array and a linked list.",
-          "minLength": 50,
-          "aiPromptContext": "Data Structures: Arrays vs Linked Lists comparison"
-        }
-      ]
+  "course_id": "663a1b...",
+  "course_structure": {
+    "Introduction to Data Structures": {
+      "Arrays & Strings": {
+        "description": "# Arrays & Strings\n\n## Arrays\n\nAn array is a contiguous block of memory...",
+        "quiz_route": "http://ai-engine:8000/api/quizzes/507f191e810c19729de860ea/",
+        "summary_route": "http://ai-engine:8000/api/summaries/507f191e810c19729de860eb/"
+      }
     }
-  ]
+  },
+  "message": "Course generated successfully."
 }
 ```
 

@@ -1,6 +1,6 @@
 # StudyLabs AI Engine
 
-This repository contains the AI engine for StudyLabs, built with Django and LlamaIndex.
+This repository contains the AI engine for StudyLabs, built with FastAPI and LlamaIndex.
 
 ## Setup
 
@@ -19,14 +19,11 @@ This repository contains the AI engine for StudyLabs, built with Django and Llam
     
     > **Note**: If using OpenRouter, you may need to adjust `engine/generator.py` to support it again or map it to `OPENAI_API_KEY` with a custom base URL if the library supports it. Currently, the code prioritizes Gemini.
 
-3.  **Run Migrations**:
+3.  **Run Server**:
     ```bash
-    python manage.py migrate
-    ```
-
-4.  **Run Server**:
-    ```bash
-    python manage.py runserver
+    python main.py
+    # or
+    uvicorn main:app --reload
     ```
 
 ## API Usage
@@ -35,23 +32,28 @@ This repository contains the AI engine for StudyLabs, built with Django and Llam
 
 **Endpoint**: `POST /api/generate-course/`
 
-**Content-Type**: `multipart/form-data`
+**Content-Type**: `application/json`
 
 **Body**:
-*   `syllabus`: JSON file or PDF file (Syllabus content). *Currently supports PDF.*
-*   `materials`: List of PDF files.
+*   `courseId` (string): Unique identifier for the course.
+*   `syllabusPath` (string): Absolute or relative path to the syllabus PDF file (in the shared volume).
+*   `materialsPaths` (list of strings): List of paths to course materials (PDFs).
 
 **Example using Python requests**:
 ```python
 import requests
 
 url = "http://localhost:8000/api/generate-course/"
-files = [
-    ('syllabus', open('example_materials/syllabus.pdf', 'rb')),
-    ('materials', open('example_materials/lecture1.pdf', 'rb')),
-    ('materials', open('lecture2.pdf', 'rb'))
-]
-response = requests.post(url, files=files)
+payload = {
+    "courseId": "1234567890abcdef",
+    "syllabusPath": "/app/uploads/syllabus.pdf",
+    "materialsPaths": [
+        "/app/uploads/lecture1.pdf",
+        "/app/uploads/lecture2.pdf"
+    ]
+}
+headers = {"Content-Type": "application/json"}
+response = requests.post(url, json=payload, headers=headers)
 print(response.json())
 ```
 
@@ -59,9 +61,9 @@ print(response.json())
 
 The API comes with built-in documentation and visualization through Swagger UI.
 
-*   **Swagger UI**: `http://localhost:8000/api/schema/swagger-ui/`
-*   **ReDoc**: `http://localhost:8000/api/schema/redoc/`
-*   **OpenAPI Schema**: `http://localhost:8000/api/schema/`
+*   **Swagger UI**: `http://localhost:8000/docs`
+*   **ReDoc**: `http://localhost:8000/redoc`
+*   **OpenAPI Schema**: `http://localhost:8000/openapi.json`
 
 ## Testing
 

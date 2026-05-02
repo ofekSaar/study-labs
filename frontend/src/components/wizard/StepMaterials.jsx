@@ -1,7 +1,7 @@
 import React, { useCallback } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { useDropzone } from 'react-dropzone';
-import { UploadCloud, FileText, Video, X } from 'lucide-react';
+import { UploadCloud, FileText, Video, X, Presentation } from 'lucide-react';
 
 const StepMaterials = () => {
     const { register, setValue, watch, formState: { errors } } = useFormContext();
@@ -26,6 +26,7 @@ const StepMaterials = () => {
         maxFiles: 1,
         accept: {
             'application/pdf': ['.pdf'],
+            'application/vnd.openxmlformats-officedocument.presentationml.presentation': ['.pptx']
         }
     });
 
@@ -47,6 +48,7 @@ const StepMaterials = () => {
         onDrop: onDropMaterials,
         accept: {
             'application/pdf': ['.pdf'],
+            'application/vnd.openxmlformats-officedocument.presentationml.presentation': ['.pptx'],
             'video/mp4': ['.mp4']
         }
     });
@@ -80,13 +82,13 @@ const StepMaterials = () => {
                         <p className="font-bold text-gray-700">
                             {isSyllabusDragActive ? "Drop syllabus here..." : "Drag & Drop syllabus or click"}
                         </p>
-                        <p className="text-xs text-gray-400 mt-1">1 PDF file only</p>
+                        <p className="text-xs text-gray-400 mt-1">1 PDF or PPTX file only</p>
                     </div>
                 ) : (
                     <div className="flex items-center justify-between p-3 bg-blue-50 rounded-xl border border-blue-100 shadow-sm">
                         <div className="flex items-center gap-3 overflow-hidden">
                             <div className="p-2 bg-blue-100 rounded-lg text-studylabs-blue shrink-0">
-                                <FileText size={20} />
+                                {syllabus[0].type.includes('presentation') ? <Presentation size={20} /> : <FileText size={20} />}
                             </div>
                             <span className="truncate font-medium text-studylabs-blue">{syllabus[0].name}</span>
                             <span className="text-xs text-blue-400 shrink-0">{(syllabus[0].size / 1024 / 1024).toFixed(2)} MB</span>
@@ -119,7 +121,7 @@ const StepMaterials = () => {
                     <p className="font-bold text-gray-700">
                         {isMaterialsDragActive ? "Drop files here..." : "Drag & Drop course materials"}
                     </p>
-                    <p className="text-xs text-gray-400 mt-1">Supports PDF & MP4</p>
+                    <p className="text-xs text-gray-400 mt-1">Supports PDF, PPTX & MP4</p>
                 </div>
 
                 {materials.length > 0 && (
@@ -129,7 +131,7 @@ const StepMaterials = () => {
                             <div key={idx} className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-100 shadow-sm">
                                 <div className="flex items-center gap-3 overflow-hidden">
                                     <div className="p-2 bg-gray-100 rounded-lg text-gray-600 shrink-0">
-                                        {file.type.includes('pdf') ? <FileText size={20} /> : <Video size={20} />}
+                                        {file.type.includes('pdf') ? <FileText size={20} /> : file.type.includes('presentation') ? <Presentation size={20} /> : <Video size={20} />}
                                     </div>
                                     <span className="truncate font-medium text-gray-700">{file.name}</span>
                                     <span className="text-xs text-gray-400 shrink-0">{(file.size / 1024 / 1024).toFixed(2)} MB</span>

@@ -18,11 +18,15 @@ const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: parseInt(process.env.MAX_FILE_SIZE) || 52428800 }, // 50MB
   fileFilter: (req, file, cb) => {
-    const allowed = ['application/pdf', 'video/mp4'];
+    const allowed = [
+      'application/pdf', 
+      'video/mp4',
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+    ];
     if (allowed.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error('Only PDF and MP4 files are allowed'), false);
+      cb(new Error('Only PDF, PPTX and MP4 files are allowed'), false);
     }
   },
 });
