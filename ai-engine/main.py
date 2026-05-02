@@ -6,6 +6,14 @@ from engine.db import get_db_handle, save_course_to_db, save_to_staging
 from engine.ocr import extract_text_from_bytes
 from engine.generator import create_course_pipeline, evaluate_answer
 from bson import ObjectId
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s [%(levelname)s] %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="StudyLabs AI Engine API",
@@ -71,19 +79,25 @@ def get_summary(summary_id: str):
 @app.post("/api/generate-course/")
 async def generate_course(request: GenerateCourseRequest, req: Request):
     try:
+        logger.info(f"Received request to generate course: {request.courseId}")
         if not os.path.exists(request.syllabusPath):
+            logger.error(f"Syllabus file not found: {request.syllabusPath}")
             raise HTTPException(status_code=400, detail=f"Syllabus file not found at path: {request.syllabusPath}")
             
         # 1. Parse Syllabus
+        logger.info(f"Parsing syllabus file: {request.syllabusPath}")
         with open(request.syllabusPath, "rb") as f:
             syllabus_bytes = f.read()
         syllabus_text = extract_text_from_bytes(syllabus_bytes, filename=os.path.basename(request.syllabusPath))
         save_to_staging(os.path.basename(request.syllabusPath), syllabus_text)
+        logger.info("Syllabus parsed successfully.")
 
         # 2. Parse Materials
+        logger.info(f"Parsing {len(request.materialsPaths)} course materials...")
         materials_text = []
         for mat_path in request.materialsPaths:
             if not os.path.exists(mat_path):
+                 logger.warning(f"Material file not found, skipping: {mat_path}")
                  continue
             with open(mat_path, "rb") as f:
                  mat_bytes = f.read()
@@ -91,11 +105,15 @@ async def generate_course(request: GenerateCourseRequest, req: Request):
             if text:
                 materials_text.append(text)
                 save_to_staging(os.path.basename(mat_path), text)
+        logger.info("Materials parsed successfully.")
         
         # 3. Run Pipeline
+        logger.info("Starting AI pipeline to generate course structure. This may take a few minutes...")
         course, _ = await create_course_pipeline(syllabus_text, materials_text)
+        logger.info("AI pipeline finished generating course structure.")
         
         # 4. Save to DB
+        logger.info("Saving generated course to database...")
         course_doc = save_course_to_db(course)
         course_id_str = course_doc["_id"]
         db_structure = course_doc["course_structure"]
@@ -117,22 +135,25 @@ async def generate_course(request: GenerateCourseRequest, req: Request):
 
         structure_to_routes(db_structure)
         
+        logger.info("Course payload successfully constructed and returned to Node backend.")
         return {
             "course_id": course_id_str,
             "course_structure": db_structure,
             "message": "Course generated successfully."
         }
     except Exception as e:
-        print(f"Pipeline Error: {e}")
+        logger.error(f"Pipeline Error: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Internal Error: {str(e)}")
 
 @app.post("/api/evaluate-answer/")
 async def evaluate_answer_endpoint(request: EvaluateAnswerRequest):
     try:
+        logger.info("Evaluating answer via AI...")
         result = await evaluate_answer(request.question, request.answer, request.aiPromptContext)
+        logger.info("Evaluation complete.")
         return result
     except Exception as e:
-        print(f"Evaluation Error: {e}")
+        logger.error(f"Evaluation Error: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Internal Error: {str(e)}")
 
 if __name__ == "__main__":

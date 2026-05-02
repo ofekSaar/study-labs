@@ -15,11 +15,11 @@ const StepCoreDetails = () => {
                     <div>
                         <label className="block text-sm font-bold text-gray-700 mb-1">Course Name</label>
                         <input
-                            {...register('courseName', { required: 'Course Name is required' })}
-                            className={`w-full p-3 rounded-xl border-2 ${errors.courseName ? 'border-red-500' : 'border-gray-200'} focus:border-studylabs-blue focus:outline-none transition`}
+                            {...register('title', { required: 'Course Name is required' })}
+                            className={`w-full p-3 rounded-xl border-2 ${errors.title ? 'border-red-500' : 'border-gray-200'} focus:border-studylabs-blue focus:outline-none transition`}
                             placeholder="e.g. Advanced Data Structures"
                         />
-                        {errors.courseName && <p className="text-red-500 text-xs mt-1">{errors.courseName.message}</p>}
+                        {errors.title && <p className="text-red-500 text-xs mt-1">{errors.title.message}</p>}
                     </div>
 
                     {/* Department */}

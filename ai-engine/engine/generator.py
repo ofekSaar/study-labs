@@ -10,9 +10,12 @@ from llama_index.llms.openai import OpenAI
 # Defaults to standard OpenAI setup if env var is set.
 # Handles OpenRouter and Gemini as alternatives.
 import os
+import logging
 from dotenv import load_dotenv
 from llama_index.llms.gemini import Gemini
 from llama_index.llms.openai import OpenAI
+
+logger = logging.getLogger(__name__)
 
 load_dotenv()
 
@@ -33,7 +36,7 @@ if os.environ.get("OPENAI_API_KEY"):
     LLMS.append(("OpenAI", OpenAI(model="gpt-4o")))
     
 if not LLMS:
-    print("Warning: No API Keys found. AI features will fail unless Mock Mode is active.")
+    logger.warning("No API Keys found. AI features will fail unless Mock Mode is active.")
 
 def parse_syllabus(syllabus_text: str) -> Course:
     """
@@ -41,7 +44,7 @@ def parse_syllabus(syllabus_text: str) -> Course:
     """
     # Check for MOCK mode to allow testing without valid API keys
     if os.environ.get("USE_MOCK_AI") == "True":
-        print("Using MOCK AI Mode...")
+        logger.info("Using MOCK AI Mode for parsing syllabus...")
         return Course(
             title="Mock Course (Demo)", 
             lessons=[
@@ -59,28 +62,31 @@ def parse_syllabus(syllabus_text: str) -> Course:
             ]
         )
 
-    prompt_template_str = (
-        "You are an expert curriculum designer. \n"
-        "Analyze the following syllabus text and extract the course structure including lessons and topics.\n"
-        "Syllabus:\n"
-        "{syllabus_text}\n"
-    )
-    
     for provider_name, llm_instance in LLMS:
         try:
-            print(f"Attempting parse_syllabus with {provider_name}...")
+            logger.info(f"Attempting parse_syllabus with {provider_name}...")
             program = LLMTextCompletionProgram.from_defaults(
                 output_cls=Course,
-                prompt_template_str=prompt_template_str,
+                prompt_template_str="""
+                Extract a highly detailed course structure from the following syllabus.
+                Ensure you include all major lessons, topics under each lesson, and the description of what will be taught.
+                Do NOT generate summaries or questions at this stage.
+
+                Syllabus:
+                {syllabus}
+                """,
                 llm=llm_instance,
                 verbose=True
             )
-            return program(syllabus_text=syllabus_text)
+            logger.info("Calling LLM to extract syllabus structure...")
+            result = program(syllabus=syllabus_text)
+            logger.info(f"Successfully parsed syllabus with {len(result.lessons)} lessons.")
+            return result
         except Exception as e:
-            print(f"Error with {provider_name}: {e}")
+            logger.warning(f"Error with {provider_name}: {e}")
             continue # Try next provider
 
-    print("All LLM providers failed for parse_syllabus.")
+    logger.warning("All LLM providers failed for parse_syllabus.")
     return Course(title="Error Parsing Syllabus", lessons=[])
 
 def tag_materials_to_topic(topic: Topic, materials: List[str]) -> List[str]:
@@ -115,7 +121,7 @@ def tag_materials_to_topic(topic: Topic, materials: List[str]) -> List[str]:
             result = program(topic_title=topic.title, topic_desc=topic.description or "", materials_list=materials_text)
             return [materials[i] for i in result.relevant_indices if i < len(materials)]
         except Exception as e:
-            print(f"Error in tag_materials_to_topic with {provider_name}: {e}")
+            logger.warning(f"Error in tag_materials_to_topic with {provider_name}: {e}")
             continue
 
     return materials[:1] # Fallback: return first material
@@ -152,7 +158,7 @@ async def generate_questions_for_topic(topic: Topic) -> List[Question]:
             result = await program.acall(topic_title=topic.title, matched_content=matched_content)
             return result.questions
         except Exception as e:
-            print(f"Error in generate_questions_for_topic with {provider_name}: {e}")
+            logger.warning(f"Error in generate_questions_for_topic with {provider_name}: {e}")
             continue
             
     return []
@@ -204,7 +210,7 @@ async def generate_summary_for_topic(topic: Topic) -> str:
             result = await program.acall(topic_title=topic.title, topic_desc=topic.description or "", matched_content=matched_content)
             return result.summary_markdown
         except Exception as e:
-            print(f"Error in generate_summary_for_topic with {provider_name}: {e}")
+            logger.warning(f"Error in generate_summary_for_topic with {provider_name}: {e}")
             continue
 
     return f"# Summary for {topic.title}\n\n(Error generating summary)"
@@ -229,18 +235,18 @@ async def create_course_pipeline(syllabus_text: str, materials: List[str]) -> tu
     """
     # Step 1: Syllabus -> Structure (Sync LLM call for now, structure is sequence dependent)
     # We could make parse_syllabus async too, but let's focus on the heavy parallel part
-    print("Parsing syllabus...")
+    logger.info("Pipeline Step 1/3: Parsing Syllabus")
     # Wrap sync call if needed but parse_syllabus uses sync program() call.
     # ideally we update parse_syllabus to be async or run in executor.
     # For now, let's assume parse_syllabus remains sync but fast enough
     course = parse_syllabus(syllabus_text)
     
     # Step 2: Tag Materials (Sync for now)
-    print("Tagging materials...")
+    logger.info("Pipeline Step 2/3: Tagging materials...")
     course = tag_materials(course, materials)
     
     # Step 3: Generate Questions & Summaries (PARALLEL)
-    print("Generating content (questions & summaries) in PARALLEL...")
+    logger.info("Pipeline Step 3/3: Generating content (questions & summaries) in PARALLEL...")
     
     tasks = []
     
