@@ -120,9 +120,20 @@ export const createCourse = async (req, res, next) => {
       throw createError(400, 'Syllabus is required');
     }
 
-    // Process other materials
+    // Process other materials (filter duplicates by name and size)
     if (req.files && req.files.materials && req.files.materials.length > 0) {
+      const seenFiles = new Set();
+
       for (const file of req.files.materials) {
+        const fileSignature = `${file.originalname}_${file.size}`;
+
+        // Skip duplicate files
+        if (seenFiles.has(fileSignature)) {
+          console.log(`[Course Upload] Skipping duplicate file: ${file.originalname}`);
+          continue;
+        }
+
+        seenFiles.add(fileSignature);
         const result = await storage.upload(file, 'materials');
         materialsData.push({
           filename: result.filename,

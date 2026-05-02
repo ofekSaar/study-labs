@@ -59,19 +59,29 @@ const CourseMap = () => {
     }, [courseId, course, localLoading, fetchCourseNodes]);
     
     // Map backend status to frontend map statuses
-    const nodes = (course?.nodes || []).map(node => ({
-        ...node,
-        label: node.title,
-        status: role === 'instructor' ? 'completed' : (node.status === 'current' ? 'active' : (node.status || 'locked')),
-        onClick: () => {
-            if (node.type === 'quiz' || node.type === 'lesson') {
-                navigate(`/course/${courseId}/lesson/${node._id}`);
-            } else {
-                // Future: open other node types
-                console.log("Opening node:", node.title);
-            }
+    const nodes = (course?.nodes || []).map((node, index) => {
+        // Create descriptive label based on type
+        let label = node.title;
+
+        // If title is too generic or empty, use type prefix
+        if (!label || label.trim().length === 0) {
+            label = `${node.type.charAt(0).toUpperCase() + node.type.slice(1)} ${index + 1}`;
         }
-    }));
+
+        return {
+            ...node,
+            label,
+            status: role === 'instructor' ? 'completed' : (node.status === 'current' ? 'active' : (node.status || 'locked')),
+            onClick: () => {
+                if (node.type === 'quiz' || node.type === 'lesson') {
+                    navigate(`/course/${courseId}/lesson/${node._id}`);
+                } else {
+                    // Future: open other node types
+                    console.log("Opening node:", node.title);
+                }
+            }
+        };
+    });
 
     if (localLoading || storeLoading) {
         return (
