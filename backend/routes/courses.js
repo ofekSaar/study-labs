@@ -110,12 +110,15 @@ router.get('/:id', authenticate, getCourse);
  *                 description: JSON string { nodeCount, quizFrequency }
  *               gamification:
  *                 type: string
- *                 description: JSON string { xpMultiplier, leaderboardEnabled }
- *               files:
- *                 type: array
- *                 items:
- *                   type: string
- *                   format: binary
+ *                 properties:
+ *                   syllabus:
+ *                     type: string
+ *                     format: binary
+ *                   materials:
+ *                     type: array
+ *                     items:
+ *                       type: string
+ *                       format: binary
  *     responses:
  *       201:
  *         description: Course created
@@ -126,7 +129,13 @@ router.post(
   '/',
   authenticate,
   authorize('instructor'),
-  upload.array('files', 10),
+  (req, res, next) => {
+    const maxMaterials = parseInt(process.env.MAX_MATERIALS_COUNT) || 20;
+    upload.fields([
+      { name: 'syllabus', maxCount: 1 },
+      { name: 'materials', maxCount: maxMaterials }
+    ])(req, res, next);
+  },
   createCourse
 );
 

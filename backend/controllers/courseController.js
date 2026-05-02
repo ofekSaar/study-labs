@@ -75,11 +75,29 @@ export const createCourse = async (req, res, next) => {
     const { title, department, description, aiConfig, gamification } = req.body;
 
     // Upload materials to storage
-    const materials = [];
-    if (req.files && req.files.length > 0) {
-      for (const file of req.files) {
+    let syllabusData = null;
+    const materialsData = [];
+
+    // Process syllabus
+    if (req.files && req.files.syllabus && req.files.syllabus.length > 0) {
+      const file = req.files.syllabus[0];
+      const result = await storage.upload(file, 'materials');
+      syllabusData = {
+        filename: result.filename,
+        originalName: file.originalname,
+        mimetype: file.mimetype,
+        storagePath: result.storagePath,
+        size: file.size,
+      };
+    } else {
+      throw createError(400, 'Syllabus is required');
+    }
+
+    // Process other materials
+    if (req.files && req.files.materials && req.files.materials.length > 0) {
+      for (const file of req.files.materials) {
         const result = await storage.upload(file, 'materials');
-        materials.push({
+        materialsData.push({
           filename: result.filename,
           originalName: file.originalname,
           mimetype: file.mimetype,
@@ -94,7 +112,8 @@ export const createCourse = async (req, res, next) => {
       department,
       description,
       instructor: req.user._id,
-      materials,
+      syllabus: syllabusData,
+      materials: materialsData,
       aiConfig: aiConfig ? JSON.parse(aiConfig) : undefined,
       gamification: gamification ? JSON.parse(gamification) : undefined,
       isPublished: false,
@@ -105,7 +124,8 @@ export const createCourse = async (req, res, next) => {
       courseId: course._id.toString(),
       title,
       description,
-      materials: materials.map((m) => m.storagePath),
+      syllabus: syllabusData.storagePath,
+      materials: materialsData.map((m) => m.storagePath),
       aiConfig: course.aiConfig,
     });
 

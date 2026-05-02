@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-const materialSchema = new mongoose.Schema({
+const fileSchema = new mongoose.Schema({
   filename: { type: String, required: true },
   originalName: { type: String, required: true },
   mimetype: { type: String, required: true },
@@ -42,7 +42,11 @@ const courseSchema = new mongoose.Schema(
       default: 'Beginner',
       enum: ['Beginner', 'Intermediate', 'Advanced'],
     },
-    materials: [materialSchema],
+    syllabus: {
+      type: fileSchema,
+      required: true,
+    },
+    materials: [fileSchema],
     aiConfig: {
       nodeCount: {
         type: Number,
