@@ -1,33 +1,74 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import StudentLayout from '../components/layout/StudentLayout';
 import InstructorLayout from '../components/layout/InstructorLayout';
 import GameMapComponent from '../components/map/GameMap';
-import { ChevronLeft } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { ChevronLeft, Loader2 } from 'lucide-react';
 import useAuthStore from '../store/authStore';
+import useCourseStore from '../store/courseStore';
 
 const CourseMap = () => {
+    const { id: courseId } = useParams();
     const navigate = useNavigate();
     const { role } = useAuthStore();
+    const { fetchCourseNodes, courses, isLoading: storeLoading } = useCourseStore();
+    const [localLoading, setLocalLoading] = useState(true);
+
     const Layout = role === 'instructor' ? InstructorLayout : StudentLayout;
 
-    // Expanded Data with Locked/Unlocked Stages
-    const nodes = [
-        { status: 'completed', label: 'Introduction' },
-        { status: 'completed', label: 'Big O Notation' },
-        { status: 'completed', label: 'Arrays & Strings' },
-        { status: 'active', label: 'Linked Lists', onClick: () => navigate('/lesson/1/quiz') }, // Current Level
-        { status: 'locked', label: 'Stacks & Queues' },
-        { status: 'locked', label: 'Recursion' },
-        { status: 'locked', label: 'Binary Trees' },
-        { status: 'locked', label: 'BST Operations' },
-        { status: 'locked', label: 'Heaps' },
-        { status: 'locked', label: 'Hash Maps' },
-        { status: 'locked', label: 'Final Project' },
-    ];
+    useEffect(() => {
+        const loadNodes = async () => {
+            if (courseId) {
+                await fetchCourseNodes(courseId);
+                setLocalLoading(false);
+            }
+        };
+        loadNodes();
+    }, [courseId, fetchCourseNodes]);
+
+    const course = courses.find(c => c.id === courseId || c._id === courseId);
+    
+    // Map backend status to frontend map statuses
+    const nodes = (course?.nodes || []).map(node => ({
+        ...node,
+        label: node.title,
+        status: node.status === 'current' ? 'active' : (node.status || 'locked'),
+        onClick: () => {
+            if (node.type === 'quiz') {
+                navigate(`/lesson/${node._id}/quiz`);
+            } else {
+                // Future: open lesson content drawer/modal
+                console.log("Opening lesson:", node.title);
+            }
+        }
+    }));
+
+    if (localLoading || storeLoading) {
+        return (
+            <Layout title="Loading Course...">
+                <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+                    <Loader2 className="w-10 h-10 animate-spin text-studylabs-blue" />
+                    <p className="text-gray-500 font-medium">Generating your learning path...</p>
+                </div>
+            </Layout>
+        );
+    }
+
+    if (!course) {
+        return (
+            <Layout title="Course Not Found">
+                <div className="text-center p-20">
+                    <h2 className="text-2xl font-bold text-gray-800 mb-4">Course Not Found</h2>
+                    <button onClick={() => navigate(-1)} className="text-studylabs-blue font-bold flex items-center gap-2 mx-auto">
+                        <ChevronLeft size={20} /> Go Back
+                    </button>
+                </div>
+            </Layout>
+        );
+    }
 
     return (
-        <Layout title="Data Structures">
+        <Layout title={course.title}>
             <div className="min-h-screen md:min-h-0 bg-studylabs-blue md:bg-transparent md:text-gray-900">
 
                 {/* Mobile-only Course Header */}
@@ -38,7 +79,7 @@ const CourseMap = () => {
                     >
                         <ChevronLeft size={24} />
                     </button>
-                    <h1 className="font-display font-bold text-xl">Data Structures</h1>
+                    <h1 className="font-display font-bold text-xl">{course.title}</h1>
                     <div className="w-10" />
                 </div>
 
@@ -48,14 +89,21 @@ const CourseMap = () => {
                     {/* Streak Banner */}
                     <div className="flex justify-center mb-6">
                         <div className="bg-accent-yellow/20 backdrop-blur-md md:bg-orange-50 px-6 py-2 rounded-full border border-accent-yellow/50 md:border-orange-100 flex items-center gap-2">
-                            <span className="text-accent-yellow md:text-orange-600 font-bold">Daily Streak</span>
-                            <span className="text-2xl">🔥</span>
+                            <span className="text-accent-yellow md:text-orange-600 font-bold">Learning Path</span>
+                            <span className="text-2xl">🗺️</span>
                         </div>
                     </div>
 
                     {/* Map Container - Centered and Contained on Desktop */}
                     <div className="px-4 pb-20 md:pb-0 max-w-xl mx-auto">
-                        <GameMapComponent nodes={nodes} />
+                        {nodes.length > 0 ? (
+                            <GameMapComponent nodes={nodes} />
+                        ) : (
+                            <div className="text-center py-20 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
+                                <p className="text-gray-400">Roadmap is being generated by AI...</p>
+                                <p className="text-xs text-gray-300 mt-2">Check back in a minute.</p>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

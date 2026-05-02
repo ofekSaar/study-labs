@@ -109,7 +109,9 @@ async def generate_course(request: GenerateCourseRequest, req: Request):
         
         # 3. Run Pipeline
         logger.info("Starting AI pipeline to generate course structure. This may take a few minutes...")
-        course, _ = await create_course_pipeline(syllabus_text, materials_text)
+        syllabus_name = os.path.basename(request.syllabusPath)
+        materials_names = [os.path.basename(p) for p in request.materialsPaths if os.path.exists(p)]
+        course, _ = await create_course_pipeline(syllabus_text, materials_text, syllabus_name=syllabus_name, materials_names=materials_names)
         logger.info("AI pipeline finished generating course structure.")
         
         # 4. Save to DB

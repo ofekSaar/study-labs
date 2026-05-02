@@ -33,18 +33,18 @@ if os.environ.get("GEMINI_API_KEY"):
     LLMS.append(("Gemini", Gemini(model="models/gemini-flash-latest", api_key=os.environ.get("GEMINI_API_KEY"))))
 
 if os.environ.get("OPENAI_API_KEY"):
-    LLMS.append(("OpenAI", OpenAI(model="gpt-4o")))
+    LLMS.append(("OpenAI", OpenAI(model="gpt-5-nano")))
     
 if not LLMS:
     logger.warning("No API Keys found. AI features will fail unless Mock Mode is active.")
 
-def parse_syllabus(syllabus_text: str) -> Course:
+def parse_syllabus(syllabus_text: str, syllabus_name: str = "Unknown") -> Course:
     """
     Parses raw syllabus text into a structured Course object.
     """
     # Check for MOCK mode to allow testing without valid API keys
     if os.environ.get("USE_MOCK_AI") == "True":
-        logger.info("Using MOCK AI Mode for parsing syllabus...")
+        logger.info(f"Using MOCK AI Mode for parsing syllabus: {syllabus_name}")
         return Course(
             title="Mock Course (Demo)", 
             lessons=[
@@ -64,7 +64,7 @@ def parse_syllabus(syllabus_text: str) -> Course:
 
     for provider_name, llm_instance in LLMS:
         try:
-            logger.info(f"Attempting parse_syllabus with {provider_name}...")
+            logger.info(f"Attempting parse_syllabus for '{syllabus_name}' with {provider_name}...")
             program = LLMTextCompletionProgram.from_defaults(
                 output_cls=Course,
                 prompt_template_str="""
@@ -229,7 +229,7 @@ def sanitize_filename(name: str) -> str:
 
 import asyncio
 
-async def create_course_pipeline(syllabus_text: str, materials: List[str]) -> tuple[Course, dict]:
+async def create_course_pipeline(syllabus_text: str, materials: List[str], syllabus_name: str = "Unknown", materials_names: List[str] = None) -> tuple[Course, dict]:
     """
     Orchestrates the course generation pipeline (Async Version).
     """
@@ -239,10 +239,13 @@ async def create_course_pipeline(syllabus_text: str, materials: List[str]) -> tu
     # Wrap sync call if needed but parse_syllabus uses sync program() call.
     # ideally we update parse_syllabus to be async or run in executor.
     # For now, let's assume parse_syllabus remains sync but fast enough
-    course = parse_syllabus(syllabus_text)
+    course = parse_syllabus(syllabus_text, syllabus_name=syllabus_name)
     
     # Step 2: Tag Materials (Sync for now)
-    logger.info("Pipeline Step 2/3: Tagging materials...")
+    if materials_names:
+        logger.info(f"Pipeline Step 2/3: Tagging {len(materials)} materials: {', '.join(materials_names)}")
+    else:
+        logger.info("Pipeline Step 2/3: Tagging materials...")
     course = tag_materials(course, materials)
     
     # Step 3: Generate Questions & Summaries (PARALLEL)
