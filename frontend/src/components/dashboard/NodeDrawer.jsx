@@ -86,7 +86,7 @@ const NodeDrawer = () => {
                                 onClick={() => {
                                     closeDrawer();
                                     // Route to the combined lesson summary + quiz page
-                                    navigate(`/course/${selectedNode.course}/lesson/${selectedNode.id}`);
+                                    navigate(`/course/${selectedNode.course}/lesson/${selectedNode._id || selectedNode.id}`);
                                 }}
                                 className="w-full py-4 bg-studylabs-blue hover:bg-blue-600 text-white rounded-xl font-bold text-lg shadow-lg shadow-blue-200 hover:shadow-blue-300 transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2"
                             >

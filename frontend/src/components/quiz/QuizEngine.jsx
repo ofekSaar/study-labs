@@ -25,7 +25,7 @@ const QuizEngine = ({ questions, onComplete }) => {
     const handleMCQSubmit = () => {
         if (selectedOption === null) return;
 
-        const isCorrect = selectedOption === currentQuestion.correct_answer_index;
+        const isCorrect = selectedOption === currentQuestion.correctAnswerIndex;
         setFeedback({
             isCorrect,
             message: currentQuestion.explanation || (isCorrect ? 'Correct!' : 'Incorrect.')
@@ -119,7 +119,7 @@ const QuizEngine = ({ questions, onComplete }) => {
                         <div className="space-y-3">
                             {currentQuestion.options.map((opt, idx) => {
                                 const isSelected = selectedOption === idx;
-                                const showCorrect = isSubmitted && idx === currentQuestion.correct_answer_index;
+                                const showCorrect = isSubmitted && idx === currentQuestion.correctAnswerIndex;
                                 const showWrong = isSubmitted && isSelected && !feedback.isCorrect;
                                 const optDirection = isRTL(opt) ? 'rtl' : 'ltr';
 

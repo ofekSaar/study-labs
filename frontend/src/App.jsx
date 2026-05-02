@@ -78,7 +78,7 @@ function App() {
         <Route 
           path="/course/:courseId/lesson/:id" 
           element={
-            <ProtectedRoute allowedRole="student">
+            <ProtectedRoute>
               <LessonQuiz />
             </ProtectedRoute>
           } 

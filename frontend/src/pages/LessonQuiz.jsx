@@ -4,6 +4,7 @@ import QuizEngine from '../components/quiz/QuizEngine';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ChevronLeft, BookOpen, GraduationCap, ArrowRight } from 'lucide-react';
 import api from '../utils/api';
+import useCourseStore from '../store/courseStore';
 
 const LessonQuiz = () => {
     const { courseId, id } = useParams(); // id is the nodeId
@@ -19,12 +20,12 @@ const LessonQuiz = () => {
             try {
                 // 1. Fetch Node Info (Summary)
                 const nodeRes = await api.get(`/api/courses/${courseId}/nodes/${id}/content`);
-                setNodeData(nodeRes.data.data); // Backend returns { data: { ... } }
+                setNodeData(nodeRes.data); // Backend returns { data: { ... } }, api utility unwraps to just the JSON body
 
                 // 2. Fetch Quiz Questions
                 try {
                     const quizRes = await api.get(`/api/quizzes/node/${id}`);
-                    setQuizData(quizRes.data.data.questions || []);
+                    setQuizData(quizRes.data.questions || []);
                 } catch (quizErr) {
                     console.log("No quiz data available for this node, or fetch failed:", quizErr.message);
                     setQuizData([]);
@@ -39,14 +40,42 @@ const LessonQuiz = () => {
         fetchData();
     }, [id]);
 
+    const { courses, fetchCourseNodes } = useCourseStore();
+
     const handleComplete = async (score, answersData) => {
         try {
             await api.post('/api/quizzes/submit', {
                 nodeId: id,
                 answers: answersData || []
             });
+            
+            // Mark node as completed in the student's progress
+            try {
+                await api.post('/api/progress/complete-node', {
+                    courseId: courseId,
+                    nodeId: id
+                });
+            } catch (progressErr) {
+                console.log("Progress update skipped (instructor preview or already completed):", progressErr.message);
+            }
+
+            // Refresh course map data so the sidebar updates instantly
+            await fetchCourseNodes(courseId);
+
             alert(`Quiz Complete! You earned ${score} XP.`);
-            navigate(-1);
+            
+            // Find next lesson
+            const course = courses.find(c => c._id === courseId || c.id === courseId);
+            if (course && course.nodes) {
+                const currentIndex = course.nodes.findIndex(n => n._id === id);
+                if (currentIndex !== -1 && currentIndex < course.nodes.length - 1) {
+                    const nextNode = course.nodes[currentIndex + 1];
+                    navigate(`/course/${courseId}/lesson/${nextNode._id}`);
+                    setStep('summary');
+                    return;
+                }
+            }
+            navigate(`/course/${courseId}`); // Fallback to map
         } catch (error) {
             alert(error.message || "Failed to submit quiz");
         }
@@ -89,7 +118,16 @@ const LessonQuiz = () => {
                             
                             <div className="p-8 md:p-10 prose prose-slate max-w-none">
                                 {nodeData?.content ? (
-                                    <div className="whitespace-pre-wrap text-gray-700 leading-relaxed">
+                                    <div 
+                                        dir={(() => {
+                                            if (!nodeData.content) return 'ltr';
+                                            const rtlChar = /[\u0590-\u05FF\u0600-\u06FF\u0700-\u074F]/;
+                                            return rtlChar.test(nodeData.content) ? 'rtl' : 'ltr';
+                                        })()} 
+                                        className={`whitespace-pre-wrap text-gray-700 leading-relaxed ${
+                                            (/[\u0590-\u05FF\u0600-\u06FF\u0700-\u074F]/.test(nodeData.content || '')) ? 'text-right' : 'text-left'
+                                        }`}
+                                    >
                                         {nodeData.content}
                                     </div>
                                 ) : (

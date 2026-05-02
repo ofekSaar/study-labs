@@ -36,7 +36,8 @@ export const getQuizQuestions = async (req, res, next) => {
 
       if (q.type === 'mcq') {
         question.options = q.options;
-        // Don't send correctAnswerIndex to client
+        question.correctAnswerIndex = q.correctAnswerIndex;
+        question.explanation = q.explanation;
       }
       if (q.type === 'summary') {
         question.content = q.content;

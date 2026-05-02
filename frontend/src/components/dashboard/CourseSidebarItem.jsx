@@ -46,6 +46,32 @@ const CourseSidebarItem = ({ course, isSelected, onClick }) => {
                     className={`h-full ${course.color}`}
                 />
             </div>
+
+            {/* Current Stage Indicator */}
+            {isSelected && (
+                <motion.div 
+                    initial={{ opacity: 0, height: 0 }} 
+                    animate={{ opacity: 1, height: 'auto' }}
+                    className="mt-3 pt-3 border-t border-blue-100/50"
+                >
+                    {(() => {
+                        const activeNode = course.nodes.find(n => n.status === 'active') || course.nodes.find(n => n.status !== 'completed');
+                        if (activeNode) {
+                            return (
+                                <div className="flex items-center gap-2 text-xs font-bold text-studylabs-blue bg-blue-50/50 rounded-lg p-2">
+                                    <PlayCircle size={14} className="shrink-0" />
+                                    <span className="truncate">Up Next: {activeNode.title}</span>
+                                </div>
+                            );
+                        }
+                        return (
+                            <div className="flex items-center gap-2 text-xs font-bold text-green-600 bg-green-50/50 rounded-lg p-2">
+                                <span className="truncate">🎉 Course Completed!</span>
+                            </div>
+                        );
+                    })()}
+                </motion.div>
+            )}
         </motion.div>
     );
 };
