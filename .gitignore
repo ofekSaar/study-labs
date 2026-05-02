@@ -1,0 +1,34 @@
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Python / FastAPI
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+.env
+
+# MacOS
+.DS_Store
+
+# IDEs
+.vscode/
+.idea/
+
+# Database / Storage
+mongo_data/
+shared_uploads/
+backend/uploads/
+ai-engine/uploads/
+*.sqlite3
+
+# Frontend builds
+frontend/dist/
+frontend/build/
+
+# Docker
+.dockerignore

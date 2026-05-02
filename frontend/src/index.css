@@ -1,0 +1,19 @@
+@import "tailwindcss";
+
+@theme {
+    --font-sans: 'Inter', system-ui, sans-serif;
+    --font-display: 'Nunito', system-ui, sans-serif;
+
+    --color-studylabs-blue: #2563EB;
+    /* Replace with exact picker value if needed, using a standard vibrant blue for now */
+    --color-studylabs-dark: #1E40AF;
+    --color-map-bg: #1f2937;
+    /* Dark grayish blue for map background as seen in mockups usually, adjusting based on valid contrast */
+    --color-accent-green: #22C55E;
+    --color-accent-yellow: #EAB308;
+}
+
+/* Global mobile-first styles */
+body {
+    @apply bg-gray-50 text-gray-900 font-sans antialiased;
+}
