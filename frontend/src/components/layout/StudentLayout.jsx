@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Settings, LogOut, Menu, Map } from 'lucide-react';
+import { Settings, LogOut, Menu, Map, BookOpen } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import useCourseStore from '../../store/courseStore';
 import useAuthStore from '../../store/authStore';
@@ -35,6 +35,13 @@ const StudentLayout = ({ children, title }) => {
                 <div className="flex-1 overflow-y-auto px-4 py-2 space-y-4">
                     <div className="mb-2 px-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Discover</div>
                     <button
+                        onClick={() => navigate('/my-courses')}
+                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${location.pathname === '/my-courses' ? 'bg-blue-50 text-studylabs-blue font-bold' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900 font-medium'}`}
+                    >
+                        <BookOpen size={20} />
+                        <span className="text-sm">My Courses</span>
+                    </button>
+                    <button
                         onClick={() => navigate('/enrollments')}
                         className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${location.pathname === '/enrollments' ? 'bg-blue-50 text-studylabs-blue font-bold' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900 font-medium'}`}
                     >
@@ -42,7 +49,7 @@ const StudentLayout = ({ children, title }) => {
                         <span className="text-sm">Find Courses</span>
                     </button>
 
-                    <div className="mt-8 mb-2 px-2 text-xs font-bold text-gray-400 uppercase tracking-wider">My Courses</div>
+                    <div className="mt-8 mb-2 px-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Active Roadmaps</div>
 
                     <div className="space-y-2">
                         {courses.map(course => (
