@@ -11,7 +11,7 @@ const Dashboard = () => {
     useEffect(() => {
         fetchStats();
         fetchCourses();
-    }, [fetchStats, fetchCourses]);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     if (isLoading && courses.length === 0) {
         return (

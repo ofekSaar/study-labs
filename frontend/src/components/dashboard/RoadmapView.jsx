@@ -17,7 +17,7 @@ const RoadmapView = () => {
             };
             loadNodes();
         }
-    }, [course, fetchCourseNodes]);
+    }, [course?.id, fetchCourseNodes]);
 
     // Safety check
     if (!course) return <div className="p-8 text-center text-gray-500">Select a course to view roadmap</div>;
@@ -150,9 +150,12 @@ const RoadmapView = () => {
                         const y = START_Y + (index * NODE_HEIGHT);
                         const x = 350 + ((index % 2 === 0 ? -1 : 1) * AMPLITUDE);
 
+                        const nodeId = node._id || node.id;
+                        const selectedNodeId = selectedNode?._id || selectedNode?.id;
+
                         return (
                             <div
-                                key={node.id}
+                                key={nodeId}
                                 className="absolute transform -translate-x-1/2 -translate-y-1/2"
                                 style={{ left: x, top: y }}
                             >
@@ -162,7 +165,7 @@ const RoadmapView = () => {
                                     onClick={() => setSelectedNode(node)}
                                     // Pass explicit position prop if needed for text alignment
                                     alignment={index % 2 === 0 ? 'left' : 'right'}
-                                    isSelected={selectedNode?.id === node.id}
+                                    isSelected={selectedNodeId === nodeId}
                                 />
                             </div>
                         );

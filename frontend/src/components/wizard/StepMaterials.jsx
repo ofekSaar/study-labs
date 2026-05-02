@@ -59,6 +59,18 @@ const StepMaterials = () => {
         register('materials'); // Optional
     }, [register]);
 
+    // Cleanup preview URLs on unmount
+    React.useEffect(() => {
+        return () => {
+            syllabus.forEach(file => {
+                if (file.preview) URL.revokeObjectURL(file.preview);
+            });
+            materials.forEach(file => {
+                if (file.preview) URL.revokeObjectURL(file.preview);
+            });
+        };
+    }, [syllabus, materials]);
+
     return (
         <div className="space-y-8 animate-fade-in">
             <div>

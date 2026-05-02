@@ -56,7 +56,7 @@ const NodeDrawer = () => {
                                     </div>
                                     <div>
                                         <p className="font-bold text-sm">Estimated Time</p>
-                                        <p className="text-xs text-gray-500">45 Minutes</p>
+                                        <p className="text-xs text-gray-500">{selectedNode.estimatedMinutes || 45} Minutes</p>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-4 text-gray-700">
@@ -74,7 +74,7 @@ const NodeDrawer = () => {
                                     </div>
                                     <div>
                                         <p className="font-bold text-sm">Reward</p>
-                                        <p className="text-xs text-gray-500">150 XP + Badge</p>
+                                        <p className="text-xs text-gray-500">{selectedNode.xpReward || 150} XP + Badge</p>
                                     </div>
                                 </div>
                             </div>
@@ -86,7 +86,9 @@ const NodeDrawer = () => {
                                 onClick={() => {
                                     closeDrawer();
                                     // Route to the combined lesson summary + quiz page
-                                    navigate(`/course/${selectedNode.course}/lesson/${selectedNode._id || selectedNode.id}`);
+                                    const nodeId = selectedNode._id || selectedNode.id;
+                                    const courseId = selectedNode.course || selectedNode.courseId;
+                                    navigate(`/course/${courseId}/lesson/${nodeId}`);
                                 }}
                                 className="w-full py-4 bg-studylabs-blue hover:bg-blue-600 text-white rounded-xl font-bold text-lg shadow-lg shadow-blue-200 hover:shadow-blue-300 transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2"
                             >

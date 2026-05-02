@@ -15,7 +15,7 @@ const InstructorDashboard = () => {
 
     useEffect(() => {
         fetchAllCourses();
-    }, [fetchAllCourses]);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(() => {
         if (courses.length > 0 && !selectedCourseId) {
@@ -41,9 +41,9 @@ const InstructorDashboard = () => {
 
     const metrics = analytics?.metrics || {
         totalStudents: 0,
-        averageCompletion: 0,
-        activeNodes: 0,
-        totalClassXP: 0
+        avgCompletion: 0,
+        activeModules: 0,
+        totalXP: 0
     };
 
     const atRisk = analytics?.atRiskStudents || [];
@@ -72,19 +72,19 @@ const InstructorDashboard = () => {
                     />
                     <MetricCard
                         label="Avg. Completion"
-                        value={`${Math.round(metrics.averageCompletion)}%`}
+                        value={`${Math.round(metrics.avgCompletion)}%`}
                         icon={<TrendingUp size={20} className="text-green-600" />}
                         color="bg-green-50"
                     />
                     <MetricCard
                         label="Active Modules"
-                        value={metrics.activeNodes}
+                        value={metrics.activeModules}
                         icon={<BookOpen size={20} className="text-purple-600" />}
                         color="bg-purple-50"
                     />
                     <MetricCard
                         label="Class XP"
-                        value={metrics.totalClassXP}
+                        value={metrics.totalXP}
                         icon={<Trophy size={20} className="text-orange-600" />}
                         color="bg-orange-50"
                     />
@@ -107,7 +107,7 @@ const InstructorDashboard = () => {
                                 ))}
                             </select>
                         </div>
-                        <ClassProgressChart />
+                        <ClassProgressChart data={analytics?.nodeProgress} isLoading={isLoading} />
                         <div className="mt-4 text-center text-sm text-gray-400">
                             Distribution of students across modules
                         </div>
@@ -120,12 +120,12 @@ const InstructorDashboard = () => {
                             <span className="bg-red-100 text-red-600 text-xs px-2 py-0.5 rounded-full">{atRisk.length}</span>
                         </h3>
                         <div className="flex-1 space-y-4">
-                            {atRisk.map((student, i) => (
+                            {atRisk.map((item, i) => (
                                 <div key={i} className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition">
-                                    <img src={student.avatar || 'https://via.placeholder.com/150'} alt="Avatar" className="w-10 h-10 rounded-full bg-gray-200" />
+                                    <img src={item.student?.avatar || 'https://via.placeholder.com/150'} alt="Avatar" className="w-10 h-10 rounded-full bg-gray-200" />
                                     <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-bold text-gray-900 truncate">{student.name}</p>
-                                        <p className="text-xs text-red-500 font-medium">{student.reason}</p>
+                                        <p className="text-sm font-bold text-gray-900 truncate">{item.student?.name || 'Student'}</p>
+                                        <p className="text-xs text-red-500 font-medium">{item.issue}</p>
                                     </div>
                                     <button className="text-xs font-bold text-studylabs-blue hover:text-blue-700 bg-blue-50 px-3 py-1.5 rounded-lg">
                                         Message

@@ -36,7 +36,7 @@ const useCourseStore = create((set, get) => ({
     fetchCourses: async () => {
         set({ isLoading: true, error: null });
         try {
-            const { data } = await api.get('/api/courses');
+            const { data } = await api.get('/api/courses?view=student');
             const courses = data.courses || [];
 
             // For each enrolled course, fetch progress
@@ -84,7 +84,7 @@ const useCourseStore = create((set, get) => ({
     fetchAllCourses: async () => {
         set({ isLoading: true, error: null });
         try {
-            const { data } = await api.get('/api/courses');
+            const { data } = await api.get('/api/courses?view=instructor');
             const courses = (data.courses || []).map((course) => ({
                 ...course,
                 id: course._id,
@@ -173,6 +173,19 @@ const useCourseStore = create((set, get) => ({
             return data;
         } catch (error) {
             console.error('Failed to complete node:', error);
+            throw error;
+        }
+    },
+
+    deleteCourse: async (courseId) => {
+        try {
+            await api.delete(`/api/courses/${courseId}`);
+            set((state) => ({
+                courses: state.courses.filter((c) => c.id !== courseId && c._id !== courseId),
+                selectedCourseId: state.selectedCourseId === courseId ? null : state.selectedCourseId,
+            }));
+        } catch (error) {
+            console.error('Failed to delete course:', error);
             throw error;
         }
     },

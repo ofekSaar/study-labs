@@ -57,18 +57,30 @@ const useAuthStore = create((set, get) => ({
 
     /**
      * Set role for first-time users.
+     * Can accept either a single role string or an array of roles.
      */
-    setRole: async (role) => {
-        const { data } = await api.put('/api/auth/role', { role });
-        // Update token with new role
-        if (data.token) {
-            setToken(data.token);
+    setRole: async (roleInput) => {
+        try {
+            // Support both single role and array of roles
+            const payload = Array.isArray(roleInput)
+                ? { roles: roleInput }
+                : { role: roleInput };
+
+            const { data } = await api.put('/api/auth/role', payload);
+            // Update token with new role
+            if (data.token) {
+                setToken(data.token);
+            }
+            set({
+                user: data.user,
+                role: data.user.role,
+            });
+            return data.user;
+        } catch (error) {
+            // Re-throw with better error message
+            const message = error.data?.message || error.message || 'Failed to set role';
+            throw new Error(message);
         }
-        set({
-            user: data.user,
-            role: data.user.role,
-        });
-        return data.user;
     },
 
     /**

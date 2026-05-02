@@ -25,7 +25,10 @@ const CourseSidebarItem = ({ course, isSelected, onClick }) => {
                         {course.title}
                     </h4>
                     <p className="text-xs text-gray-400 font-medium">
-                        {course.level} • {course.nodes.filter(n => n.status === 'completed').length}/{course.nodes.length} Stages
+                        {course.level}
+                        {course.nodes && course.nodes.length > 0 && (
+                            <> • {course.nodes.filter(n => n.status === 'completed').length}/{course.nodes.length} Stages</>
+                        )}
                     </p>
                 </div>
 

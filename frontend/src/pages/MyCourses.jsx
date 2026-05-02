@@ -11,7 +11,7 @@ const MyCourses = () => {
 
     useEffect(() => {
         fetchCourses();
-    }, [fetchCourses]);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Filter only approved enrollments (handled by fetchCourses logic in store)
     const enrolledCourses = courses.filter(course => 

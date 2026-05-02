@@ -23,7 +23,7 @@ const MyEnrollments = () => {
             setIsLoading(false);
         };
         loadData();
-    }, [fetchMyEnrollments]);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     const handleRequest = async (courseId) => {
         setIsRequesting(true);
