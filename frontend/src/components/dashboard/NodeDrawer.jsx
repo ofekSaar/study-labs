@@ -85,9 +85,8 @@ const NodeDrawer = () => {
                             <button
                                 onClick={() => {
                                     closeDrawer();
-                                    // For this prototype, we'll route everything to the quiz page
-                                    // In a real app, this would route based on node.type
-                                    navigate(`/lesson/${selectedNode.id}/quiz`);
+                                    // Route to the combined lesson summary + quiz page
+                                    navigate(`/course/${selectedNode.course}/lesson/${selectedNode.id}`);
                                 }}
                                 className="w-full py-4 bg-studylabs-blue hover:bg-blue-600 text-white rounded-xl font-bold text-lg shadow-lg shadow-blue-200 hover:shadow-blue-300 transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2"
                             >

@@ -73,6 +73,15 @@ const courseSchema = new mongoose.Schema(
         default: true,
       },
     },
+    generationStatus: {
+      type: String,
+      enum: ['pending', 'generating', 'ready', 'failed'],
+      default: 'pending',
+    },
+    generationError: {
+      type: String,
+      default: null,
+    },
     isPublished: {
       type: Boolean,
       default: false,

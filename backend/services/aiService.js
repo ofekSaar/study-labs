@@ -42,26 +42,58 @@ export const generateRoadmap = async ({
   console.log(`[AI Service] Syllabus: ${syllabusPath}`);
   console.log(`[AI Service] Materials: ${materialsPaths.length} files attached.`);
 
-  const response = await fetch(`${AI_SERVICE_URL}/api/generate-course/`, {
+  // We use the native http module here instead of fetch() to bypass the strict 
+  // 5-minute (300s) idle timeout built into Node 18+ fetch implementation.
+  // The AI pipeline can take up to 10 minutes for large courses.
+  const http = await import('http');
+  const url = new URL(`${AI_SERVICE_URL}/api/generate-course/`);
+  
+  const postData = JSON.stringify({ 
+    courseId, 
+    syllabusPath, 
+    materialsPaths 
+  });
+
+  const options = {
+    hostname: url.hostname,
+    port: url.port,
+    path: url.pathname,
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${AI_SERVICE_API_KEY}`,
+      'Content-Length': Buffer.byteLength(postData)
     },
-    body: JSON.stringify({ 
-      courseId, 
-      syllabusPath, 
-      materialsPaths 
-    }),
+    timeout: 1200000 // 20 minutes upper limit
+  };
+
+  const data = await new Promise((resolve, reject) => {
+    const req = http.request(options, (res) => {
+      let body = '';
+      res.on('data', (chunk) => body += chunk);
+      res.on('end', () => {
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          try {
+            resolve(JSON.parse(body));
+          } catch (e) {
+            reject(new Error(`Failed to parse AI response: ${e.message}`));
+          }
+        } else {
+          reject(new Error(`AI Service Error (${res.statusCode}): ${body}`));
+        }
+      });
+    });
+
+    req.on('error', (e) => reject(new Error(`AI Request Failed: ${e.message}`)));
+    req.on('timeout', () => {
+      req.destroy();
+      reject(new Error('AI Request Timed Out after 20 minutes'));
+    });
+
+    req.write(postData);
+    req.end();
   });
 
-  if (!response.ok) {
-     const errText = await response.text();
-     console.error(`[AI Service] Error response: ${errText}`);
-     throw new Error(`AI Service Error: ${errText}`);
-  }
-
-  const data = await response.json();
   console.log(`[AI Service] Course successfully generated with ID: ${data.course_id}`);
   
   // Transform the response (course_structure) into the flat nodes array expected by the rest of the backend
@@ -69,26 +101,62 @@ export const generateRoadmap = async ({
   let orderIndex = 0;
 
   for (const [lessonTitle, lessonData] of Object.entries(data.course_structure)) {
-      // Create a lesson node (Optional: depends on how the frontend renders lessons vs topics)
       for (const [topicTitle, topicData] of Object.entries(lessonData)) {
-          const isQuiz = !!topicData.quiz_id || !!topicData.quiz_route;
-          
+          let quizData = undefined;
+          let summaryContent = null;
+
+          // Fetch quiz data — use quiz_id if available, else parse from quiz_route
+          const quizId = topicData.quiz_id || (topicData.quiz_route ? topicData.quiz_route.split('/quizzes/')[1]?.replace('/', '') : null);
+          if (quizId) {
+              try {
+                  const qRes = await fetch(`${AI_SERVICE_URL}/api/quizzes/${quizId}/`, {
+                      headers: { 'Authorization': `Bearer ${AI_SERVICE_API_KEY}` }
+                  });
+                  if (qRes.ok) {
+                      const qData = await qRes.json();
+                      // Map AI engine question format → CourseNode quizData schema
+                      quizData = (qData.questions || []).map(q => ({
+                          type: 'mcq',
+                          question: q.question_text || q.question,
+                          options: q.options || [],
+                          correctAnswerIndex: typeof q.correct_answer === 'number' ? q.correct_answer : 0,
+                          explanation: q.explanation || null,
+                      }));
+                  }
+              } catch (err) {
+                  console.error(`[AI Service] Failed to fetch quiz ${quizId}:`, err.message);
+              }
+          }
+
+          // Fetch summary data — use summary_id if available, else parse from summary_route
+          const summaryId = topicData.summary_id || (topicData.summary_route ? topicData.summary_route.split('/summaries/')[1]?.replace('/', '') : null);
+          if (summaryId) {
+              try {
+                  const sRes = await fetch(`${AI_SERVICE_URL}/api/summaries/${summaryId}/`, {
+                      headers: { 'Authorization': `Bearer ${AI_SERVICE_API_KEY}` }
+                  });
+                  if (sRes.ok) {
+                      const sData = await sRes.json();
+                      summaryContent = sData.content;
+                  }
+              } catch (err) {
+                  console.error(`[AI Service] Failed to fetch summary ${summaryId}:`, err.message);
+              }
+          }
+
           nodes.push({
               title: `${lessonTitle}: ${topicTitle}`,
-              type: isQuiz ? 'quiz' : 'lesson',
+              type: 'quiz',
               order: orderIndex++,
-              estimatedMinutes: isQuiz ? 20 : 45,
-              xpReward: isQuiz ? 200 : 150,
-              // The real AI engine stores the content in MongoDB and returns routes
-              // The frontend expects lessonContent directly or we fetch it later
-              // For now, we will just pass the routes to the frontend or fetch them here
-              lessonContent: topicData.description, 
-              aiSummaryRoute: topicData.summary_route,
-              aiQuizRoute: topicData.quiz_route
+              estimatedMinutes: 45,
+              xpReward: 200,
+              lessonContent: summaryContent || topicData.description || '', 
+              quizData: quizData && quizData.length > 0 ? quizData : undefined,
           });
       }
   }
 
+  console.log(`[AI Service] Transformed ${nodes.length} nodes (${nodes.filter(n => n.quizData).length} with quizzes, ${nodes.filter(n => n.lessonContent).length} with summaries)`);
   return { nodes };
 };
 

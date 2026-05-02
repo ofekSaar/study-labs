@@ -37,8 +37,17 @@ const CourseWizard = () => {
     const StepComponent = steps[currentStep].component;
 
     const handleNext = async () => {
-        const isValid = await methods.trigger();
-        // Note: Ideally trigger only fields for current step, but keeping simple for now
+        let fieldsToValidate = [];
+        if (currentStep === 0) {
+            fieldsToValidate = ['title', 'department', 'description'];
+        } else if (currentStep === 1) {
+            fieldsToValidate = ['syllabus', 'materials'];
+        } else if (currentStep === 2) {
+            fieldsToValidate = ['nodeCount', 'quizFrequency'];
+        }
+
+        const isValid = await methods.trigger(fieldsToValidate);
+        
         if (isValid) {
             setCurrentStep(prev => Math.min(prev + 1, steps.length - 1));
         }
@@ -150,7 +159,7 @@ const CourseWizard = () => {
 
                 {/* Form Content */}
                 <FormProvider {...methods}>
-                    <form onSubmit={methods.handleSubmit(onSubmit)} className="bg-white p-8 rounded-3xl border border-gray-100 shadow-xl min-h-[500px] flex flex-col justify-between">
+                    <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-xl min-h-[500px] flex flex-col justify-between">
 
                         <StepComponent />
 
@@ -168,7 +177,8 @@ const CourseWizard = () => {
 
                             {currentStep === steps.length - 1 ? (
                                 <button
-                                    type="submit"
+                                    type="button"
+                                    onClick={methods.handleSubmit(onSubmit)}
                                     className="bg-studylabs-blue text-white px-8 py-3 rounded-xl font-bold hover:bg-studylabs-dark transition flex items-center gap-2 shadow-lg shadow-blue-200"
                                 >
                                     Create Course
@@ -185,7 +195,7 @@ const CourseWizard = () => {
                                 </button>
                             )}
                         </div>
-                    </form>
+                    </div>
                 </FormProvider>
             </div>
         </InstructorLayout>

@@ -121,9 +121,34 @@ export const createCourse = async (req, res, next) => {
       aiConfig: aiConfig ? JSON.parse(aiConfig) : undefined,
       gamification: gamification ? JSON.parse(gamification) : undefined,
       isPublished: false,
+      generationStatus: 'generating',
     });
 
-    // Auto-generate roadmap using AI service
+    // Return immediately — don't wait for AI pipeline
+    const populatedCourse = await Course.findById(course._id)
+      .populate('instructor', 'name email avatar');
+
+    res.status(201).json({
+      status: 'success',
+      data: { course: populatedCourse },
+    });
+
+    // ── Background AI Generation (fire-and-forget) ──────────
+    generateRoadmapInBackground(course, syllabusData, materialsData, title, description);
+
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Runs the AI roadmap generation in the background.
+ * Updates course status when complete or on failure.
+ */
+async function generateRoadmapInBackground(course, syllabusData, materialsData, title, description) {
+  try {
+    console.log(`[Background] Starting AI generation for course ${course._id}...`);
+
     const roadmapResult = await generateRoadmap({
       courseId: course._id.toString(),
       title,
@@ -159,23 +184,25 @@ export const createCourse = async (req, res, next) => {
       }
 
       await CourseNode.insertMany(nodes);
+    } else {
+      throw new Error('AI failed to generate any lessons. The syllabus might be empty or too complex.');
     }
 
-    // Publish the course
+    // Publish the course & mark as ready
     course.isPublished = true;
+    course.generationStatus = 'ready';
+    course.generationError = null;
     await course.save();
 
-    const populatedCourse = await Course.findById(course._id)
-      .populate('instructor', 'name email avatar');
-
-    res.status(201).json({
-      status: 'success',
-      data: { course: populatedCourse },
-    });
+    console.log(`[Background] ✅ Course ${course._id} generation complete! ${roadmapResult.nodes?.length || 0} nodes created.`);
   } catch (error) {
-    next(error);
+    console.error(`[Background] ❌ Course ${course._id} generation failed:`, error.message);
+    course.generationStatus = 'failed';
+    course.generationError = error.message;
+    course.isPublished = false; // Do not publish failed courses
+    await course.save();
   }
-};
+}
 
 /**
  * Update a course (Instructor owner only).
