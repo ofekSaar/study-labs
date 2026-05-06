@@ -3,6 +3,8 @@ import StudentLayout from '../components/layout/StudentLayout';
 import QuizEngine from '../components/quiz/QuizEngine';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ChevronLeft, BookOpen, GraduationCap, ArrowRight } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import api from '../utils/api';
 import useCourseStore from '../store/courseStore';
 
@@ -118,17 +120,18 @@ const LessonQuiz = () => {
                             
                             <div className="p-8 md:p-10 prose prose-slate max-w-none">
                                 {nodeData?.content ? (
-                                    <div 
+                                    <div
                                         dir={(() => {
-                                            if (!nodeData.content) return 'ltr';
                                             const rtlChar = /[\u0590-\u05FF\u0600-\u06FF\u0700-\u074F]/;
                                             return rtlChar.test(nodeData.content) ? 'rtl' : 'ltr';
-                                        })()} 
-                                        className={`whitespace-pre-wrap text-gray-700 leading-relaxed ${
-                                            (/[\u0590-\u05FF\u0600-\u06FF\u0700-\u074F]/.test(nodeData.content || '')) ? 'text-right' : 'text-left'
+                                        })()}
+                                        className={`text-gray-700 leading-relaxed ${
+                                            (/[\u0590-\u05FF\u0600-\u06FF\u0700-\u074F]/.test(nodeData.content)) ? 'text-right' : 'text-left'
                                         }`}
                                     >
-                                        {nodeData.content}
+                                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                            {nodeData.content}
+                                        </ReactMarkdown>
                                     </div>
                                 ) : (
                                     <p className="text-gray-400 italic">No summary available for this lesson.</p>

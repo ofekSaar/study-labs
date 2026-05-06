@@ -1,5 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { CheckCircle, XCircle, ArrowRight, BrainCircuit, Loader2 } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+
+const Markdown = ({ children, className = '', inline = false }) => {
+    if (!children) return null;
+    const components = inline
+        ? { p: ({ node, ...props }) => <span {...props} /> }
+        : undefined;
+    return (
+        <div className={className}>
+            <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
+                {String(children)}
+            </ReactMarkdown>
+        </div>
+    );
+};
 
 const QuizEngine = ({ questions, onComplete }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -91,12 +107,12 @@ const QuizEngine = ({ questions, onComplete }) => {
                 </div>
 
                 {/* Question Text */}
-                <h2
-                    className="text-2xl font-display font-bold text-gray-900 mb-8 leading-relaxed"
+                <div
+                    className="text-2xl font-display font-bold text-gray-900 mb-8 leading-relaxed prose prose-slate max-w-none prose-headings:font-display prose-headings:font-bold prose-p:my-0"
                     dir={questionDirection}
                 >
-                    {currentQuestion.question}
-                </h2>
+                    <Markdown>{currentQuestion.question}</Markdown>
+                </div>
 
                 {/* Answer Area */}
                 <div className="flex-1">
@@ -104,11 +120,9 @@ const QuizEngine = ({ questions, onComplete }) => {
                         // SUMMARY CARD RENDER
                         <div className="bg-blue-50 p-6 rounded-2xl border border-blue-100">
                             <h3 className="text-xl font-bold text-studylabs-blue mb-4">Lesson Summary</h3>
-                            <div className="prose prose-blue text-gray-700 leading-relaxed">
-                                {currentQuestion.content.split('\n').map((line, i) => (
-                                    <p key={i} className="mb-2">{line}</p>
-                                ))}
-                            </div>
+                            <Markdown className="prose prose-blue max-w-none text-gray-700 leading-relaxed">
+                                {currentQuestion.content}
+                            </Markdown>
                             <div className="mt-6 flex items-center gap-3 text-sm font-medium text-blue-600 bg-white p-3 rounded-lg border border-blue-100 shadow-sm w-fit">
                                 <BrainCircuit size={18} />
                                 <span>Read this carefully before starting the quiz!</span>
@@ -145,7 +159,7 @@ const QuizEngine = ({ questions, onComplete }) => {
                                         className={baseStyle}
                                         dir={optDirection}
                                     >
-                                        <span>{opt}</span>
+                                        <Markdown inline className="prose prose-sm max-w-none prose-p:my-0 prose-code:text-sm">{opt}</Markdown>
                                         {showCorrect && <CheckCircle size={20} className="text-green-600 shrink-0 mx-2" />}
                                         {showWrong && <XCircle size={20} className="text-red-500 shrink-0 mx-2" />}
                                     </button>
@@ -180,7 +194,9 @@ const QuizEngine = ({ questions, onComplete }) => {
                         dir={isRTL(feedback.message) ? 'rtl' : 'ltr'}
                     >
                         <p className="font-bold mb-1">{feedback.isCorrect ? "Well done!" : "Keep practicing."}</p>
-                        <p>{feedback.message}</p>
+                        <Markdown className="prose prose-sm max-w-none prose-p:my-1 prose-code:text-sm">
+                            {feedback.message}
+                        </Markdown>
                     </div>
                 )}
 
