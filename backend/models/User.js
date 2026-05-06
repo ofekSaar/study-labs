@@ -28,6 +28,12 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    roles: {
+      type: [String],
+      enum: ['student', 'instructor'],
+      default: [],
+    },
+    // Keep for backward compatibility, maps to primary role
     role: {
       type: String,
       enum: ['student', 'instructor', null],

@@ -71,13 +71,41 @@ const StudentLayout = ({ children, title }) => {
                 {/* Quick Actions Footer */}
                 <div className="p-4 pb-10 border-t border-gray-100 bg-gray-50/50">
                     <div className="px-4 py-3 mb-2 flex items-center gap-3">
-                        <img src={user?.avatar} alt="Avatar" className="w-8 h-8 rounded-full bg-gray-200" />
+                        {user?.avatar ? (
+                            <img
+                                src={user.avatar}
+                                alt="Avatar"
+                                className="w-8 h-8 rounded-full bg-gray-200 object-cover"
+                                onError={(e) => {
+                                    e.target.style.display = 'none';
+                                    e.target.nextSibling.style.display = 'flex';
+                                }}
+                            />
+                        ) : null}
+                        <div
+                            className="w-8 h-8 rounded-full bg-studylabs-blue flex items-center justify-center text-white font-bold text-sm"
+                            style={{ display: user?.avatar ? 'none' : 'flex' }}
+                        >
+                            {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+                        </div>
                         <div>
                             <p className="text-sm font-bold text-gray-900 leading-tight">{user?.name}</p>
                             <p className="text-xs text-gray-500">Student</p>
                         </div>
                     </div>
                     <div className="flex flex-col gap-1">
+                        {/* Show "Switch to Instructor" if user has both roles */}
+                        {user?.roles?.includes('instructor') && (
+                            <button
+                                onClick={() => navigate('/instructor')}
+                                className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-purple-600 hover:bg-purple-50 transition-all text-sm font-medium"
+                            >
+                                <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                                </svg>
+                                <span>Switch to Instructor</span>
+                            </button>
+                        )}
                         <button className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-gray-500 hover:bg-white hover:shadow-sm transition-all text-sm font-medium">
                             <Settings size={18} />
                             <span>Settings</span>
@@ -91,7 +119,7 @@ const StudentLayout = ({ children, title }) => {
             </aside>
 
             {/* Main Content Area */}
-            <div className="flex-1 flex flex-col min-w-0 bg-white relative">
+            <div className="flex-1 flex flex-col min-w-0 bg-gray-50 relative">
                 {/* Mobile Header */}
                 <header className="md:hidden px-6 py-4 flex items-center justify-between bg-white sticky top-0 z-20 border-b border-gray-100">
                     <div className="flex items-center gap-2">

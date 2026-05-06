@@ -41,23 +41,44 @@ export const getMe = async (req, res) => {
 
 /**
  * Set user role (first-time login flow).
+ * Now supports multiple roles - user can be both student and instructor.
  */
 export const setRole = async (req, res, next) => {
   try {
-    const { role } = req.body;
+    const { role, roles } = req.body;
 
-    if (!['student', 'instructor'].includes(role)) {
-      throw createError(400, 'Invalid role. Must be "student" or "instructor".');
+    // Support both single role and multiple roles
+    let rolesToSet = [];
+    if (roles && Array.isArray(roles)) {
+      rolesToSet = roles;
+    } else if (role) {
+      rolesToSet = [role];
     }
 
-    // Only allow setting role if not already set
-    if (req.user.role) {
-      throw createError(400, 'Role already set. Cannot change role.');
+    // Validate roles
+    const validRoles = ['student', 'instructor'];
+    const invalidRoles = rolesToSet.filter(r => !validRoles.includes(r));
+    if (invalidRoles.length > 0) {
+      throw createError(400, `Invalid role(s): ${invalidRoles.join(', ')}. Must be "student" or "instructor".`);
     }
+
+    if (rolesToSet.length === 0) {
+      throw createError(400, 'At least one role must be provided.');
+    }
+
+    // Get unique roles
+    const uniqueRoles = [...new Set(rolesToSet)];
+
+    // Determine primary role (for backward compatibility)
+    // Priority: instructor > student
+    const primaryRole = uniqueRoles.includes('instructor') ? 'instructor' : 'student';
 
     const user = await User.findByIdAndUpdate(
       req.user._id,
-      { role },
+      {
+        roles: uniqueRoles,
+        role: primaryRole
+      },
       { new: true }
     );
 

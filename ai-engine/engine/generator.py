@@ -91,6 +91,13 @@ def parse_syllabus(syllabus_text: str, syllabus_name: str = "Unknown") -> Course
                 prompt_template_str="""
                 Extract a highly detailed course structure from the following syllabus.
                 Ensure you include all major lessons, topics under each lesson, and the description of what will be taught.
+
+                IMPORTANT: Create UNIQUE and DESCRIPTIVE titles for each lesson and topic.
+                - Lesson titles should be clear, concise, and specific (e.g., "Introduction to Python Basics", "Object-Oriented Programming Fundamentals")
+                - Topic titles should be even more specific and describe the exact concept being taught (e.g., "Variables and Data Types", "List Comprehensions", "Class Inheritance")
+                - Each title MUST be different and meaningful - avoid generic names like "Topic 1", "Lesson A", or repeating the same title
+                - Use the actual concepts and terms from the syllabus content
+
                 Do NOT generate summaries or questions at this stage.
 
                 Syllabus:

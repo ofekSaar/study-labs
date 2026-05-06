@@ -32,7 +32,22 @@ const StepMaterials = () => {
 
     // --- Materials Dropzone ---
     const onDropMaterials = useCallback(acceptedFiles => {
-        const newFiles = acceptedFiles.map(file => Object.assign(file, {
+        // Filter out duplicates by checking file name and size
+        const existingFileSignatures = new Set(
+            materials.map(f => `${f.name}_${f.size}`)
+        );
+
+        const uniqueNewFiles = acceptedFiles.filter(file => {
+            const signature = `${file.name}_${file.size}`;
+            return !existingFileSignatures.has(signature);
+        });
+
+        if (uniqueNewFiles.length < acceptedFiles.length) {
+            const duplicateCount = acceptedFiles.length - uniqueNewFiles.length;
+            alert(`${duplicateCount} duplicate file(s) were skipped.`);
+        }
+
+        const newFiles = uniqueNewFiles.map(file => Object.assign(file, {
             preview: URL.createObjectURL(file)
         }));
         setValue('materials', [...materials, ...newFiles], { shouldValidate: true });
@@ -58,6 +73,18 @@ const StepMaterials = () => {
         register('syllabus', { required: 'Please upload a syllabus file' });
         register('materials'); // Optional
     }, [register]);
+
+    // Cleanup preview URLs on unmount
+    React.useEffect(() => {
+        return () => {
+            syllabus.forEach(file => {
+                if (file.preview) URL.revokeObjectURL(file.preview);
+            });
+            materials.forEach(file => {
+                if (file.preview) URL.revokeObjectURL(file.preview);
+            });
+        };
+    }, [syllabus, materials]);
 
     return (
         <div className="space-y-8 animate-fade-in">

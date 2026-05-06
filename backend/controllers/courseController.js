@@ -12,17 +12,40 @@ import { generateRoadmap } from '../services/aiService.js';
  */
 export const listCourses = async (req, res, next) => {
   try {
-    const query = req.user?.role === 'instructor' 
-      ? { instructor: req.user._id } 
-      : { isPublished: true };
+    // Check if user has roles array (multi-role support)
+    const userRoles = req.user?.roles || (req.user?.role ? [req.user.role] : []);
+    const isInstructor = userRoles.includes('instructor');
+    const isStudent = userRoles.includes('student');
+
+    // Determine query based on role and optional filter
+    // For instructors viewing their dashboard: show only their courses
+    // For students (or multi-role users browsing as students): show all published courses
+    let query;
+
+    if (isInstructor && !isStudent) {
+      // Pure instructor: show only their courses
+      query = { instructor: req.user._id };
+    } else if (isInstructor && isStudent) {
+      // Multi-role user: check which view they're in via query param
+      const view = req.query.view;
+      if (view === 'instructor') {
+        query = { instructor: req.user._id };
+      } else {
+        // Default to student view (all published courses)
+        query = { isPublished: true };
+      }
+    } else {
+      // Pure student: show all published courses
+      query = { isPublished: true };
+    }
 
     const courses = await Course.find(query)
       .populate('instructor', 'name email avatar')
       .select('-materials')
       .sort({ createdAt: -1 });
 
-    // If student, include enrollment status
-    if (req.user?.role === 'student') {
+    // If user has student role, include enrollment status for all courses
+    if (isStudent) {
       const enrollments = await Enrollment.find({
         student: req.user._id,
         course: { $in: courses.map((c) => c._id) },
@@ -97,9 +120,20 @@ export const createCourse = async (req, res, next) => {
       throw createError(400, 'Syllabus is required');
     }
 
-    // Process other materials
+    // Process other materials (filter duplicates by name and size)
     if (req.files && req.files.materials && req.files.materials.length > 0) {
+      const seenFiles = new Set();
+
       for (const file of req.files.materials) {
+        const fileSignature = `${file.originalname}_${file.size}`;
+
+        // Skip duplicate files
+        if (seenFiles.has(fileSignature)) {
+          console.log(`[Course Upload] Skipping duplicate file: ${file.originalname}`);
+          continue;
+        }
+
+        seenFiles.add(fileSignature);
         const result = await storage.upload(file, 'materials');
         materialsData.push({
           filename: result.filename,
@@ -297,8 +331,11 @@ export const getCourseNodes = async (req, res, next) => {
 
     let nodesWithStatus = nodes.map((n) => n.toObject());
 
-    // If student, include progress status per node
-    if (req.user.role === 'student') {
+    // If user has student role (check roles array for multi-role support), include progress status per node
+    const userRoles = req.user?.roles || (req.user?.role ? [req.user.role] : []);
+    const isStudent = userRoles.includes('student');
+
+    if (isStudent) {
       const progress = await Progress.findOne({
         student: req.user._id,
         course: req.params.id,

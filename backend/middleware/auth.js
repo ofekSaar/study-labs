@@ -4,6 +4,7 @@ import User from '../models/User.js';
 
 /**
  * Verifies JWT from Authorization header and attaches user to req.
+ * Always fetches fresh user data from database to get latest roles.
  */
 export const authenticate = async (req, res, next) => {
   try {
@@ -16,11 +17,13 @@ export const authenticate = async (req, res, next) => {
     const token = authHeader.split(' ')[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
+    // Fetch fresh user data from database (includes latest roles)
     const user = await User.findById(decoded.userId).select('-__v');
     if (!user) {
       throw createError(401, 'User not found. Token may be invalid.');
     }
 
+    // Use fresh database data (not token data) for roles
     req.user = user;
     next();
   } catch (error) {
@@ -37,7 +40,8 @@ export const authenticate = async (req, res, next) => {
 /**
  * Checks if the authenticated user has one of the allowed roles.
  * Must be used AFTER authenticate middleware.
- * 
+ * Now supports users with multiple roles - checks both 'role' and 'roles' array.
+ *
  * @param  {...string} roles - Allowed roles (e.g., 'student', 'instructor')
  */
 export const authorize = (...roles) => {
@@ -46,11 +50,18 @@ export const authorize = (...roles) => {
       return next(createError(401, 'Authentication required.'));
     }
 
-    if (!req.user.role) {
+    // Check if user has any role set (backward compatible)
+    const hasRole = req.user.role || (req.user.roles && req.user.roles.length > 0);
+    if (!hasRole) {
       return next(createError(403, 'Please select a role before accessing this resource.'));
     }
 
-    if (!roles.includes(req.user.role)) {
+    // Check if user has at least one of the required roles
+    // Support both single role (backward compat) and multiple roles (new)
+    const userRoles = req.user.roles || (req.user.role ? [req.user.role] : []);
+    const hasRequiredRole = userRoles.some(userRole => roles.includes(userRole));
+
+    if (!hasRequiredRole) {
       return next(
         createError(403, `Access denied. Required role: ${roles.join(' or ')}.`)
       );
@@ -62,10 +73,15 @@ export const authorize = (...roles) => {
 
 /**
  * Generates a JWT token for the given user.
+ * Includes both role (primary) and roles array (multi-role support).
  */
 export const generateToken = (user) => {
   return jwt.sign(
-    { userId: user._id, role: user.role },
+    {
+      userId: user._id,
+      role: user.role,
+      roles: user.roles || (user.role ? [user.role] : [])
+    },
     process.env.JWT_SECRET,
     { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
   );

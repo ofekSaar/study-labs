@@ -1,7 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { Lock, Star, Check } from 'lucide-react';
 
-const MapNode = ({ status, x, y, label, onClick }) => {
+const MapNode = ({ status, x, y, label, onClick, index }) => {
     const getStyles = () => {
         switch (status) {
             case 'completed':
@@ -14,15 +13,6 @@ const MapNode = ({ status, x, y, label, onClick }) => {
         }
     };
 
-    const getIcon = () => {
-        switch (status) {
-            case 'completed': return <Check size={20} strokeWidth={3} />;
-            case 'active': return <Star size={20} fill="currentColor" />;
-            case 'locked':
-            default: return <Lock size={18} />;
-        }
-    };
-
     return (
         <div
             className="absolute flex flex-col items-center gap-2 transform -translate-x-1/2 -translate-y-1/2 z-10"
@@ -31,21 +21,12 @@ const MapNode = ({ status, x, y, label, onClick }) => {
             <button
                 onClick={onClick}
                 disabled={status === 'locked'}
-                className={`w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 ${getStyles()}`}
+                className={`w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 font-bold text-lg ${getStyles()}`}
             >
-                {getIcon()}
+                {index + 1}
             </button>
 
-            {/* Stars */}
-            {status === 'completed' && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 flex gap-0.5 pointer-events-none">
-                    {[1, 2, 3].map(i => (
-                        <Star key={i} size={10} className="fill-yellow-400 text-yellow-500" />
-                    ))}
-                </div>
-            )}
-
-            <span className={`text-xs font-bold px-2 py-1 rounded bg-black/40 backdrop-blur-sm text-white max-w-[120px] text-center ${status === 'locked' ? 'opacity-50' : 'opacity-100'}`}>
+            <span className={`text-xs font-bold px-2 py-1 rounded bg-white/90 backdrop-blur-sm text-gray-700 max-w-[120px] text-center shadow-sm ${status === 'locked' ? 'opacity-50' : 'opacity-100'}`}>
                 {label}
             </span>
         </div>
@@ -131,7 +112,7 @@ const GameMapComponent = ({ nodes }) => {
 
     return (
         <div
-            className="relative w-full overflow-hidden bg-map-bg rounded-3xl shadow-inner border-4 border-studylabs-dark/20"
+            className="relative w-full overflow-hidden bg-gray-50 rounded-3xl shadow-sm border border-gray-200"
             style={{ height: '600px' }} // Visible viewport height
         >
             <div
@@ -159,6 +140,7 @@ const GameMapComponent = ({ nodes }) => {
                             {...node}
                             x={node.px}
                             y={node.py}
+                            index={index}
                         />
                     ))}
                 </div>

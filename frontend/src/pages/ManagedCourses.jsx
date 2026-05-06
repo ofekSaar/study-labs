@@ -2,20 +2,35 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import InstructorLayout from '../components/layout/InstructorLayout';
 import useCourseStore from '../store/courseStore';
-import { Search, BookOpen, Clock, Users, ArrowRight, Loader2, AlertCircle } from 'lucide-react';
+import { Search, BookOpen, Clock, Users, ArrowRight, Loader2, AlertCircle, Trash2 } from 'lucide-react';
 
 const ManagedCourses = () => {
     const navigate = useNavigate();
-    const { courses, fetchAllCourses, isLoading } = useCourseStore();
+    const { courses, fetchAllCourses, deleteCourse, isLoading } = useCourseStore();
     const [searchTerm, setSearchTerm] = useState('');
+    const [deletingId, setDeletingId] = useState(null);
 
     useEffect(() => {
         fetchAllCourses();
     }, [fetchAllCourses]);
 
+    const handleDelete = async (courseId, courseTitle) => {
+        if (!window.confirm(`Are you sure you want to delete "${courseTitle}"? This action cannot be undone.`)) {
+            return;
+        }
+        setDeletingId(courseId);
+        try {
+            await deleteCourse(courseId);
+        } catch (error) {
+            alert('Failed to delete course: ' + (error.message || 'Unknown error'));
+        } finally {
+            setDeletingId(null);
+        }
+    };
+
     // Filter courses based on search term
-    const filteredCourses = courses.filter(course => 
-        course.title?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    const filteredCourses = courses.filter(course =>
+        course.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         course.department?.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
@@ -98,12 +113,27 @@ const ManagedCourses = () => {
                                                 <span className="uppercase">{course.department || 'Other'}</span>
                                             </div>
                                         </div>
-                                        <button
-                                            onClick={() => navigate(`/instructor/course/${course.id}`)}
-                                            className="w-8 h-8 bg-gray-50 hover:bg-studylabs-blue hover:text-white text-gray-400 rounded-full flex items-center justify-center transition"
-                                        >
-                                            <ArrowRight size={16} />
-                                        </button>
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                onClick={() => handleDelete(course.id, course.title)}
+                                                disabled={deletingId === course.id}
+                                                className="w-8 h-8 bg-red-50 hover:bg-red-100 text-red-600 rounded-full flex items-center justify-center transition disabled:opacity-50"
+                                                title="Delete course"
+                                            >
+                                                {deletingId === course.id ? (
+                                                    <Loader2 size={16} className="animate-spin" />
+                                                ) : (
+                                                    <Trash2 size={16} />
+                                                )}
+                                            </button>
+                                            <button
+                                                onClick={() => navigate(`/instructor/course/${course.id}`)}
+                                                className="w-8 h-8 bg-gray-50 hover:bg-studylabs-blue hover:text-white text-gray-400 rounded-full flex items-center justify-center transition"
+                                                title="View course"
+                                            >
+                                                <ArrowRight size={16} />
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

@@ -43,10 +43,31 @@ export const requestEnrollment = async (req, res, next) => {
       }
     }
 
+    // Auto-approve if student is also the course instructor
+    const isInstructor = course.instructor.toString() === req.user._id.toString();
+
     const enrollment = await Enrollment.create({
       student: req.user._id,
       course: courseId,
+      status: isInstructor ? 'approved' : 'pending',
+      respondedAt: isInstructor ? new Date() : null,
     });
+
+    // If auto-approved, create initial progress record
+    if (isInstructor) {
+      const firstNode = await CourseNode.findOne({
+        course: courseId,
+      }).sort({ order: 1 });
+
+      await Progress.create({
+        student: req.user._id,
+        course: courseId,
+        currentNode: firstNode?._id || null,
+        completedNodes: [],
+        totalXP: 0,
+        streak: 0,
+      });
+    }
 
     const populated = await Enrollment.findById(enrollment._id)
       .populate('course', 'title color level')

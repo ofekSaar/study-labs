@@ -75,7 +75,7 @@ const QuizEngine = ({ questions, onComplete }) => {
             <div className="h-2 bg-gray-100">
                 <div
                     className="h-full bg-studylabs-blue transition-all duration-500"
-                    style={{ width: `${((currentIndex) / questions.length) * 100}%` }}
+                    style={{ width: `${((currentIndex + 1) / questions.length) * 100}%` }}
                 />
             </div>
 

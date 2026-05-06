@@ -26,14 +26,29 @@ const CourseMap = () => {
         loadNodes();
     }, [courseId, fetchCourseNodes]);
 
+    // Refresh nodes when window regains focus (user comes back from lesson)
+    useEffect(() => {
+        const handleFocus = () => {
+            if (courseId && !localLoading) {
+                fetchCourseNodes(courseId);
+            }
+        };
+        window.addEventListener('focus', handleFocus);
+        return () => window.removeEventListener('focus', handleFocus);
+    }, [courseId, localLoading, fetchCourseNodes]);
+
     const course = courses.find(c => c.id === courseId || c._id === courseId);
 
     // Auto-poll while roadmap is still generating
     useEffect(() => {
-        const hasNodes = course?.nodes && course.nodes.length > 0;
-        const isFailed = course?.generationStatus === 'failed';
-        
-        if (hasNodes || isFailed || localLoading) return; // No need to poll
+        if (!course) return;
+
+        const hasNodes = course.nodes && course.nodes.length > 0;
+        const isFailed = course.generationStatus === 'failed';
+        const isReady = course.generationStatus === 'ready';
+
+        // Only poll if course exists, has no nodes yet, and hasn't failed or completed
+        if (hasNodes || isFailed || isReady || localLoading) return;
 
         const interval = setInterval(async () => {
             console.log('[CourseMap] Polling for nodes...');
@@ -41,22 +56,32 @@ const CourseMap = () => {
         }, 10000); // Poll every 10 seconds
 
         return () => clearInterval(interval);
-    }, [courseId, course?.nodes?.length, course?.generationStatus, localLoading, fetchCourseNodes]);
+    }, [courseId, course, localLoading, fetchCourseNodes]);
     
     // Map backend status to frontend map statuses
-    const nodes = (course?.nodes || []).map(node => ({
-        ...node,
-        label: node.title,
-        status: role === 'instructor' ? 'completed' : (node.status === 'current' ? 'active' : (node.status || 'locked')),
-        onClick: () => {
-            if (node.type === 'quiz' || node.type === 'lesson') {
-                navigate(`/course/${courseId}/lesson/${node._id}`);
-            } else {
-                // Future: open other node types
-                console.log("Opening node:", node.title);
-            }
+    const nodes = (course?.nodes || []).map((node, index) => {
+        // Create descriptive label based on type
+        let label = node.title;
+
+        // If title is too generic or empty, use type prefix
+        if (!label || label.trim().length === 0) {
+            label = `${node.type.charAt(0).toUpperCase() + node.type.slice(1)} ${index + 1}`;
         }
-    }));
+
+        return {
+            ...node,
+            label,
+            status: role === 'instructor' ? 'completed' : (node.status === 'current' ? 'active' : (node.status || 'locked')),
+            onClick: () => {
+                if (node.type === 'quiz' || node.type === 'lesson') {
+                    navigate(`/course/${courseId}/lesson/${node._id}`);
+                } else {
+                    // Future: open other node types
+                    console.log("Opening node:", node.title);
+                }
+            }
+        };
+    });
 
     if (localLoading || storeLoading) {
         return (
@@ -84,13 +109,13 @@ const CourseMap = () => {
 
     return (
         <Layout title={course.title}>
-            <div className="min-h-screen md:min-h-0 bg-studylabs-blue md:bg-transparent md:text-gray-900">
+            <div className="min-h-screen md:min-h-0 bg-gray-50 text-gray-900">
 
                 {/* Mobile-only Course Header */}
-                <div className="md:hidden px-6 py-6 flex items-center justify-between text-white">
+                <div className="md:hidden px-6 py-6 flex items-center justify-between bg-white border-b border-gray-100">
                     <button
                         onClick={() => navigate(-1)}
-                        className="w-10 h-10 bg-white/20 backdrop-blur rounded-full flex items-center justify-center hover:bg-white/30 transition"
+                        className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition"
                     >
                         <ChevronLeft size={24} />
                     </button>
@@ -99,13 +124,18 @@ const CourseMap = () => {
                 </div>
 
                 {/* Content Container */}
-                <div className="bg-studylabs-blue md:bg-white md:rounded-3xl md:p-8 md:shadow-sm">
+                <div className="bg-white md:rounded-3xl md:p-8 md:shadow-sm md:mx-6 md:my-6">
 
                     {/* Streak Banner */}
                     <div className="flex justify-center mb-6">
-                        <div className="bg-accent-yellow/20 backdrop-blur-md md:bg-orange-50 px-6 py-2 rounded-full border border-accent-yellow/50 md:border-orange-100 flex items-center gap-2">
+                        <div className="bg-accent-yellow/20 backdrop-blur-md md:bg-orange-50 px-6 py-2 rounded-full border border-accent-yellow/50 md:border-orange-100 flex items-center gap-3">
                             <span className="text-accent-yellow md:text-orange-600 font-bold">Learning Path</span>
                             <span className="text-2xl">🗺️</span>
+                            {role === 'student' && nodes.length > 0 && (
+                                <span className="text-accent-yellow md:text-orange-600 font-bold text-sm">
+                                    {nodes.filter(n => n.status === 'completed').length}/{nodes.length}
+                                </span>
+                            )}
                         </div>
                     </div>
 
