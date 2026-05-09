@@ -19,7 +19,7 @@ load_dotenv()
 
 # ── Rate Limiting ────────────────────────────────────────
 # Max concurrent API calls to avoid 429 errors
-MAX_CONCURRENT_CALLS = int(os.environ.get("MAX_CONCURRENT_AI_CALLS", "3"))
+MAX_CONCURRENT_CALLS = int(os.environ.get("MAX_CONCURRENT_AI_CALLS", "15"))
 _api_semaphore = asyncio.Semaphore(MAX_CONCURRENT_CALLS)
 
 async def retry_with_backoff(coro_fn, max_retries=3, base_delay=2.0):
@@ -171,6 +171,7 @@ async def generate_questions_for_topic(topic: Topic) -> List[Question]:
         "Topic: {topic_title}\n"
         "Material content:\n"
         "{matched_content}\n"
+        "IMPORTANT: Use LaTeX for any mathematical formulas or equations (e.g., $E=mc^2$ for inline or $$...$$ for blocks). "
         "IMPORTANT: You must output strictly valid JSON. Properly escape all internal quotes, backslashes, and newlines so the parser does not fail."
     )
     
@@ -224,7 +225,8 @@ async def generate_summary_for_topic(topic: Topic) -> str:
         "Material content:\n"
         f"{matched_content}\n"
         "Generate a concise but comprehensive study summary in Markdown format. "
-        "Include key concepts, definitions, and important points."
+        "Include key concepts, definitions, and important points. "
+        "IMPORTANT: Use LaTeX for any mathematical formulas or equations (e.g., $E=mc^2$ for inline or $$...$$ for blocks)."
     )
     
     for provider_name, llm_instance in LLMS:
