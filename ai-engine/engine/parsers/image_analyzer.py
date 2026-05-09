@@ -63,7 +63,8 @@ async def analyze_image(image_bytes: bytes, context: str = "") -> Optional[str]:
             "relationships, and any key takeaways. "
             "If it's a chart/graph, describe the axes, values, and trends. "
             "If it's a diagram, describe the structure and connections. "
-            "Keep the description concise but comprehensive (2-4 sentences)."
+            "Keep the description concise but comprehensive (2-4 sentences). "
+            "Use Markdown for formatting and LaTeX for any math symbols or formulas ($...$)."
         )
 
         context_note = f"\nDocument context: {context}" if context else ""
