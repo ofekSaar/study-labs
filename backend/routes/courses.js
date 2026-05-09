@@ -21,12 +21,14 @@ const upload = multer({
     const allowed = [
       'application/pdf', 
       'video/mp4',
-      'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     ];
     if (allowed.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error('Only PDF, PPTX and MP4 files are allowed'), false);
+      cb(new Error('Only PDF, PPTX, DOCX, XLSX and MP4 files are allowed'), false);
     }
   },
 });

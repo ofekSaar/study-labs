@@ -35,7 +35,7 @@ const router = Router();
  *       404:
  *         description: Node not found
  */
-router.get('/node/:nodeId', authenticate, authorize('student'), getQuizQuestions);
+router.get('/node/:nodeId', authenticate, authorize('student', 'instructor'), getQuizQuestions);
 
 /**
  * @swagger
@@ -95,7 +95,7 @@ router.get('/node/:nodeId', authenticate, authorize('student'), getQuizQuestions
 router.post(
   '/submit',
   authenticate,
-  authorize('student'),
+  authorize('student', 'instructor'),
   [
     body('nodeId').notEmpty().withMessage('Node ID is required'),
     body('answers').isArray().withMessage('Answers must be an array'),

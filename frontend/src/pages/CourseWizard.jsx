@@ -86,6 +86,9 @@ const CourseWizard = () => {
                 });
             }
 
+            // Append image analysis preference
+            formData.append('analyzeImages', data.analyzeImages ? 'true' : 'false');
+
             await api.upload('/api/courses', formData);
             
             setIsProcessing(false);

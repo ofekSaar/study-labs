@@ -116,7 +116,7 @@ router.get('/course/:courseId', authenticate, authorize('student'), getCoursePro
 router.post(
   '/complete-node',
   authenticate,
-  authorize('student'),
+  authorize('student', 'instructor'),
   [
     body('courseId').notEmpty().withMessage('Course ID is required'),
     body('nodeId').notEmpty().withMessage('Node ID is required'),
