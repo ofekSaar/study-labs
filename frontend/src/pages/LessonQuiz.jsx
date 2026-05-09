@@ -3,8 +3,7 @@ import StudentLayout from '../components/layout/StudentLayout';
 import QuizEngine from '../components/quiz/QuizEngine';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ChevronLeft, BookOpen, GraduationCap, ArrowRight } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
+import ContentRenderer from '../components/common/ContentRenderer';
 import api from '../utils/api';
 import useCourseStore from '../store/courseStore';
 
@@ -104,7 +103,7 @@ const LessonQuiz = () => {
                             <ChevronLeft size={24} />
                         </button>
                         <div>
-                            <h1 className="font-bold text-gray-900">{nodeData?.title || "Lesson Summary"}</h1>
+                            <h1 className="font-bold text-gray-900" dir="auto">{nodeData?.title || "Lesson Summary"}</h1>
                             <p className="text-xs text-gray-400">Read the summary carefully before the quiz</p>
                         </div>
                     </div>
@@ -120,19 +119,7 @@ const LessonQuiz = () => {
                             
                             <div className="p-8 md:p-10 prose prose-slate max-w-none">
                                 {nodeData?.content ? (
-                                    <div
-                                        dir={(() => {
-                                            const rtlChar = /[\u0590-\u05FF\u0600-\u06FF\u0700-\u074F]/;
-                                            return rtlChar.test(nodeData.content) ? 'rtl' : 'ltr';
-                                        })()}
-                                        className={`text-gray-700 leading-relaxed ${
-                                            (/[\u0590-\u05FF\u0600-\u06FF\u0700-\u074F]/.test(nodeData.content)) ? 'text-right' : 'text-left'
-                                        }`}
-                                    >
-                                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                                            {nodeData.content}
-                                        </ReactMarkdown>
-                                    </div>
+                                    <ContentRenderer content={nodeData.content} className="text-gray-700 leading-relaxed" />
                                 ) : (
                                     <p className="text-gray-400 italic">No summary available for this lesson.</p>
                                 )}

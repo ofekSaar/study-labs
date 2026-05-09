@@ -1,21 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { CheckCircle, XCircle, ArrowRight, BrainCircuit, Loader2 } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-
-const Markdown = ({ children, className = '', inline = false }) => {
-    if (!children) return null;
-    const components = inline
-        ? { p: ({ node, ...props }) => <span {...props} /> }
-        : undefined;
-    return (
-        <div className={className}>
-            <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
-                {String(children)}
-            </ReactMarkdown>
-        </div>
-    );
-};
+import ContentRenderer from '../common/ContentRenderer';
+import { isRTL } from '../../utils/rtl';
 
 const QuizEngine = ({ questions, onComplete }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -31,12 +17,7 @@ const QuizEngine = ({ questions, onComplete }) => {
     const isOpenQuestion = currentQuestion.type === 'open';
 
     // Helper to detect RTL language (Hebrew/Arabic)
-    const isRTL = (text) => {
-        const rtlChar = /[\u0590-\u05FF\u0600-\u06FF\u0700-\u074F]/;
-        return rtlChar.test(text);
-    };
 
-    const questionDirection = isRTL(currentQuestion.question) ? 'rtl' : 'ltr';
 
     const handleMCQSubmit = () => {
         if (selectedOption === null) return;
@@ -109,9 +90,8 @@ const QuizEngine = ({ questions, onComplete }) => {
                 {/* Question Text */}
                 <div
                     className="text-2xl font-display font-bold text-gray-900 mb-8 leading-relaxed prose prose-slate max-w-none prose-headings:font-display prose-headings:font-bold prose-p:my-0"
-                    dir={questionDirection}
                 >
-                    <Markdown>{currentQuestion.question}</Markdown>
+                    <ContentRenderer content={currentQuestion.question} />
                 </div>
 
                 {/* Answer Area */}
@@ -120,9 +100,7 @@ const QuizEngine = ({ questions, onComplete }) => {
                         // SUMMARY CARD RENDER
                         <div className="bg-blue-50 p-6 rounded-2xl border border-blue-100">
                             <h3 className="text-xl font-bold text-studylabs-blue mb-4">Lesson Summary</h3>
-                            <Markdown className="prose prose-blue max-w-none text-gray-700 leading-relaxed">
-                                {currentQuestion.content}
-                            </Markdown>
+                            <ContentRenderer content={currentQuestion.content} className="prose prose-blue max-w-none text-gray-700 leading-relaxed" />
                             <div className="mt-6 flex items-center gap-3 text-sm font-medium text-blue-600 bg-white p-3 rounded-lg border border-blue-100 shadow-sm w-fit">
                                 <BrainCircuit size={18} />
                                 <span>Read this carefully before starting the quiz!</span>
@@ -157,9 +135,9 @@ const QuizEngine = ({ questions, onComplete }) => {
                                         onClick={() => !isSubmitted && setSelectedOption(idx)}
                                         disabled={isSubmitted}
                                         className={baseStyle}
-                                        dir={optDirection}
+                                        dir="auto"
                                     >
-                                        <Markdown inline className="prose prose-sm max-w-none prose-p:my-0 prose-code:text-sm">{opt}</Markdown>
+                                        <ContentRenderer inline content={opt} className="prose prose-sm max-w-none prose-p:my-0 prose-code:text-sm" />
                                         {showCorrect && <CheckCircle size={20} className="text-green-600 shrink-0 mx-2" />}
                                         {showWrong && <XCircle size={20} className="text-red-500 shrink-0 mx-2" />}
                                     </button>
@@ -191,12 +169,9 @@ const QuizEngine = ({ questions, onComplete }) => {
                 {feedback && (
                     <div
                         className={`mt-6 p-4 rounded-xl ${feedback.isCorrect ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'} animate-fade-in`}
-                        dir={isRTL(feedback.message) ? 'rtl' : 'ltr'}
                     >
                         <p className="font-bold mb-1">{feedback.isCorrect ? "Well done!" : "Keep practicing."}</p>
-                        <Markdown className="prose prose-sm max-w-none prose-p:my-1 prose-code:text-sm">
-                            {feedback.message}
-                        </Markdown>
+                        <ContentRenderer content={feedback.message} className="prose prose-sm max-w-none prose-p:my-1 prose-code:text-sm" />
                     </div>
                 )}
 

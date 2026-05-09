@@ -18,3 +18,29 @@
 body {
     @apply bg-gray-50 text-gray-900 font-sans antialiased;
 }
+
+/* RTL Support */
+[dir="rtl"] .prose, 
+.rtl-content .prose,
+.prose[dir="rtl"] {
+    text-align: right;
+}
+
+[dir="auto"] {
+    text-align: start;
+}
+
+.rtl-content {
+    direction: rtl;
+    text-align: right;
+}
+
+.ltr-content {
+    direction: ltr;
+    text-align: left;
+}
+
+/* Katex adjustments */
+.katex-display {
+    @apply my-4 overflow-x-auto overflow-y-hidden;
+}

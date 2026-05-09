@@ -53,7 +53,7 @@ const CourseMap = () => {
         const interval = setInterval(async () => {
             console.log('[CourseMap] Polling for nodes...');
             await fetchCourseNodes(courseId);
-        }, 10000); // Poll every 10 seconds
+        }, 3000); // Poll every 3 seconds
 
         return () => clearInterval(interval);
     }, [courseId, course, localLoading, fetchCourseNodes]);
@@ -152,8 +152,10 @@ const CourseMap = () => {
                         ) : (
                             <div className="text-center py-20 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
                                 <Loader2 className="w-8 h-8 animate-spin text-studylabs-blue mx-auto mb-4" />
-                                <p className="text-gray-500 font-bold">AI is generating your roadmap...</p>
-                                <p className="text-xs text-gray-400 mt-2">This usually takes 3-5 minutes. The page will refresh automatically.</p>
+                                <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">Current Status</p>
+                                <p className="text-sm font-medium text-studylabs-blue animate-pulse">
+                                    {course?.generationProgress || 'AI is generating your roadmap...'}
+                                </p>
                             </div>
                         )}
                     </div>
