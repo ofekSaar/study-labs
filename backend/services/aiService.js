@@ -27,6 +27,7 @@ export const generateRoadmap = async ({
   syllabus,
   materials,
   aiConfig,
+  analyzeImages = false,
 }) => {
   if (!syllabus) {
     throw new Error('Syllabus is required for course generation.');
@@ -41,6 +42,7 @@ export const generateRoadmap = async ({
   console.log(`[AI Service] Sending course generation request for Course ID: ${courseId}`);
   console.log(`[AI Service] Syllabus: ${syllabusPath}`);
   console.log(`[AI Service] Materials: ${materialsPaths.length} files attached.`);
+  console.log(`[AI Service] Image Analysis: ${analyzeImages ? 'ENABLED' : 'DISABLED'}`);
 
   // We use the native http module here instead of fetch() to bypass the strict 
   // 5-minute (300s) idle timeout built into Node 18+ fetch implementation.
@@ -51,7 +53,8 @@ export const generateRoadmap = async ({
   const postData = JSON.stringify({ 
     courseId, 
     syllabusPath, 
-    materialsPaths 
+    materialsPaths,
+    analyzeImages
   });
 
   const options = {

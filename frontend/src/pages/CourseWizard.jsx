@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import InstructorLayout from '../components/layout/InstructorLayout';
 import { useForm, FormProvider } from 'react-hook-form';
 import { ChevronRight, ChevronLeft, Check, Loader2 } from 'lucide-react';
@@ -32,6 +32,8 @@ const CourseWizard = () => {
     const [currentStep, setCurrentStep] = useState(0);
     const [isProcessing, setIsProcessing] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
+    const [createdCourseId, setCreatedCourseId] = useState(null);
+    const [generationProgress, setGenerationProgress] = useState('Initializing AI Engine...');
     const navigate = useNavigate();
 
     const StepComponent = steps[currentStep].component;
@@ -86,15 +88,52 @@ const CourseWizard = () => {
                 });
             }
 
-            await api.upload('/api/courses', formData);
+            // Append image analysis preference
+            formData.append('analyzeImages', data.analyzeImages ? 'true' : 'false');
+
+            const res = await api.upload('/api/courses', formData);
             
             setIsProcessing(false);
+            if (res.data && res.data.course && res.data.course._id) {
+                setCreatedCourseId(res.data.course._id);
+            }
             setIsSuccess(true);
         } catch (error) {
             alert(error.message || "Failed to create course");
             setIsProcessing(false);
         }
     };
+
+    // Polling effect for generation progress
+    useEffect(() => {
+        let interval;
+        if (isSuccess && createdCourseId) {
+            interval = setInterval(async () => {
+                try {
+                    const res = await api.get(`/api/courses/${createdCourseId}`);
+                    const course = res.data.course;
+                    
+                    if (course.generationProgress) {
+                        setGenerationProgress(course.generationProgress);
+                    }
+                    
+                    if (course.generationStatus === 'ready') {
+                        clearInterval(interval);
+                        navigate('/instructor');
+                    } else if (course.generationStatus === 'failed') {
+                        clearInterval(interval);
+                        alert("AI generation failed. Please try again.");
+                        navigate('/instructor');
+                    }
+                } catch (err) {
+                    console.error("Failed to poll course status:", err);
+                }
+            }, 2000);
+        }
+        return () => {
+            if (interval) clearInterval(interval);
+        };
+    }, [isSuccess, createdCourseId, navigate]);
 
     if (isSuccess) {
         return (
@@ -103,15 +142,24 @@ const CourseWizard = () => {
                     <div className="w-24 h-24 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-6">
                         <Check size={48} />
                     </div>
-                    <h2 className="text-3xl font-display font-bold text-gray-900 mb-2">Course Created!</h2>
-                    <p className="text-gray-500 max-w-md mb-8">
+                    <h2 className="text-3xl font-display font-bold text-gray-900 mb-2">Generating Course!</h2>
+                    <p className="text-gray-500 max-w-md mb-4">
                         Our AI is now processing your materials and generating the learning map. This usually takes about 2-3 minutes.
                     </p>
+                    <div className="w-full max-w-md bg-white p-4 rounded-xl border border-blue-100 shadow-sm flex items-center gap-4 mb-8 text-left">
+                        <Loader2 size={24} className="text-studylabs-blue animate-spin shrink-0" />
+                        <div className="flex-1 overflow-hidden">
+                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">Current Status</p>
+                            <p className="text-sm font-medium text-studylabs-blue truncate animate-pulse">
+                                {generationProgress}
+                            </p>
+                        </div>
+                    </div>
                     <button
                         onClick={() => navigate('/instructor')}
-                        className="bg-studylabs-blue text-white px-8 py-3 rounded-xl font-bold hover:bg-studylabs-dark transition"
+                        className="bg-gray-100 text-gray-600 px-8 py-3 rounded-xl font-bold hover:bg-gray-200 transition"
                     >
-                        Back to Dashboard
+                        Run in Background
                     </button>
                 </div>
             </InstructorLayout>

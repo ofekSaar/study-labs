@@ -82,6 +82,10 @@ const courseSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    generationProgress: {
+      type: String,
+      default: 'Initializing AI Engine...',
+    },
     isPublished: {
       type: Boolean,
       default: false,

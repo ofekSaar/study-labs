@@ -2,8 +2,9 @@ from fastapi import FastAPI, HTTPException, Request
 from pydantic import BaseModel
 from typing import List, Optional
 import os
-from engine.db import get_db_handle, save_course_to_db, save_to_staging
-from engine.ocr import extract_text_from_bytes
+from engine.db import get_db_handle, save_course_to_db, update_course_progress, save_to_staging
+from engine.ocr import extract_text_from_bytes, extract_with_images
+from engine.parsers.image_analyzer import analyze_images
 from engine.generator import create_course_pipeline, evaluate_answer
 from bson import ObjectId
 import logging
@@ -26,6 +27,7 @@ class GenerateCourseRequest(BaseModel):
     courseId: str
     syllabusPath: str
     materialsPaths: List[str]
+    analyzeImages: Optional[bool] = False
 
 class EvaluateAnswerRequest(BaseModel):
     question: str
@@ -86,14 +88,18 @@ async def generate_course(request: GenerateCourseRequest, req: Request):
             
         # 1. Parse Syllabus
         logger.info(f"Parsing syllabus file: {request.syllabusPath}")
+        update_course_progress(request.courseId, f"Parsing syllabus: {os.path.basename(request.syllabusPath)}...")
         with open(request.syllabusPath, "rb") as f:
             syllabus_bytes = f.read()
-        syllabus_text = extract_text_from_bytes(syllabus_bytes, filename=os.path.basename(request.syllabusPath))
+        syllabus_result = extract_with_images(syllabus_bytes, filename=os.path.basename(request.syllabusPath))
+        syllabus_text = syllabus_result.text
+        all_images = list(syllabus_result.images)
         save_to_staging(os.path.basename(request.syllabusPath), syllabus_text)
-        logger.info("Syllabus parsed successfully.")
+        logger.info(f"Syllabus parsed successfully. ({len(syllabus_result.images)} images found)")
 
         # 2. Parse Materials
         logger.info(f"Parsing {len(request.materialsPaths)} course materials...")
+        update_course_progress(request.courseId, f"Parsing {len(request.materialsPaths)} course materials...")
         materials_text = []
         for mat_path in request.materialsPaths:
             if not os.path.exists(mat_path):
@@ -101,21 +107,38 @@ async def generate_course(request: GenerateCourseRequest, req: Request):
                  continue
             with open(mat_path, "rb") as f:
                  mat_bytes = f.read()
-            text = extract_text_from_bytes(mat_bytes, filename=os.path.basename(mat_path))
-            if text:
-                materials_text.append(text)
-                save_to_staging(os.path.basename(mat_path), text)
-        logger.info("Materials parsed successfully.")
+            mat_result = extract_with_images(mat_bytes, filename=os.path.basename(mat_path))
+            if mat_result.text:
+                materials_text.append(mat_result.text)
+                all_images.extend(mat_result.images)
+                save_to_staging(os.path.basename(mat_path), mat_result.text)
+        logger.info(f"Materials parsed successfully. ({len(all_images)} total images found)")
+
+        # 2.5. Analyze embedded images via Vision LLM (if enabled)
+        if request.analyzeImages and all_images:
+            logger.info(f"Image analysis enabled. Analyzing {len(all_images)} images...")
+            update_course_progress(request.courseId, f"Analyzing {len(all_images)} embedded images with Vision AI...")
+            image_descriptions = await analyze_images(all_images, context=syllabus_text[:500])
+            if image_descriptions:
+                image_section = "\n\n--- Embedded Image Descriptions ---\n" + "\n".join(image_descriptions)
+                materials_text.append(image_section)
+                logger.info(f"Added {len(image_descriptions)} image descriptions to materials")
+        elif all_images:
+            logger.info(f"Image analysis disabled. Skipping {len(all_images)} images.")
+        
+        logger.info("All parsing complete.")
         
         # 3. Run Pipeline
         logger.info("Starting AI pipeline to generate course structure. This may take a few minutes...")
+        update_course_progress(request.courseId, "Generating course blueprint from syllabus...")
         syllabus_name = os.path.basename(request.syllabusPath)
         materials_names = [os.path.basename(p) for p in request.materialsPaths if os.path.exists(p)]
-        course, _ = await create_course_pipeline(syllabus_text, materials_text, syllabus_name=syllabus_name, materials_names=materials_names)
+        course, _ = await create_course_pipeline(syllabus_text, materials_text, syllabus_name=syllabus_name, materials_names=materials_names, course_id=request.courseId)
         logger.info("AI pipeline finished generating course structure.")
         
         # 4. Save to DB
         logger.info("Saving generated course to database...")
+        update_course_progress(request.courseId, "Saving course to database...")
         course_doc = save_course_to_db(course)
         course_id_str = course_doc["_id"]
         db_structure = course_doc["course_structure"]

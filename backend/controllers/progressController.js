@@ -95,6 +95,14 @@ export const completeNode = async (req, res, next) => {
   try {
     const { courseId, nodeId } = req.body;
 
+    // Instructors don't track progress
+    if (req.user.role === 'instructor') {
+      return res.json({
+        status: 'success',
+        data: { message: 'Progress tracking is disabled for instructors' }
+      });
+    }
+
     // Verify enrollment
     const enrollment = await Enrollment.findOne({
       student: req.user._id,

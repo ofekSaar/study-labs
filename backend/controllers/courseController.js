@@ -99,7 +99,7 @@ export const getCourse = async (req, res, next) => {
  */
 export const createCourse = async (req, res, next) => {
   try {
-    const { title, department, description, aiConfig, gamification } = req.body;
+    const { title, department, description, aiConfig, gamification, analyzeImages } = req.body;
 
     // Upload materials to storage
     let syllabusData = null;
@@ -168,7 +168,7 @@ export const createCourse = async (req, res, next) => {
     });
 
     // ── Background AI Generation (fire-and-forget) ──────────
-    generateRoadmapInBackground(course, syllabusData, materialsData, title, description);
+    generateRoadmapInBackground(course, syllabusData, materialsData, title, description, analyzeImages === 'true');
 
   } catch (error) {
     next(error);
@@ -179,7 +179,7 @@ export const createCourse = async (req, res, next) => {
  * Runs the AI roadmap generation in the background.
  * Updates course status when complete or on failure.
  */
-async function generateRoadmapInBackground(course, syllabusData, materialsData, title, description) {
+async function generateRoadmapInBackground(course, syllabusData, materialsData, title, description, analyzeImages = false) {
   try {
     console.log(`[Background] Starting AI generation for course ${course._id}...`);
 
@@ -190,6 +190,7 @@ async function generateRoadmapInBackground(course, syllabusData, materialsData, 
       syllabus: syllabusData.storagePath,
       materials: materialsData.map((m) => m.storagePath),
       aiConfig: course.aiConfig,
+      analyzeImages,
     });
 
     // Create course nodes from AI-generated roadmap

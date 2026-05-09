@@ -13,6 +13,7 @@ from llama_index.llms.gemini import Gemini
 from llama_index.llms.openai import OpenAI
 
 logger = logging.getLogger(__name__)
+from engine.db import update_course_progress
 
 load_dotenv()
 
@@ -254,7 +255,7 @@ def sanitize_filename(name: str) -> str:
 
 # asyncio already imported at top
 
-async def create_course_pipeline(syllabus_text: str, materials: List[str], syllabus_name: str = "Unknown", materials_names: List[str] = None) -> tuple[Course, dict]:
+async def create_course_pipeline(syllabus_text: str, materials: List[str], syllabus_name: str = "Unknown", materials_names: List[str] = None, course_id: str = None) -> tuple[Course, dict]:
     """
     Orchestrates the course generation pipeline (Async Version).
     """
@@ -269,8 +270,12 @@ async def create_course_pipeline(syllabus_text: str, materials: List[str], sylla
     # Step 2: Tag Materials (Sync for now)
     if materials_names:
         logger.info(f"Pipeline Step 2/3: Tagging {len(materials)} materials: {', '.join(materials_names)}")
+        if course_id:
+            update_course_progress(course_id, f"Indexing {len(materials)} materials for topic matching...")
     else:
         logger.info("Pipeline Step 2/3: Tagging materials...")
+        if course_id:
+            update_course_progress(course_id, "Indexing materials for topic matching...")
     course = tag_materials(course, materials)
     
     # Step 3: Generate Questions & Summaries (PARALLEL)
@@ -279,13 +284,19 @@ async def create_course_pipeline(syllabus_text: str, materials: List[str], sylla
     
     tasks = []
     
+    completed_topics = 0
+
     async def process_topic(lesson_title, t):
+        nonlocal completed_topics
         # Run both gen tasks for this topic
         logger.info(f"  → Generating content for: {lesson_title} / {t.title}")
         q_task = generate_questions_for_topic(t)
         s_task = generate_summary_for_topic(t)
         t.questions, t.summary = await asyncio.gather(q_task, s_task)
         logger.info(f"  ✓ Finished: {lesson_title} / {t.title} ({len(t.questions)} questions)")
+        completed_topics += 1
+        if course_id:
+            update_course_progress(course_id, f"Generating Content: Topic {completed_topics} of {total_topics} completed...")
 
     for lesson in course.lessons:
         for topic in lesson.topics:

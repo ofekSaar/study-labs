@@ -76,13 +76,15 @@ export const submitQuiz = async (req, res, next) => {
       throw createError(400, 'This node does not have quiz data');
     }
 
-    // Verify enrollment
-    const enrollment = await Enrollment.findOne({
-      student: req.user._id,
-      course: node.course,
-      status: 'approved',
-    });
-    if (!enrollment) throw createError(403, 'You are not enrolled in this course');
+    // Verify enrollment if student
+    if (req.user.role === 'student') {
+      const enrollment = await Enrollment.findOne({
+        student: req.user._id,
+        course: node.course,
+        status: 'approved',
+      });
+      if (!enrollment) throw createError(403, 'You are not enrolled in this course');
+    }
 
     // Score each answer
     const scoredAnswers = [];
