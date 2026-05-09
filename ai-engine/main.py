@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException, Request
 from pydantic import BaseModel
 from typing import List, Optional
 import os
-from engine.db import get_db_handle, save_course_to_db, save_to_staging
+from engine.db import get_db_handle, save_course_to_db, update_course_progress, save_to_staging
 from engine.ocr import extract_text_from_bytes, extract_with_images
 from engine.parsers.image_analyzer import analyze_images
 from engine.generator import create_course_pipeline, evaluate_answer
@@ -88,6 +88,7 @@ async def generate_course(request: GenerateCourseRequest, req: Request):
             
         # 1. Parse Syllabus
         logger.info(f"Parsing syllabus file: {request.syllabusPath}")
+        update_course_progress(request.courseId, f"Parsing syllabus: {os.path.basename(request.syllabusPath)}...")
         with open(request.syllabusPath, "rb") as f:
             syllabus_bytes = f.read()
         syllabus_result = extract_with_images(syllabus_bytes, filename=os.path.basename(request.syllabusPath))
@@ -98,6 +99,7 @@ async def generate_course(request: GenerateCourseRequest, req: Request):
 
         # 2. Parse Materials
         logger.info(f"Parsing {len(request.materialsPaths)} course materials...")
+        update_course_progress(request.courseId, f"Parsing {len(request.materialsPaths)} course materials...")
         materials_text = []
         for mat_path in request.materialsPaths:
             if not os.path.exists(mat_path):
@@ -115,6 +117,7 @@ async def generate_course(request: GenerateCourseRequest, req: Request):
         # 2.5. Analyze embedded images via Vision LLM (if enabled)
         if request.analyzeImages and all_images:
             logger.info(f"Image analysis enabled. Analyzing {len(all_images)} images...")
+            update_course_progress(request.courseId, f"Analyzing {len(all_images)} embedded images with Vision AI...")
             image_descriptions = await analyze_images(all_images, context=syllabus_text[:500])
             if image_descriptions:
                 image_section = "\n\n--- Embedded Image Descriptions ---\n" + "\n".join(image_descriptions)
@@ -127,13 +130,15 @@ async def generate_course(request: GenerateCourseRequest, req: Request):
         
         # 3. Run Pipeline
         logger.info("Starting AI pipeline to generate course structure. This may take a few minutes...")
+        update_course_progress(request.courseId, "Generating course blueprint from syllabus...")
         syllabus_name = os.path.basename(request.syllabusPath)
         materials_names = [os.path.basename(p) for p in request.materialsPaths if os.path.exists(p)]
-        course, _ = await create_course_pipeline(syllabus_text, materials_text, syllabus_name=syllabus_name, materials_names=materials_names)
+        course, _ = await create_course_pipeline(syllabus_text, materials_text, syllabus_name=syllabus_name, materials_names=materials_names, course_id=request.courseId)
         logger.info("AI pipeline finished generating course structure.")
         
         # 4. Save to DB
         logger.info("Saving generated course to database...")
+        update_course_progress(request.courseId, "Saving course to database...")
         course_doc = save_course_to_db(course)
         course_id_str = course_doc["_id"]
         db_structure = course_doc["course_structure"]

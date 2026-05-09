@@ -18,7 +18,7 @@ load_dotenv()
 logger = logging.getLogger(__name__)
 
 # Maximum number of images to analyze per document (cost control)
-MAX_IMAGES_PER_DOC = int(os.environ.get("MAX_IMAGES_PER_DOC", "15"))
+
 
 # Minimum image size in bytes to bother analyzing (skip tiny icons/bullets)
 MIN_IMAGE_SIZE = 5000  # ~5KB
@@ -120,11 +120,6 @@ async def analyze_images(images: List[bytes], context: str = "") -> List[str]:
     if not significant_images:
         logger.info("No significant images found (all below size threshold)")
         return []
-
-    # Cap the number of images to analyze
-    if len(significant_images) > MAX_IMAGES_PER_DOC:
-        logger.info(f"Capping image analysis to {MAX_IMAGES_PER_DOC} images (found {len(significant_images)})")
-        significant_images = significant_images[:MAX_IMAGES_PER_DOC]
 
     logger.info(f"Analyzing {len(significant_images)} embedded images via Vision LLM...")
 

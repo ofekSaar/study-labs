@@ -110,3 +110,19 @@ def save_to_staging(filename: str, content: str) -> str:
     
     res = db['staging_materials'].insert_one(doc)
     return str(res.inserted_id)
+
+def update_course_progress(course_id: str, message: str):
+    """
+    Updates the generationProgress field in the course document.
+    """
+    db = get_db_handle()
+    if db is None:
+        return
+    try:
+        from bson.objectid import ObjectId
+        db['courses'].update_one(
+            {"_id": ObjectId(course_id)},
+            {"$set": {"generationProgress": message}}
+        )
+    except Exception as e:
+        print(f"Failed to update progress for course {course_id}: {e}")
