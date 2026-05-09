@@ -101,6 +101,8 @@ def parse_syllabus(syllabus_text: str, syllabus_name: str = "Unknown") -> Course
 
                 Do NOT generate summaries or questions at this stage.
 
+                IMPORTANT: Always use Markdown for formatting. Use LaTeX for ALL mathematical formulas, variables, and state transitions (e.g., $E=mc^2$ or $q_0 \\rightarrow q_1$).
+
                 Syllabus:
                 {syllabus}
                 """,
@@ -171,7 +173,9 @@ async def generate_questions_for_topic(topic: Topic) -> List[Question]:
         "Topic: {topic_title}\n"
         "Material content:\n"
         "{matched_content}\n"
-        "IMPORTANT: Use LaTeX for any mathematical formulas or equations (e.g., $E=mc^2$ for inline or $$...$$ for blocks). "
+        "IMPORTANT: Always use LaTeX for mathematical formulas, variables, and state transitions. "
+        "Use single dollar signs $...$ for inline math (e.g., $E=mc^2$ or $q_0 \\rightarrow q_1$) and double dollar signs $$...$$ for block equations. "
+        "Do NOT use parentheses ( ) or plain text for math symbols. "
         "IMPORTANT: You must output strictly valid JSON. Properly escape all internal quotes, backslashes, and newlines so the parser does not fail."
     )
     
@@ -226,7 +230,9 @@ async def generate_summary_for_topic(topic: Topic) -> str:
         f"{matched_content}\n"
         "Generate a concise but comprehensive study summary in Markdown format. "
         "Include key concepts, definitions, and important points. "
-        "IMPORTANT: Use LaTeX for any mathematical formulas or equations (e.g., $E=mc^2$ for inline or $$...$$ for blocks)."
+        "IMPORTANT: Always use LaTeX for mathematical formulas, variables, and state transitions. "
+        "Use single dollar signs $...$ for inline math (e.g., $E=mc^2$ or $q_0 \\rightarrow q_1$) and double dollar signs $$...$$ for block equations. "
+        "Do NOT use parentheses ( ) or plain text for math symbols."
     )
     
     for provider_name, llm_instance in LLMS:
@@ -331,7 +337,7 @@ async def evaluate_answer(question: str, answer: str, aiPromptContext: str = Non
     prompt_template_str += (
         "Evaluate the answer. Provide a boolean 'isCorrect' indicating if it passes the minimum bar. "
         "Provide a 'score' from 0 to 100. "
-        "Provide detailed constructive 'feedback'."
+        "Provide detailed constructive 'feedback'. Use Markdown for formatting and LaTeX for all math ($...$)."
     )
     
     for provider_name, llm_instance in LLMS:
