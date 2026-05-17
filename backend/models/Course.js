@@ -72,6 +72,39 @@ const courseSchema = new mongoose.Schema(
         type: Boolean,
         default: true,
       },
+      bounties: {
+        type: [{
+          title: { type: String, required: true },
+          description: { type: String, required: true },
+          xpReward: { type: Number, default: 200 },
+          targetNode: { type: String, default: "" },
+          expiryDate: { type: Date, default: null },
+          maxWinners: { type: Number, default: 5 },
+          winners: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+        }],
+        default: [],
+      },
+      customBadges: {
+        type: [{
+          title: { type: String, required: true },
+          description: { type: String, required: true },
+          xpReward: { type: Number, default: 300 },
+          requirementType: { type: String, enum: ['quiz_streak', 'lessons_completed', 'custom'], default: 'custom' },
+          requirementValue: { type: Number, default: 1 },
+          iconName: { type: String, default: 'Award' },
+        }],
+        default: [],
+      },
+      rewardsStore: {
+        type: [{
+          title: { type: String, required: true },
+          description: { type: String, required: true },
+          xpCost: { type: Number, default: 1000 },
+          type: { type: String, enum: ['academic', 'cosmetic', 'profile'], default: 'cosmetic' },
+          unlockedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+        }],
+        default: [],
+      },
     },
     generationStatus: {
       type: String,

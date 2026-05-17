@@ -98,7 +98,7 @@ const Dashboard = () => {
                                 Current Learning Path
                             </h2>
                         </div>
-                        <div className="flex-1 overflow-y-auto custom-scrollbar relative z-0">
+                        <div className="flex-1 overflow-auto custom-scrollbar relative z-0">
                             <RoadmapView />
                         </div>
                     </div>

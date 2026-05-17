@@ -23,19 +23,24 @@ const RoadmapNode = ({ node, index, onClick, alignment, isSelected }) => {
 
             {/* Text Label - Absolute relative to the button center */}
             <div
-                className={`hidden md:block absolute top-1/2 -translate-y-1/2 w-60 transition-all duration-300 ${
-                    isSelected ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
-                } ${alignment === 'left' ? 'right-full mr-8 text-right' : 'left-full ml-8 text-left'}`}
+                className={`hidden md:block absolute top-1/2 -translate-y-1/2 w-56 transition-all duration-300 p-4 rounded-2xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/80 dark:border-white/10 backdrop-blur-md shadow-md ${
+                    isSelected ? 'opacity-0 scale-95' : 'opacity-100 scale-100 group-hover:scale-[1.03]'
+                } ${alignment === 'left' 
+                    ? 'right-full mr-8 text-right group-hover:-translate-x-1' 
+                    : 'left-full ml-8 text-left group-hover:translate-x-1'
+                }`}
             >
-                <h3 className={`font-black text-sm uppercase tracking-wider leading-tight transition-colors ${
+                <h3 className={`font-black text-xs tracking-wider leading-relaxed transition-colors ${
                     isLocked 
                         ? 'text-slate-400 dark:text-white/20' 
-                        : 'text-slate-800 dark:text-white group-hover:text-indigo-500 dark:group-hover:text-indigo-400'
+                        : 'text-slate-800 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400'
                 }`}>
                     {node.title}
                 </h3>
-                <p className="text-[10px] font-black text-indigo-500/70 dark:text-indigo-400/50 uppercase tracking-widest mt-1">
-                    {node.type || 'Lesson'}
+                <p className={`text-[9px] font-black text-indigo-500 dark:text-indigo-400 uppercase tracking-widest mt-1.5 flex items-center gap-1 ${
+                    alignment === 'left' ? 'justify-end' : 'justify-start'
+                }`}>
+                    {node.type === 'quiz' ? 'בוחן 📝' : node.type === 'exam' ? 'מבחן 🏆' : 'שיעור 📖'}
                 </p>
             </div>
 

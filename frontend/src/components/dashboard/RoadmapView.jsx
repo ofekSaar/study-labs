@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import RoadmapNode from './RoadmapNode';
 import useCourseStore from '../../store/courseStore';
+import { CheckCircle2, PlayCircle, Lock, Zap, BookOpen, Target, ChevronLeft } from 'lucide-react';
 
 const RoadmapView = () => {
     const { courses, selectedCourseId, fetchCourseNodes, setSelectedNode, selectedNode } = useCourseStore();
@@ -21,176 +21,142 @@ const RoadmapView = () => {
 
     // Safety check
     if (!course) return (
-        <div className="p-20 text-center">
-            <div className="text-5xl mb-4">🗺️</div>
-            <p className="text-gray-400 font-medium">Select a course to view roadmap</p>
+        <div className="p-12 text-center" dir="rtl">
+            <div className="text-4xl mb-3">🗺️</div>
+            <p className="text-slate-400 dark:text-white/40 font-medium">אנא בחר קורס כדי לצפות בנתיב הלמידה</p>
         </div>
     );
+
     if (isLoadingNodes) return (
-        <div className="p-20 flex flex-col items-center gap-4">
-            <div className="w-12 h-12 rounded-full border-4 border-transparent border-t-indigo-500 border-r-purple-500 animate-spin" />
-            <p className="text-sm text-gray-400 font-medium">Loading roadmap...</p>
+        <div className="p-16 flex flex-col items-center gap-4">
+            <div className="w-10 h-10 rounded-full border-4 border-transparent border-t-indigo-500 border-r-purple-500 animate-spin" />
+            <p className="text-sm text-slate-400 dark:text-white/40 font-medium">טוען את נתיב הלמידה...</p>
         </div>
     );
 
-    // Constants for layout
-    const NODE_HEIGHT = 120; // Vertical distance between nodes
-    const AMPLITUDE = 70;   // Horizontal sway from center
-    const START_Y = 60;      // Initial top padding
-
-    // Generate Path
-    const generatePath = () => {
-        let path = `M 50% ${START_Y} `; // Start center top
-
-        course.nodes.forEach((_, index) => {
-            const y = START_Y + (index * NODE_HEIGHT);
-            const nextY = START_Y + ((index + 1) * NODE_HEIGHT);
-
-            // Current position (implied from previous segment end)
-            // Target position for next node
-            // Note: SVG path logic with mix of % and px implies we need a fixed coordinate system usually.
-            // Simplified: Draw a curve from (0,0) down.
-            // Let's use specific x coordinates relative to center (0).
-            // But SVG inside a responsive div is tricky. 
-            // Better: Use a fixed width container for the SVG (max-w-2xl is 672px). Center is 336px.
-
-            const centerX = 336;
-            const currentX = centerX + (index % 2 === 0 ? -AMPLITUDE : AMPLITUDE); // Start left, then right? Or center-based?
-            // Actually, if we want a sine wave passing THROUGH the nodes:
-            // Node 0: Center - Amp (Left)
-            // Node 1: Center + Amp (Right)
-            // Node 2: Center - Amp
-
-            // Wait, standard Game Maps usually have nodes ON the curve.
-        });
-        return path;
-    };
-
-    // New Approach: 
-    // We render the SVG as a background layer with known coordinates.
-    // We render nodes absolutely positioned on top of those coordinates.
+    const nodes = course.nodes || [];
 
     return (
-        <div className="relative min-h-full pb-32">
-            <div className="text-center pt-8 pb-10">
-                <h2 className="text-2xl font-display font-black text-white drop-shadow-md mb-1">{course.title}</h2>
-                <p className="text-white/60 text-sm font-medium mt-1">
-                    Level: <span className="font-bold text-indigo-400">{course.level}</span>
-                    <span className="mx-2 text-white/20">•</span>
-                    <span>{course.nodes?.length ?? 0} modules</span>
-                </p>
+        <div className="p-5" dir="rtl">
+            {/* Header section (Compact) */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 pb-5 border-b border-slate-200/60 dark:border-white/10 text-right">
+                <div>
+                    <span className="text-[10px] font-black text-indigo-500 dark:text-indigo-400 uppercase tracking-widest bg-indigo-500/10 px-2.5 py-1 rounded-md">נתיב למידה פעיל</span>
+                    <h3 className="text-xl font-display font-black text-slate-800 dark:text-white mt-2 leading-tight">{course.title}</h3>
+                </div>
+                <div className="flex items-center gap-2 self-start sm:self-center">
+                    <span className="text-xs font-bold text-slate-500 dark:text-white/50 bg-slate-100 dark:bg-white/5 px-3 py-1.5 rounded-xl border border-slate-200/50 dark:border-white/5">
+                        רמה: <span className="text-indigo-600 dark:text-indigo-400 font-extrabold">{course.level || 'מתחיל'}</span>
+                    </span>
+                    <span className="text-xs font-bold text-slate-500 dark:text-white/50 bg-slate-100 dark:bg-white/5 px-3 py-1.5 rounded-xl border border-slate-200/50 dark:border-white/5">
+                        <span className="text-slate-800 dark:text-white font-extrabold">{nodes.length}</span> שיעורים
+                    </span>
+                </div>
             </div>
 
-            {/* Container for Map */}
-            <div className="relative w-full max-w-[700px] mx-auto min-h-[600px]">
+            {/* Compact List of Lessons */}
+            <div className="space-y-3.5 max-h-[380px] overflow-y-auto pr-1 pl-1 custom-scrollbar">
+                {nodes.map((node, index) => {
+                    const isCompleted = node.status === 'completed';
+                    const isCurrent = node.status === 'current';
+                    const isLocked = node.status === 'locked';
 
-                {/* SVG Path Layer */}
-                <svg className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-visible" xmlns="http://www.w3.org/2000/svg">
-                    {/* Defs for gradients etc */}
-                    <defs>
-                        <linearGradient id="pathGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                            <stop offset="0%" stopColor="#e0e7ff" />
-                            <stop offset="100%" stopColor="#ede9fe" />
-                        </linearGradient>
-                        <linearGradient id="activeGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                            <stop offset="0%" stopColor="#6366f1" />
-                            <stop offset="50%" stopColor="#8b5cf6" />
-                            <stop offset="100%" stopColor="#7c3aed" />
-                        </linearGradient>
-                        <filter id="glow">
-                            <feGaussianBlur stdDeviation="3" result="coloredBlur" />
-                            <feMerge><feMergeNode in="coloredBlur" /><feMergeNode in="SourceGraphic" /></feMerge>
-                        </filter>
-                    </defs>
+                    const nodeId = node._id || node.id;
+                    const selectedNodeId = selectedNode?._id || selectedNode?.id;
+                    const isActiveSelected = selectedNodeId === nodeId;
 
-                    {/* Background Guide Line */}
-                    <path
-                        d={course.nodes.reduce((acc, _, i) => {
-                            const y = START_Y + (i * NODE_HEIGHT);
-                            const prevY = START_Y + ((i - 1) * NODE_HEIGHT);
-                            // CENTER_X = 350
-                            const xCurr = 350 + ((i % 2 === 0 ? -1 : 1) * AMPLITUDE);
+                    // Text for lesson types
+                    const getTypeBadge = () => {
+                        switch (node.type) {
+                            case 'quiz': return 'בוחן 📝';
+                            case 'exam': return 'מבחן 🏆';
+                            default: return 'שיעור 📖';
+                        }
+                    };
 
-                            if (i === 0) return `M ${xCurr} ${y}`;
+                    return (
+                        <motion.div
+                            key={nodeId}
+                            onClick={() => !isLocked && setSelectedNode(node)}
+                            whileHover={!isLocked ? { scale: 1.01, y: -1 } : {}}
+                            whileTap={!isLocked ? { scale: 0.99 } : {}}
+                            className={`
+                                relative p-4 rounded-2xl border transition-all duration-300 flex items-center justify-between gap-4 text-right
+                                ${isLocked 
+                                    ? 'opacity-60 bg-slate-50/50 dark:bg-white/2 border-slate-200/40 dark:border-white/5 cursor-not-allowed'
+                                    : isActiveSelected
+                                        ? 'bg-indigo-50/80 dark:bg-indigo-500/10 border-indigo-500/50 shadow-md shadow-indigo-500/5 cursor-pointer'
+                                        : 'bg-white dark:bg-slate-900/60 border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 hover:bg-slate-50/50 dark:hover:bg-white/3 shadow-sm hover:shadow cursor-pointer'
+                                }
+                            `}
+                        >
+                            {/* Inner active border highlight */}
+                            {isCurrent && !isLocked && (
+                                <div className="absolute top-0 bottom-0 right-0 w-1 bg-gradient-to-b from-indigo-500 to-purple-600 rounded-r-2xl" />
+                            )}
 
-                            const xPrev = 350 + (((i - 1) % 2 === 0 ? -1 : 1) * AMPLITUDE);
-
-                            // Bezier Control Points
-                            const cp1x = xPrev;
-                            const cp1y = prevY + (NODE_HEIGHT / 2);
-                            const cp2x = xCurr;
-                            const cp2y = y - (NODE_HEIGHT / 2);
-
-                            return `${acc} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${xCurr} ${y}`;
-                        }, '')}
-                        fill="none"
-                        stroke="url(#pathGradient)"
-                        strokeWidth="14"
-                        strokeLinecap="round"
-                    />
-
-                    {/* Progress Line (Masked or Partial - distinct path for simplicity) */}
-                    {/* For MVP, let's just make the whole path blue up to the current node index */}
-                    <path
-                        d={course.nodes.reduce((acc, node, i) => {
-                            // If node is locked, stop drawing? 
-                            // Or draw up to 'current' node + halfway to next?
-                            // Let's draw up to the last completed node fully, and partially to current.
-
-                            // Simple logic: Draw full segments if the TARGET node is completed or current.
-                            if (node.status === 'locked') return acc;
-
-                            const y = START_Y + (i * NODE_HEIGHT);
-                            const prevY = START_Y + ((i - 1) * NODE_HEIGHT);
-                            const xCurr = 350 + ((i % 2 === 0 ? -1 : 1) * AMPLITUDE);
-
-                            if (i === 0) return `M ${xCurr} ${y}`;
-
-                            const xPrev = 350 + (((i - 1) % 2 === 0 ? -1 : 1) * AMPLITUDE);
-                            const cp1x = xPrev;
-                            const cp1y = prevY + (NODE_HEIGHT / 2);
-                            const cp2x = xCurr;
-                            const cp2y = y - (NODE_HEIGHT / 2);
-
-                            return `${acc} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${xCurr} ${y}`;
-                        }, '')}
-                        fill="none"
-                        stroke="url(#activeGradient)"
-                        strokeWidth="5"
-                        strokeLinecap="round"
-                        strokeDasharray="12 6"
-                        filter="url(#glow)"
-                        className="animate-pulse"
-                    />
-                </svg>
-
-                {/* Nodes Layer */}
-                <div style={{ height: (course.nodes.length * NODE_HEIGHT) + 250 }}>
-                    {course.nodes.map((node, index) => {
-                        const y = START_Y + (index * NODE_HEIGHT);
-                        const x = 350 + ((index % 2 === 0 ? -1 : 1) * AMPLITUDE);
-
-                        const nodeId = node._id || node.id;
-                        const selectedNodeId = selectedNode?._id || selectedNode?.id;
-
-                        return (
-                            <div
-                                key={nodeId}
-                                className="absolute transform -translate-x-1/2 -translate-y-1/2"
-                                style={{ left: x, top: y }}
-                            >
-                                <RoadmapNode
-                                    node={node}
-                                    index={index}
-                                    onClick={() => setSelectedNode(node)}
-                                    // Pass explicit position prop if needed for text alignment
-                                    alignment={index % 2 === 0 ? 'left' : 'right'}
-                                    isSelected={selectedNodeId === nodeId}
-                                />
+                            {/* Left Side: Actions/Status Badges */}
+                            <div className="flex items-center gap-3">
+                                {isCompleted && (
+                                    <span className="hidden sm:inline-flex items-center gap-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-3 py-1.5 rounded-xl text-xs font-black border border-emerald-500/20">
+                                        הושלם
+                                    </span>
+                                )}
+                                {isCurrent && !isLocked && (
+                                    <button className="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-1.5 rounded-xl text-xs font-black shadow-[0_0_12px_rgba(99,102,241,0.35)] flex items-center gap-1 transition-colors">
+                                        התחל למידה
+                                        <ChevronLeft size={14} strokeWidth={3} />
+                                    </button>
+                                )}
+                                {isLocked && (
+                                    <span className="hidden sm:inline-flex items-center gap-1 bg-slate-100 dark:bg-white/5 text-slate-400 dark:text-white/20 px-3 py-1.5 rounded-xl text-xs font-black border border-slate-200/50 dark:border-white/5">
+                                        נעול
+                                    </span>
+                                )}
                             </div>
-                        );
-                    })}
-                </div>
+
+                            {/* Right Side: Step Icon + Text details */}
+                            <div className="flex items-center gap-4 min-w-0 flex-1">
+                                {/* State Circle Icon */}
+                                <div className={`
+                                    w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 border-b-2 shadow-sm transition-all duration-300
+                                    ${isCompleted
+                                        ? 'bg-gradient-to-br from-emerald-400 to-teal-500 border-emerald-600 text-white'
+                                        : isCurrent
+                                            ? 'bg-gradient-to-br from-indigo-500 to-purple-600 border-indigo-700 text-white shadow-[0_0_10px_rgba(99,102,241,0.4)] scale-105'
+                                            : 'bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-400 dark:text-white/20'
+                                    }
+                                `}>
+                                    {isCompleted && <CheckCircle2 size={18} strokeWidth={2.5} />}
+                                    {isCurrent && <PlayCircle size={18} strokeWidth={2.5} className="animate-pulse" />}
+                                    {isLocked && <Lock size={16} strokeWidth={2.5} />}
+                                </div>
+
+                                {/* Texts */}
+                                <div className="min-w-0 flex-1">
+                                    <span className="text-[9px] font-black text-slate-400 dark:text-white/30 uppercase tracking-widest leading-none">שיעור {index + 1}</span>
+                                    <h4 className={`text-sm font-extrabold truncate leading-tight mt-1 transition-colors ${
+                                        isLocked 
+                                            ? 'text-slate-400 dark:text-white/20' 
+                                            : isActiveSelected
+                                                ? 'text-indigo-600 dark:text-indigo-400 font-black'
+                                                : 'text-slate-800 dark:text-white group-hover:text-indigo-500'
+                                    }`}>
+                                        {node.title}
+                                    </h4>
+                                    <div className="flex items-center gap-2 mt-1.5 text-[10px] font-bold text-slate-400 dark:text-white/40">
+                                        <span>{getTypeBadge()}</span>
+                                        <span>•</span>
+                                        <span className="flex items-center gap-0.5 text-indigo-500 dark:text-indigo-400">
+                                            <Zap size={10} className="fill-indigo-500/15" />
+                                            +{node.xpReward || 150} XP
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </motion.div>
+                    );
+                })}
             </div>
         </div>
     );
