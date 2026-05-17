@@ -42,8 +42,8 @@ const Dashboard = () => {
             <div className="relative z-[1] p-4 lg:p-6 max-w-[1600px] mx-auto h-[calc(100vh-2rem)] flex flex-col">
                 <header className="mb-4 lg:mb-6 flex flex-col sm:flex-row sm:justify-between sm:items-end gap-2">
                     <div>
-                        <h1 className="text-3xl font-display font-black text-white drop-shadow-md">Welcome back, {user?.name?.split(' ')[0] || 'Student'}!</h1>
-                        <p className="text-indigo-200 mt-1 font-medium">Ready to conquer your next challenge?</p>
+                        <h1 className="text-3xl font-display font-black text-slate-900 dark:text-white drop-shadow-sm">Welcome back, {user?.name?.split(' ')[0] || 'Student'}!</h1>
+                        <p className="text-indigo-600 dark:text-indigo-200 mt-1 font-medium">Ready to conquer your next challenge?</p>
                     </div>
                 </header>
                 
@@ -51,13 +51,13 @@ const Dashboard = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 min-h-0">
                     
                     {/* Main Tile: Roadmap (8 cols) */}
-                    <div className="lg:col-span-8 bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl shadow-[0_8px_32px_rgba(0,0,0,0.4)] flex flex-col overflow-hidden relative group/roadmap">
+                    <div className="lg:col-span-8 glass-card rounded-3xl shadow-lg flex flex-col overflow-hidden relative group/roadmap">
                         {/* Inner glow */}
                         <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-purple-500/5 pointer-events-none opacity-50 transition-opacity group-hover/roadmap:opacity-100 duration-1000" />
                         
-                        <div className="p-4 sm:p-5 border-b border-white/10 bg-black/20 flex justify-between items-center z-10 backdrop-blur-md">
-                            <h2 className="text-lg font-bold text-white flex items-center gap-2 drop-shadow-md">
-                                <Target size={20} className="text-indigo-400" />
+                        <div className="p-4 sm:p-5 border-b border-slate-200 dark:border-white/10 bg-slate-100/50 dark:bg-black/20 flex justify-between items-center z-10 backdrop-blur-md">
+                            <h2 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                                <Target size={20} className="text-indigo-500 dark:text-indigo-400" />
                                 Current Learning Path
                             </h2>
                         </div>
@@ -71,36 +71,36 @@ const Dashboard = () => {
                     <div className="lg:col-span-4 flex flex-col gap-6 overflow-y-auto custom-scrollbar lg:pr-2 pb-6">
                         
                         {/* Stats Bento Tile */}
-                        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-5 sm:p-6 shadow-[0_8px_32px_rgba(0,0,0,0.4)] relative overflow-hidden group">
+                        <div className="glass-card rounded-3xl p-5 sm:p-6 shadow-lg relative overflow-hidden group">
                             <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-teal-500/5 pointer-events-none" />
                             
-                            <h3 className="text-xs font-black text-white/50 uppercase tracking-widest mb-4 drop-shadow-md">Your Progress</h3>
+                            <h3 className="text-xs font-black text-slate-500 dark:text-white/50 uppercase tracking-widest mb-4">Your Progress</h3>
                             
                             <div className="grid grid-cols-2 gap-4">
                                 {/* Level */}
-                                <div className="bg-black/40 rounded-2xl p-4 border border-white/5 flex flex-col items-center justify-center text-center transition-transform hover:-translate-y-1 hover:bg-black/60 duration-300 shadow-inner">
-                                    <Trophy size={28} className="text-emerald-400 mb-2 drop-shadow-[0_0_12px_rgba(52,211,153,0.8)]" />
-                                    <div className="text-3xl font-black text-white leading-none">{level}</div>
-                                    <div className="text-[10px] font-bold text-white/40 uppercase tracking-wider mt-1">Level</div>
+                                <div className="bg-slate-100 dark:bg-black/40 rounded-2xl p-4 border border-slate-200/50 dark:border-white/5 flex flex-col items-center justify-center text-center transition-transform hover:-translate-y-1 hover:bg-slate-200/50 dark:hover:bg-black/60 duration-300 shadow-inner">
+                                    <Trophy size={28} className="text-emerald-500 dark:text-emerald-400 mb-2 drop-shadow-[0_0_12px_rgba(52,211,153,0.3)]" />
+                                    <div className="text-3xl font-black text-slate-900 dark:text-white leading-none">{level}</div>
+                                    <div className="text-[10px] font-bold text-slate-500 dark:text-white/40 uppercase tracking-wider mt-1">Level</div>
                                 </div>
                                 {/* Streak */}
-                                <div className="bg-black/40 rounded-2xl p-4 border border-white/5 flex flex-col items-center justify-center text-center transition-transform hover:-translate-y-1 hover:bg-black/60 duration-300 shadow-inner">
-                                    <Flame size={28} className="text-orange-400 mb-2 drop-shadow-[0_0_12px_rgba(251,146,60,0.8)] fill-orange-400/20" />
-                                    <div className="text-3xl font-black text-white leading-none">{user?.streak ?? 0}</div>
-                                    <div className="text-[10px] font-bold text-white/40 uppercase tracking-wider mt-1">Day Streak</div>
+                                <div className="bg-slate-100 dark:bg-black/40 rounded-2xl p-4 border border-slate-200/50 dark:border-white/5 flex flex-col items-center justify-center text-center transition-transform hover:-translate-y-1 hover:bg-slate-200/50 dark:hover:bg-black/60 duration-300 shadow-inner">
+                                    <Flame size={28} className="text-orange-500 dark:text-orange-400 mb-2 drop-shadow-[0_0_12px_rgba(251,146,60,0.3)] fill-orange-500/20 dark:fill-orange-400/20" />
+                                    <div className="text-3xl font-black text-slate-900 dark:text-white leading-none">{user?.streak ?? 0}</div>
+                                    <div className="text-[10px] font-bold text-slate-500 dark:text-white/40 uppercase tracking-wider mt-1">Day Streak</div>
                                 </div>
                             </div>
                             
                             {/* XP Progress Bar */}
-                            <div className="mt-4 bg-black/40 rounded-2xl p-4 border border-white/5 shadow-inner">
+                            <div className="mt-4 bg-slate-100 dark:bg-black/40 rounded-2xl p-4 border border-slate-200/50 dark:border-white/5 shadow-inner">
                                 <div className="flex justify-between items-end mb-2">
-                                    <div className="flex items-center gap-1.5 drop-shadow-md">
-                                        <Zap size={16} className="text-indigo-400 fill-indigo-400/20" />
-                                        <span className="font-bold text-white text-sm">{user?.totalXP ?? 0} XP</span>
+                                    <div className="flex items-center gap-1.5">
+                                        <Zap size={16} className="text-indigo-500 dark:text-indigo-400 fill-indigo-500/20 dark:fill-indigo-400/20" />
+                                        <span className="font-bold text-slate-900 dark:text-white text-sm">{user?.totalXP ?? 0} XP</span>
                                     </div>
-                                    <span className="text-[10px] font-bold text-white/40">{100 - progressToNextLevel} to next level</span>
+                                    <span className="text-[10px] font-bold text-slate-500 dark:text-white/40">{100 - progressToNextLevel} to next level</span>
                                 </div>
-                                <div className="h-2.5 w-full bg-white/10 rounded-full overflow-hidden shadow-inner">
+                                <div className="h-2.5 w-full bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden shadow-inner">
                                     <div 
                                         className="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-full transition-all duration-1000 ease-out relative"
                                         style={{ width: `${progressToNextLevel}%` }}
@@ -110,41 +110,39 @@ const Dashboard = () => {
                                 </div>
                             </div>
                         </div>
-
+ 
                         {/* Achievements Bento Tile */}
-                        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-5 sm:p-6 shadow-[0_8px_32px_rgba(0,0,0,0.4)] relative overflow-hidden flex-1">
-                            <h3 className="text-xs font-black text-white/50 uppercase tracking-widest mb-4 drop-shadow-md">Recent Achievements</h3>
+                        <div className="glass-card rounded-3xl p-5 sm:p-6 shadow-lg relative overflow-hidden flex-1">
+                            <h3 className="text-xs font-black text-slate-500 dark:text-white/50 uppercase tracking-widest mb-4">Recent Achievements</h3>
                             
                             <div className="space-y-3">
-                                {/* Mock Badges - Future proofed for real data */}
-                                <div className="flex items-center gap-4 bg-black/20 p-3 rounded-2xl border border-white/5 hover:bg-white/10 transition-colors group/badge cursor-default">
-                                    <div className="w-12 h-12 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center flex-shrink-0 group-hover/badge:scale-110 transition-transform shadow-[0_0_15px_rgba(16,185,129,0.2)]">
-                                        <Award size={20} className="text-emerald-400" />
+                                <div className="flex items-center gap-4 bg-slate-100/50 dark:bg-black/20 p-3 rounded-2xl border border-slate-200/50 dark:border-white/5 hover:bg-slate-200 dark:hover:bg-white/10 transition-colors group/badge cursor-default">
+                                    <div className="w-12 h-12 rounded-full bg-emerald-500/10 dark:bg-emerald-500/20 border border-emerald-500/20 dark:border-emerald-500/30 flex items-center justify-center flex-shrink-0 group-hover/badge:scale-110 transition-transform">
+                                        <Award size={20} className="text-emerald-600 dark:text-emerald-400" />
                                     </div>
                                     <div>
-                                        <h4 className="text-sm font-bold text-white drop-shadow-sm">First Steps</h4>
-                                        <p className="text-[11px] text-white/50 leading-tight mt-0.5">Started your learning journey.</p>
+                                        <h4 className="text-sm font-bold text-slate-800 dark:text-white">First Steps</h4>
+                                        <p className="text-[11px] text-slate-500 dark:text-white/50 leading-tight mt-0.5">Started your learning journey.</p>
                                     </div>
                                 </div>
                                 
-                                <div className="flex items-center gap-4 bg-black/20 p-3 rounded-2xl border border-white/5 hover:bg-white/10 transition-colors group/badge cursor-default">
-                                    <div className="w-12 h-12 rounded-full bg-orange-500/20 border border-orange-500/30 flex items-center justify-center flex-shrink-0 group-hover/badge:scale-110 transition-transform shadow-[0_0_15px_rgba(249,115,22,0.2)]">
-                                        <Flame size={20} className="text-orange-400" />
+                                <div className="flex items-center gap-4 bg-slate-100/50 dark:bg-black/20 p-3 rounded-2xl border border-slate-200/50 dark:border-white/5 hover:bg-slate-200 dark:hover:bg-white/10 transition-colors group/badge cursor-default">
+                                    <div className="w-12 h-12 rounded-full bg-orange-500/10 dark:bg-orange-500/20 border border-orange-500/20 dark:border-orange-500/30 flex items-center justify-center flex-shrink-0 group-hover/badge:scale-110 transition-transform">
+                                        <Flame size={20} className="text-orange-600 dark:text-orange-400" />
                                     </div>
                                     <div>
-                                        <h4 className="text-sm font-bold text-white drop-shadow-sm">On Fire</h4>
-                                        <p className="text-[11px] text-white/50 leading-tight mt-0.5">Logged in for multiple days.</p>
+                                        <h4 className="text-sm font-bold text-slate-800 dark:text-white">On Fire</h4>
+                                        <p className="text-[11px] text-slate-500 dark:text-white/50 leading-tight mt-0.5">Logged in for multiple days.</p>
                                     </div>
                                 </div>
                                 
-                                {/* Locked badge silhouette */}
-                                <div className="flex items-center gap-4 bg-black/10 p-3 rounded-2xl border border-white/5 opacity-50 grayscale cursor-not-allowed">
-                                    <div className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0">
-                                        <Trophy size={20} className="text-white/40" />
+                                <div className="flex items-center gap-4 bg-slate-100/30 dark:bg-black/10 p-3 rounded-2xl border border-slate-200/50 dark:border-white/5 opacity-50 grayscale cursor-not-allowed">
+                                    <div className="w-12 h-12 rounded-full bg-slate-200/50 dark:bg-white/5 border border-slate-300 dark:border-white/10 flex items-center justify-center flex-shrink-0">
+                                        <Trophy size={20} className="text-slate-400 dark:text-white/40" />
                                     </div>
                                     <div>
-                                        <h4 className="text-sm font-bold text-white/60">Mastermind</h4>
-                                        <p className="text-[11px] text-white/40 leading-tight mt-0.5">Reach Level 5 (Locked)</p>
+                                        <h4 className="text-sm font-bold text-slate-500 dark:text-white/60">Mastermind</h4>
+                                        <p className="text-[11px] text-slate-400 dark:text-white/40 leading-tight mt-0.5">Reach Level 5 (Locked)</p>
                                     </div>
                                 </div>
                             </div>

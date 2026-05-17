@@ -180,7 +180,7 @@ const StudentLayout = ({ children, title }) => {
     );
 
     return (
-        <div className="min-h-screen flex font-sans bg-slate-950">
+        <div className="min-h-screen flex font-sans bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300">
             {/* ── Desktop Sidebar ── */}
             <aside className="hidden md:flex flex-col w-72 sticky top-0 h-screen z-30 sidebar-dark">
                 <SidebarContent />
