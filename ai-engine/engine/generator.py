@@ -162,6 +162,12 @@ async def generate_questions_for_topic(topic: Topic) -> List[Question]:
     Generates questions based on the topic and its matched materials.
     Uses semaphore for rate limiting and retry for 429 errors.
     """
+    if os.environ.get("USE_MOCK_AI") == "True":
+        logger.info(f"Using MOCK AI Mode for generate_questions_for_topic: {topic.title}")
+        if topic.questions:
+            return topic.questions
+        return [Question(question_text="Is this real?", options=["Yes", "No"], correct_answer=1)]
+
     from pydantic import BaseModel
     class QuestionList(BaseModel):
         questions: List[Question]
@@ -220,6 +226,12 @@ async def generate_summary_for_topic(topic: Topic) -> str:
     Generates a study summary (Markdown) for the topic based on matched materials.
     Uses semaphore for rate limiting and retry for 429 errors.
     """
+    if os.environ.get("USE_MOCK_AI") == "True":
+        logger.info(f"Using MOCK AI Mode for generate_summary_for_topic: {topic.title}")
+        if topic.summary:
+            return topic.summary
+        return f"# Summary for {topic.title}\n\nThis is a mock summary for {topic.title} generated because USE_MOCK_AI is True."
+
     matched_content = "\n".join(topic.matched_materials)
     
     prompt = (
