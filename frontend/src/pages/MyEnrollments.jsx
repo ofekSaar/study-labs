@@ -64,10 +64,10 @@ const MyEnrollments = () => {
 
             <div className="relative z-[1] p-6 max-w-[1600px] mx-auto pb-32">
                 <div className="mb-10">
-                    <h1 className="font-display text-4xl font-black text-white mb-4 tracking-tight drop-shadow-md">Discover Courses</h1>
-                    <p className="text-white/60 text-lg font-medium">Browse available courses and request enrollment.</p>
+                    <h1 className="font-display text-4xl font-black text-slate-900 dark:text-white mb-4 tracking-tight drop-shadow-sm dark:drop-shadow-md">Discover Courses</h1>
+                    <p className="text-slate-500 dark:text-white/60 text-lg font-medium">Browse available courses and request enrollment.</p>
                 </div>
-
+ 
                 {isLoading ? (
                     <div className="flex justify-center p-12">
                         <div className="animate-spin w-8 h-8 border-4 border-studylabs-blue border-t-transparent rounded-full"></div>
@@ -79,7 +79,7 @@ const MyEnrollments = () => {
                             const enrollment = myEnrollments.find(e => e.course._id === course._id || e.course === course._id);
                             
                             return (
-                                <div key={course._id} className="bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.4)] hover:-translate-y-1 hover:shadow-[0_16px_48px_rgba(0,0,0,0.5)] transition-all duration-300 flex flex-col overflow-hidden h-full group relative">
+                                <div key={course._id} className="glass-card rounded-3xl hover:-translate-y-1 hover:shadow-xl transition-all duration-300 flex flex-col overflow-hidden h-full group relative">
                                     {/* Inner glow hover */}
                                     <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
                                     
@@ -93,20 +93,20 @@ const MyEnrollments = () => {
                                     </div>
                                     
                                     <div className="p-6 flex-1 flex flex-col relative z-10">
-                                        <h3 className="font-display font-bold text-xl text-white mb-2 drop-shadow-md">{course.title}</h3>
-                                        <p className="text-white/60 text-sm mb-6 line-clamp-3 flex-1">{course.description}</p>
+                                        <h3 className="font-display font-bold text-xl text-slate-900 dark:text-white mb-2 drop-shadow-sm dark:drop-shadow-md">{course.title}</h3>
+                                        <p className="text-slate-500 dark:text-white/60 text-sm mb-6 line-clamp-3 flex-1">{course.description}</p>
                                         
-                                        <div className="flex items-center gap-3 mb-6 bg-black/20 p-3 rounded-2xl border border-white/5">
-                                            <img src={course.instructor?.avatar || 'https://via.placeholder.com/150'} alt="Instructor" className="w-10 h-10 rounded-full bg-white/10 border border-white/20" />
+                                        <div className="flex items-center gap-3 mb-6 bg-slate-100 dark:bg-black/20 p-3 rounded-2xl border border-slate-200/50 dark:border-white/5">
+                                            <img src={course.instructor?.avatar || 'https://via.placeholder.com/150'} alt="Instructor" className="w-10 h-10 rounded-full bg-slate-200 dark:bg-white/10 border border-slate-300 dark:border-white/20" />
                                             <div className="text-sm">
-                                                <p className="text-white font-bold">{course.instructor?.name || 'Instructor'}</p>
-                                                <p className="text-[10px] text-white/40 uppercase tracking-widest mt-0.5">Course Creator</p>
+                                                <p className="text-slate-800 dark:text-white font-bold">{course.instructor?.name || 'Instructor'}</p>
+                                                <p className="text-[10px] text-slate-400 dark:text-white/40 uppercase tracking-widest mt-0.5">Course Creator</p>
                                             </div>
                                         </div>
-
-                                        <div className="mt-auto pt-4 border-t border-white/10 flex items-center justify-between">
+ 
+                                        <div className="mt-auto pt-4 border-t border-slate-200 dark:border-white/10 flex items-center justify-between">
                                             <div>
-                                                {enrollment ? getStatusBadge(enrollment.status) : <span className="text-white/40 text-sm font-bold tracking-wide uppercase">Not enrolled</span>}
+                                                {enrollment ? getStatusBadge(enrollment.status) : <span className="text-slate-400 dark:text-white/40 text-sm font-bold tracking-wide uppercase">Not enrolled</span>}
                                             </div>
                                             
                                             {(!enrollment || enrollment.status === 'denied') && (
@@ -126,11 +126,11 @@ const MyEnrollments = () => {
                         
                         {availableCourses.length === 0 && (
                             <div className="col-span-full py-20 flex flex-col items-center justify-center text-center">
-                                <div className="w-24 h-24 mb-6 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
+                                <div className="w-24 h-24 mb-6 rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center">
                                     <span className="text-4xl opacity-50">🛸</span>
                                 </div>
-                                <h3 className="text-xl font-bold text-white mb-2">No Courses Found</h3>
-                                <p className="text-white/40 max-w-md">There are currently no published courses available in the catalog. Check back later!</p>
+                                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">No Courses Found</h3>
+                                <p className="text-slate-500 dark:text-white/40 max-w-md">There are currently no published courses available in the catalog. Check back later!</p>
                             </div>
                         )}
                     </div>

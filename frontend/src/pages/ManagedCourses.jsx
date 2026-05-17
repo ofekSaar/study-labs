@@ -50,18 +50,18 @@ const ManagedCourses = () => {
                 {/* Header & Search */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                     <div>
-                        <h1 className="text-4xl font-display font-black text-white drop-shadow-md tracking-tight">Managed Courses</h1>
-                        <p className="text-white/60 text-lg mt-1 font-medium">View, search, and manage all your created courses.</p>
+                        <h1 className="text-4xl font-display font-black text-slate-900 dark:text-white drop-shadow-sm dark:drop-shadow-md tracking-tight">Managed Courses</h1>
+                        <p className="text-slate-500 dark:text-white/60 text-lg mt-1 font-medium">View, search, and manage all your created courses.</p>
                     </div>
                     <div className="flex items-center gap-3 w-full md:w-auto">
                         <div className="relative flex-1 md:w-80">
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40" size={18} />
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-white/40" size={18} />
                             <input 
                                 type="text"
                                 placeholder="Search courses..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full pl-11 pr-4 py-3 rounded-xl border border-white/10 bg-white/5 backdrop-blur-md text-white placeholder-white/40 focus:border-purple-400 focus:bg-white/10 focus:outline-none transition-all shadow-inner"
+                                className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-white/5 backdrop-blur-md text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-white/40 focus:border-purple-500 focus:bg-white dark:focus:bg-white/10 focus:outline-none transition-all shadow-sm dark:shadow-inner"
                             />
                         </div>
                         <button
@@ -83,14 +83,14 @@ const ManagedCourses = () => {
                         {filteredCourses.map(course => (
                             <div 
                                 key={course.id} 
-                                className="bg-white/5 backdrop-blur-xl rounded-3xl p-6 border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.4)] hover:-translate-y-1 hover:shadow-[0_16px_48px_rgba(0,0,0,0.5)] transition-all duration-300 group flex flex-col h-full relative overflow-hidden"
+                                className="glass-card rounded-3xl p-6 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 group flex flex-col h-full relative overflow-hidden"
                             >
                                 {/* Inner glow hover */}
                                 <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
                                 
                                 <div className="flex justify-between items-start mb-6 relative z-10">
-                                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-inner border border-white/10 ${course.color || 'bg-purple-500/20 text-purple-400'}`}>
-                                        <BookOpen size={28} className="drop-shadow-md" />
+                                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-inner border border-slate-200 dark:border-white/10 ${course.color || 'bg-purple-500/20 text-purple-400'}`}>
+                                        <BookOpen size={28} className="drop-shadow-sm dark:drop-shadow-md" />
                                     </div>
                                     <span className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 border shadow-inner ${
                                         course.generationStatus === 'generating' ? 'bg-indigo-500/20 text-indigo-400 border-indigo-500/30 drop-shadow-[0_0_8px_rgba(99,102,241,0.5)]' :
@@ -106,23 +106,23 @@ const ManagedCourses = () => {
                                 </div>
                                 
                                 <div className="relative z-10 flex-1 flex flex-col">
-                                    <h3 className="font-display font-bold text-2xl text-white mb-2 line-clamp-2 drop-shadow-md">
+                                    <h3 className="font-display font-bold text-2xl text-slate-900 dark:text-white mb-2 line-clamp-2 drop-shadow-sm dark:drop-shadow-md">
                                         {course.title || 'Untitled Course'}
                                     </h3>
-                                    <p className="text-white/60 text-sm mb-6 line-clamp-3 flex-1">
+                                    <p className="text-slate-500 dark:text-white/60 text-sm mb-6 line-clamp-3 flex-1">
                                         {course.description || 'No description provided.'}
                                     </p>
                                     
                                     <div className="mt-auto">
-                                        <hr className="border-white/10 mb-5" />
-                                        <div className="flex justify-between items-center bg-black/20 p-3 rounded-2xl border border-white/5">
+                                        <hr className="border-slate-200 dark:border-white/10 mb-5" />
+                                        <div className="flex justify-between items-center bg-slate-100 dark:bg-black/20 p-3 rounded-2xl border border-slate-200/50 dark:border-white/5">
                                             <div className="flex gap-4">
-                                                <div className="flex items-center gap-2 text-xs font-bold text-white/50 uppercase tracking-wide">
-                                                    <Users size={16} className="text-white/40" />
+                                                <div className="flex items-center gap-2 text-xs font-bold text-slate-500 dark:text-white/50 uppercase tracking-wide">
+                                                    <Users size={16} className="text-slate-400 dark:text-white/40" />
                                                     <span>{course.level || 'Beginner'}</span>
                                                 </div>
-                                                <div className="flex items-center gap-2 text-xs font-bold text-white/50 uppercase tracking-wide">
-                                                    <Clock size={16} className="text-white/40" />
+                                                <div className="flex items-center gap-2 text-xs font-bold text-slate-500 dark:text-white/50 uppercase tracking-wide">
+                                                    <Clock size={16} className="text-slate-400 dark:text-white/40" />
                                                     <span>{course.department || 'Other'}</span>
                                                 </div>
                                             </div>
@@ -130,7 +130,7 @@ const ManagedCourses = () => {
                                                 <button
                                                     onClick={() => handleDelete(course.id, course.title)}
                                                     disabled={deletingId === course.id}
-                                                    className="w-10 h-10 bg-red-500/20 hover:bg-red-500/40 text-red-400 border border-red-500/30 rounded-xl flex items-center justify-center transition-colors disabled:opacity-50 shadow-inner"
+                                                    className="w-10 h-10 bg-red-500/20 hover:bg-red-500/40 text-red-500 dark:text-red-400 border border-red-500/30 rounded-xl flex items-center justify-center transition-colors disabled:opacity-50 shadow-inner"
                                                     title="Delete course"
                                                 >
                                                     {deletingId === course.id ? (
@@ -141,7 +141,7 @@ const ManagedCourses = () => {
                                                 </button>
                                                 <button
                                                     onClick={() => navigate(`/instructor/course/${course.id}`)}
-                                                    className="w-10 h-10 bg-white/10 hover:bg-purple-600 text-white border border-white/20 rounded-xl flex items-center justify-center transition-colors shadow-[0_0_10px_rgba(255,255,255,0.1)] hover:shadow-[0_0_15px_rgba(124,58,237,0.5)]"
+                                                    className="w-10 h-10 bg-slate-200 dark:bg-white/10 hover:bg-purple-600 text-slate-700 dark:text-white border border-slate-300 dark:border-white/20 rounded-xl flex items-center justify-center transition-colors shadow-sm dark:shadow-inner"
                                                     title="View course"
                                                 >
                                                     <ArrowRight size={18} />
@@ -154,12 +154,12 @@ const ManagedCourses = () => {
                         ))}
                     </div>
                 ) : (
-                    <div className="text-center py-24 bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10 border-dashed relative z-10">
-                        <div className="w-20 h-20 bg-white/5 border border-white/10 text-white/50 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <div className="text-center py-24 glass-card rounded-3xl border-dashed relative z-10">
+                        <div className="w-20 h-20 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-400 dark:text-white/50 rounded-full flex items-center justify-center mx-auto mb-6">
                             <BookOpen size={40} />
                         </div>
-                        <h3 className="text-2xl font-black text-white drop-shadow-md mb-3">No courses found</h3>
-                        <p className="text-white/60 mb-8 max-w-md mx-auto text-lg">
+                        <h3 className="text-2xl font-black text-slate-900 dark:text-white drop-shadow-sm dark:drop-shadow-md mb-3">No courses found</h3>
+                        <p className="text-slate-500 dark:text-white/60 mb-8 max-w-md mx-auto text-lg">
                             {searchTerm ? 'Try adjusting your search filters.' : 'You haven\'t created any courses yet.'}
                         </p>
                         {!searchTerm && (

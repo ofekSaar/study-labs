@@ -148,8 +148,13 @@ body {
 
 /* ── Dot Grid Background ─────────────────────────────── */
 .dot-grid {
-    background-image: radial-gradient(circle, #c7d2fe 1px, transparent 1px);
+    background-image: radial-gradient(circle, rgba(99, 102, 241, 0.07) 1.2px, transparent 1.2px);
     background-size: 28px 28px;
+    transition: background 0.3s ease;
+}
+
+.dark .dot-grid {
+    background-image: radial-gradient(circle, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
 }
 
 /* ── RTL Support ─────────────────────────────────────── */
