@@ -93,6 +93,11 @@ export const getMe = async (req, res) => {
  */
 export const setRole = async (req, res, next) => {
   try {
+    // Check if role is already set to prevent changing it
+    if (req.user.role || (req.user.roles && req.user.roles.length > 0)) {
+      throw createError(400, 'Role already set');
+    }
+
     const { role, roles } = req.body;
 
     // Support both single role and multiple roles

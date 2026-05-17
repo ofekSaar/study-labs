@@ -11,6 +11,10 @@ import StreakCalendar from '../components/gamification/StreakCalendar';
 import Leaderboard from '../components/gamification/Leaderboard';
 import LevelUpModal from '../components/gamification/LevelUpModal';
 import ConfettiEffect from '../components/gamification/ConfettiEffect';
+import BadgeDisplay from '../components/gamification/BadgeDisplay';
+import QuestPanel from '../components/gamification/QuestPanel';
+import WeeklyInsights from '../components/gamification/WeeklyInsights';
+import XPMultiplierBanner from '../components/gamification/XPMultiplierBanner';
 
 const Dashboard = () => {
     const { courses, fetchCourses, fetchStats, isLoading, user } = useCourseStore();
@@ -79,6 +83,9 @@ const Dashboard = () => {
                     </div>
                 </header>
 
+                {/* XP Multiplier Banner */}
+                <XPMultiplierBanner />
+
                 {/* ── Main bento grid ── */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
@@ -141,54 +148,36 @@ const Dashboard = () => {
                             </div>
                         </div>
 
-                        {/* ── Daily Challenge ── */}
-                        <DailyChallengeCard />
+                        {/* Side Panel: Daily Challenge */}
+                        <div className="space-y-5">
+                            <DailyChallengeCard />
+                        </div>
 
                     </div>
                 </div>
 
-                {/* ── Bottom row: Streak Calendar + Leaderboard + Achievements ── */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 pb-10">
+                {/* ── Middle Row: Quests (50%) & Leaderboard (50%) for perfect list visibility ── */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+                    {/* Active Learning Quests */}
+                    <QuestPanel />
+
+                    {/* Leaderboard */}
+                    <Leaderboard />
+                </div>
+
+                {/* ── Bottom Row: Bento Cards with perfect horizontal breathing room ── */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6 pb-10">
 
                     {/* Streak Calendar */}
                     <StreakCalendar />
 
-                    {/* Leaderboard */}
-                    <Leaderboard />
+                    {/* AI Weekly Insights */}
+                    <WeeklyInsights />
 
-                    {/* Recent Achievements */}
-                    <div className="glass-card rounded-3xl p-5 sm:p-6 shadow-lg relative overflow-hidden">
-                        <h3 className="text-xs font-black text-slate-500 dark:text-white/50 uppercase tracking-widest mb-4">Recent Achievements</h3>
-
-                        <div className="space-y-3">
-                            {[
-                                { icon: <Award size={20} className="text-emerald-600 dark:text-emerald-400" />, bg: 'bg-emerald-500/10 dark:bg-emerald-500/20 border-emerald-500/20 dark:border-emerald-500/30', title: 'First Steps', desc: 'Started your learning journey.' },
-                                { icon: <Flame size={20} className="text-orange-600 dark:text-orange-400 fill-orange-500/20" />, bg: 'bg-orange-500/10 dark:bg-orange-500/20 border-orange-500/20 dark:border-orange-500/30', title: 'On Fire', desc: 'Logged in for multiple days.' },
-                            ].map((a, i) => (
-                                <div key={i} className="flex items-center gap-4 bg-slate-100/50 dark:bg-black/20 p-3 rounded-2xl border border-slate-200/50 dark:border-white/5 hover:bg-slate-200 dark:hover:bg-white/10 transition-colors group/badge cursor-default">
-                                    <div className={`w-12 h-12 rounded-full ${a.bg} border flex items-center justify-center flex-shrink-0 group-hover/badge:scale-110 transition-transform`}>
-                                        {a.icon}
-                                    </div>
-                                    <div>
-                                        <h4 className="text-sm font-bold text-slate-800 dark:text-white">{a.title}</h4>
-                                        <p className="text-[11px] text-slate-500 dark:text-white/50 leading-tight mt-0.5">{a.desc}</p>
-                                    </div>
-                                </div>
-                            ))}
-
-                            {/* Locked */}
-                            <div className="flex items-center gap-4 bg-slate-100/30 dark:bg-black/10 p-3 rounded-2xl border border-slate-200/50 dark:border-white/5 opacity-50 grayscale cursor-not-allowed">
-                                <div className="w-12 h-12 rounded-full bg-slate-200/50 dark:bg-white/5 border border-slate-300 dark:border-white/10 flex items-center justify-center flex-shrink-0">
-                                    <Trophy size={20} className="text-slate-400 dark:text-white/40" />
-                                </div>
-                                <div>
-                                    <h4 className="text-sm font-bold text-slate-500 dark:text-white/60">Mastermind</h4>
-                                    <p className="text-[11px] text-slate-400 dark:text-white/40 leading-tight mt-0.5">Reach Level 5 (Locked)</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    {/* Achievements Badge Gallery */}
+                    <BadgeDisplay />
                 </div>
+
             </div>
 
             <NodeDrawer />

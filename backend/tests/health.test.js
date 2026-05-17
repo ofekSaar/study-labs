@@ -1,5 +1,5 @@
 import request from 'supertest';
-import app from '../../server.js';
+import app from '../server.js';
 import { connectTestDB, closeTestDB } from './utils/testSetup.js';
 
 describe('Health Check API', () => {

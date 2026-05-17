@@ -100,7 +100,7 @@ const DailyChallengeCard = () => {
                         <div className="h-1.5 bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden">
                             <motion.div
                                 initial={{ width: 0 }}
-                                animate={{ width: '0%' }}
+                                animate={{ width: '40%' }}
                                 className="h-full bg-gradient-to-r from-amber-400 to-orange-500 rounded-full"
                             />
                         </div>

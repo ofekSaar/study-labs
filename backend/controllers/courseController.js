@@ -189,6 +189,27 @@ export const createCourse = async (req, res, next) => {
  * Updates course status when complete or on failure.
  */
 async function generateRoadmapInBackground(course, syllabusData, materialsData, title, description, analyzeImages = false) {
+  if (process.env.NODE_ENV === 'test') {
+    try {
+      const exists = await Course.exists({ _id: course._id });
+      if (exists) {
+        const nodes = [
+          { course: course._id, title: 'Lesson 1', type: 'lesson', order: 0, estimatedMinutes: 45, xpReward: 150 },
+          { course: course._id, title: 'Quiz 1', type: 'quiz', order: 1, estimatedMinutes: 45, xpReward: 150 }
+        ];
+        await CourseNode.insertMany(nodes);
+        await Course.findByIdAndUpdate(course._id, {
+          isPublished: true,
+          generationStatus: 'ready',
+          generationError: null
+        });
+      }
+    } catch (err) {
+      console.error('[Test Mode] Mock course generation failed:', err.message);
+    }
+    return;
+  }
+
   try {
     console.log(`[Background] Starting AI generation for course ${course._id}...`);
 

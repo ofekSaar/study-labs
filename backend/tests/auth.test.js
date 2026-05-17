@@ -1,5 +1,5 @@
 import request from 'supertest';
-import app from '../../server.js';
+import app from '../server.js';
 import { connectTestDB, closeTestDB, clearTestDB } from './utils/testSetup.js';
 import { generateTestUser } from './utils/authHelper.js';
 import User from '../models/User.js';
@@ -27,8 +27,8 @@ describe('Auth API', () => {
                 .set('Authorization', `Bearer ${token}`);
             
             expect(res.status).toBe(200);
-            expect(res.body.user.email).toBe(user.email);
-            expect(res.body.user.role).toBe('student');
+            expect(res.body.data.user.email).toBe(user.email);
+            expect(res.body.data.user.role).toBe('student');
         });
 
         it('should return 401 if no token provided', async () => {
@@ -55,7 +55,7 @@ describe('Auth API', () => {
                 .send({ role: 'instructor' });
             
             expect(res.status).toBe(200);
-            expect(res.body.user.role).toBe('instructor');
+            expect(res.body.data.user.role).toBe('instructor');
             
             // Verify in DB
             const dbUser = await User.findById(user._id);

@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Check, Lock, Star, Play } from 'lucide-react';
+import { Check, Lock, Star, Play, Trophy, Zap } from 'lucide-react';
 
 const RoadmapNode = ({ node, index, onClick, alignment, isSelected }) => {
     const isCompleted = node.status === 'completed';
@@ -9,20 +9,34 @@ const RoadmapNode = ({ node, index, onClick, alignment, isSelected }) => {
 
     // Node Variant Styles
     const getNodeStyles = () => {
-        if (isCompleted) return 'bg-emerald-500 border-emerald-600 shadow-emerald-200';
-        if (isCurrent) return 'bg-studylabs-blue border-blue-600 ring-4 ring-blue-100 scale-110 z-10';
-        return 'bg-gray-200 border-gray-300 grayscale';
+        if (isCompleted) return 'bg-gradient-to-br from-emerald-400 to-teal-500 border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.3)] text-white';
+        if (isCurrent) return 'bg-gradient-to-br from-indigo-500 to-purple-600 border-indigo-600 shadow-[0_0_20px_rgba(99,102,241,0.5)] scale-110 z-10 text-white';
+        return 'bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-400 dark:text-white/20';
     };
 
     return (
-        <div className="relative group">
+        <div className="relative group flex flex-col items-center">
+            {/* Connection line helpers */}
+            {isCurrent && (
+                <div className="absolute inset-0 -m-1.5 rounded-full bg-indigo-500/25 animate-ping pointer-events-none" />
+            )}
+
             {/* Text Label - Absolute relative to the button center */}
             <div
-                className={`hidden md:block absolute top-1/2 -translate-y-1/2 w-60 transition-opacity duration-300 ${isSelected ? 'opacity-0' : 'opacity-100'
-                    } ${alignment === 'left' ? 'right-full mr-6 text-right' : 'left-full ml-6 text-left'}`}
+                className={`hidden md:block absolute top-1/2 -translate-y-1/2 w-60 transition-all duration-300 ${
+                    isSelected ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
+                } ${alignment === 'left' ? 'right-full mr-8 text-right' : 'left-full ml-8 text-left'}`}
             >
-                <h3 className={`font-bold text-base leading-tight ${isLocked ? 'text-gray-400' : 'text-gray-900 group-hover:text-studylabs-blue transition-colors'}`}>{node.title}</h3>
-                <p className="text-xs text-gray-400 uppercase tracking-wider mt-1">{node.type}</p>
+                <h3 className={`font-black text-sm uppercase tracking-wider leading-tight transition-colors ${
+                    isLocked 
+                        ? 'text-slate-400 dark:text-white/20' 
+                        : 'text-slate-800 dark:text-white group-hover:text-indigo-500 dark:group-hover:text-indigo-400'
+                }`}>
+                    {node.title}
+                </h3>
+                <p className="text-[10px] font-black text-indigo-500/70 dark:text-indigo-400/50 uppercase tracking-widest mt-1">
+                    {node.type || 'Lesson'}
+                </p>
             </div>
 
             {/* The Node Itself */}
@@ -31,29 +45,39 @@ const RoadmapNode = ({ node, index, onClick, alignment, isSelected }) => {
                 whileTap={!isLocked ? { scale: 0.95 } : {}}
                 onClick={!isLocked ? onClick : undefined}
                 className={`
-                    relative w-20 h-20 rounded-full border-b-4 shadow-lg flex items-center justify-center transition-all duration-300 z-20
+                    relative w-18 h-18 rounded-full border-b-4 flex items-center justify-center transition-all duration-300 z-20
                     ${getNodeStyles()}
-                    ${isCurrent ? 'animate-bounce-subtle' : ''}
                 `}
             >
                 {/* Icon inside Node */}
-                {isCompleted && <Check className="text-white w-8 h-8 font-bold" strokeWidth={4} />}
-                {isLocked && <Lock className="text-gray-400 w-8 h-8" />}
-                {isCurrent && <Play className="text-white w-8 h-8 fill-white ml-1" />}
+                {isCompleted && <Check className="w-7 h-7 font-black" strokeWidth={4} />}
+                {isLocked && <Lock className="w-6 h-6" />}
+                {isCurrent && <Play className="w-6 h-6 fill-white ml-0.5" />}
 
                 {/* Star Rating (if completed) */}
                 {isCompleted && (
-                    <div className="absolute -top-4 flex gap-1 bg-white px-2 py-0.5 rounded-full shadow-sm border border-gray-100">
+                    <div className="absolute -top-3.5 flex gap-0.5 bg-white dark:bg-slate-800 px-1.5 py-0.5 rounded-full shadow-md border border-slate-100 dark:border-white/5 scale-90">
                         {[1, 2, 3].map(i => (
-                            <Star key={i} size={10} className="fill-yellow-400 text-yellow-500" />
+                            <Star key={i} size={8} className="fill-amber-400 text-amber-500" />
                         ))}
                     </div>
+                )}
+
+                {/* XP Reward Badge */}
+                {!isCompleted && !isLocked && (
+                    <span className="absolute -bottom-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-[9px] font-black text-white px-2 py-0.5 rounded-full uppercase tracking-wider shadow-[0_0_8px_rgba(99,102,241,0.4)]">
+                        +{node.xpReward || 150} XP
+                    </span>
                 )}
             </motion.button>
 
             {/* Mobile Title (Below Node) */}
-            <div className="md:hidden absolute top-24 left-1/2 -translate-x-1/2 text-center w-32">
-                <h3 className={`font-bold text-sm ${isLocked ? 'text-gray-400' : 'text-gray-900'}`}>{node.title}</h3>
+            <div className="md:hidden absolute top-20 text-center w-32">
+                <h3 className={`font-black text-xs uppercase tracking-wider leading-tight ${
+                    isLocked ? 'text-slate-400 dark:text-white/20' : 'text-slate-800 dark:text-white'
+                }`}>
+                    {node.title}
+                </h3>
             </div>
         </div>
     );

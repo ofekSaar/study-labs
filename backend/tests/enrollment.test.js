@@ -1,5 +1,5 @@
 import request from 'supertest';
-import app from '../../server.js';
+import app from '../server.js';
 import { connectTestDB, closeTestDB, clearTestDB } from './utils/testSetup.js';
 import { generateTestUser } from './utils/authHelper.js';
 import Course from '../models/Course.js';
@@ -30,21 +30,30 @@ describe('Enrollments API', () => {
 
         course = await Course.create({
             title: 'Test Course',
+            department: 'cs',
+            description: 'This is a test description that meets all required constraints.',
             instructor: instructor._id,
-            status: 'published'
+            syllabus: {
+                filename: 'syllabus.pdf',
+                originalName: 'syllabus.pdf',
+                mimetype: 'application/pdf',
+                storagePath: 'uploads/syllabus.pdf',
+                size: 1024
+            },
+            isPublished: true
         });
     });
 
-    describe('POST /api/enrollments/request', () => {
+    describe('POST /api/enrollments', () => {
         it('should allow student to request enrollment', async () => {
             const res = await request(app)
-                .post('/api/enrollments/request')
+                .post('/api/enrollments')
                 .set('Authorization', `Bearer ${studentToken}`)
                 .send({ courseId: course._id });
             
             expect(res.status).toBe(201);
-            expect(res.body.enrollment.status).toBe('pending');
-            expect(res.body.enrollment.student).toBe(student._id.toString());
+            expect(res.body.data.enrollment.status).toBe('pending');
+            expect(res.body.data.enrollment.student._id).toBe(student._id.toString());
         });
 
         it('should prevent duplicate requests', async () => {
@@ -55,16 +64,16 @@ describe('Enrollments API', () => {
             });
 
             const res = await request(app)
-                .post('/api/enrollments/request')
+                .post('/api/enrollments')
                 .set('Authorization', `Bearer ${studentToken}`)
                 .send({ courseId: course._id });
             
             expect(res.status).toBe(400);
-            expect(res.body.message).toMatch(/already requested/i);
+            expect(res.body.message).toMatch(/already pending|already requested/i);
         });
     });
 
-    describe('PUT /api/enrollments/:id/status', () => {
+    describe('PUT /api/enrollments/:id/approve', () => {
         let enrollment;
 
         beforeEach(async () => {
@@ -77,17 +86,17 @@ describe('Enrollments API', () => {
 
         it('should allow instructor to approve enrollment', async () => {
             const res = await request(app)
-                .put(`/api/enrollments/${enrollment._id}/status`)
+                .put(`/api/enrollments/${enrollment._id}/approve`)
                 .set('Authorization', `Bearer ${instructorToken}`)
                 .send({ status: 'approved' });
             
             expect(res.status).toBe(200);
-            expect(res.body.enrollment.status).toBe('approved');
+            expect(res.body.data.enrollment.status).toBe('approved');
         });
 
         it('should forbid students from changing status', async () => {
             const res = await request(app)
-                .put(`/api/enrollments/${enrollment._id}/status`)
+                .put(`/api/enrollments/${enrollment._id}/approve`)
                 .set('Authorization', `Bearer ${studentToken}`)
                 .send({ status: 'approved' });
             
