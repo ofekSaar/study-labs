@@ -1,14 +1,12 @@
-from typing import List
 from pydantic import BaseModel
+from typing import List
 
-class Challenge(BaseModel):
-    id: int
+class ChallengeSchema(BaseModel):
     name: str
     description: str
     points: int
 
-class Leaderboard(BaseModel):
-    id: int
+class LeaderboardSchema(BaseModel):
     user_id: int
     challenge_id: int
     score: int

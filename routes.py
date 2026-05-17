@@ -1,28 +1,25 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select
-from sqlalchemy.orm import Session
-from models import MasteryBadge, UserMasteryBadges
+from fastapi import FastAPI, HTTPException
+from services import ChallengeService, LeaderboardService
 
-router = APIRouter()
+app = FastAPI()
 
-@router.get("/mastery-badges/")
-async def get_mastery_badges(db: Session = Depends()):
-    result = db.execute(select(MasteryBadge))
-    return result.all()
+challenge_service = ChallengeService()
+leaderboard_service = LeaderboardService()
 
-@router.post("/mastery-badges/")
-async def create_mastery_badge(mastery_badge: MasteryBadge, db: Session = Depends()):
-    db.add(mastery_badge)
-    db.commit()
-    return mastery_badge
+@app.get("/challenges")
+async def get_challenges():
+    return challenge_service.get_challenges()
 
-@router.get("/user-mastery-badges/{user_id}")
-async def get_user_mastery_badges(user_id: int, db: Session = Depends()):
-    result = db.execute(select(UserMasteryBadges).where(UserMasteryBadges.user_id == user_id))
-    return result.all()
+@app.post("/challenges")
+async def create_challenge(challenge: ChallengeSchema):
+    new_challenge = challenge_service.create_challenge(challenge)
+    return new_challenge
 
-@router.post("/user-mastery-badges/")
-async def create_user_mastery_badge(user_mastery_badge: UserMasteryBadges, db: Session = Depends()):
-    db.add(user_mastery_badge)
-    db.commit()
-    return user_mastery_badge
+@app.get("/leaderboards")
+async def get_leaderboards():
+    return leaderboard_service.get_leaderboards()
+
+@app.post("/leaderboards")
+async def create_leaderboard(leaderboard: LeaderboardSchema):
+    new_leaderboard = leaderboard_service.create_leaderboard(leaderboard)
+    return new_leaderboard
