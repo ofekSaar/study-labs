@@ -3,7 +3,7 @@
  * Handles JWT injection, base URL, and error formatting.
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5005';
 
 /**
  * Get the stored JWT token.

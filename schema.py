@@ -1,8 +1,10 @@
 from pydantic import BaseModel
 
-class AdaptiveLearningPathSchema(BaseModel):
-    id: int
+class MasteryBadgeSchema(BaseModel):
     name: str
     description: str
+    image_url: str
+
+class UserMasteryBadgesSchema(BaseModel):
     user_id: int
-    path_item_ids: List[int]
+    mastery_badge_id: int

@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import api, { getToken, setToken, removeToken } from '../utils/api.js';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5005';
 
 const useAuthStore = create((set, get) => ({
     user: null,
