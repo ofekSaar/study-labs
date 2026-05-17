@@ -7,6 +7,15 @@ import QuizAttempt from '../models/QuizAttempt.js';
 import storage from '../services/storage/index.js';
 import { generateRoadmap } from '../services/aiService.js';
 
+const safeJSONParse = (str, fieldName) => {
+  if (!str) return undefined;
+  try {
+    return JSON.parse(str);
+  } catch (error) {
+    throw createError(400, `Invalid JSON format in field: ${fieldName}`);
+  }
+};
+
 /**
  * List all published courses.
  */
@@ -152,8 +161,8 @@ export const createCourse = async (req, res, next) => {
       instructor: req.user._id,
       syllabus: syllabusData,
       materials: materialsData,
-      aiConfig: aiConfig ? JSON.parse(aiConfig) : undefined,
-      gamification: gamification ? JSON.parse(gamification) : undefined,
+      aiConfig: safeJSONParse(aiConfig, 'aiConfig'),
+      gamification: safeJSONParse(gamification, 'gamification'),
       isPublished: false,
       generationStatus: 'generating',
     });
@@ -257,11 +266,11 @@ export const updateCourse = async (req, res, next) => {
       if (req.body[field] !== undefined) updates[field] = req.body[field];
     });
 
-    if (req.body.aiConfig) {
-      updates.aiConfig = JSON.parse(req.body.aiConfig);
+    if (req.body.aiConfig !== undefined) {
+      updates.aiConfig = safeJSONParse(req.body.aiConfig, 'aiConfig');
     }
-    if (req.body.gamification) {
-      updates.gamification = JSON.parse(req.body.gamification);
+    if (req.body.gamification !== undefined) {
+      updates.gamification = safeJSONParse(req.body.gamification, 'gamification');
     }
 
     const updated = await Course.findByIdAndUpdate(
@@ -288,18 +297,18 @@ export const deleteCourse = async (req, res, next) => {
       throw createError(403, 'You can only delete your own courses');
     }
 
-    // Clean up materials from storage
-    for (const material of course.materials) {
-      await storage.delete(material.storagePath);
-    }
+    // Clean up materials from storage (parallel)
+    await Promise.all(
+      course.materials.map(material => storage.delete(material.storagePath))
+    );
 
-    // Clean up lesson markdown files
+    // Clean up lesson markdown files (parallel)
     const nodes = await CourseNode.find({ course: course._id });
-    for (const node of nodes) {
-      if (node.lessonContentPath) {
-        await storage.delete(node.lessonContentPath);
-      }
-    }
+    const contentPaths = nodes.map(n => n.lessonContentPath).filter(Boolean);
+    
+    await Promise.all(
+      contentPaths.map(path => storage.delete(path))
+    );
 
     // Delete related data
     await CourseNode.deleteMany({ course: course._id });
@@ -517,14 +526,20 @@ export const getCourseAnalytics = async (req, res, next) => {
             : 'Low progress',
       }));
 
+    // Calculate node completion frequencies once (O(N) instead of N^2)
+    const nodeCompletionCounts = {};
+    progressRecords.forEach((p) => {
+      p.completedNodes.forEach((nodeId) => {
+        const idStr = nodeId.toString();
+        nodeCompletionCounts[idStr] = (nodeCompletionCounts[idStr] || 0) + 1;
+      });
+    });
+
     // Class progress per node (how many students reached each node)
     const nodeProgress = nodes.map((node) => {
-      const studentsAtOrPast = progressRecords.filter(
-        (p) => p.completedNodes.some((id) => id.toString() === node._id.toString())
-      ).length;
       return {
         name: node.title,
-        students: studentsAtOrPast,
+        students: nodeCompletionCounts[node._id.toString()] || 0,
       };
     });
 

@@ -41,11 +41,11 @@ const MyEnrollments = () => {
     const getStatusBadge = (status) => {
         switch (status) {
             case 'approved':
-                return <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold uppercase tracking-wide">Approved</span>;
+                return <span className="px-3 py-1 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full text-xs font-bold uppercase tracking-wide drop-shadow-md">Approved</span>;
             case 'pending':
-                return <span className="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs font-bold uppercase tracking-wide">Pending</span>;
+                return <span className="px-3 py-1 bg-orange-500/20 text-orange-400 border border-orange-500/30 rounded-full text-xs font-bold uppercase tracking-wide drop-shadow-md">Pending</span>;
             case 'denied':
-                return <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-bold uppercase tracking-wide">Denied</span>;
+                return <span className="px-3 py-1 bg-red-500/20 text-red-400 border border-red-500/30 rounded-full text-xs font-bold uppercase tracking-wide drop-shadow-md">Denied</span>;
             default:
                 return null;
         }
@@ -53,10 +53,19 @@ const MyEnrollments = () => {
 
     return (
         <StudentLayout title="Find Courses">
-            <div className="p-6 max-w-6xl mx-auto pb-32">
+            {/* Ambient background orbs */}
+            <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+                <div className="absolute inset-0 dot-grid opacity-60" />
+                <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full"
+                    style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 70%)', filter: 'blur(40px)' }} />
+                <div className="absolute top-1/2 -right-32 w-80 h-80 rounded-full"
+                    style={{ background: 'radial-gradient(circle, rgba(124,58,237,0.10) 0%, transparent 70%)', filter: 'blur(40px)' }} />
+            </div>
+
+            <div className="relative z-[1] p-6 max-w-[1600px] mx-auto pb-32">
                 <div className="mb-10">
-                    <h1 className="font-display text-4xl font-extrabold text-gray-900 mb-4 tracking-tight">Discover Courses</h1>
-                    <p className="text-gray-500 text-lg">Browse available courses and request enrollment.</p>
+                    <h1 className="font-display text-4xl font-black text-white mb-4 tracking-tight drop-shadow-md">Discover Courses</h1>
+                    <p className="text-white/60 text-lg font-medium">Browse available courses and request enrollment.</p>
                 </div>
 
                 {isLoading ? (
@@ -70,37 +79,41 @@ const MyEnrollments = () => {
                             const enrollment = myEnrollments.find(e => e.course._id === course._id || e.course === course._id);
                             
                             return (
-                                <div key={course._id} className="bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition flex flex-col overflow-hidden h-full">
-                                    <div className={`h-32 ${course.color || 'bg-studylabs-blue'} relative`}>
-                                        <div className="absolute inset-0 bg-black/10"></div>
+                                <div key={course._id} className="bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.4)] hover:-translate-y-1 hover:shadow-[0_16px_48px_rgba(0,0,0,0.5)] transition-all duration-300 flex flex-col overflow-hidden h-full group relative">
+                                    {/* Inner glow hover */}
+                                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                                    
+                                    <div className={`h-36 ${course.color || 'bg-indigo-600'} relative`}>
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
                                         <div className="absolute bottom-4 left-6">
-                                            <span className="px-3 py-1 bg-white/20 backdrop-blur-md text-white text-xs font-bold rounded-full border border-white/20">
-                                                {course.department.toUpperCase()}
+                                            <span className="px-3 py-1.5 bg-white/10 backdrop-blur-md text-white text-[10px] font-black tracking-widest rounded-full border border-white/20 shadow-inner uppercase">
+                                                {course.department?.toUpperCase() || 'GENERAL'}
                                             </span>
                                         </div>
                                     </div>
                                     
-                                    <div className="p-6 flex-1 flex flex-col">
-                                        <h3 className="font-display font-bold text-xl text-gray-900 mb-2">{course.title}</h3>
-                                        <p className="text-gray-500 text-sm mb-4 line-clamp-3 flex-1">{course.description}</p>
+                                    <div className="p-6 flex-1 flex flex-col relative z-10">
+                                        <h3 className="font-display font-bold text-xl text-white mb-2 drop-shadow-md">{course.title}</h3>
+                                        <p className="text-white/60 text-sm mb-6 line-clamp-3 flex-1">{course.description}</p>
                                         
-                                        <div className="flex items-center gap-3 mb-6">
-                                            <img src={course.instructor?.avatar || 'https://via.placeholder.com/150'} alt="Instructor" className="w-8 h-8 rounded-full bg-gray-200" />
+                                        <div className="flex items-center gap-3 mb-6 bg-black/20 p-3 rounded-2xl border border-white/5">
+                                            <img src={course.instructor?.avatar || 'https://via.placeholder.com/150'} alt="Instructor" className="w-10 h-10 rounded-full bg-white/10 border border-white/20" />
                                             <div className="text-sm">
-                                                <p className="text-gray-900 font-medium">{course.instructor?.name || 'Instructor'}</p>
+                                                <p className="text-white font-bold">{course.instructor?.name || 'Instructor'}</p>
+                                                <p className="text-[10px] text-white/40 uppercase tracking-widest mt-0.5">Course Creator</p>
                                             </div>
                                         </div>
 
-                                        <div className="mt-auto pt-4 border-t border-gray-50 flex items-center justify-between">
+                                        <div className="mt-auto pt-4 border-t border-white/10 flex items-center justify-between">
                                             <div>
-                                                {enrollment ? getStatusBadge(enrollment.status) : <span className="text-gray-400 text-sm font-medium">Not enrolled</span>}
+                                                {enrollment ? getStatusBadge(enrollment.status) : <span className="text-white/40 text-sm font-bold tracking-wide uppercase">Not enrolled</span>}
                                             </div>
                                             
                                             {(!enrollment || enrollment.status === 'denied') && (
                                                 <button
                                                     onClick={() => handleRequest(course._id)}
                                                     disabled={isRequesting}
-                                                    className="bg-studylabs-blue text-white px-4 py-2 rounded-xl text-sm font-bold shadow-md shadow-blue-200 hover:bg-studylabs-dark transition disabled:opacity-50"
+                                                    className="bg-indigo-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-[0_0_15px_rgba(99,102,241,0.4)] hover:bg-indigo-400 transition-colors disabled:opacity-50"
                                                 >
                                                     {enrollment?.status === 'denied' ? 'Request Again' : 'Request Access'}
                                                 </button>
@@ -112,8 +125,12 @@ const MyEnrollments = () => {
                         })}
                         
                         {availableCourses.length === 0 && (
-                            <div className="col-span-full py-12 text-center text-gray-500">
-                                No published courses available right now.
+                            <div className="col-span-full py-20 flex flex-col items-center justify-center text-center">
+                                <div className="w-24 h-24 mb-6 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
+                                    <span className="text-4xl opacity-50">🛸</span>
+                                </div>
+                                <h3 className="text-xl font-bold text-white mb-2">No Courses Found</h3>
+                                <p className="text-white/40 max-w-md">There are currently no published courses available in the catalog. Check back later!</p>
                             </div>
                         )}
                     </div>

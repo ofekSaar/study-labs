@@ -42,7 +42,7 @@ const useCourseStore = create((set, get) => ({
             // For each enrolled course, fetch progress
             const enrichedCourses = await Promise.all(
                 courses
-                    .filter((c) => c.enrollmentStatus === 'approved')
+                    .filter((c) => c.enrollmentStatus === 'approved' || c.enrollmentStatus === 'active')
                     .map(async (course) => {
                         try {
                             const progressRes = await api.get(`/api/progress/course/${course._id}`);

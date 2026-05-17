@@ -78,3 +78,54 @@ class PdfParser(BaseParser):
             images=images,
             metadata={"page_count": len(text_parts), "image_count": len(images)}
         )
+
+    def parse_in_chunks(self, file_bytes: bytes, filename: str, chunk_size: int = 10):
+        logger.info(f"PdfParser: Processing '{filename}' in chunks of {chunk_size} pages...")
+        try:
+            doc = fitz.open(stream=file_bytes, filetype="pdf")
+            total_pages = len(doc)
+            
+            for chunk_start in range(0, total_pages, chunk_size):
+                text_parts = []
+                images = []
+                chunk_end = min(chunk_start + chunk_size, total_pages)
+                
+                for page_num in range(chunk_start, chunk_end):
+                    page = doc.load_page(page_num)
+                    page_text = page.get_text()
+                    
+                    # --- Text Extraction ---
+                    if len(page_text.strip()) < 50:
+                        logger.debug(f"  Page {page_num + 1}: text too short, attempting OCR...")
+                        try:
+                            pix = page.get_pixmap()
+                            img_data = pix.tobytes("png")
+                            image = Image.open(io.BytesIO(img_data))
+                            ocr_text = pytesseract.image_to_string(image, lang='heb+eng')
+                            page_text = ocr_text
+                        except Exception as e:
+                            logger.warning(f"  OCR failed on page {page_num + 1}: {e}")
+                    
+                    text_parts.append(page_text)
+                    
+                    # --- Embedded Image Extraction ---
+                    try:
+                        image_list = page.get_images(full=True)
+                        for img_index, img_info in enumerate(image_list):
+                            xref = img_info[0]
+                            base_image = doc.extract_image(xref)
+                            if base_image and base_image.get("image"):
+                                images.append(base_image["image"])
+                                logger.debug(f"  Page {page_num + 1}: extracted image {img_index + 1}")
+                    except Exception as e:
+                        logger.warning(f"  Image extraction failed on page {page_num + 1}: {e}")
+                
+                yield ParseResult(
+                    text="\n\n".join(text_parts),
+                    images=images,
+                    metadata={"chunk_start": chunk_start + 1, "chunk_end": chunk_end, "total_pages": total_pages}
+                )
+            doc.close()
+        except Exception as e:
+            logger.error(f"PdfParser chunking Error for '{filename}': {e}")
+            yield ParseResult(text="", images=[], metadata={"error": str(e)})

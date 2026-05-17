@@ -20,8 +20,18 @@ const RoadmapView = () => {
     }, [course?.id, fetchCourseNodes]);
 
     // Safety check
-    if (!course) return <div className="p-8 text-center text-gray-500">Select a course to view roadmap</div>;
-    if (isLoadingNodes) return <div className="p-20 flex justify-center"><div className="animate-spin w-8 h-8 border-4 border-studylabs-blue border-t-transparent rounded-full"></div></div>;
+    if (!course) return (
+        <div className="p-20 text-center">
+            <div className="text-5xl mb-4">🗺️</div>
+            <p className="text-gray-400 font-medium">Select a course to view roadmap</p>
+        </div>
+    );
+    if (isLoadingNodes) return (
+        <div className="p-20 flex flex-col items-center gap-4">
+            <div className="w-12 h-12 rounded-full border-4 border-transparent border-t-indigo-500 border-r-purple-500 animate-spin" />
+            <p className="text-sm text-gray-400 font-medium">Loading roadmap...</p>
+        </div>
+    );
 
     // Constants for layout
     const NODE_HEIGHT = 120; // Vertical distance between nodes
@@ -61,27 +71,36 @@ const RoadmapView = () => {
     // We render nodes absolutely positioned on top of those coordinates.
 
     return (
-        <div className="relative min-h-screen pb-32">
-            <div className="text-center pt-24 pb-10">
-                <h2 className="text-3xl font-display font-bold text-gray-900">{course.title}</h2>
-                <p className="text-gray-500 mt-2">Level: <span className="font-bold text-studylabs-blue">{course.level}</span></p>
+        <div className="relative min-h-full pb-32">
+            <div className="text-center pt-8 pb-10">
+                <h2 className="text-2xl font-display font-black text-white drop-shadow-md mb-1">{course.title}</h2>
+                <p className="text-white/60 text-sm font-medium mt-1">
+                    Level: <span className="font-bold text-indigo-400">{course.level}</span>
+                    <span className="mx-2 text-white/20">•</span>
+                    <span>{course.nodes?.length ?? 0} modules</span>
+                </p>
             </div>
 
             {/* Container for Map */}
-            <div className="relative w-full max-w-[700px] mx-auto min-h-[800px]">
+            <div className="relative w-full max-w-[700px] mx-auto min-h-[600px]">
 
                 {/* SVG Path Layer */}
                 <svg className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-visible" xmlns="http://www.w3.org/2000/svg">
                     {/* Defs for gradients etc */}
                     <defs>
                         <linearGradient id="pathGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                            <stop offset="0%" stopColor="#E0E7FF" />
-                            <stop offset="100%" stopColor="#E0E7FF" />
+                            <stop offset="0%" stopColor="#e0e7ff" />
+                            <stop offset="100%" stopColor="#ede9fe" />
                         </linearGradient>
                         <linearGradient id="activeGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                            <stop offset="0%" stopColor="#3B82F6" />
-                            <stop offset="100%" stopColor="#4F46E5" />
+                            <stop offset="0%" stopColor="#6366f1" />
+                            <stop offset="50%" stopColor="#8b5cf6" />
+                            <stop offset="100%" stopColor="#7c3aed" />
                         </linearGradient>
+                        <filter id="glow">
+                            <feGaussianBlur stdDeviation="3" result="coloredBlur" />
+                            <feMerge><feMergeNode in="coloredBlur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                        </filter>
                     </defs>
 
                     {/* Background Guide Line */}
@@ -105,8 +124,8 @@ const RoadmapView = () => {
                             return `${acc} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${xCurr} ${y}`;
                         }, '')}
                         fill="none"
-                        stroke="#F3F4F6"
-                        strokeWidth="12"
+                        stroke="url(#pathGradient)"
+                        strokeWidth="14"
                         strokeLinecap="round"
                     />
 
@@ -136,11 +155,12 @@ const RoadmapView = () => {
                             return `${acc} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${xCurr} ${y}`;
                         }, '')}
                         fill="none"
-                        stroke="#6366f1"
-                        strokeWidth="4"
+                        stroke="url(#activeGradient)"
+                        strokeWidth="5"
                         strokeLinecap="round"
-                        strokeDasharray="10 5"
-                        className="animate-pulse" // Adding a subtle animation
+                        strokeDasharray="12 6"
+                        filter="url(#glow)"
+                        className="animate-pulse"
                     />
                 </svg>
 

@@ -56,3 +56,11 @@ class BaseParser(ABC):
             ParseResult with extracted text, images, and metadata.
         """
         ...
+
+    def parse_in_chunks(self, file_bytes: bytes, filename: str, chunk_size: int = 10):
+        """
+        Extract text and images in chunks (e.g., page batches).
+        Default implementation just yields the full result as a single chunk.
+        Subclasses like PdfParser should override this for true chunking.
+        """
+        yield self.parse(file_bytes, filename)

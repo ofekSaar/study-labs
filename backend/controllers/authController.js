@@ -5,18 +5,66 @@ import { generateToken } from '../middleware/auth.js';
 
 /**
  * Initiates Google OAuth flow.
- * Passport handles the redirect to Google.
+ * If Google credentials are not configured, use mock login for local development.
  */
-export const googleAuth = passport.authenticate('google', {
-  scope: ['profile', 'email'],
-  session: false,
-});
+export const googleAuth = (req, res, next) => {
+  const hasGoogleCreds = process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET;
+
+  if (!hasGoogleCreds) {
+    // Mock login for local development
+    return mockLogin(req, res, next);
+  }
+
+  return passport.authenticate('google', {
+    scope: ['profile', 'email'],
+    session: false,
+  })(req, res, next);
+};
+
+/**
+ * Mock login for local development (no Google credentials required).
+ * Creates or finds a dev user and returns a JWT token.
+ */
+const mockLogin = async (req, res, next) => {
+  try {
+    if (process.env.NODE_ENV !== 'development') {
+      return next(createError(404, 'Not found'));
+    }
+
+    const DEV_EMAIL = 'dev@studylabs.local';
+    let user = await User.findOne({ email: DEV_EMAIL });
+
+    if (!user) {
+      user = await User.create({
+        provider: 'local',
+        providerId: 'mock-dev-user',
+        name: 'Dev User',
+        email: DEV_EMAIL,
+        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=dev',
+        role: 'instructor',
+        roles: ['instructor', 'student'],
+      });
+    }
+
+    const token = generateToken(user);
+    const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+    res.redirect(`${clientUrl}/auth/callback?token=${token}`);
+  } catch (error) {
+    next(error);
+  }
+};
 
 /**
  * Google OAuth callback handler.
  * Issues JWT token and redirects to frontend.
  */
 export const googleCallback = (req, res, next) => {
+  const hasGoogleCreds = process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET;
+
+  if (!hasGoogleCreds) {
+    return mockLogin(req, res, next);
+  }
+
   passport.authenticate('google', { session: false }, (err, user) => {
     if (err) return next(err);
     if (!user) return next(createError(401, 'Authentication failed'));

@@ -64,3 +64,21 @@ def extract_with_images(file_bytes, filename=None) -> ParseResult:
         return ParseResult()
 
     return parser.parse(file_bytes, filename)
+
+def extract_in_chunks(file_bytes, filename=None, chunk_size=10):
+    """
+    Extracts text and images from file bytes in chunks (useful for large PDFs).
+    Yields ParseResult objects.
+    """
+    logger.info(f"OCR Service (chunked): Processing '{filename or 'unknown'}' in chunks of {chunk_size}...")
+
+    parser = get_parser(filename)
+    if not parser:
+        logger.warning(
+            f"No parser found for '{filename}'. "
+            f"Supported formats: {get_supported_extensions()}"
+        )
+        yield ParseResult()
+        return
+
+    yield from parser.parse_in_chunks(file_bytes, filename, chunk_size=chunk_size)

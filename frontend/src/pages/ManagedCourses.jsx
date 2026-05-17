@@ -36,28 +36,37 @@ const ManagedCourses = () => {
 
     return (
         <InstructorLayout title="Managed Courses">
-            <div className="max-w-6xl mx-auto px-6 py-8 pb-32 animate-fade-in">
+            {/* Ambient background orbs */}
+            <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+                <div className="absolute inset-0 dot-grid opacity-60" />
+                <div className="absolute top-0 right-0 w-96 h-96 rounded-full"
+                    style={{ background: 'radial-gradient(circle, rgba(124,58,237,0.12) 0%, transparent 70%)', filter: 'blur(40px)' }} />
+                <div className="absolute bottom-0 left-0 w-96 h-96 rounded-full"
+                    style={{ background: 'radial-gradient(circle, rgba(79,110,247,0.10) 0%, transparent 70%)', filter: 'blur(40px)' }} />
+            </div>
+
+            <div className="relative z-[1] max-w-6xl mx-auto px-6 py-8 pb-32 animate-fade-in">
                 
                 {/* Header & Search */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                     <div>
-                        <h1 className="text-3xl font-display font-bold text-gray-900">Managed Courses</h1>
-                        <p className="text-gray-500 mt-1">View, search, and manage all your created courses.</p>
+                        <h1 className="text-4xl font-display font-black text-white drop-shadow-md tracking-tight">Managed Courses</h1>
+                        <p className="text-white/60 text-lg mt-1 font-medium">View, search, and manage all your created courses.</p>
                     </div>
                     <div className="flex items-center gap-3 w-full md:w-auto">
-                        <div className="relative flex-1 md:w-72">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                        <div className="relative flex-1 md:w-80">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40" size={18} />
                             <input 
                                 type="text"
                                 placeholder="Search courses..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2.5 rounded-xl border-2 border-gray-100 focus:border-studylabs-blue focus:outline-none transition bg-white"
+                                className="w-full pl-11 pr-4 py-3 rounded-xl border border-white/10 bg-white/5 backdrop-blur-md text-white placeholder-white/40 focus:border-purple-400 focus:bg-white/10 focus:outline-none transition-all shadow-inner"
                             />
                         </div>
                         <button
                             onClick={() => navigate('/instructor/create')}
-                            className="bg-studylabs-blue text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-blue-200 hover:bg-studylabs-dark transition whitespace-nowrap"
+                            className="bg-purple-600 text-white px-6 py-3 rounded-xl font-bold shadow-[0_0_15px_rgba(124,58,237,0.4)] hover:bg-purple-500 transition-colors whitespace-nowrap flex items-center gap-2"
                         >
                             + New
                         </button>
@@ -74,65 +83,70 @@ const ManagedCourses = () => {
                         {filteredCourses.map(course => (
                             <div 
                                 key={course.id} 
-                                className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition group flex flex-col h-full"
+                                className="bg-white/5 backdrop-blur-xl rounded-3xl p-6 border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.4)] hover:-translate-y-1 hover:shadow-[0_16px_48px_rgba(0,0,0,0.5)] transition-all duration-300 group flex flex-col h-full relative overflow-hidden"
                             >
-                                <div className="flex justify-between items-start mb-4">
-                                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${course.color || 'bg-blue-100 text-blue-600'}`}>
-                                        <BookOpen size={24} />
+                                {/* Inner glow hover */}
+                                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                                
+                                <div className="flex justify-between items-start mb-6 relative z-10">
+                                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-inner border border-white/10 ${course.color || 'bg-purple-500/20 text-purple-400'}`}>
+                                        <BookOpen size={28} className="drop-shadow-md" />
                                     </div>
-                                    <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide flex items-center gap-1 ${
-                                        course.generationStatus === 'generating' ? 'bg-studylabs-blue/10 text-studylabs-blue' :
-                                        course.generationStatus === 'failed' ? 'bg-red-100 text-red-700' :
-                                        course.isPublished ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'
+                                    <span className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 border shadow-inner ${
+                                        course.generationStatus === 'generating' ? 'bg-indigo-500/20 text-indigo-400 border-indigo-500/30 drop-shadow-[0_0_8px_rgba(99,102,241,0.5)]' :
+                                        course.generationStatus === 'failed' ? 'bg-red-500/20 text-red-400 border-red-500/30' :
+                                        course.isPublished ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-orange-500/20 text-orange-400 border-orange-500/30'
                                     }`}>
-                                        {course.generationStatus === 'generating' && <Loader2 size={12} className="animate-spin" />}
-                                        {course.generationStatus === 'failed' && <AlertCircle size={12} />}
+                                        {course.generationStatus === 'generating' && <Loader2 size={14} className="animate-spin" />}
+                                        {course.generationStatus === 'failed' && <AlertCircle size={14} />}
                                         {course.generationStatus === 'generating' ? 'Generating AI' :
                                          course.generationStatus === 'failed' ? 'Failed' :
                                          course.isPublished ? 'Published' : 'Draft'}
                                     </span>
                                 </div>
                                 
-                                <h3 className="font-display font-bold text-xl text-gray-900 mb-2 line-clamp-2">
-                                    {course.title || 'Untitled Course'}
-                                </h3>
-                                <p className="text-gray-500 text-sm mb-6 line-clamp-3 flex-1">
-                                    {course.description || 'No description provided.'}
-                                </p>
-                                
-                                <div className="mt-auto">
-                                    <hr className="border-gray-100 mb-4" />
-                                    <div className="flex justify-between items-center">
-                                        <div className="flex gap-4">
-                                            <div className="flex items-center gap-1.5 text-xs font-medium text-gray-500">
-                                                <Users size={14} />
-                                                <span>{course.level || 'Beginner'}</span>
+                                <div className="relative z-10 flex-1 flex flex-col">
+                                    <h3 className="font-display font-bold text-2xl text-white mb-2 line-clamp-2 drop-shadow-md">
+                                        {course.title || 'Untitled Course'}
+                                    </h3>
+                                    <p className="text-white/60 text-sm mb-6 line-clamp-3 flex-1">
+                                        {course.description || 'No description provided.'}
+                                    </p>
+                                    
+                                    <div className="mt-auto">
+                                        <hr className="border-white/10 mb-5" />
+                                        <div className="flex justify-between items-center bg-black/20 p-3 rounded-2xl border border-white/5">
+                                            <div className="flex gap-4">
+                                                <div className="flex items-center gap-2 text-xs font-bold text-white/50 uppercase tracking-wide">
+                                                    <Users size={16} className="text-white/40" />
+                                                    <span>{course.level || 'Beginner'}</span>
+                                                </div>
+                                                <div className="flex items-center gap-2 text-xs font-bold text-white/50 uppercase tracking-wide">
+                                                    <Clock size={16} className="text-white/40" />
+                                                    <span>{course.department || 'Other'}</span>
+                                                </div>
                                             </div>
-                                            <div className="flex items-center gap-1.5 text-xs font-medium text-gray-500">
-                                                <Clock size={14} />
-                                                <span className="uppercase">{course.department || 'Other'}</span>
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    onClick={() => handleDelete(course.id, course.title)}
+                                                    disabled={deletingId === course.id}
+                                                    className="w-10 h-10 bg-red-500/20 hover:bg-red-500/40 text-red-400 border border-red-500/30 rounded-xl flex items-center justify-center transition-colors disabled:opacity-50 shadow-inner"
+                                                    title="Delete course"
+                                                >
+                                                    {deletingId === course.id ? (
+                                                        <Loader2 size={18} className="animate-spin" />
+                                                    ) : (
+                                                        <Trash2 size={18} />
+                                                    )}
+                                                </button>
+                                                <button
+                                                    onClick={() => navigate(`/instructor/course/${course.id}`)}
+                                                    className="w-10 h-10 bg-white/10 hover:bg-purple-600 text-white border border-white/20 rounded-xl flex items-center justify-center transition-colors shadow-[0_0_10px_rgba(255,255,255,0.1)] hover:shadow-[0_0_15px_rgba(124,58,237,0.5)]"
+                                                    title="View course"
+                                                >
+                                                    <ArrowRight size={18} />
+                                                </button>
                                             </div>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <button
-                                                onClick={() => handleDelete(course.id, course.title)}
-                                                disabled={deletingId === course.id}
-                                                className="w-8 h-8 bg-red-50 hover:bg-red-100 text-red-600 rounded-full flex items-center justify-center transition disabled:opacity-50"
-                                                title="Delete course"
-                                            >
-                                                {deletingId === course.id ? (
-                                                    <Loader2 size={16} className="animate-spin" />
-                                                ) : (
-                                                    <Trash2 size={16} />
-                                                )}
-                                            </button>
-                                            <button
-                                                onClick={() => navigate(`/instructor/course/${course.id}`)}
-                                                className="w-8 h-8 bg-gray-50 hover:bg-studylabs-blue hover:text-white text-gray-400 rounded-full flex items-center justify-center transition"
-                                                title="View course"
-                                            >
-                                                <ArrowRight size={16} />
-                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -140,18 +154,18 @@ const ManagedCourses = () => {
                         ))}
                     </div>
                 ) : (
-                    <div className="text-center py-20 bg-white rounded-3xl border border-gray-100 border-dashed">
-                        <div className="w-16 h-16 bg-gray-50 text-gray-300 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <BookOpen size={32} />
+                    <div className="text-center py-24 bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10 border-dashed relative z-10">
+                        <div className="w-20 h-20 bg-white/5 border border-white/10 text-white/50 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <BookOpen size={40} />
                         </div>
-                        <h3 className="text-xl font-bold text-gray-900 mb-2">No courses found</h3>
-                        <p className="text-gray-500 mb-6">
+                        <h3 className="text-2xl font-black text-white drop-shadow-md mb-3">No courses found</h3>
+                        <p className="text-white/60 mb-8 max-w-md mx-auto text-lg">
                             {searchTerm ? 'Try adjusting your search filters.' : 'You haven\'t created any courses yet.'}
                         </p>
                         {!searchTerm && (
                             <button
                                 onClick={() => navigate('/instructor/create')}
-                                className="bg-studylabs-blue text-white px-6 py-2.5 rounded-xl font-bold shadow-lg shadow-blue-200 hover:bg-studylabs-dark transition"
+                                className="bg-purple-600 text-white px-8 py-3.5 rounded-xl font-bold shadow-[0_0_15px_rgba(124,58,237,0.4)] hover:bg-purple-500 transition-colors"
                             >
                                 Create Your First Course
                             </button>

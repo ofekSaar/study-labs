@@ -129,17 +129,24 @@ export const completeNode = async (req, res, next) => {
         totalXP: 0,
         streak: 0,
       });
+      await progress.save();
     }
 
-    // Check if already completed
-    if (progress.completedNodes.some((id) => id.toString() === nodeId)) {
+    // Atomically complete the node and add XP to avoid race conditions
+    const updatedProgress = await Progress.findOneAndUpdate(
+      { _id: progress._id, completedNodes: { $ne: nodeId } },
+      {
+        $addToSet: { completedNodes: nodeId },
+        $inc: { totalXP: node.xpReward }
+      },
+      { new: true }
+    );
+
+    if (!updatedProgress) {
       throw createError(400, 'Node already completed');
     }
 
-    // Complete the node
-    progress.completedNodes.push(nodeId);
-    progress.totalXP += node.xpReward;
-    progress.updateStreak();
+    updatedProgress.updateStreak();
 
     // Find the next node in order
     const nextNode = await CourseNode.findOne({
@@ -147,9 +154,10 @@ export const completeNode = async (req, res, next) => {
       order: { $gt: node.order },
     }).sort({ order: 1 });
 
-    progress.currentNode = nextNode?._id || null;
+    updatedProgress.currentNode = nextNode?._id || null;
+    await updatedProgress.save();
 
-    await progress.save();
+    progress = updatedProgress;
 
     const totalNodes = await CourseNode.countDocuments({ course: courseId });
 

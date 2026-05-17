@@ -32,3 +32,8 @@ frontend/build/
 
 # Docker
 .dockerignore
+
+# Agents Manager and Crew Env
+agents_manager.py
+agents_manager/
+crew_env/

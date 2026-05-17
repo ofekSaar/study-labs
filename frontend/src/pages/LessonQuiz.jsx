@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import StudentLayout from '../components/layout/StudentLayout';
 import QuizEngine from '../components/quiz/QuizEngine';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ChevronLeft, BookOpen, GraduationCap, ArrowRight } from 'lucide-react';
+import { ChevronLeft, BookOpen, GraduationCap, ArrowRight, Trophy } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import ContentRenderer from '../components/common/ContentRenderer';
 import api from '../utils/api';
 import useCourseStore from '../store/courseStore';
@@ -14,6 +15,7 @@ const LessonQuiz = () => {
     const [nodeData, setNodeData] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [step, setStep] = useState('summary'); // 'summary' or 'quiz'
+    const [showReward, setShowReward] = useState(null);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -63,20 +65,19 @@ const LessonQuiz = () => {
             // Refresh course map data so the sidebar updates instantly
             await fetchCourseNodes(courseId);
 
-            alert(`Quiz Complete! You earned ${score} XP.`);
-            
             // Find next lesson
             const course = courses.find(c => c._id === courseId || c.id === courseId);
+            let nextNode = null;
             if (course && course.nodes) {
                 const currentIndex = course.nodes.findIndex(n => n._id === id);
                 if (currentIndex !== -1 && currentIndex < course.nodes.length - 1) {
-                    const nextNode = course.nodes[currentIndex + 1];
-                    navigate(`/course/${courseId}/lesson/${nextNode._id}`);
-                    setStep('summary');
-                    return;
+                    nextNode = course.nodes[currentIndex + 1];
                 }
             }
-            navigate(`/course/${courseId}`); // Fallback to map
+
+            // Show Gamified Reward Overlay
+            setShowReward({ score, nextNodeId: nextNode ? nextNode._id : null });
+            
         } catch (error) {
             alert(error.message || "Failed to submit quiz");
         }
@@ -88,6 +89,56 @@ const LessonQuiz = () => {
                 <div className="flex flex-col items-center justify-center p-20 gap-4">
                     <div className="animate-spin w-8 h-8 border-4 border-studylabs-blue border-t-transparent rounded-full"></div>
                     <p className="text-gray-500 font-medium">Preparing your lesson materials...</p>
+                </div>
+            </StudentLayout>
+        );
+    }
+
+    // Step 0: Gamification Reward Overlay
+    if (showReward) {
+        return (
+            <StudentLayout title="Quiz Complete">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-md">
+                    <motion.div 
+                        initial={{ scale: 0.8, opacity: 0, y: 20 }}
+                        animate={{ scale: 1, opacity: 1, y: 0 }}
+                        transition={{ type: "spring", damping: 15 }}
+                        className="bg-gray-900 border border-indigo-500/30 rounded-3xl p-8 max-w-sm w-full text-center shadow-[0_0_50px_rgba(99,102,241,0.2)] relative overflow-hidden"
+                    >
+                        {/* Gamification particles/glow */}
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-indigo-500/20 blur-3xl rounded-full" />
+                        
+                        <motion.div 
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1, rotate: 360 }}
+                            transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+                            className="w-24 h-24 mx-auto bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(99,102,241,0.6)] mb-6 relative z-10"
+                        >
+                            <Trophy size={48} className="text-white drop-shadow-md" />
+                        </motion.div>
+                        
+                        <h2 className="text-3xl font-black text-white mb-2 relative z-10">Awesome Job!</h2>
+                        
+                        <div className="flex items-center justify-center gap-2 mb-8 relative z-10">
+                            <span className="text-gray-400 font-medium">You earned</span>
+                            <span className="text-2xl font-bold text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.8)]">+{showReward.score} XP</span>
+                        </div>
+                        
+                        <button
+                            onClick={() => {
+                                if (showReward.nextNodeId) {
+                                    navigate(`/course/${courseId}/lesson/${showReward.nextNodeId}`);
+                                    setStep('summary');
+                                    setShowReward(null);
+                                } else {
+                                    navigate(`/course/${courseId}`);
+                                }
+                            }}
+                            className="w-full py-4 bg-white text-slate-900 rounded-xl font-bold text-lg hover:bg-gray-100 transition-colors relative z-10"
+                        >
+                            {showReward.nextNodeId ? 'Continue to Next Lesson' : 'Back to Map'}
+                        </button>
+                    </motion.div>
                 </div>
             </StudentLayout>
         );
