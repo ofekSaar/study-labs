@@ -1,14 +1,18 @@
 from typing import List
 from pydantic import BaseModel
 
-class Challenge(BaseModel):
+class Skill(BaseModel):
     id: int
     name: str
     description: str
-    points: int
 
-class Leaderboard(BaseModel):
+class Node(BaseModel):
     id: int
-    user_id: int
-    challenge_id: int
-    score: int
+    skill_id: int
+    parent_id: int
+    children: List[int]
+
+class Tree(BaseModel):
+    id: int
+    name: str
+    nodes: List[Node]

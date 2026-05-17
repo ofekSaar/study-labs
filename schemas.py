@@ -1,12 +1,13 @@
 from pydantic import BaseModel
-from typing import List
 
-class ChallengeSchema(BaseModel):
+class SkillSchema(BaseModel):
     name: str
     description: str
-    points: int
 
-class LeaderboardSchema(BaseModel):
-    user_id: int
-    challenge_id: int
-    score: int
+class NodeSchema(BaseModel):
+    skill_id: int
+    parent_id: int
+
+class TreeSchema(BaseModel):
+    name: str
+    nodes: List[NodeSchema]

@@ -1,27 +1,30 @@
-from fastapi import HTTPException
-from models import Challenge, Leaderboard
-from schemas import ChallengeSchema, LeaderboardSchema
+from typing import List
+from models import Skill, Node, Tree
+from schemas import SkillSchema, NodeSchema, TreeSchema
 
-class ChallengeService:
-    def get_challenges(self):
-        return [Challenge(id=1, name="Challenge 1", description="Desc 1", points=10),
-                Challenge(id=2, name="Challenge 2", description="Desc 2", points=20)]
+class SkillService:
+    def get_skills(self) -> List[Skill]:
+        # database query to retrieve skills
+        return [Skill(id=1, name="Python", description="Programming language")]
 
-    def create_challenge(self, challenge: ChallengeSchema):
-        new_challenge = Challenge(id=len(self.get_challenges()) + 1,
-                                  name=challenge.name,
-                                  description=challenge.description,
-                                  points=challenge.points)
-        return new_challenge
+    def create_skill(self, schema: SkillSchema):
+        # database query to create a new skill
+        pass
 
-class LeaderboardService:
-    def get_leaderboards(self):
-        return [Leaderboard(id=1, user_id=1, challenge_id=1, score=100),
-                Leaderboard(id=2, user_id=2, challenge_id=2, score=200)]
+class NodeService:
+    def get_nodes(self) -> List[Node]:
+        # database query to retrieve nodes
+        return [Node(id=1, skill_id=1, parent_id=None)]
 
-    def create_leaderboard(self, leaderboard: LeaderboardSchema):
-        new_leaderboard = Leaderboard(id=len(self.get_leaderboards()) + 1,
-                                      user_id=leaderboard.user_id,
-                                      challenge_id=leaderboard.challenge_id,
-                                      score=leaderboard.score)
-        return new_leaderboard
+    def create_node(self, schema: NodeSchema):
+        # database query to create a new node
+        pass
+
+class TreeService:
+    def get_trees(self) -> List[Tree]:
+        # database query to retrieve trees
+        return [Tree(id=1, name="Python", nodes=[Node(id=1, skill_id=1, parent_id=None)])]
+
+    def create_tree(self, schema: TreeSchema):
+        # database query to create a new tree
+        pass
