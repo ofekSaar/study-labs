@@ -1,24 +1,13 @@
-// Import required libraries
-import SyllabusRagEngine from './SyllabusRagEngine';
+import React from 'react';
+import ReactDOM from 'react-dom';
+import { BrowserRouter } from 'react-router-dom';
+import SyllabusNavigator from './ai_syllabus_navigator';
 
-const engine = new SyllabusRagEngine();
-
-// Example usage:
-const syllabusData = {
-  subject: 'Maths',
-  chapters: ['Algebra', 'Geometry']
-};
-
-const studentData = {
-  name: 'John Doe',
-  grade: 'A'
-};
-
-const ragStatus = engine.calculateRagStatus(syllabusData);
-console.log(ragStatus);
-
-const recommendations = engine.getRecommendations(studentData);
-console.log(recommendations);
-
-const progressPoints = engine.trackProgress(studentData, syllabusData);
-console.log(progressPoints);
+ReactDOM.render(
+  <BrowserRouter>
+    <Switch>
+      <Route path="/" component={SyllabusNavigator} />
+    </Switch>
+  </BrowserRouter>,
+  document.getElementById('root')
+);
