@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import useCourseStore from '../../store/courseStore';
 import useAuthStore from '../../store/authStore';
 import CourseSidebarItem from '../dashboard/CourseSidebarItem';
+import SettingsModal from './SettingsModal';
 
 /* ── Logo SVG ── */
 const Logo = ({ size = 32 }) => (
@@ -48,6 +49,7 @@ const StudentLayout = ({ children, title }) => {
     const { courses, selectedCourseId, setSelectedCourse, user: courseUser } = useCourseStore();
     const { logout, user } = useAuthStore();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
     const handleLogout = () => {
         logout();
@@ -162,7 +164,10 @@ const StudentLayout = ({ children, title }) => {
                             Switch to Instructor
                         </button>
                     )}
-                    <button className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-white/40 hover:bg-white/5 hover:text-white/70 transition-all">
+                    <button 
+                        onClick={() => setIsSettingsOpen(true)}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-white/40 hover:bg-white/5 hover:text-white/70 transition-all"
+                    >
                         <Settings size={16} />Settings
                     </button>
                     <button onClick={handleLogout}
@@ -215,6 +220,8 @@ const StudentLayout = ({ children, title }) => {
                     {children}
                 </main>
             </div>
+            
+            <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
         </div>
     );
 };

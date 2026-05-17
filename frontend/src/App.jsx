@@ -14,6 +14,25 @@ import EnrollmentRequests from './pages/EnrollmentRequests';
 import AuthCallback from './pages/AuthCallback';
 import RoleSelectPage from './pages/RoleSelectPage';
 import useAuthStore from './store/authStore';
+import useSettingsStore from './store/settingsStore';
+
+const ThemeWrapper = ({ children }) => {
+  const { theme } = useSettingsStore();
+
+  React.useEffect(() => {
+    const root = window.document.documentElement;
+    root.classList.remove('light', 'dark');
+
+    if (theme === 'system') {
+      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      root.classList.add(systemTheme);
+    } else {
+      root.classList.add(theme);
+    }
+  }, [theme]);
+
+  return children;
+};
 
 const AuthWrapper = ({ children }) => {
   const { initialize, isLoading } = useAuthStore();
@@ -24,7 +43,7 @@ const AuthWrapper = ({ children }) => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-slate-900">
         <div className="animate-spin w-8 h-8 border-4 border-studylabs-blue border-t-transparent rounded-full"></div>
       </div>
     );
@@ -36,8 +55,9 @@ const AuthWrapper = ({ children }) => {
 function App() {
   return (
     <BrowserRouter>
-      <AuthWrapper>
-        <Routes>
+      <ThemeWrapper>
+        <AuthWrapper>
+          <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="/role-select" element={<ProtectedRoute><RoleSelectPage /></ProtectedRoute>} />
@@ -130,6 +150,7 @@ function App() {
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
       </AuthWrapper>
+      </ThemeWrapper>
     </BrowserRouter>
   )
 }
