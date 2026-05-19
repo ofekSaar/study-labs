@@ -109,13 +109,13 @@ const CourseMap = () => {
 
     return (
         <Layout title={course.title}>
-            <div className="min-h-screen md:min-h-0 bg-gray-50 text-gray-900">
+            <div className="min-h-screen md:min-h-0 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white transition-colors duration-300">
 
                 {/* Mobile-only Course Header */}
-                <div className="md:hidden px-6 py-6 flex items-center justify-between bg-white border-b border-gray-100">
+                <div className="md:hidden px-6 py-6 flex items-center justify-between bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-white/5">
                     <button
                         onClick={() => navigate(-1)}
-                        className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition"
+                        className="w-10 h-10 bg-slate-100 dark:bg-white/5 rounded-full flex items-center justify-center hover:bg-slate-200 dark:hover:bg-white/10 transition text-slate-700 dark:text-white"
                     >
                         <ChevronLeft size={24} />
                     </button>
@@ -124,11 +124,11 @@ const CourseMap = () => {
                 </div>
 
                 {/* Content Container */}
-                <div className="bg-white md:rounded-3xl md:p-8 md:shadow-sm md:mx-6 md:my-6">
+                <div className="bg-white dark:bg-slate-900/60 md:rounded-3xl md:p-8 md:shadow-sm dark:shadow-none border border-transparent dark:border-white/5 md:mx-6 md:my-6 backdrop-blur-md">
 
                     {/* Streak Banner */}
                     <div className="flex justify-center mb-6">
-                        <div className="bg-accent-yellow/20 backdrop-blur-md md:bg-orange-50 px-6 py-2 rounded-full border border-accent-yellow/50 md:border-orange-100 flex items-center gap-3">
+                        <div className="bg-accent-yellow/20 backdrop-blur-md md:bg-orange-50 dark:md:bg-orange-950/20 px-6 py-2 rounded-full border border-accent-yellow/50 md:border-orange-100 dark:md:border-orange-900/30 flex items-center gap-3">
                             <span className="text-accent-yellow md:text-orange-600 font-bold">Learning Path</span>
                             <span className="text-2xl">🗺️</span>
                             {role === 'student' && nodes.length > 0 && (
@@ -144,13 +144,13 @@ const CourseMap = () => {
                         {nodes.length > 0 ? (
                             <GameMapComponent nodes={nodes} />
                         ) : course?.generationStatus === 'failed' ? (
-                            <div className="text-center py-20 bg-red-50 rounded-2xl border-2 border-dashed border-red-200">
-                                <p className="text-red-500 font-bold text-lg">Generation Failed</p>
-                                <p className="text-sm text-red-400 mt-2">{course.generationError || 'An error occurred during AI generation.'}</p>
-                                <p className="text-xs text-red-300 mt-4">Try creating the course again or contact support.</p>
+                            <div className="text-center py-20 bg-red-50 dark:bg-red-950/10 rounded-2xl border-2 border-dashed border-red-200 dark:border-red-900/20">
+                                <p className="text-red-500 dark:text-red-400 font-bold text-lg">Generation Failed</p>
+                                <p className="text-sm text-red-400 dark:text-red-500/60 mt-2">{course.generationError || 'An error occurred during AI generation.'}</p>
+                                <p className="text-xs text-red-300 dark:text-red-500/40 mt-4">Try creating the course again or contact support.</p>
                             </div>
                         ) : (
-                            <div className="text-center py-20 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
+                            <div className="text-center py-20 bg-slate-50 dark:bg-slate-900/40 rounded-2xl border-2 border-dashed border-slate-200 dark:border-white/5">
                                 <Loader2 className="w-8 h-8 animate-spin text-studylabs-blue mx-auto mb-4" />
                                 <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">Current Status</p>
                                 <p className="text-sm font-medium text-studylabs-blue animate-pulse">

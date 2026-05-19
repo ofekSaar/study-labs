@@ -8,6 +8,16 @@ export const AVATARS = [
     { id: 'legendary', emoji: '👑', name: 'Grandmaster', levelReq: 8 }
 ];
 
+export const INSTRUCTOR_AVATARS = [
+    { id: 'default_inst', emoji: '👨‍🏫', name: 'Professor Male', levelReq: 1 },
+    { id: 'female_prof', emoji: '👩‍🏫', name: 'Professor Female', levelReq: 1 },
+    { id: 'scientist', emoji: '🔬', name: 'Researcher', levelReq: 1 },
+    { id: 'mentor', emoji: '🤝', name: 'Mentor', levelReq: 1 },
+    { id: 'genius', emoji: '💡', name: 'Idea Guru', levelReq: 1 },
+    { id: 'expert', emoji: '🧠', name: 'Subject Expert', levelReq: 1 },
+    { id: 'director', emoji: '🏛️', name: 'Academic Dean', levelReq: 1 }
+];
+
 export const TITLES = [
     { id: 'beginner', name: 'Beginner', levelReq: 1 },
     { id: 'curious', name: 'Curious Learner', levelReq: 2 },

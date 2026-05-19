@@ -2,18 +2,31 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Moon, Sun, Volume2, VolumeX, Sparkles, Monitor, Award, Lock } from 'lucide-react';
 import useSettingsStore from '../../store/settingsStore';
-import useGamificationStore, { AVATARS, TITLES } from '../../store/gamificationStore';
+import useGamificationStore, { AVATARS, INSTRUCTOR_AVATARS, TITLES } from '../../store/gamificationStore';
 import sounds from '../../utils/soundManager';
+import api from '../../utils/api';
+import useAuthStore from '../../store/authStore';
 
-const SettingsModal = ({ isOpen, onClose }) => {
+const SettingsModal = ({ isOpen, onClose, isInstructor = false }) => {
     const { theme, setTheme, animationsEnabled, toggleAnimations, soundEnabled, toggleSound } = useSettingsStore();
     const { activeAvatar, activeTitle, unlockedAvatars, unlockedTitles, selectAvatar, selectTitle } = useGamificationStore();
 
     if (!isOpen) return null;
 
-    const handleSelectAvatar = (id) => {
+    const handleSelectAvatar = async (id) => {
         sounds.click();
         selectAvatar(id);
+        
+        const list = isInstructor ? INSTRUCTOR_AVATARS : AVATARS;
+        const selected = list.find(a => a.id === id);
+        if (selected) {
+            try {
+                await api.put('/api/auth/profile', { avatar: selected.emoji });
+                await useAuthStore.getState().initialize();
+            } catch (err) {
+                console.error('Failed to sync avatar with database:', err);
+            }
+        }
     };
 
     const handleSelectTitle = (id) => {
@@ -129,16 +142,20 @@ const SettingsModal = ({ isOpen, onClose }) => {
                                     <Award size={14} className="text-indigo-500" />
                                     Profile Customization
                                 </h3>
-                                <p className="text-[10px] text-slate-400 dark:text-white/30 mb-4 font-bold uppercase tracking-wider">Unlock custom identities by leveling up!</p>
+                                <p className="text-[10px] text-slate-400 dark:text-white/30 mb-4 font-bold uppercase tracking-wider">
+                                    {isInstructor ? 'Choose your professional academic avatar!' : 'Unlock custom identities by leveling up!'}
+                                </p>
                             </div>
 
                             {/* Avatar selector */}
                             <div>
                                 <h4 className="text-[10px] font-black text-slate-400 dark:text-white/20 uppercase tracking-widest mb-3">Choose Avatar</h4>
                                 <div className="grid grid-cols-4 sm:grid-cols-7 gap-3">
-                                    {AVATARS.map((av) => {
-                                        const isUnlocked = unlockedAvatars.includes(av.id);
-                                        const isActive = activeAvatar === av.id;
+                                    {(isInstructor ? INSTRUCTOR_AVATARS : AVATARS).map((av) => {
+                                        const isUnlocked = isInstructor ? true : unlockedAvatars.includes(av.id);
+                                        const isActive = isInstructor 
+                                            ? (activeAvatar === av.id || (activeAvatar === 'default' && av.id === 'default_inst'))
+                                            : activeAvatar === av.id;
 
                                         return (
                                             <button
@@ -171,38 +188,40 @@ const SettingsModal = ({ isOpen, onClose }) => {
                             </div>
 
                             {/* Custom Title Selector */}
-                            <div>
-                                <h4 className="text-[10px] font-black text-slate-400 dark:text-white/20 uppercase tracking-widest mb-3">Choose Title</h4>
-                                <div className="flex flex-wrap gap-2">
-                                    {TITLES.map((t) => {
-                                        const isUnlocked = unlockedTitles.includes(t.id);
-                                        const isActive = activeTitle === t.id;
+                            {!isInstructor && (
+                                <div>
+                                    <h4 className="text-[10px] font-black text-slate-400 dark:text-white/20 uppercase tracking-widest mb-3">Choose Title</h4>
+                                    <div className="flex flex-wrap gap-2">
+                                        {TITLES.map((t) => {
+                                            const isUnlocked = unlockedTitles.includes(t.id);
+                                            const isActive = activeTitle === t.id;
 
-                                        return (
-                                            <button
-                                                key={t.id}
-                                                disabled={!isUnlocked}
-                                                onClick={() => handleSelectTitle(t.id)}
-                                                className={`relative px-3 py-1.5 rounded-xl border-2 text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-1 group ${
-                                                    isActive
-                                                        ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 shadow-sm'
-                                                        : isUnlocked
-                                                            ? 'border-slate-100 dark:border-white/5 text-slate-600 dark:text-white/60 hover:border-slate-200 bg-slate-50 dark:bg-white/3'
-                                                            : 'border-slate-100 dark:border-white/2 opacity-35 grayscale cursor-not-allowed text-slate-400 bg-slate-100'
-                                                }`}
-                                            >
-                                                {!isUnlocked && <Lock size={8} />}
-                                                {t.name}
-                                                
-                                                {/* Tooltip */}
-                                                <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-slate-900 text-white rounded-lg p-1.5 shadow-xl opacity-0 group-hover:opacity-100 transition-all pointer-events-none text-[9px] w-24 text-center z-50 border border-white/5 font-black uppercase">
-                                                    {isUnlocked ? 'Unlocked' : `Level ${t.levelReq}`}
-                                                </div>
-                                            </button>
-                                        );
-                                    })}
+                                            return (
+                                                <button
+                                                    key={t.id}
+                                                    disabled={!isUnlocked}
+                                                    onClick={() => handleSelectTitle(t.id)}
+                                                    className={`relative px-3 py-1.5 rounded-xl border-2 text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-1 group ${
+                                                        isActive
+                                                            ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 shadow-sm'
+                                                            : isUnlocked
+                                                                ? 'border-slate-100 dark:border-white/5 text-slate-600 dark:text-white/60 hover:border-slate-200 bg-slate-50 dark:bg-white/3'
+                                                                : 'border-slate-100 dark:border-white/2 opacity-35 grayscale cursor-not-allowed text-slate-400 bg-slate-100'
+                                                    }`}
+                                                >
+                                                    {!isUnlocked && <Lock size={8} />}
+                                                    {t.name}
+                                                    
+                                                    {/* Tooltip */}
+                                                    <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-slate-900 text-white rounded-lg p-1.5 shadow-xl opacity-0 group-hover:opacity-100 transition-all pointer-events-none text-[9px] w-24 text-center z-50 border border-white/5 font-black uppercase">
+                                                        {isUnlocked ? 'Unlocked' : `Level ${t.levelReq}`}
+                                                    </div>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
                                 </div>
-                            </div>
+                            )}
                         </div>
                     </div>
 

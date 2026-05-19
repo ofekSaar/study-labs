@@ -8,7 +8,6 @@ const ClassProgressChart = ({ data, isLoading }) => {
 
     React.useEffect(() => {
         const checkTheme = () => {
-            const root = window.document.documentElement;
             if (theme === 'system') {
                 setIsDark(window.matchMedia('(prefers-color-scheme: dark)').matches);
             } else {

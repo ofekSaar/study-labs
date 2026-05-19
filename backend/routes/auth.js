@@ -6,6 +6,7 @@ import {
   getMe,
   setRole,
   logout,
+  updateProfile,
 } from '../controllers/authController.js';
 
 const router = Router();
@@ -112,5 +113,28 @@ router.put('/role', authenticate, setRole);
  *         description: Logged out successfully
  */
 router.post('/logout', authenticate, logout);
+
+/**
+ * @swagger
+ * /api/auth/profile:
+ *   put:
+ *     summary: Update user profile fields (name, avatar)
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               avatar:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Profile updated successfully
+ */
+router.put('/profile', authenticate, updateProfile);
 
 export default router;

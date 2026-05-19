@@ -49,7 +49,7 @@ const playTone = (frequency, duration, type = 'sine', volume = 0.3, startDelay =
 
         osc.start(ac.currentTime + startDelay);
         osc.stop(ac.currentTime + startDelay + duration);
-    } catch (e) {
+    } catch {
         // Silently fail if AudioContext blocked
     }
 };

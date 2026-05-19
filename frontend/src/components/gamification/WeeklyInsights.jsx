@@ -8,7 +8,7 @@ const WeeklyInsights = () => {
 
     // Construct highly personalized AI insights based on actual student gamification stats
     const getInsightContent = () => {
-        const { lessons_completed = 0, perfect_quizzes = 0, streak = 0, fast_answers = 0, night_study = 0, level = 1 } = stats;
+        const { lessons_completed = 0, streak = 0, fast_answers = 0, night_study = 0 } = stats;
 
         if (streak >= 3) {
             return {

@@ -4,7 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import useCourseStore from '../../store/courseStore';
 import CourseSidebarItem from '../dashboard/CourseSidebarItem';
 
-const MainLayout = ({ children, title }) => {
+const MainLayout = ({ children }) => {
     const navigate = useNavigate();
     const location = useLocation();
     const { courses, selectedCourseId, setSelectedCourse } = useCourseStore();

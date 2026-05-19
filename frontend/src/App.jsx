@@ -6,6 +6,7 @@ import Dashboard from './pages/Dashboard';
 import LessonQuiz from './pages/LessonQuiz';
 import CourseMap from './pages/CourseMap';
 import InstructorDashboard from './pages/InstructorDashboard';
+import StudentStatusOverview from './pages/StudentStatusOverview';
 import CourseWizard from './pages/CourseWizard';
 import ManagedCourses from './pages/ManagedCourses';
 import MyEnrollments from './pages/MyEnrollments';
@@ -15,6 +16,7 @@ import AuthCallback from './pages/AuthCallback';
 import RoleSelectPage from './pages/RoleSelectPage';
 import useAuthStore from './store/authStore';
 import useSettingsStore from './store/settingsStore';
+import StudentProfile from './pages/StudentProfile';
 
 const ThemeWrapper = ({ children }) => {
   const { theme } = useSettingsStore();
@@ -103,6 +105,14 @@ function App() {
             </ProtectedRoute>
           } 
         />
+        <Route 
+          path="/profile" 
+          element={
+            <ProtectedRoute allowedRole="student">
+              <StudentProfile />
+            </ProtectedRoute>
+          } 
+        />
 
         {/* Instructor Routes */}
         <Route 
@@ -110,6 +120,14 @@ function App() {
           element={
             <ProtectedRoute allowedRole="instructor">
               <InstructorDashboard />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/instructor/status" 
+          element={
+            <ProtectedRoute allowedRole="instructor">
+              <StudentStatusOverview />
             </ProtectedRoute>
           } 
         />

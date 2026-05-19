@@ -156,3 +156,29 @@ export const logout = (req, res) => {
     message: 'Logged out successfully',
   });
 };
+
+/**
+ * Update authenticated user's profile fields.
+ */
+export const updateProfile = async (req, res, next) => {
+  try {
+    const { name, avatar } = req.body;
+    const updates = {};
+    if (name !== undefined) updates.name = name;
+    if (avatar !== undefined) updates.avatar = avatar;
+
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      updates,
+      { new: true }
+    );
+
+    res.json({
+      status: 'success',
+      data: { user },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+

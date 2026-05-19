@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 import useAuthStore from '../store/authStore';
 
 /* ── Animated floating orbs for background ── */

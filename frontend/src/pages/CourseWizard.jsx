@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import InstructorLayout from '../components/layout/InstructorLayout';
 import { useForm, FormProvider } from 'react-hook-form';
-import { ChevronRight, ChevronLeft, Check, Loader2 } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Check, Loader2, FileText, UploadCloud, Brain, Trophy } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../utils/api';
 
@@ -12,10 +12,10 @@ import StepAIConfig from '../components/wizard/StepAIConfig';
 import StepGamification from '../components/wizard/StepGamification';
 
 const steps = [
-    { title: 'Details', component: StepCoreDetails },
-    { title: 'Materials', component: StepMaterials },
-    { title: 'AI Config', component: StepAIConfig },
-    { title: 'Gamification', component: StepGamification }
+    { title: 'Details', component: StepCoreDetails, icon: FileText },
+    { title: 'Materials', component: StepMaterials, icon: UploadCloud },
+    { title: 'AI Config', component: StepAIConfig, icon: Brain },
+    { title: 'Gamification', component: StepGamification, icon: Trophy }
 ];
 
 const CourseWizard = () => {
@@ -181,27 +181,60 @@ const CourseWizard = () => {
     return (
         <InstructorLayout title="New Course Wizard">
             <div className="max-w-3xl mx-auto py-12 px-6 md:px-0 pb-40">
-                {/* Stepper Header */}
-                <div className="mb-10">
-                    <div className="flex items-center justify-between mb-4 px-2">
-                        {steps.map((step, idx) => (
-                            <div key={idx} className={`flex flex-col items-center gap-2 ${idx <= currentStep ? 'text-studylabs-blue' : 'text-gray-300'}`}>
-                                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold border-2 transition-all ${idx < currentStep ? 'bg-studylabs-blue text-white border-studylabs-blue' :
-                                        idx === currentStep ? 'bg-white text-studylabs-blue border-studylabs-blue' :
-                                            'bg-white text-gray-300 border-gray-200'
+                {/* Glowing Connected Timeline Stepper */}
+                <div className="mb-12 relative px-4">
+                    {/* Background track line */}
+                    <div className="absolute top-5 left-8 right-8 h-1 bg-slate-100 dark:bg-white/5 -translate-y-1/2 z-0 rounded-full" />
+                    
+                    {/* Glowing progress line */}
+                    <div 
+                        className="absolute top-5 left-8 h-1 bg-gradient-to-r from-purple-600 to-indigo-600 -translate-y-1/2 z-0 rounded-full transition-all duration-500 shadow-[0_0_10px_rgba(124,58,237,0.4)]"
+                        style={{ width: currentStep === 0 ? '0px' : `calc(${((currentStep) / (steps.length - 1)) * 100}% - 16px)` }}
+                    />
+
+                    <div className="flex items-center justify-between relative z-10">
+                        {steps.map((step, idx) => {
+                            const isCompleted = idx < currentStep;
+                            const isActive = idx === currentStep;
+                            const Icon = step.icon;
+
+                            return (
+                                <div key={idx} className="flex flex-col items-center group">
+                                    {/* Circle wrapper */}
+                                    <div 
+                                        className={`w-11 h-11 rounded-2xl flex items-center justify-center font-bold border-2 transition-all duration-300 relative ${
+                                            isCompleted 
+                                                ? 'bg-gradient-to-tr from-purple-600 to-indigo-600 border-transparent text-white shadow-[0_0_15px_rgba(99,102,241,0.4)]' 
+                                                : isActive 
+                                                    ? 'bg-white dark:bg-slate-900 border-purple-500 text-purple-600 dark:text-purple-400 shadow-[0_0_12px_rgba(168,85,247,0.2)] scale-110' 
+                                                    : 'bg-white dark:bg-slate-950 border-slate-200 dark:border-white/10 text-slate-400 dark:text-white/20'
+                                        }`}
+                                    >
+                                        {isCompleted ? (
+                                            <Check size={18} className="stroke-[3]" />
+                                        ) : (
+                                            <Icon size={18} />
+                                        )}
+                                        
+                                        {/* Pulse glow for active step */}
+                                        {isActive && (
+                                            <span className="absolute -inset-1 rounded-2xl border border-purple-500/50 animate-pulse pointer-events-none" />
+                                        )}
+                                    </div>
+                                    
+                                    {/* Label */}
+                                    <span className={`text-[11px] font-black uppercase tracking-wider mt-3 transition-colors ${
+                                        isActive 
+                                            ? 'text-purple-600 dark:text-purple-400' 
+                                            : isCompleted 
+                                                ? 'text-indigo-600/80 dark:text-indigo-400/80' 
+                                                : 'text-slate-400 dark:text-white/30'
                                     }`}>
-                                    {idx < currentStep ? <Check size={20} /> : idx + 1}
+                                        {step.title}
+                                    </span>
                                 </div>
-                                <span className="text-xs font-bold hidden md:block">{step.title}</span>
-                            </div>
-                        ))}
-                    </div>
-                    {/* Progress Line */}
-                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                        <div
-                            className="h-full bg-studylabs-blue transition-all duration-300"
-                            style={{ width: `${((currentStep) / (steps.length - 1)) * 100}%` }}
-                        />
+                            );
+                        })}
                     </div>
                 </div>
 

@@ -20,14 +20,14 @@ const ContentRenderer = ({ content, className = '', inline = false }) => {
 
     const components = {
         // Apply dir="auto" to common block elements to let the browser handle RTL per-paragraph
-        p: ({ node, ...props }) => <p dir="auto" {...props} />,
-        li: ({ node, ...props }) => <li dir="auto" {...props} />,
-        h1: ({ node, ...props }) => <h1 dir="auto" {...props} />,
-        h2: ({ node, ...props }) => <h2 dir="auto" {...props} />,
-        h3: ({ node, ...props }) => <h3 dir="auto" {...props} />,
-        h4: ({ node, ...props }) => <h4 dir="auto" {...props} />,
-        h5: ({ node, ...props }) => <h5 dir="auto" {...props} />,
-        h6: ({ node, ...props }) => <h6 dir="auto" {...props} />,
+        p: ({ node: _node, ...props }) => <p dir="auto" {...props} />,
+        li: ({ node: _node, ...props }) => <li dir="auto" {...props} />,
+        h1: ({ node: _node, ...props }) => <h1 dir="auto" {...props} />,
+        h2: ({ node: _node, ...props }) => <h2 dir="auto" {...props} />,
+        h3: ({ node: _node, ...props }) => <h3 dir="auto" {...props} />,
+        h4: ({ node: _node, ...props }) => <h4 dir="auto" {...props} />,
+        h5: ({ node: _node, ...props }) => <h5 dir="auto" {...props} />,
+        h6: ({ node: _node, ...props }) => <h6 dir="auto" {...props} />,
     };
 
     if (inline) {
@@ -37,7 +37,7 @@ const ContentRenderer = ({ content, className = '', inline = false }) => {
                 <ReactMarkdown 
                     remarkPlugins={[remarkGfm, remarkMath]} 
                     rehypePlugins={[rehypeKatex]}
-                    components={{ p: ({node, ...props}) => <span {...props} /> }}
+                    components={{ p: ({ node: _node, ...props }) => <span {...props} /> }}
                 >
                     {String(content)}
                 </ReactMarkdown>

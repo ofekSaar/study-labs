@@ -3,11 +3,12 @@ import api, { getToken, setToken, removeToken } from '../utils/api.js';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5005';
 
-const useAuthStore = create((set, get) => ({
+const useAuthStore = create((set) => ({
     user: null,
     role: null,
     isAuthenticated: false,
     isLoading: true, // Start loading until we check token
+    testRedirectUrl: null,
 
     /**
      * Initialize auth state from stored JWT.
@@ -87,7 +88,12 @@ const useAuthStore = create((set, get) => ({
      * Redirect to Google OAuth.
      */
     loginWithGoogle: () => {
-        window.location.href = `${API_BASE}/api/auth/google`;
+        const redirectUrl = `${API_BASE}/api/auth/google`;
+        if (typeof process !== 'undefined' && process.env.NODE_ENV === 'test') {
+            set({ testRedirectUrl: redirectUrl });
+            return;
+        }
+        window.location.assign(redirectUrl);
     },
 
     /**

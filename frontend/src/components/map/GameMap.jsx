@@ -56,31 +56,9 @@ const GameMapComponent = ({ nodes }) => {
         }
     }, [totalHeight]); // Recalculate if node count changes significantly affecting height
 
-    // Generate SVG Path
-    // Move to start, then curve to each node
-    const generatePath = () => {
-        if (dimensions.width === 0) return '';
-
-        const centerX = dimensions.width / 2;
-        let d = `M ${centerX} ${totalHeight - 40}`; // Start from bottom center roughly
-
-        // We can draw a sine wave going up
-        // Or just simple curves between nodes if we calculate their positions first
-        // Let's calculate positions first
-        return d;
-    };
-
     // Pre-calculate node positions
     const configuredNodes = nodes.map((node, index) => {
         if (dimensions.width === 0) return { ...node, px: 0, py: 0 };
-
-        const reversedIndex = nodes.length - 1 - index; // 0 at bottom, N at top usually? 
-        // Actually typically games go Bottom -> Top or Top -> Bottom. 
-        // Let's assume Top -> Bottom for scroll (HTML) but visual progression is often Bottom -> Top in Candy Crush style.
-        // The "Learning Path" usually starts at the top (Level 1) and goes down? 
-        // Or starts bottom (Level 1) and climbs up?
-        // Let's stick to standard web Scroll Down -> Progress Forward.
-        // So Level 1 at TOP.
 
         const centerY = BASE_PADDING_TOP + index * NODE_SPACING;
         const centerX = dimensions.width / 2;

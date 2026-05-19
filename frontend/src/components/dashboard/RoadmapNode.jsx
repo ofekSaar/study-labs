@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Check, Lock, Star, Play, Trophy, Zap } from 'lucide-react';
 
-const RoadmapNode = ({ node, index, onClick, alignment, isSelected }) => {
+const RoadmapNode = ({ node, onClick, alignment, isSelected }) => {
     const isCompleted = node.status === 'completed';
     const isCurrent = node.status === 'current';
     const isLocked = node.status === 'locked';

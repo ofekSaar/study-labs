@@ -113,6 +113,20 @@ export const listCourses = async (req, res, next) => {
       return res.json({ status: 'success', data: { courses: coursesWithStatus } });
     }
 
+    if (isInstructor && req.query.view === 'instructor') {
+      const coursesWithCount = await Promise.all(courses.map(async (course) => {
+        const studentCount = await Enrollment.countDocuments({
+          course: course._id,
+          status: 'approved'
+        });
+        return {
+          ...course.toObject(),
+          studentCount
+        };
+      }));
+      return res.json({ status: 'success', data: { courses: coursesWithCount } });
+    }
+
     res.json({ status: 'success', data: { courses } });
   } catch (error) {
     next(error);

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Settings, LogOut, Menu, Map, BookOpen, ChevronRight, X, Flame, Zap, Trophy } from 'lucide-react';
+import { Settings, LogOut, Menu, Map, BookOpen, ChevronRight, ChevronDown, X, Flame, Zap, Trophy, User } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import useCourseStore from '../../store/courseStore';
 import useAuthStore from '../../store/authStore';
@@ -44,8 +44,9 @@ const NavItem = ({ icon, label, active, onClick }) => (
     </button>
 );
 
-const SidebarContent = ({ location, navigate, courses, selectedCourseId, setSelectedCourse, courseUser, user, setIsSidebarOpen, setIsSettingsOpen, handleLogout }) => {
+const SidebarContent = ({ location, navigate, courses, selectedCourseId, setSelectedCourse, _courseUser, user, setIsSidebarOpen, setIsSettingsOpen, handleLogout }) => {
     const { activeAvatar, activeTitle, stats } = useGamificationStore();
+    const [isCourseDropdownOpen, setIsCourseDropdownOpen] = React.useState(false);
     
     // Find active customizable representations
     const currentAvatar = AVATARS.find(a => a.id === activeAvatar) || { emoji: '🎓', name: 'Student' };
@@ -83,33 +84,106 @@ const SidebarContent = ({ location, navigate, courses, selectedCourseId, setSele
                     active={location.pathname === '/enrollments'}
                     onClick={() => navigate('/enrollments')}
                 />
+                <NavItem
+                    icon={<User size={18} />}
+                    label="Profile"
+                    active={location.pathname === '/profile'}
+                    onClick={() => navigate('/profile')}
+                />
 
-                {/* Active Roadmaps */}
-                {courses.length > 0 && (
-                    <>
-                        <div className="px-4 mt-6 mb-2 text-[10px] font-bold text-slate-400 dark:text-white/25 uppercase tracking-widest">Active Roadmaps</div>
-                        <div className="space-y-1">
-                            {courses.map(course => (
-                                <CourseSidebarItem
-                                    key={course.id}
-                                    course={course}
-                                    isSelected={selectedCourseId === course.id}
-                                    onClick={() => {
-                                        setSelectedCourse(course.id);
-                                        if (location.pathname !== '/') navigate('/');
-                                        setIsSidebarOpen(false);
-                                    }}
-                                />
-                            ))}
+                {/* Active Roadmap Switcher */}
+                {courses.length > 0 && (() => {
+                    const selectedCourse = courses.find(c => c.id === selectedCourseId) || courses[0];
+                    if (!selectedCourse) return null;
+                    
+                    const completedNodes = selectedCourse.nodes?.filter(n => n.status === 'completed').length || 0;
+                    const totalNodes = selectedCourse.nodes?.length || 0;
+
+                    return (
+                        <div className="px-3 mt-6 mb-4">
+                            <div className="px-1.5 mb-2 text-[10px] font-bold text-slate-400 dark:text-white/25 uppercase tracking-widest">Active Roadmap</div>
+                            
+                            <div className="relative">
+                                {/* Current Selector Button */}
+                                <button
+                                    onClick={() => setIsCourseDropdownOpen(!isCourseDropdownOpen)}
+                                    className={`w-full text-left flex items-center justify-between p-3 rounded-2xl border transition-all duration-300 ${
+                                        isCourseDropdownOpen 
+                                            ? 'bg-slate-100 dark:bg-white/10 border-indigo-500/30' 
+                                            : 'bg-white dark:bg-white/5 border-slate-200 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-white/8'
+                                    }`}
+                                >
+                                    <div className="flex items-center gap-3 min-w-0">
+                                        <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-600 text-white flex items-center justify-center text-xs font-black shadow-sm shrink-0">
+                                            {(selectedCourse.title || '').substring(0, 2).toUpperCase()}
+                                        </div>
+                                        <div className="min-w-0">
+                                            <p className="text-xs font-black text-slate-800 dark:text-white truncate leading-tight">
+                                                {selectedCourse.title || 'Untitled Course'}
+                                            </p>
+                                            <p className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 mt-0.5">
+                                                {completedNodes}/{totalNodes} Stages ({selectedCourse.progress || 0}%)
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <ChevronDown 
+                                        size={16} 
+                                        className={`text-slate-400 transition-transform duration-300 ${isCourseDropdownOpen ? 'rotate-180' : ''}`} 
+                                    />
+                                </button>
+
+                                {/* Dropdown Menu (Accordion-style for stability) */}
+                                {isCourseDropdownOpen && (
+                                    <div className="mt-2 p-1.5 bg-slate-100 dark:bg-slate-900 border border-slate-200/80 dark:border-white/5 rounded-2xl space-y-1 shadow-md max-h-48 overflow-y-auto custom-scrollbar">
+                                        {courses.map(course => {
+                                            const isCurrent = course.id === selectedCourseId;
+                                            const courseCompletedNodes = course.nodes?.filter(n => n.status === 'completed').length || 0;
+                                            const courseTotalNodes = course.nodes?.length || 0;
+
+                                            return (
+                                                <button
+                                                    key={course.id}
+                                                    onClick={() => {
+                                                        setSelectedCourse(course.id);
+                                                        if (location.pathname !== '/') navigate('/');
+                                                        setIsCourseDropdownOpen(false);
+                                                        setIsSidebarOpen(false);
+                                                    }}
+                                                    className={`w-full text-left p-2.5 rounded-xl transition-colors flex items-center gap-3 ${
+                                                        isCurrent
+                                                            ? 'bg-indigo-600/10 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 border border-indigo-500/10 dark:border-indigo-500/20 font-black'
+                                                            : 'hover:bg-slate-200/50 dark:hover:bg-white/5 text-slate-600 dark:text-white/60'
+                                                    }`}
+                                                >
+                                                    <div className="w-8 h-8 rounded-lg bg-slate-200 dark:bg-white/10 flex items-center justify-center text-[10px] font-black shrink-0">
+                                                        {(course.title || '').substring(0, 2).toUpperCase()}
+                                                    </div>
+                                                    <div className="min-w-0 flex-1">
+                                                        <p className="text-xs font-black truncate">{course.title || 'Untitled Course'}</p>
+                                                        <p className="text-[9px] font-bold text-slate-400 dark:text-white/30 mt-0.5">
+                                                            {courseCompletedNodes}/{courseTotalNodes} Stages ({course.progress || 0}%)
+                                                        </p>
+                                                    </div>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
                         </div>
-                    </>
-                )}
+                    );
+                })()}
             </div>
 
-            {/* ── Footer / Profile Customization ── */}
             <div className="p-4 border-t border-slate-200 dark:border-white/8">
                 {/* User info Card with Custom Avatar & Customizable Title */}
-                <div className="flex items-center gap-3 px-3 py-3.5 mb-2 rounded-2xl bg-slate-100 dark:bg-white/3 border border-slate-200 dark:border-white/5 hover:bg-slate-200/50 dark:hover:bg-white/8 transition-all duration-300 cursor-default group/sidebar-profile">
+                <div 
+                    onClick={() => {
+                        navigate('/profile');
+                        setIsSidebarOpen(false);
+                    }}
+                    className="flex items-center gap-3 px-3 py-3.5 mb-2 rounded-2xl bg-slate-100 dark:bg-white/3 border border-slate-200 dark:border-white/5 hover:bg-slate-200/50 dark:hover:bg-white/8 transition-all duration-300 cursor-pointer group/sidebar-profile"
+                >
                     <div className="relative flex-shrink-0">
                         {/* Selected Customizable Emoji Avatar */}
                         <div className="w-10 h-10 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-2xl shadow-sm transition-transform duration-300 group-hover/sidebar-profile:scale-110 select-none">

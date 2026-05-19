@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import api from '../utils/api.js';
 
-const useCourseStore = create((set, get) => ({
+const useCourseStore = create((set) => ({
     user: {
         name: 'Student',
         totalXP: 0,

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { CheckCircle, XCircle, ArrowRight, BrainCircuit, Loader2, Clock, Zap, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ContentRenderer from '../common/ContentRenderer';
@@ -26,13 +26,26 @@ const QuizEngine = ({ questions, onComplete }) => {
     const isOpenQuestion = currentQuestion.type === 'open';
     const isSummaryQuestion = currentQuestion.type === 'summary';
 
+    const handleTimeUp = useCallback(() => {
+        setIsTimeUp(true);
+        sounds.timeUp();
+        setFeedback({
+            isCorrect: false,
+            message: '⌛ Time expired! Try to answer faster on the next question.'
+        });
+        setIsSubmitted(true);
+        incrementStat('no_mistake_streak', 0); // reset streak
+    }, [incrementStat, setIsTimeUp, setFeedback, setIsSubmitted]);
+
     // Timer effect
+    /* eslint-disable react-hooks/set-state-in-effect */
     useEffect(() => {
         if (isSubmitted || isSummaryQuestion || isEvaluating) return;
 
         setTimeLeft(30);
         setIsTimeUp(false);
         setSpeedBonusActive(false);
+        /* eslint-enable react-hooks/set-state-in-effect */
 
         const interval = setInterval(() => {
             setTimeLeft(prev => {
@@ -51,18 +64,7 @@ const QuizEngine = ({ questions, onComplete }) => {
         }, 1000);
 
         return () => clearInterval(interval);
-    }, [currentIndex, isSubmitted, isSummaryQuestion, isEvaluating]);
-
-    const handleTimeUp = () => {
-        setIsTimeUp(true);
-        sounds.timeUp();
-        setFeedback({
-            isCorrect: false,
-            message: '⌛ Time expired! Try to answer faster on the next question.'
-        });
-        setIsSubmitted(true);
-        incrementStat('no_mistake_streak', 0); // reset streak
-    };
+    }, [currentIndex, isSubmitted, isSummaryQuestion, isEvaluating, handleTimeUp]);
 
     const handleMCQSubmit = () => {
         if (selectedOption === null || isSubmitted) return;

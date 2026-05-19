@@ -1,23 +1,19 @@
 import React, { useEffect } from 'react';
+import { motion } from 'framer-motion';
 import StudentLayout from '../components/layout/StudentLayout';
 import RoadmapView from '../components/dashboard/RoadmapView';
 import NodeDrawer from '../components/dashboard/NodeDrawer';
 import useCourseStore from '../store/courseStore';
 import useGamificationStore from '../store/gamificationStore';
 import { Trophy, Flame, Zap, Award, Target } from 'lucide-react';
-import { motion } from 'framer-motion';
 import DailyChallengeCard from '../components/gamification/DailyChallengeCard';
-import StreakCalendar from '../components/gamification/StreakCalendar';
-import Leaderboard from '../components/gamification/Leaderboard';
 import LevelUpModal from '../components/gamification/LevelUpModal';
 import ConfettiEffect from '../components/gamification/ConfettiEffect';
-import BadgeDisplay from '../components/gamification/BadgeDisplay';
 import QuestPanel from '../components/gamification/QuestPanel';
-import WeeklyInsights from '../components/gamification/WeeklyInsights';
 import XPMultiplierBanner from '../components/gamification/XPMultiplierBanner';
 
 const Dashboard = () => {
-    const { courses, fetchCourses, fetchStats, isLoading, user } = useCourseStore();
+    const { courses, fetchCourses, fetchStats, isLoading, user, selectedCourseId } = useCourseStore();
     const { logActivity, generateDailyChallenge } = useGamificationStore();
 
     useEffect(() => {
@@ -95,7 +91,7 @@ const Dashboard = () => {
                         <div className="p-4 sm:p-5 border-b border-slate-200 dark:border-white/10 bg-slate-100/50 dark:bg-black/20 flex justify-between items-center z-10 backdrop-blur-md">
                             <h2 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
                                 <Target size={20} className="text-indigo-500 dark:text-indigo-400" />
-                                Current Learning Path
+                                Learning Path: {courses.find(c => c.id === selectedCourseId)?.title || 'Current Path'}
                             </h2>
                         </div>
                         <div className="flex-1 overflow-auto custom-scrollbar relative z-0">
@@ -156,26 +152,10 @@ const Dashboard = () => {
                     </div>
                 </div>
 
-                {/* ── Middle Row: Quests (50%) & Leaderboard (50%) for perfect list visibility ── */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+                {/* ── Middle Row: Quests (100%) for clean visibility ── */}
+                <div className="grid grid-cols-1 gap-6 mt-6 pb-10">
                     {/* Active Learning Quests */}
                     <QuestPanel />
-
-                    {/* Leaderboard */}
-                    <Leaderboard />
-                </div>
-
-                {/* ── Bottom Row: Bento Cards with perfect horizontal breathing room ── */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6 pb-10">
-
-                    {/* Streak Calendar */}
-                    <StreakCalendar />
-
-                    {/* AI Weekly Insights */}
-                    <WeeklyInsights />
-
-                    {/* Achievements Badge Gallery */}
-                    <BadgeDisplay />
                 </div>
 
             </div>

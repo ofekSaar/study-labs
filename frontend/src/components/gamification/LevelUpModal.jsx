@@ -2,7 +2,6 @@ import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Star, Zap, ChevronUp } from 'lucide-react';
 import useGamificationStore from '../../store/gamificationStore';
-import useCourseStore from '../../store/courseStore';
 
 const LEVEL_TITLES = [
     '', 'Rookie', 'Scholar', 'Explorer', 'Achiever', 'Challenger',

@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import api from '../utils/api.js';
 
-const useEnrollmentStore = create((set, get) => ({
+const useEnrollmentStore = create((set) => ({
     myEnrollments: [],
     courseEnrollments: [],
     isLoading: false,
@@ -20,15 +20,11 @@ const useEnrollmentStore = create((set, get) => ({
 
     // ── Student: Request enrollment ────────────────
     requestEnrollment: async (courseId) => {
-        try {
-            const { data } = await api.post('/api/enrollments', { courseId });
-            set((state) => ({
-                myEnrollments: [data.enrollment, ...state.myEnrollments],
-            }));
-            return data.enrollment;
-        } catch (error) {
-            throw error;
-        }
+        const { data } = await api.post('/api/enrollments', { courseId });
+        set((state) => ({
+            myEnrollments: [data.enrollment, ...state.myEnrollments],
+        }));
+        return data.enrollment;
     },
 
     // ── Instructor: Fetch course enrollments ───────
@@ -46,32 +42,24 @@ const useEnrollmentStore = create((set, get) => ({
 
     // ── Instructor: Approve enrollment ─────────────
     approveEnrollment: async (enrollmentId) => {
-        try {
-            const { data } = await api.put(`/api/enrollments/${enrollmentId}/approve`);
-            set((state) => ({
-                courseEnrollments: state.courseEnrollments.map((e) =>
-                    e._id === enrollmentId ? { ...e, status: 'approved', respondedAt: new Date() } : e
-                ),
-            }));
-            return data.enrollment;
-        } catch (error) {
-            throw error;
-        }
+        const { data } = await api.put(`/api/enrollments/${enrollmentId}/approve`);
+        set((state) => ({
+            courseEnrollments: state.courseEnrollments.map((e) =>
+                e._id === enrollmentId ? { ...e, status: 'approved', respondedAt: new Date() } : e
+            ),
+        }));
+        return data.enrollment;
     },
 
     // ── Instructor: Deny enrollment ────────────────
     denyEnrollment: async (enrollmentId) => {
-        try {
-            const { data } = await api.put(`/api/enrollments/${enrollmentId}/deny`);
-            set((state) => ({
-                courseEnrollments: state.courseEnrollments.map((e) =>
-                    e._id === enrollmentId ? { ...e, status: 'denied', respondedAt: new Date() } : e
-                ),
-            }));
-            return data.enrollment;
-        } catch (error) {
-            throw error;
-        }
+        const { data } = await api.put(`/api/enrollments/${enrollmentId}/deny`);
+        set((state) => ({
+            courseEnrollments: state.courseEnrollments.map((e) =>
+                e._id === enrollmentId ? { ...e, status: 'denied', respondedAt: new Date() } : e
+            ),
+        }));
+        return data.enrollment;
     },
 }));
 

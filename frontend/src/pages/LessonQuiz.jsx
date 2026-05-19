@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import StudentLayout from '../components/layout/StudentLayout';
 import QuizEngine from '../components/quiz/QuizEngine';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -33,7 +33,7 @@ const LessonQuiz = () => {
                 try {
                     const quizRes = await api.get(`/api/quizzes/node/${id}`);
                     setQuizData(quizRes.data.questions || []);
-                } catch (quizErr) {
+                } catch {
                     setQuizData([]);
                 }
             } catch (error) {

@@ -3,9 +3,9 @@ import { persist } from 'zustand/middleware';
 import BADGES, { checkBadges } from '../utils/badges';
 import useToastStore from './toastStore';
 import sounds from '../utils/soundManager';
-import { AVATARS, TITLES, QUEST_DEFINITIONS } from '../constants/gamification';
+import { AVATARS, INSTRUCTOR_AVATARS, TITLES, QUEST_DEFINITIONS } from '../constants/gamification';
 
-export { AVATARS, TITLES, QUEST_DEFINITIONS };
+export { AVATARS, INSTRUCTOR_AVATARS, TITLES, QUEST_DEFINITIONS };
 
 const useGamificationStore = create(
     persist(
@@ -278,7 +278,7 @@ const useGamificationStore = create(
             },
 
             incrementQuestProgress: (actionType, amount = 1) => {
-                const { activeQuests, questsProgress, questsClaimed } = get();
+                const { activeQuests, questsClaimed } = get();
                 const allActive = [
                     ...activeQuests.daily,
                     ...activeQuests.weekly,
