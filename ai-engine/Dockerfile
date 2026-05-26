@@ -1,4 +1,5 @@
-FROM python:3.12-slim
+# ── AI Engine Dockerfile ─────────────────────
+FROM python:3.12.3-slim
 
 # Set working directory
 WORKDIR /app
@@ -11,12 +12,21 @@ RUN apt-get update && apt-get install -y \
     libmupdf-dev \
     && rm -rf /var/lib/apt/lists/*
 
+# Create a non-root system user and group
+RUN groupadd -r app && useradd -r -g app app
+
 # Install python dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
-COPY . .
+# Copy application code with ownership
+COPY --chown=app:app . .
+
+# Create uploads directory (used for shared volumes) with ownership
+RUN mkdir -p uploads && chown -R app:app uploads
+
+# Switch to non-root user
+USER app
 
 # Expose port
 EXPOSE 8000

@@ -2,11 +2,11 @@ import React from 'react';
 import StudentLayout from '../components/layout/StudentLayout';
 import useCourseStore from '../store/courseStore';
 import useGamificationStore from '../store/gamificationStore';
-import { AVATARS, TITLES } from '../constants/gamification';
+import { AVATARS, TITLES, SHOP_ITEMS } from '../constants/gamification';
 import Leaderboard from '../components/gamification/Leaderboard';
 import StreakCalendar from '../components/gamification/StreakCalendar';
 import BadgeDisplay from '../components/gamification/BadgeDisplay';
-import { Trophy, Zap, Flame, User, Mail, Shield, Check, Lock, Sparkles } from 'lucide-react';
+import { Trophy, Zap, Flame, User, Mail, Shield, Check, Lock, Sparkles, Coins, ShoppingBag } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const StudentProfile = () => {
@@ -18,14 +18,19 @@ const StudentProfile = () => {
         unlockedTitles, 
         selectAvatar, 
         selectTitle, 
-        stats 
+        stats,
+        coins,
+        streakShields,
+        xpBoosts,
+        buyItem
     } = useGamificationStore();
 
-    const currentAvatar = AVATARS.find(a => a.id === activeAvatar) || { emoji: '🎓', name: 'Student' };
-    const currentTitle = TITLES.find(t => t.id === activeTitle) || { name: 'Beginner' };
+    const currentAvatar = AVATARS.concat(SHOP_ITEMS.avatars).find(a => a.id === activeAvatar) || { emoji: '🎓', name: 'Student' };
+    const currentTitle = TITLES.concat(SHOP_ITEMS.titles).find(t => t.id === activeTitle) || { name: 'Beginner' };
 
-    const level = stats.level || 1;
-    const progressToNextLevel = stats.total_xp ? (stats.total_xp % 100) : 0;
+    const totalXP = user?.totalXP ?? stats.total_xp ?? 0;
+    const level = Math.floor(totalXP / 100) + 1;
+    const progressToNextLevel = totalXP % 100;
 
     return (
         <StudentLayout title="Student Profile">
@@ -149,8 +154,8 @@ const StudentProfile = () => {
                         <h3 className="font-display font-bold text-lg text-slate-800 dark:text-white mb-6 relative z-10">Select Active Avatar</h3>
                         
                         <div className="grid grid-cols-4 sm:grid-cols-7 gap-4 relative z-10">
-                            {AVATARS.map(avatar => {
-                                const isUnlocked = unlockedAvatars.includes(avatar.id) || level >= avatar.levelReq;
+                            {AVATARS.concat(SHOP_ITEMS.avatars).map(avatar => {
+                                const isUnlocked = unlockedAvatars.includes(avatar.id) || (avatar.levelReq !== undefined && level >= avatar.levelReq);
                                 const isActive = activeAvatar === avatar.id;
 
                                 return (
@@ -165,7 +170,7 @@ const StudentProfile = () => {
                                                     ? 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-white/5 text-slate-800 dark:text-white hover:bg-slate-100 dark:hover:bg-white/10 hover:scale-102'
                                                     : 'bg-slate-100/50 dark:bg-slate-950/40 border-slate-200/50 dark:border-white/5 text-slate-400 dark:text-white/20 opacity-60 cursor-not-allowed'
                                         }`}
-                                        title={`${avatar.name} (Requires Level ${avatar.levelReq})`}
+                                        title={`${avatar.name} ${avatar.levelReq !== undefined ? `(Requires Level ${avatar.levelReq})` : '(Shop Item)'}`}
                                     >
                                         <span className="text-2xl select-none">{avatar.emoji}</span>
                                         {!isUnlocked && (
@@ -185,8 +190,8 @@ const StudentProfile = () => {
                         <h3 className="font-display font-bold text-lg text-slate-800 dark:text-white mb-6 relative z-10">Select Active Title</h3>
 
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3.5 relative z-10">
-                            {TITLES.map(title => {
-                                const isUnlocked = unlockedTitles.includes(title.id) || level >= title.levelReq;
+                            {TITLES.concat(SHOP_ITEMS.titles).map(title => {
+                                const isUnlocked = unlockedTitles.includes(title.id) || (title.levelReq !== undefined && level >= title.levelReq);
                                 const isActive = activeTitle === title.id;
 
                                 return (
@@ -214,6 +219,83 @@ const StudentProfile = () => {
                         </div>
                     </div>
 
+                </div>
+
+                {/* ── Level Rewards Roadmap Timeline ── */}
+                <div className="bg-white/80 dark:bg-white/5 border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-md relative overflow-hidden group">
+                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 pointer-events-none" />
+                    
+                    <div className="relative z-10 mb-6">
+                        <h3 className="font-display font-black text-2xl text-slate-800 dark:text-white flex items-center gap-2">
+                            <Trophy className="text-amber-500" />
+                            Level Rewards Roadmap / מסלול פרסי עליית רמות
+                        </h3>
+                        <p className="text-slate-500 dark:text-white/50 text-sm mt-0.5">Track your level progression and the exclusive avatars and titles you unlock at each milestone.</p>
+                    </div>
+
+                    {/* Timeline row */}
+                    <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
+                        {[
+                            { level: 1, emoji: '🎓', avatar: 'Student', title: 'Beginner', desc: 'Initial Unlock' },
+                            { level: 2, emoji: '📚', avatar: 'Scholar', title: 'Curious Learner', desc: 'Bronze Milestone' },
+                            { level: 3, emoji: '🧠', avatar: 'Brainiac', title: 'Knowledge Seeker', desc: 'Silver Milestone' },
+                            { level: 4, emoji: '⚡', avatar: 'Speed Demon', title: 'Speed Runner', desc: 'Gold Milestone' },
+                            { level: 5, emoji: '🥷', avatar: 'Code Ninja', title: 'Code Ninja', desc: 'Platinum Milestone' },
+                            { level: 6, emoji: '🧙‍♂️', avatar: 'AI Sorcerer', title: 'AI Sorcerer', desc: 'Emerald Milestone' },
+                            { level: 8, emoji: '👑', avatar: 'Grandmaster', title: 'Grandmaster', desc: 'Legendary Milestone' }
+                        ].map((milestone) => {
+                            const isUnlocked = level >= milestone.level;
+                            return (
+                                <div 
+                                    key={milestone.level} 
+                                    className={`relative p-4 rounded-2xl border-2 transition-all flex flex-col items-center text-center ${
+                                        isUnlocked
+                                            ? 'bg-gradient-to-b from-indigo-500/5 to-purple-500/5 border-indigo-500/20 text-slate-800 dark:text-white'
+                                            : 'bg-slate-100/40 dark:bg-slate-950/20 border-slate-200/50 dark:border-white/5 text-slate-400 dark:text-white/20'
+                                    }`}
+                                >
+                                    {/* Level Badge */}
+                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black mb-3 ${
+                                        isUnlocked 
+                                            ? 'bg-indigo-600 text-white shadow-md' 
+                                            : 'bg-slate-200 dark:bg-white/10 text-slate-500'
+                                    }`}>
+                                        Lvl {milestone.level}
+                                    </div>
+
+                                    {/* Reward Avatar Emoji */}
+                                    <span className={`text-3xl mb-2 select-none filter transition ${isUnlocked ? '' : 'grayscale opacity-40'}`}>
+                                        {milestone.emoji}
+                                    </span>
+
+                                    {/* Reward details */}
+                                    <p className={`font-black text-xs ${isUnlocked ? 'text-slate-800 dark:text-white' : 'text-slate-500 dark:text-white/20'}`}>
+                                        {milestone.avatar}
+                                    </p>
+                                    <p className={`text-[10px] font-bold uppercase tracking-wider mt-1 px-2 py-0.5 rounded ${
+                                        isUnlocked 
+                                            ? 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400' 
+                                            : 'bg-slate-200/50 dark:bg-white/5 text-slate-400 dark:text-white/10'
+                                    }`}>
+                                        {milestone.title}
+                                    </p>
+                                    
+                                    <p className="text-[9px] text-slate-400 dark:text-white/30 mt-2 leading-tight">
+                                        {milestone.desc}
+                                    </p>
+
+                                    {/* Status Icon Indicator */}
+                                    <div className="absolute top-2 right-2">
+                                        {isUnlocked ? (
+                                            <span className="text-emerald-500 text-xs font-bold" title="Unlocked">✓</span>
+                                        ) : (
+                                            <Lock size={10} className="text-slate-400 dark:text-white/20" />
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
                 </div>
 
                 {/* ── Third Row: Leaderboard (Results Table) & Achievements Badge Display ── */}

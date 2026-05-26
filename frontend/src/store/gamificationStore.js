@@ -3,13 +3,18 @@ import { persist } from 'zustand/middleware';
 import BADGES, { checkBadges } from '../utils/badges';
 import useToastStore from './toastStore';
 import sounds from '../utils/soundManager';
-import { AVATARS, INSTRUCTOR_AVATARS, TITLES, QUEST_DEFINITIONS } from '../constants/gamification';
+import { AVATARS, INSTRUCTOR_AVATARS, TITLES, QUEST_DEFINITIONS, SHOP_ITEMS } from '../constants/gamification';
 
-export { AVATARS, INSTRUCTOR_AVATARS, TITLES, QUEST_DEFINITIONS };
+export { AVATARS, INSTRUCTOR_AVATARS, TITLES, QUEST_DEFINITIONS, SHOP_ITEMS };
 
 const useGamificationStore = create(
     persist(
         (set, get) => ({
+            // Shop & Economy state
+            coins: 100,
+            streakShields: 0,
+            xpBoosts: 0,
+
             // Level Up state
             showLevelUp: false,
             newLevel: 1,
@@ -69,8 +74,8 @@ const useGamificationStore = create(
             
             dismissLevelUp: () => set({ showLevelUp: false }),
 
-            getXPMultiplier: () => {
-                const { stats } = get();
+             getXPMultiplier: () => {
+                const { stats, xpBoosts } = get();
                 const streak = stats.streak || 0;
                 
                 let multiplier = 1.0;
@@ -99,6 +104,12 @@ const useGamificationStore = create(
                     }
                 }
 
+                // 3. XP Boost Powerup
+                if (xpBoosts > 0) {
+                    multiplier *= 2.0;
+                    reasons.push('XP Boost Token Active (2.0x)');
+                }
+
                 return { multiplier, reasons };
             },
 
@@ -109,6 +120,12 @@ const useGamificationStore = create(
             checkLevelUp: (previousXP, newXP) => {
                 const oldLevel = Math.floor(previousXP / 100) + 1;
                 const newLevel = Math.floor(newXP / 100) + 1;
+                
+                // Award coins equal to XP difference
+                const xpEarned = newXP - previousXP;
+                if (xpEarned > 0) {
+                    set(state => ({ coins: (state.coins || 0) + xpEarned }));
+                }
                 
                 get().updateStat('total_xp', newXP);
                 get().updateStat('level', newLevel);
@@ -334,17 +351,71 @@ const useGamificationStore = create(
                     questsClaimed: [...state.questsClaimed, questId]
                 }));
 
+                // Actually add XP to the user level progression
+                const prevXP = get().stats.total_xp || 0;
+                get().checkLevelUp(prevXP, prevXP + quest.xp);
+
                 // Reward standard XP notification
                 setTimeout(() => {
                     useToastStore.getState().xp(quest.xp, `Quest Reward: ${quest.title}`);
                     sounds.perfectScore();
                     get().setTriggerConfetti('quest_complete');
                 }, 100);
+            },
+            buyItem: (itemType, itemId, cost) => {
+                const { coins, unlockedAvatars, unlockedTitles } = get();
+                if (coins < cost) {
+                    useToastStore.getState().success(
+                        'Insufficient Coins!',
+                        `You need ${cost} Study Coins to buy this item, but you only have ${coins}.`,
+                        3500
+                    );
+                    return false;
+                }
+
+                // Check if already unlocked (for avatars and titles)
+                if (itemType === 'avatars' && unlockedAvatars.includes(itemId)) {
+                    useToastStore.getState().success('Already Owned', 'You already own this avatar!', 3000);
+                    return false;
+                }
+                if (itemType === 'titles' && unlockedTitles.includes(itemId)) {
+                    useToastStore.getState().success('Already Owned', 'You already own this title!', 3000);
+                    return false;
+                }
+
+                // Deduct coins
+                set(state => ({ coins: state.coins - cost }));
+
+                // Grant item
+                if (itemType === 'avatars') {
+                    set(state => ({ unlockedAvatars: [...state.unlockedAvatars, itemId] }));
+                    const item = SHOP_ITEMS.avatars.find(x => x.id === itemId);
+                    useToastStore.getState().success('Purchase Successful!', `Unlocked Avatar: ${item.emoji} ${item.name}`, 4000);
+                } else if (itemType === 'titles') {
+                    set(state => ({ unlockedTitles: [...state.unlockedTitles, itemId] }));
+                    const item = SHOP_ITEMS.titles.find(x => x.id === itemId);
+                    useToastStore.getState().success('Purchase Successful!', `Unlocked Title: ${item.name}`, 4000);
+                } else if (itemType === 'powerups') {
+                    if (itemId === 'streak_shield') {
+                        set(state => ({ streakShields: (state.streakShields || 0) + 1 }));
+                        useToastStore.getState().success('Purchase Successful!', 'Acquired 1 Streak Shield 🛡️', 4000);
+                    } else if (itemId === 'xp_boost') {
+                        set(state => ({ xpBoosts: (state.xpBoosts || 0) + 1 }));
+                        useToastStore.getState().success('Purchase Successful!', 'Acquired 1 XP Boost Token (2x) ⚡', 4000);
+                    }
+                }
+
+                sounds.badge();
+                get().setTriggerConfetti('quest_complete');
+                return true;
             }
         }),
         {
             name: 'studylabs-gamification',
             partialize: (state) => ({
+                coins: state.coins,
+                streakShields: state.streakShields,
+                xpBoosts: state.xpBoosts,
                 activityLog: state.activityLog,
                 dailyChallenge: state.dailyChallenge,
                 dailyChallengeCompleted: state.dailyChallengeCompleted,

@@ -17,6 +17,7 @@ import RoleSelectPage from './pages/RoleSelectPage';
 import useAuthStore from './store/authStore';
 import useSettingsStore from './store/settingsStore';
 import StudentProfile from './pages/StudentProfile';
+import StudyShop from './pages/StudyShop';
 
 const ThemeWrapper = ({ children }) => {
   const { theme } = useSettingsStore();
@@ -110,6 +111,14 @@ function App() {
           element={
             <ProtectedRoute allowedRole="student">
               <StudentProfile />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/shop" 
+          element={
+            <ProtectedRoute allowedRole="student">
+              <StudyShop />
             </ProtectedRoute>
           } 
         />

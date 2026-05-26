@@ -45,3 +45,20 @@ export const QUEST_DEFINITIONS = {
         { id: 'milestone_perfect_quizzes_10', title: 'Get 10 perfect quizzes', action: 'perfect_quiz', target: 10, xp: 1200, icon: '🥇' },
     ]
 };
+
+export const SHOP_ITEMS = {
+    avatars: [
+        { id: 'wizard_scholar', emoji: '🧙‍♂️', name: 'Wizard Scholar', cost: 150, description: 'A mystical master of educational wisdom.' },
+        { id: 'cyber_learner', emoji: '👾', name: 'Cyber Learner', cost: 250, description: 'Direct neural interface to the study database.' },
+        { id: 'unicorn_scholar', emoji: '🦄', name: 'Academic Unicorn', cost: 400, description: 'A rare creature of unparalleled brilliance.' }
+    ],
+    titles: [
+        { id: 'knowledge_alchemist', name: 'Alchemist of Knowledge', cost: 100, description: 'Transmuting study time into pure genius.' },
+        { id: 'ultimate_mind', name: 'Ultimate Mind', cost: 200, description: 'Capable of storing infinite amounts of material.' },
+        { id: 'legendary_scholar', name: 'Legendary Scholar', cost: 350, description: 'Your achievements will be spoken of for generations.' }
+    ],
+    powerups: [
+        { id: 'streak_shield', emoji: '🛡️', name: 'Streak Shield', cost: 75, description: 'Saves your streak if you miss a day.' },
+        { id: 'xp_boost', emoji: '⚡', name: 'XP Boost Token (2x)', cost: 120, description: 'Doubles all XP earned from your next quiz.' }
+    ]
+};

@@ -21,7 +21,7 @@ const LessonQuiz = () => {
     const [showReward, setShowReward] = useState(null);
 
     // Gamification
-    const { setTriggerConfetti, checkLevelUp, logActivity, completeChallenge, dailyChallenge } = useGamificationStore();
+    const { setTriggerConfetti, checkLevelUp, logActivity, completeChallenge, dailyChallenge, getXPMultiplier } = useGamificationStore();
     const { user } = useCourseStore();
 
     useEffect(() => {
@@ -88,11 +88,15 @@ const LessonQuiz = () => {
                 completeChallenge();
             }
 
+            // Apply XP Multiplier!
+            const { multiplier } = getXPMultiplier();
+            const boostedScore = Math.round(score * multiplier);
+
             // Check for level up
             const prevXP = user?.totalXP || 0;
-            checkLevelUp(prevXP, prevXP + score);
+            checkLevelUp(prevXP, prevXP + boostedScore);
 
-            setShowReward({ score, nextNodeId: nextNode ? nextNode._id : null, isPerfect });
+            setShowReward({ score: boostedScore, nextNodeId: nextNode ? nextNode._id : null, isPerfect });
 
         } catch (error) {
             alert(error.message || 'Failed to submit quiz');

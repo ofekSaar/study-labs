@@ -1,18 +1,23 @@
 # ── Backend Dockerfile ───────────────────────
-FROM node:20-alpine
-
+# Stage 1: Base (Install dependencies)
+FROM node:20.12.2-alpine AS base
 WORKDIR /app
-
-# Install dependencies first (layer caching)
-COPY package.json package-lock.json* ./
+COPY package*.json ./
 RUN npm install
 
-# Copy source code
-COPY . .
-
-# Create uploads directory
-RUN mkdir -p uploads
-
+# Stage 2: Development (For local development via compose)
+FROM base AS development
+# Create uploads directory and set permissions
+RUN mkdir -p uploads && chown -R node:node uploads
+COPY --chown=node:node . .
+USER node
 EXPOSE 5000
-
 CMD ["npm", "run", "dev"]
+
+# Stage 3: Production (Production setup)
+FROM base AS production
+RUN mkdir -p uploads && chown -R node:node uploads
+COPY --chown=node:node . .
+USER node
+EXPOSE 5000
+CMD ["npm", "start"]

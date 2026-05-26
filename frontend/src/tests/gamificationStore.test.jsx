@@ -3,19 +3,12 @@ import { act } from 'react';
 import useGamificationStoreModule from '../store/gamificationStore';
 import { AVATARS, TITLES } from '../constants/gamification';
 import BADGES, { checkBadges } from '../utils/badges';
-import sounds from '../utils/soundManager';
-import useToastStore from '../store/toastStore';
+import soundsModule from '../utils/soundManager';
+import useToastStoreModule from '../store/toastStore';
 
 const useGamificationStore = useGamificationStoreModule.default || useGamificationStoreModule;
-
-// Mock badges utility to isolate Zustand store tests
-jest.mock('../utils/badges', () => ({
-    __esModule: true,
-    default: [
-        { id: 'first_quiz', name: 'First Quiz', icon: '📝', description: 'Solve your first quiz' }
-    ],
-    checkBadges: jest.fn(() => [])
-}));
+const sounds = soundsModule.default || soundsModule;
+const useToastStore = useToastStoreModule.default || useToastStoreModule;
 
 describe('useGamificationStore Zustand Store', () => {
     const originalDate = global.Date;
@@ -56,8 +49,6 @@ describe('useGamificationStore Zustand Store', () => {
         mockToastState.badge.mockClear();
         mockToastState.xp.mockClear();
 
-        checkBadges.mockReset().mockReturnValue([]);
-
         // Reset the store state before each test run
         act(() => {
             useGamificationStore.setState({
@@ -78,6 +69,7 @@ describe('useGamificationStore Zustand Store', () => {
                 activeTitle: 'beginner',
                 unlockedAvatars: ['default'],
                 unlockedTitles: ['beginner'],
+                unlockedBadges: [],
                 showLevelUp: false,
                 newLevel: 1,
                 previousXP: 0,
@@ -350,16 +342,13 @@ describe('useGamificationStore Zustand Store', () => {
     });
 
     test('updates stats and triggers badge unlock if earned', () => {
-        // Mock checkBadges to return a badge
-        checkBadges.mockReturnValue(['first_quiz']);
-
         act(() => {
             useGamificationStore.getState().updateStat('perfect_quizzes', 1);
         });
 
         const state = useGamificationStore.getState();
         expect(state.stats.perfect_quizzes).toBe(1);
-        expect(state.unlockedBadges).toContain('first_quiz');
+        expect(state.unlockedBadges).toContain('first_perfect');
 
         // Advance timers by 500ms to verify toast and sound triggers
         act(() => {
@@ -367,7 +356,7 @@ describe('useGamificationStore Zustand Store', () => {
         });
 
         const stateAfterTimer = useGamificationStore.getState();
-        expect(mockToastState.badge).toHaveBeenCalledWith('First Quiz', '📝');
+        expect(mockToastState.badge).toHaveBeenCalledWith('Sharpshooter', '🎯');
         expect(sounds.badge).toHaveBeenCalled();
         expect(stateAfterTimer.triggerConfetti).toBe(true);
         expect(stateAfterTimer.confettiReason).toBe('badge_unlock');
@@ -514,10 +503,82 @@ describe('useGamificationStore Zustand Store', () => {
         });
         expect(useGamificationStore.getState().questsClaimed).not.toContain('q_test');
 
-        // 2. Quest ID does not exist
         act(() => {
             useGamificationStore.getState().claimQuestReward('non_existent');
         });
         expect(useGamificationStore.getState().questsClaimed).not.toContain('non_existent');
+    });
+
+    test('shop system: buyItem fails on insufficient balance', () => {
+        act(() => {
+            useGamificationStore.setState({ coins: 50, unlockedAvatars: ['default'] });
+        });
+
+        const success = useGamificationStore.getState().buyItem('avatars', 'wizard_scholar', 150);
+        expect(success).toBe(false);
+        expect(useGamificationStore.getState().coins).toBe(50);
+        expect(mockToastState.success).toHaveBeenCalledWith('Insufficient Coins!', expect.any(String), 3500);
+    });
+
+    test('shop system: buyItem fails on already owned item', () => {
+        act(() => {
+            useGamificationStore.setState({ coins: 200, unlockedAvatars: ['default', 'wizard_scholar'] });
+        });
+
+        const success = useGamificationStore.getState().buyItem('avatars', 'wizard_scholar', 150);
+        expect(success).toBe(false);
+        expect(useGamificationStore.getState().coins).toBe(200);
+        expect(mockToastState.success).toHaveBeenCalledWith('Already Owned', expect.any(String), 3000);
+    });
+
+    test('shop system: buyItem successfully unlocks avatar', () => {
+        act(() => {
+            useGamificationStore.setState({ coins: 200, unlockedAvatars: ['default'] });
+        });
+
+        const success = useGamificationStore.getState().buyItem('avatars', 'wizard_scholar', 150);
+        expect(success).toBe(true);
+        expect(useGamificationStore.getState().coins).toBe(50);
+        expect(useGamificationStore.getState().unlockedAvatars).toContain('wizard_scholar');
+        expect(sounds.badge).toHaveBeenCalled();
+        expect(useGamificationStore.getState().triggerConfetti).toBe(true);
+        expect(useGamificationStore.getState().confettiReason).toBe('quest_complete');
+    });
+
+    test('shop system: buyItem successfully unlocks title', () => {
+        act(() => {
+            useGamificationStore.setState({ coins: 200, unlockedTitles: ['beginner'] });
+        });
+
+        const success = useGamificationStore.getState().buyItem('titles', 'knowledge_alchemist', 100);
+        expect(success).toBe(true);
+        expect(useGamificationStore.getState().coins).toBe(100);
+        expect(useGamificationStore.getState().unlockedTitles).toContain('knowledge_alchemist');
+    });
+
+    test('shop system: buyItem successfully purchases streak shield', () => {
+        act(() => {
+            useGamificationStore.setState({ coins: 100, streakShields: 0 });
+        });
+
+        const success = useGamificationStore.getState().buyItem('powerups', 'streak_shield', 75);
+        expect(success).toBe(true);
+        expect(useGamificationStore.getState().coins).toBe(25);
+        expect(useGamificationStore.getState().streakShields).toBe(1);
+    });
+
+    test('shop system: buyItem successfully purchases xp boost and getXPMultiplier applies it', () => {
+        act(() => {
+            useGamificationStore.setState({ coins: 200, xpBoosts: 0, stats: { streak: 0 } });
+        });
+
+        const success = useGamificationStore.getState().buyItem('powerups', 'xp_boost', 120);
+        expect(success).toBe(true);
+        expect(useGamificationStore.getState().coins).toBe(80);
+        expect(useGamificationStore.getState().xpBoosts).toBe(1);
+
+        const { multiplier, reasons } = useGamificationStore.getState().getXPMultiplier();
+        expect(multiplier).toBe(2.0);
+        expect(reasons).toContain('XP Boost Token Active (2.0x)');
     });
 });

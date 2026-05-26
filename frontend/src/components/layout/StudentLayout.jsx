@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Settings, LogOut, Menu, Map, BookOpen, ChevronRight, ChevronDown, X, Flame, Zap, Trophy, User } from 'lucide-react';
+import { Settings, LogOut, Menu, Map, BookOpen, ChevronRight, ChevronDown, X, Flame, Zap, Trophy, User, ShoppingBag } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import useCourseStore from '../../store/courseStore';
 import useAuthStore from '../../store/authStore';
@@ -89,6 +89,12 @@ const SidebarContent = ({ location, navigate, courses, selectedCourseId, setSele
                     label="Profile"
                     active={location.pathname === '/profile'}
                     onClick={() => navigate('/profile')}
+                />
+                <NavItem
+                    icon={<ShoppingBag size={18} />}
+                    label="Study Shop"
+                    active={location.pathname === '/shop'}
+                    onClick={() => navigate('/shop')}
                 />
 
                 {/* Active Roadmap Switcher */}
