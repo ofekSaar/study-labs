@@ -111,6 +111,32 @@ def save_to_staging(filename: str, content: str) -> str:
     res = db['staging_materials'].insert_one(doc)
     return str(res.inserted_id)
 
+def check_file_hash(hash_val: str) -> bool:
+    """
+    Checks if a given SHA256 hash already exists in the global 'files' collection.
+    """
+    db = get_db_handle()
+    if db is None:
+        return False
+    
+    doc = db['files'].find_one({"hash": hash_val})
+    return doc is not None
+
+def save_file_hash(filename: str, hash_val: str):
+    """
+    Saves a file hash to the global 'files' collection.
+    """
+    db = get_db_handle()
+    if db is None:
+        return
+        
+    doc = {
+        "filename": filename,
+        "hash": hash_val,
+        "created_at": datetime.datetime.utcnow()
+    }
+    db['files'].insert_one(doc)
+
 def update_course_progress(course_id: str, message: str):
     """
     Updates the generationProgress field in the course document.

@@ -2,7 +2,8 @@ from fastapi import FastAPI, HTTPException, Request
 from pydantic import BaseModel
 from typing import List, Optional
 import os
-from engine.db import get_db_handle, save_course_to_db, update_course_progress, save_to_staging
+import hashlib
+from engine.db import get_db_handle, save_course_to_db, update_course_progress, save_to_staging, check_file_hash, save_file_hash
 from engine.ocr import extract_text_from_bytes, extract_with_images, extract_in_chunks
 from engine.parsers.image_analyzer import analyze_images
 from engine.generator import create_course_pipeline, evaluate_answer
@@ -91,6 +92,14 @@ async def generate_course(request: GenerateCourseRequest, req: Request):
         update_course_progress(request.courseId, f"Parsing syllabus: {os.path.basename(request.syllabusPath)}...")
         with open(request.syllabusPath, "rb") as f:
             syllabus_bytes = f.read()
+            
+        # Task 1: Cryptographic Ingestion Hash Validation (Syllabus)
+        syllabus_hash = hashlib.sha256(syllabus_bytes).hexdigest()
+        if check_file_hash(syllabus_hash):
+            logger.error("Duplicate syllabus file detected based on SHA256 hash.")
+            raise HTTPException(status_code=400, detail="Duplicate syllabus file detected. Processing aborted.")
+        save_file_hash(os.path.basename(request.syllabusPath), syllabus_hash)
+        
         syllabus_result = extract_with_images(syllabus_bytes, filename=os.path.basename(request.syllabusPath))
         syllabus_text = syllabus_result.text
         all_images = list(syllabus_result.images)
@@ -107,6 +116,13 @@ async def generate_course(request: GenerateCourseRequest, req: Request):
                  continue
             with open(mat_path, "rb") as f:
                  mat_bytes = f.read()
+                 
+            # Task 1: Cryptographic Ingestion Hash Validation (Material)
+            mat_hash = hashlib.sha256(mat_bytes).hexdigest()
+            if check_file_hash(mat_hash):
+                logger.error(f"Duplicate material file detected based on SHA256 hash: {os.path.basename(mat_path)}")
+                raise HTTPException(status_code=400, detail=f"Duplicate material file detected: {os.path.basename(mat_path)}. Processing aborted.")
+            save_file_hash(os.path.basename(mat_path), mat_hash)
                  
             # Process in chunks (10 pages at a time) to prevent memory spikes
             chunk_generator = extract_in_chunks(mat_bytes, filename=os.path.basename(mat_path), chunk_size=10)
