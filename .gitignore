@@ -33,6 +33,9 @@ frontend/build/
 # Docker
 .dockerignore
 
+# TLS certificates (generated on VM, never commit)
+nginx/certs/
+
 # Agents Manager and Crew Env
 agents_manager.py
 agents_manager/
