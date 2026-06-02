@@ -13,7 +13,7 @@ from llama_index.llms.gemini import Gemini
 from llama_index.llms.openai import OpenAI
 
 logger = logging.getLogger(__name__)
-from engine.db import update_course_progress
+from engine.db import update_course_progress, save_syllabus_blueprint
 
 load_dotenv()
 
@@ -286,7 +286,16 @@ async def create_course_pipeline(syllabus_text: str, materials: List[str], sylla
     # ideally we update parse_syllabus to be async or run in executor.
     # For now, let's assume parse_syllabus remains sync but fast enough
     course = parse_syllabus(syllabus_text, syllabus_name=syllabus_name)
-    
+
+    # Persist syllabus blueprint as ground truth anchor
+    if course_id:
+        save_syllabus_blueprint(
+            course_id=course_id,
+            syllabus_name=syllabus_name,
+            blueprint=course.model_dump()
+        )
+        logger.info(f"Syllabus blueprint saved for course {course_id}.")
+
     # Step 2: Tag Materials (Sync for now)
     if materials_names:
         logger.info(f"Pipeline Step 2/3: Tagging {len(materials)} materials: {', '.join(materials_names)}")

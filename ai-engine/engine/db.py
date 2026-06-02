@@ -137,6 +137,25 @@ def save_file_hash(filename: str, hash_val: str):
     }
     db['files'].insert_one(doc)
 
+def save_syllabus_blueprint(course_id: str, syllabus_name: str, blueprint: dict) -> str:
+    """
+    Persists the parsed syllabus Pydantic blueprint to the 'syllabus_blueprints' collection.
+    Returns the inserted document's ObjectId as a string.
+    """
+    db = get_db_handle()
+    if db is None:
+        return None
+
+    doc = {
+        "course_id": course_id,
+        "syllabus_name": syllabus_name,
+        "blueprint": blueprint,
+        "created_at": datetime.datetime.utcnow()
+    }
+    res = db['syllabus_blueprints'].insert_one(doc)
+    return str(res.inserted_id)
+
+
 def update_course_progress(course_id: str, message: str):
     """
     Updates the generationProgress field in the course document.
