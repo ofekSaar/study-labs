@@ -14,6 +14,7 @@ from llama_index.llms.openai import OpenAI
 
 logger = logging.getLogger(__name__)
 from engine.db import update_course_progress, save_syllabus_blueprint
+from engine.semantic_filter import filter_chunks_by_syllabus
 
 load_dotenv()
 
@@ -306,7 +307,20 @@ async def create_course_pipeline(syllabus_text: str, materials: List[str], sylla
         if course_id:
             update_course_progress(course_id, "Indexing materials for topic matching...")
     course = tag_materials(course, materials)
-    
+
+    # Semantic alignment — drop matched material chunks below 0.60 cosine similarity
+    syllabus_topics = [
+        f"{topic.title}: {topic.description or ''}"
+        for lesson in course.lessons
+        for topic in lesson.topics
+    ]
+    for lesson in course.lessons:
+        for topic in lesson.topics:
+            if topic.matched_materials:
+                topic.matched_materials = filter_chunks_by_syllabus(
+                    topic.matched_materials, syllabus_topics
+                )
+
     # Step 3: Generate Questions & Summaries (PARALLEL)
     total_topics = sum(len(lesson.topics) for lesson in course.lessons)
     logger.info(f"Pipeline Step 3/3: Generating content (questions & summaries) for {total_topics} topics in PARALLEL...")
