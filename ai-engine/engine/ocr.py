@@ -8,6 +8,7 @@ Kept for backward compatibility with existing imports in generator.py and main.p
 import logging
 from engine.parsers import get_parser, get_supported_extensions
 from engine.parsers.base import ParseResult
+from engine.quality_filter import is_clean
 
 logger = logging.getLogger(__name__)
 
@@ -81,4 +82,8 @@ def extract_in_chunks(file_bytes, filename=None, chunk_size=10):
         yield ParseResult()
         return
 
-    yield from parser.parse_in_chunks(file_bytes, filename, chunk_size=chunk_size)
+    for chunk in parser.parse_in_chunks(file_bytes, filename, chunk_size=chunk_size):
+        if is_clean(chunk.text):
+            yield chunk
+        else:
+            yield ParseResult(text="", images=chunk.images, metadata=chunk.metadata)
