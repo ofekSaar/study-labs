@@ -1,0 +1,22 @@
+name: Auto PR — main to production
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  create-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Open PR to production
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr create \
+            --base production \
+            --head main \
+            --title "chore: sync main → production" \
+            --body "Automated PR created after push to main. Review and merge to trigger deployment." \
+            || echo "PR already exists or nothing to merge."

@@ -1,0 +1,80 @@
+name: Deploy - Production
+
+on:
+  push:
+    branches: [ "production" ]
+  workflow_dispatch:
+
+jobs:
+  run-tests:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up environment
+        run: |
+          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" > .env
+          echo "GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}" >> .env
+          echo "GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}" >> .env
+          echo "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}" >> .env
+          echo "OPEN_ROUTE_API_KEY=${{ secrets.OPEN_ROUTE_API_KEY }}" >> .env
+          echo "AI_SERVICE_API_KEY=${{ secrets.AI_SERVICE_API_KEY }}" >> .env
+          echo "USE_MOCK_AI=True" >> .env
+          echo "MAX_MATERIALS_COUNT=20" >> .env
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Run backend tests
+        run: |
+          cd backend
+          npm install
+          docker compose -f ../docker-compose.yml up -d mongo
+          sleep 15
+          MONGODB_URI=mongodb://localhost:27017/studylabs_test \
+          JWT_SECRET=${{ secrets.JWT_SECRET }} \
+          NODE_OPTIONS=--experimental-vm-modules \
+          npm test
+          docker compose -f ../docker-compose.yml stop mongo
+
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-report
+          path: backend/test-report.html
+          retention-days: 3
+
+  deploy-app:
+    needs: run-tests
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up production environment
+        run: |
+          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" > .env
+          echo "GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}" >> .env
+          echo "GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}" >> .env
+          echo "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}" >> .env
+          echo "OPEN_ROUTE_API_KEY=${{ secrets.OPEN_ROUTE_API_KEY }}" >> .env
+          echo "AI_SERVICE_API_KEY=${{ secrets.AI_SERVICE_API_KEY }}" >> .env
+          echo "USE_MOCK_AI=False" >> .env
+          echo "MAX_MATERIALS_COUNT=${{ vars.MAX_MATERIALS_COUNT || 20 }}" >> .env
+          echo "COLLEGE_API_BASE=${{ secrets.COLLEGE_API_BASE }}" >> .env
+          echo "COLLEGE_MODEL=gpt-oss-120b" >> .env
+          echo "COLLEGE_API_KEY=college" >> .env
+
+      - name: Build and restart all services
+        run: |
+          docker compose down
+          docker compose up --build -d
+          docker system prune -f
+          sleep 15
+
+      - name: Smoke test — health check
+        run: |
+          curl --fail --retry 5 --retry-delay 3 http://localhost:5001/api/health || exit 1
+          curl --fail --retry 5 --retry-delay 3 http://localhost:8000/api/health/ || exit 1
