@@ -372,6 +372,9 @@ async function generateRoadmapInBackground(course, syllabusData, materialsData, 
 /** How long a course may sit in 'generating' before it is retriable as stuck. */
 const STUCK_GENERATION_THRESHOLD_MS = 20 * 60 * 1000; // 20 minutes — mirrors aiService.js
 
+/** Max total generation attempts: 1 initial + 1 retry. After this, no further retries are allowed. */
+const MAX_GENERATION_ATTEMPTS = 2;
+
 /**
  * Retry course generation (Instructor owner only).
  *
@@ -379,6 +382,9 @@ const STUCK_GENERATION_THRESHOLD_MS = 20 * 60 * 1000; // 20 minutes — mirrors 
  *   - 'failed'  — an explicit failure was recorded
  *   - 'generating' AND generationStartedAt is older than STUCK_GENERATION_THRESHOLD_MS
  *     (i.e. stuck after a server restart before recovery ran)
+ *
+ * Retries are capped at MAX_GENERATION_ATTEMPTS (1 initial + 1 retry). Once a course
+ * has been attempted that many times, it can no longer be regenerated.
  */
 export const regenerateCourse = async (req, res, next) => {
   try {
@@ -387,6 +393,15 @@ export const regenerateCourse = async (req, res, next) => {
 
     if (course.instructor.toString() !== req.user._id.toString()) {
       throw createError(403, 'You can only regenerate your own courses');
+    }
+
+    // Cap retries: 1 initial attempt + 2 retries. Once exhausted, the course stays failed for good.
+    if (course.generationAttempts >= MAX_GENERATION_ATTEMPTS) {
+      throw createError(
+        409,
+        `Course generation has already been attempted ${course.generationAttempts} times ` +
+          `(max ${MAX_GENERATION_ATTEMPTS}: 1 initial + 1 retry). No further retries are allowed.`
+      );
     }
 
     const isStuckGenerating =
