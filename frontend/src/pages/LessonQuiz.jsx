@@ -210,7 +210,7 @@ const LessonQuiz = () => {
                         </div>
                     </div>
 
-                    <div className="flex-1 max-w-3xl mx-auto w-full p-4 sm:p-6 md:p-12">
+                    <div className="flex-1 max-w-5xl mx-auto w-full p-4 sm:p-6 md:p-12">
                         <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-100 dark:border-white/10 overflow-hidden">
                             <div className="bg-indigo-500/5 dark:bg-indigo-500/10 px-4 sm:px-8 py-4 sm:py-6 border-b border-slate-100 dark:border-white/10 flex items-center gap-3">
                                 <div className="w-10 h-10 bg-indigo-500 rounded-xl flex items-center justify-center text-white">

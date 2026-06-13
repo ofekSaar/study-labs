@@ -40,7 +40,7 @@ const RoadmapNode = ({ node, onClick, alignment, isSelected }) => {
                 <p className={`text-[9px] font-black text-indigo-500 dark:text-indigo-400 uppercase tracking-widest mt-1.5 flex items-center gap-1 ${
                     alignment === 'left' ? 'justify-end' : 'justify-start'
                 }`}>
-                    {node.type === 'quiz' ? 'בוחן 📝' : node.type === 'exam' ? 'מבחן 🏆' : 'שיעור 📖'}
+                    {node.type === 'quiz' ? 'Quiz 📝' : node.type === 'exam' ? 'Exam 🏆' : 'Lesson 📖'}
                 </p>
             </div>
 

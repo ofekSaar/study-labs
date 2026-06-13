@@ -40,12 +40,12 @@ const Leaderboard = ({ courseId }) => {
             } catch {
                 // Mock leaderboard when API not yet implemented
                 setEntries([
-                    { rank: 1, name: 'אלכס ק.', xp: 1850, avatar: '🥷', isYou: false },
-                    { rank: 2, name: 'שרה מ.', xp: 1620, avatar: '🦄', isYou: false },
-                    { rank: 3, name: 'דוד ל.', xp: 1410, avatar: '🧠', isYou: false },
-                    { rank: 4, name: 'אתה', xp: currentUser?.totalXP || 0, avatar: currentUserEmoji, isYou: true },
-                    { rank: 5, name: 'אמה ר.', xp: 980, avatar: '🦊', isYou: false },
-                    { rank: 6, name: 'תום ב.', xp: 760, avatar: '🦁', isYou: false },
+                    { rank: 1, name: 'Alex K.', xp: 1850, avatar: '🥷', isYou: false },
+                    { rank: 2, name: 'Sarah M.', xp: 1620, avatar: '🦄', isYou: false },
+                    { rank: 3, name: 'David L.', xp: 1410, avatar: '🧠', isYou: false },
+                    { rank: 4, name: 'You', xp: currentUser?.totalXP || 0, avatar: currentUserEmoji, isYou: true },
+                    { rank: 5, name: 'Emma R.', xp: 980, avatar: '🦊', isYou: false },
+                    { rank: 6, name: 'Tom B.', xp: 760, avatar: '🦁', isYou: false },
                 ]);
             } finally {
                 setIsLoading(false);
@@ -134,7 +134,7 @@ const Leaderboard = ({ courseId }) => {
                                         {entry.name}
                                         {entry.isYou && (
                                             <span className="mr-1.5 text-[9px] font-black text-white bg-indigo-500/80 dark:bg-indigo-500/90 px-1.5 py-0.5 rounded-md uppercase tracking-wider shadow-[0_2px_4px_rgba(99,102,241,0.2)]">
-                                                אתה
+                                                You
                                             </span>
                                         )}
                                     </span>

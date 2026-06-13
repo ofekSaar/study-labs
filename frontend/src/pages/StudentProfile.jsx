@@ -224,7 +224,7 @@ const StudentProfile = () => {
                     <div className="relative z-10 mb-6">
                         <h3 className="font-display font-black text-xl sm:text-2xl text-slate-800 dark:text-white flex items-center gap-2">
                             <Trophy className="text-amber-500" />
-                            Level Rewards Roadmap / מסלול פרסי עליית רמות
+                            Level Rewards Roadmap
                         </h3>
                         <p className="text-slate-500 dark:text-white/50 text-sm mt-0.5">Track your level progression and the exclusive avatars and titles you unlock at each milestone.</p>
                     </div>
