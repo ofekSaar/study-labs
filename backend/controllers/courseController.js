@@ -362,10 +362,20 @@ async function generateRoadmapInBackground(course, syllabusData, materialsData, 
     console.log(`[Background] ✅ Course ${course._id} generation complete! ${roadmapResult.nodes?.length || 0} nodes created.`);
   } catch (error) {
     console.error(`[Background] ❌ Course ${course._id} generation failed:`, error.message);
-    course.generationStatus = 'failed';
-    course.generationError = error.message;
-    course.isPublished = false; // Do not publish failed courses
-    await course.save();
+    // Persist the failure with an atomic field update rather than course.save():
+    // save() re-validates the whole document, and if that throws here (in a
+    // fire-and-forget background task) the rejection is unhandled and crashes
+    // the process. A scoped findByIdAndUpdate can't fail full-doc validation,
+    // and we still guard it so the failure handler itself can never throw.
+    try {
+      await Course.findByIdAndUpdate(course._id, {
+        generationStatus: 'failed',
+        generationError: error.message,
+        isPublished: false, // Do not publish failed courses
+      });
+    } catch (persistError) {
+      console.error(`[Background] ❌ Failed to record generation failure for course ${course._id}:`, persistError.message);
+    }
   }
 }
 
@@ -584,7 +594,17 @@ export const getCourseNodes = async (req, res, next) => {
       status: 'success',
       data: {
         nodes: nodesWithStatus,
-        course: { title: course.title, level: course.level, color: course.color },
+        course: {
+          title: course.title,
+          level: course.level,
+          color: course.color,
+          // Expose generation state so CourseMap can render the generating/failed
+          // views (and the instructor retry button) on a direct page load.
+          generationStatus: course.generationStatus,
+          generationError: course.generationError,
+          generationProgress: course.generationProgress,
+          generationAttempts: course.generationAttempts,
+        },
       },
     });
   } catch (error) {
