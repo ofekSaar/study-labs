@@ -159,9 +159,25 @@ const ManagedCourses = () => {
                                         <h3 className="font-display font-bold text-2xl text-slate-800 dark:text-white mb-2 line-clamp-2 drop-shadow-sm dark:drop-shadow-md group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
                                             {course.title || 'Untitled Course'}
                                         </h3>
-                                        <p className="text-slate-500 dark:text-white/60 text-sm mb-6 line-clamp-3 flex-1 font-medium leading-relaxed">
+                                        <p className="text-slate-500 dark:text-white/60 text-sm mb-4 line-clamp-2 flex-1 font-medium leading-relaxed">
                                             {course.description || 'No description provided.'}
                                         </p>
+                                        
+                                        {course.aiEvaluation?.status === 'completed' && (
+                                            <div className="mb-4 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200 dark:border-white/5">
+                                                <div className="flex items-center justify-between mb-1">
+                                                    <span className="text-xs font-bold text-slate-500 dark:text-slate-400">AI Judge Score</span>
+                                                    <span className={`text-sm font-black ${course.aiEvaluation.score >= 80 ? 'text-emerald-500' : course.aiEvaluation.score >= 50 ? 'text-amber-500' : 'text-red-500'}`}>
+                                                        {course.aiEvaluation.score}/100
+                                                    </span>
+                                                </div>
+                                                {course.aiEvaluation.feedback && (
+                                                    <p className="text-xs text-slate-400 dark:text-slate-500 line-clamp-2">
+                                                        {course.aiEvaluation.feedback}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        )}
                                         
                                         <div className="mt-auto">
                                             <hr className="border-slate-200 dark:border-white/10 mb-4" />

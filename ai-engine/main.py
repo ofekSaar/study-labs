@@ -7,6 +7,7 @@ from engine.db import get_db_handle, save_course_to_db, update_course_progress, 
 from engine.ocr import extract_text_from_bytes, extract_with_images, extract_in_chunks
 from engine.parsers.image_analyzer import analyze_images
 from engine.generator import create_course_pipeline, evaluate_answer
+from engine.judge import evaluate_course
 from bson import ObjectId
 import logging
 
@@ -34,6 +35,11 @@ class EvaluateAnswerRequest(BaseModel):
     question: str
     answer: str
     aiPromptContext: Optional[str] = None
+
+class EvaluateCourseRequest(BaseModel):
+    courseId: str
+    syllabusPath: str
+    courseStructure: dict
 
 # --- Endpoints ---
 
@@ -203,6 +209,28 @@ async def evaluate_answer_endpoint(request: EvaluateAnswerRequest):
         return result
     except Exception as e:
         logger.error(f"Evaluation Error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Internal Error: {str(e)}")
+
+@app.post("/api/evaluate-course/")
+async def evaluate_course_endpoint(request: EvaluateCourseRequest):
+    try:
+        logger.info(f"Received request to evaluate course: {request.courseId}")
+        if not os.path.exists(request.syllabusPath):
+            logger.error(f"Syllabus file not found for evaluation: {request.syllabusPath}")
+            raise HTTPException(status_code=400, detail=f"Syllabus file not found at path: {request.syllabusPath}")
+            
+        with open(request.syllabusPath, "rb") as f:
+            syllabus_bytes = f.read()
+            
+        syllabus_result = extract_with_images(syllabus_bytes, filename=os.path.basename(request.syllabusPath))
+        syllabus_text = syllabus_result.text
+        
+        logger.info("Evaluating course structure via AI Judge...")
+        result = await evaluate_course(request.courseStructure, syllabus_text)
+        logger.info(f"Course evaluation complete. Score: {result.get('score')}")
+        return result
+    except Exception as e:
+        logger.error(f"Course Evaluation Error: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Internal Error: {str(e)}")
 
 if __name__ == "__main__":

@@ -119,6 +119,29 @@ const courseSchema = new mongoose.Schema(
       type: String,
       default: 'Initializing AI Engine...',
     },
+    aiEvaluation: {
+      status: {
+        type: String,
+        enum: ['pending', 'evaluating', 'completed', 'failed'],
+        default: 'pending',
+      },
+      score: {
+        type: Number,
+        default: null,
+      },
+      feedback: {
+        type: String,
+        default: null,
+      },
+      evaluatedAt: {
+        type: Date,
+        default: null,
+      },
+      criteriaBreakdown: {
+        type: mongoose.Schema.Types.Mixed,
+        default: null,
+      }
+    },
     isPublished: {
       type: Boolean,
       default: false,
