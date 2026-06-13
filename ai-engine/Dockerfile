@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Create a non-root system user and group
-RUN groupadd -r app && useradd -r -g app app
+RUN groupadd -r app && useradd -r -m -g app app
 
 # Install python dependencies
 COPY requirements.txt .
@@ -22,8 +22,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code with ownership
 COPY --chown=app:app . .
 
-# Create uploads directory (used for shared volumes) with ownership
-RUN mkdir -p uploads && chown -R app:app uploads
+# Create uploads directory (used for shared volumes) with open permissions
+RUN mkdir -p uploads && chmod 777 uploads
 
 # Switch to non-root user
 USER app
