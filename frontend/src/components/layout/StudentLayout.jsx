@@ -283,7 +283,7 @@ const StudentLayout = ({ children }) => {
             {isSidebarOpen && (
                 <div className="fixed inset-0 z-50 md:hidden">
                     <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsSidebarOpen(false)} />
-                    <aside className="absolute left-0 top-0 bottom-0 w-72 sidebar-theme shadow-2xl">
+                    <aside className="absolute left-0 top-0 bottom-0 w-[85vw] max-w-72 sidebar-theme shadow-2xl">
                         <div className="absolute top-4 right-4 z-10">
                             <button onClick={() => setIsSidebarOpen(false)}
                                 className="p-2 rounded-xl bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-white/60 hover:text-slate-800 dark:hover:text-white transition-colors">
@@ -298,7 +298,7 @@ const StudentLayout = ({ children }) => {
             {/* ── Main Content ── */}
             <div className="flex-1 flex flex-col min-w-0 relative">
                 {/* Mobile header */}
-                <header className="md:hidden px-5 py-4 flex items-center justify-between sticky top-0 z-20 glass-card border-b border-slate-200 dark:border-white/10">
+                <header className="md:hidden px-3 sm:px-5 py-3 sm:py-4 flex items-center justify-between sticky top-0 z-20 glass-card border-b border-slate-200 dark:border-white/10">
                     <div className="flex items-center gap-2.5">
                         <Logo size={32} />
                         <span className="font-display font-bold text-lg text-slate-800 dark:text-white">StudyLabs</span>

@@ -142,11 +142,11 @@ const CourseWizard = () => {
                     <div className="w-24 h-24 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-6">
                         <Check size={48} />
                     </div>
-                    <h2 className="text-3xl font-display font-bold text-gray-900 mb-2">Generating Course!</h2>
+                    <h2 className="text-2xl sm:text-3xl font-display font-bold text-gray-900 mb-2">Generating Course!</h2>
                     <p className="text-gray-500 max-w-md mb-4">
                         Our AI is now processing your materials and generating the learning map. This usually takes about 2-3 minutes.
                     </p>
-                    <div className="w-full max-w-md bg-white p-4 rounded-xl border border-blue-100 shadow-sm flex items-center gap-4 mb-8 text-left">
+                    <div className="w-full max-w-md bg-white p-3 sm:p-4 rounded-xl border border-blue-100 shadow-sm flex items-center gap-3 sm:gap-4 mb-8 text-left">
                         <Loader2 size={24} className="text-studylabs-blue animate-spin shrink-0" />
                         <div className="flex-1 overflow-hidden">
                             <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">Current Status</p>
@@ -180,9 +180,9 @@ const CourseWizard = () => {
 
     return (
         <InstructorLayout title="New Course Wizard">
-            <div className="max-w-3xl mx-auto py-12 px-6 md:px-0 pb-40">
+            <div className="max-w-3xl mx-auto py-6 sm:py-10 md:py-12 px-4 sm:px-6 md:px-0 pb-40">
                 {/* Glowing Connected Timeline Stepper */}
-                <div className="mb-12 relative px-4">
+                <div className="mb-8 sm:mb-12 relative px-2 sm:px-4">
                     {/* Background track line */}
                     <div className="absolute top-5 left-8 right-8 h-1 bg-slate-100 dark:bg-white/5 -translate-y-1/2 z-0 rounded-full" />
                     
@@ -240,7 +240,7 @@ const CourseWizard = () => {
 
                 {/* Form Content */}
                 <FormProvider {...methods}>
-                    <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-xl min-h-[500px] flex flex-col justify-between">
+                    <div className="bg-white p-4 sm:p-6 md:p-8 rounded-3xl border border-gray-100 shadow-xl min-h-[500px] flex flex-col justify-between">
 
                         <StepComponent />
 

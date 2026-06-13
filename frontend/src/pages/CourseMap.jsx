@@ -97,8 +97,8 @@ const CourseMap = () => {
     if (!course) {
         return (
             <Layout title="Course Not Found">
-                <div className="text-center p-20">
-                    <h2 className="text-2xl font-bold text-gray-800 mb-4">Course Not Found</h2>
+                <div className="text-center p-4 sm:p-8 md:p-12">
+                    <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4">Course Not Found</h2>
                     <button onClick={() => navigate(-1)} className="text-studylabs-blue font-bold flex items-center gap-2 mx-auto">
                         <ChevronLeft size={20} /> Go Back
                     </button>
@@ -112,7 +112,7 @@ const CourseMap = () => {
             <div className="min-h-screen md:min-h-0 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white transition-colors duration-300">
 
                 {/* Mobile-only Course Header */}
-                <div className="md:hidden px-6 py-6 flex items-center justify-between bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-white/5">
+                <div className="md:hidden px-4 py-4 flex items-center justify-between bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-white/5">
                     <button
                         onClick={() => navigate(-1)}
                         className="w-10 h-10 bg-slate-100 dark:bg-white/5 rounded-full flex items-center justify-center hover:bg-slate-200 dark:hover:bg-white/10 transition text-slate-700 dark:text-white"

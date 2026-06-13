@@ -26,7 +26,7 @@ const Dashboard = () => {
     if (isLoading && courses.length === 0) {
         return (
             <StudentLayout title="Dashboard">
-                <div className="flex justify-center p-20">
+                <div className="flex justify-center p-4 sm:p-8 md:p-12">
                     <div className="animate-spin w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full"></div>
                 </div>
             </StudentLayout>
@@ -57,7 +57,7 @@ const Dashboard = () => {
                 {/* ── Header ── */}
                 <header className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-2">
                     <div>
-                        <h1 className="text-3xl font-display font-black text-slate-900 dark:text-white drop-shadow-sm">
+                        <h1 className="text-2xl sm:text-3xl font-display font-black text-slate-900 dark:text-white drop-shadow-sm">
                             Welcome back, {user?.name?.split(' ')[0] || 'Student'}! 👋
                         </h1>
                         <p className="text-indigo-600 dark:text-indigo-200 mt-1 font-medium">Ready to conquer your next challenge?</p>

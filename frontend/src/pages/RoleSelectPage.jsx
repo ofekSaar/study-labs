@@ -74,7 +74,7 @@ const RoleSelectPage = () => {
     const isSelected = (roleToCheck) => selectedRoles.includes(roleToCheck);
 
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-6 pb-32 font-sans relative transition-colors duration-300">
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-4 sm:p-6 pb-32 font-sans relative transition-colors duration-300">
             {/* Logout button */}
             <button
                 onClick={handleLogout}
@@ -87,18 +87,18 @@ const RoleSelectPage = () => {
                 <div className="w-12 h-12 bg-studylabs-blue rounded-xl flex items-center justify-center text-white font-bold shadow-xl shadow-blue-200/50 dark:shadow-none text-2xl">
                     S
                 </div>
-                <h1 className="font-display font-extrabold text-4xl text-slate-900 dark:text-white tracking-tight">StudyLabs</h1>
+                <h1 className="font-display font-extrabold text-2xl sm:text-4xl text-slate-900 dark:text-white tracking-tight">StudyLabs</h1>
             </div>
 
             <h2 className="text-xl font-medium text-slate-500 dark:text-white/60 mb-2">You're almost in. Select your role(s).</h2>
             <p className="text-sm text-slate-400 dark:text-white/40 mb-8">You can select both if you want to teach and learn!</p>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-2xl mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full max-w-2xl mb-8">
                 {/* Student Card */}
                 <button
                     onClick={() => toggleRole('student')}
                     disabled={isSubmitting}
-                    className={`bg-white dark:bg-slate-900 p-8 rounded-3xl border-2 shadow-lg hover:shadow-xl dark:shadow-none hover:-translate-y-1 transition-all duration-300 flex flex-col items-center gap-6 group disabled:opacity-50 relative ${
+                    className={`bg-white dark:bg-slate-900 p-5 sm:p-8 rounded-3xl border-2 shadow-lg hover:shadow-xl dark:shadow-none hover:-translate-y-1 transition-all duration-300 flex flex-col items-center gap-6 group disabled:opacity-50 relative ${
                         isSelected('student')
                             ? 'border-studylabs-blue ring-4 ring-blue-100 dark:ring-blue-950/40'
                             : 'border-transparent dark:border-white/5 hover:border-studylabs-blue dark:hover:border-studylabs-blue'
@@ -126,7 +126,7 @@ const RoleSelectPage = () => {
                 <button
                     onClick={() => toggleRole('instructor')}
                     disabled={isSubmitting}
-                    className={`bg-white dark:bg-slate-900 p-8 rounded-3xl border-2 shadow-lg hover:shadow-xl dark:shadow-none hover:-translate-y-1 transition-all duration-300 flex flex-col items-center gap-6 group disabled:opacity-50 relative ${
+                    className={`bg-white dark:bg-slate-900 p-5 sm:p-8 rounded-3xl border-2 shadow-lg hover:shadow-xl dark:shadow-none hover:-translate-y-1 transition-all duration-300 flex flex-col items-center gap-6 group disabled:opacity-50 relative ${
                         isSelected('instructor')
                             ? 'border-purple-500 ring-4 ring-purple-100 dark:ring-purple-950/40'
                             : 'border-transparent dark:border-white/5 hover:border-purple-500 dark:hover:border-purple-500'

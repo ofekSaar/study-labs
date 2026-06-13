@@ -20,7 +20,7 @@ const QuestPanel = () => {
     };
 
     return (
-        <div className="glass-card rounded-3xl p-6 shadow-lg relative overflow-hidden h-full flex flex-col min-h-[420px]">
+        <div className="glass-card rounded-3xl p-4 sm:p-6 shadow-lg relative overflow-hidden h-full flex flex-col min-h-[420px]">
             <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 pointer-events-none" />
 
             {/* Header */}

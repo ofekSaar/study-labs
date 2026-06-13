@@ -171,7 +171,7 @@ const QuizEngine = ({ questions, onComplete }) => {
                 />
             </div>
 
-            <div className="p-8 flex-1 flex flex-col relative">
+            <div className="p-4 sm:p-6 md:p-8 flex-1 flex flex-col relative">
                 {/* Header */}
                 <div className="flex justify-between items-center mb-6 z-10">
                     <span className="text-xs font-black text-slate-400 dark:text-white/30 uppercase tracking-widest">
@@ -197,7 +197,7 @@ const QuizEngine = ({ questions, onComplete }) => {
                 </div>
 
                 {/* Question Text */}
-                <div className="text-2xl font-display font-black text-slate-900 dark:text-white mb-8 leading-relaxed prose prose-slate dark:prose-invert max-w-none prose-p:my-0 z-10">
+                <div className="text-xl sm:text-2xl font-display font-black text-slate-900 dark:text-white mb-6 sm:mb-8 leading-relaxed prose prose-slate dark:prose-invert max-w-none prose-p:my-0 z-10">
                     <ContentRenderer content={currentQuestion.question} />
                 </div>
 
@@ -264,7 +264,7 @@ const QuizEngine = ({ questions, onComplete }) => {
                                 disabled={isSubmitted || isEvaluating || isTimeUp}
                                 placeholder="Type your answer here..."
                                 dir="auto"
-                                className="w-full h-48 p-4 rounded-2xl border-2 border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-white/3 text-slate-800 dark:text-white placeholder:text-slate-300 focus:border-indigo-500 focus:ring-0 resize-none font-sans text-lg transition-all shadow-inner"
+                                className="w-full min-h-[180px] sm:h-48 p-4 rounded-2xl border-2 border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-white/3 text-slate-800 dark:text-white placeholder:text-slate-300 focus:border-indigo-500 focus:ring-0 resize-none font-sans text-lg transition-all shadow-inner"
                             />
                             {isEvaluating && (
                                 <div className="flex items-center gap-2 text-indigo-500 dark:text-indigo-400 font-bold text-sm animate-pulse">
