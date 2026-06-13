@@ -28,10 +28,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Node 20
+      # Node 24: the frontend is a static Vite build (Node is build/test
+      # tooling only, not a runtime), and Jest 30's require(ESM) path needs
+      # Node >= 24.9 to load the ESM store modules. Node 20 fails to run the
+      # suite ("Jest's require(ESM) requires Node v24.9+").
+      - name: Set up Node 24
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "24"
           cache: npm
           # Key the npm cache to the frontend lockfile so backend installs
           # do not pollute and vice-versa.
