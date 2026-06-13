@@ -32,7 +32,7 @@ const StudyShop = () => {
     };
 
     return (
-        <StudentLayout title="Study Shop / חנות כלכלת למידה">
+        <StudentLayout title="Study Shop">
             <ConfettiEffect />
             <div className="max-w-6xl mx-auto px-4 py-8 space-y-8 pb-24">
                 
@@ -222,7 +222,7 @@ const StudyShop = () => {
                     <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/5 to-transparent pointer-events-none" />
                     <h3 className="font-display font-black text-xl text-slate-800 dark:text-white flex items-center gap-2 mb-4 relative z-10">
                         <HelpCircle className="text-emerald-500" />
-                        How to Earn Points & Coins? / כיצד צוברים נקודות ומטבעות?
+                        How to Earn Points & Coins?
                     </h3>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10">

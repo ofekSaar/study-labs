@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import useCourseStore from '../../store/courseStore';
-import { CheckCircle2, PlayCircle, Lock, Zap, BookOpen, Target, ChevronLeft } from 'lucide-react';
+import { CheckCircle2, PlayCircle, Lock, Zap, BookOpen, Target, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const RoadmapView = () => {
     const { courses, selectedCourseId, fetchCourseNodes, setSelectedNode, selectedNode } = useCourseStore();
@@ -21,16 +21,16 @@ const RoadmapView = () => {
 
     // Safety check
     if (!course) return (
-        <div className="p-12 text-center" dir="rtl">
+        <div className="p-12 text-center">
             <div className="text-4xl mb-3">🗺️</div>
-            <p className="text-slate-400 dark:text-white/40 font-medium">אנא בחר קורס כדי לצפות בנתיב הלמידה</p>
+            <p className="text-slate-400 dark:text-white/40 font-medium">Please select a course to view the learning path</p>
         </div>
     );
 
     if (isLoadingNodes) return (
         <div className="p-16 flex flex-col items-center gap-4">
             <div className="w-10 h-10 rounded-full border-4 border-transparent border-t-indigo-500 border-r-purple-500 animate-spin" />
-            <p className="text-sm text-slate-400 dark:text-white/40 font-medium">טוען את נתיב הלמידה...</p>
+            <p className="text-sm text-slate-400 dark:text-white/40 font-medium">Loading learning path...</p>
         </div>
     );
 
@@ -40,19 +40,19 @@ const RoadmapView = () => {
     const progressPercentage = totalNodes > 0 ? Math.round((completedNodes / totalNodes) * 100) : 0;
 
     return (
-        <div className="p-5" dir="rtl">
+        <div className="p-5">
             {/* Header section (Compact) */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 pb-5 border-b border-slate-200/60 dark:border-white/10 text-right">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 pb-5 border-b border-slate-200/60 dark:border-white/10 text-left">
                 <div>
-                    <span className="text-[10px] font-black text-indigo-500 dark:text-indigo-400 uppercase tracking-widest bg-indigo-500/10 px-2.5 py-1 rounded-md">נתיב למידה פעיל</span>
+                    <span className="text-[10px] font-black text-indigo-500 dark:text-indigo-400 uppercase tracking-widest bg-indigo-500/10 px-2.5 py-1 rounded-md">Active learning path</span>
                     <h3 className="text-xl font-display font-black text-slate-800 dark:text-white mt-2 leading-tight">{course.title}</h3>
                 </div>
                 <div className="flex items-center gap-2 self-start sm:self-center">
                     <span className="text-xs font-bold text-slate-500 dark:text-white/50 bg-slate-100 dark:bg-white/5 px-3 py-1.5 rounded-xl border border-slate-200/50 dark:border-white/5">
-                        רמה: <span className="text-indigo-600 dark:text-indigo-400 font-extrabold">{course.level || 'מתחיל'}</span>
+                        Level: <span className="text-indigo-600 dark:text-indigo-400 font-extrabold">{course.level || 'Beginner'}</span>
                     </span>
                     <span className="text-xs font-bold text-slate-500 dark:text-white/50 bg-slate-100 dark:bg-white/5 px-3 py-1.5 rounded-xl border border-slate-200/50 dark:border-white/5">
-                        <span className="text-slate-800 dark:text-white font-extrabold">{nodes.length}</span> שיעורים
+                        <span className="text-slate-800 dark:text-white font-extrabold">{nodes.length}</span> lessons
                     </span>
                 </div>
             </div>
@@ -60,8 +60,8 @@ const RoadmapView = () => {
             {/* Sleek Course Progress Bar */}
             <div className="mb-6 bg-slate-50/50 dark:bg-white/[0.02] p-4 rounded-2xl border border-slate-200/60 dark:border-white/10">
                 <div className="flex justify-between items-center mb-2">
-                    <span className="text-xs font-bold text-slate-500 dark:text-white/60">התקדמות במסלול הלמידה</span>
-                    <span className="text-xs font-black text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 dark:bg-indigo-500/20 px-2.5 py-0.5 rounded-md">{progressPercentage}% הושלם</span>
+                    <span className="text-xs font-bold text-slate-500 dark:text-white/60">Learning path progress</span>
+                    <span className="text-xs font-black text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 dark:bg-indigo-500/20 px-2.5 py-0.5 rounded-md">{progressPercentage}% Completed</span>
                 </div>
                 <div className="h-2 w-full bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden shadow-inner relative">
                     <motion.div 
@@ -92,19 +92,19 @@ const RoadmapView = () => {
                             case 'quiz': 
                                 return (
                                     <span className="flex items-center gap-1 bg-blue-500/10 text-blue-600 dark:text-blue-400 px-2.5 py-0.5 rounded-md text-[10px] font-black border border-blue-500/20">
-                                        בוחן 📝
+                                        Quiz 📝
                                     </span>
                                 );
                             case 'exam': 
                                 return (
                                     <span className="flex items-center gap-1 bg-amber-500/10 text-amber-600 dark:text-amber-400 px-2.5 py-0.5 rounded-md text-[10px] font-black border border-amber-500/20">
-                                        מבחן 🏆
+                                        Exam 🏆
                                     </span>
                                 );
                             default: 
                                 return (
                                     <span className="flex items-center gap-1 bg-purple-500/10 text-purple-600 dark:text-purple-400 px-2.5 py-0.5 rounded-md text-[10px] font-black border border-purple-500/20">
-                                        שיעור 📖
+                                        Lesson 📖
                                     </span>
                                 );
                         }
@@ -154,7 +154,7 @@ const RoadmapView = () => {
                                 whileHover={!isLocked ? { scale: 1.015, y: -1 } : {}}
                                 whileTap={!isLocked ? { scale: 0.99 } : {}}
                                 className={`
-                                    relative p-4 my-2.5 rounded-2xl border transition-all duration-300 flex items-center justify-between gap-4 text-right flex-1
+                                    relative p-4 my-2.5 rounded-2xl border transition-all duration-300 flex items-center justify-between gap-4 text-left flex-1
                                     ${isLocked 
                                         ? 'opacity-50 bg-slate-50/30 dark:bg-white/[0.01] border-slate-200/40 dark:border-white/5 border-dashed cursor-not-allowed'
                                         : isActiveSelected
@@ -174,25 +174,25 @@ const RoadmapView = () => {
                                 <div className="flex items-center gap-3">
                                     {isCompleted && (
                                         <span className="hidden sm:inline-flex items-center gap-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-3 py-1.5 rounded-xl text-xs font-black border border-emerald-500/20">
-                                            הושלם
+                                            Completed
                                         </span>
                                     )}
                                     {isCurrent && !isLocked && (
                                         <button className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white px-4 py-2 rounded-xl text-xs font-black shadow-[0_4px_12px_rgba(99,102,241,0.3)] hover:shadow-[0_4px_16px_rgba(99,102,241,0.45)] flex items-center gap-1 transition-all duration-300">
-                                            התחל למידה
-                                            <ChevronLeft size={14} strokeWidth={3} />
+                                            Start learning
+                                            <ChevronRight size={14} strokeWidth={3} />
                                         </button>
                                     )}
                                     {isLocked && (
                                         <span className="hidden sm:inline-flex items-center gap-1 bg-slate-100 dark:bg-white/5 text-slate-400 dark:text-white/20 px-3 py-1.5 rounded-xl text-xs font-black border border-slate-200/50 dark:border-white/5">
-                                            נעול
+                                            Locked
                                         </span>
                                     )}
                                 </div>
 
                                 {/* Right Side: Text details */}
                                 <div className="min-w-0 flex-1">
-                                    <span className="text-[9px] font-black text-slate-400 dark:text-white/30 uppercase tracking-widest leading-none">שיעור {index + 1}</span>
+                                    <span className="text-[9px] font-black text-slate-400 dark:text-white/30 uppercase tracking-widest leading-none">Lesson {index + 1}</span>
                                     <h4 className={`text-sm font-extrabold truncate leading-tight mt-1 transition-colors ${
                                         isLocked 
                                             ? 'text-slate-400 dark:text-white/20' 

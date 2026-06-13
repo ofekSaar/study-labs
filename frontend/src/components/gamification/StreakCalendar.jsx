@@ -4,7 +4,7 @@ import { Flame } from 'lucide-react';
 import useGamificationStore from '../../store/gamificationStore';
 import useCourseStore from '../../store/courseStore';
 
-const DAYS = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'];
+const DAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
 const StreakCalendar = () => {
     const { activityLog } = useGamificationStore();
@@ -48,7 +48,7 @@ const StreakCalendar = () => {
                     </p>
                     <div className="flex items-center gap-1.5 bg-orange-500/10 border border-orange-500/20 px-2.5 py-1 rounded-xl">
                         <Flame size={14} className="text-orange-500 fill-orange-500/40" />
-                        <span className="text-xs font-black text-orange-500">{streak} ימים</span>
+                        <span className="text-xs font-black text-orange-500">{streak} days</span>
                     </div>
                 </div>
 
@@ -108,11 +108,11 @@ const StreakCalendar = () => {
                 <div className="flex items-center gap-3 mt-3 justify-end">
                     <div className="flex items-center gap-1.5">
                         <div className="w-3 h-3 rounded bg-slate-200 dark:bg-white/10" />
-                        <span className="text-[10px] text-slate-400 dark:text-white/30 font-bold">ללא פעילות</span>
+                        <span className="text-[10px] text-slate-400 dark:text-white/30 font-bold">Inactive</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                         <div className="w-3 h-3 rounded bg-gradient-to-br from-orange-400 to-red-500" />
-                        <span className="text-[10px] text-slate-400 dark:text-white/30 font-bold">יום פעיל</span>
+                        <span className="text-[10px] text-slate-400 dark:text-white/30 font-bold">Active day</span>
                     </div>
                 </div>
             </div>

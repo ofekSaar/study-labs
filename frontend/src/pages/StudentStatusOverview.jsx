@@ -116,7 +116,7 @@ const StudentStatusOverview = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
                     {/* Class Progress Widget */}
-                    <div className="lg:col-span-2 bg-white dark:bg-white/5 border border-slate-200/80 dark:border-white/10 p-6 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] relative group overflow-hidden" dir="rtl">
+                    <div className="lg:col-span-2 bg-white dark:bg-white/5 border border-slate-200/80 dark:border-white/10 p-6 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] relative group overflow-hidden">
                         <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
                         
                         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 relative z-10">
@@ -143,7 +143,7 @@ const StudentStatusOverview = () => {
                                             {(!analytics?.nodeProgress || analytics.nodeProgress.length === 0) ? (
                                                 <tr>
                                                     <td colSpan="4" className="px-5 py-10 text-center text-slate-400 dark:text-white/30 font-medium">
-                                                        אין נתונים זמינים. צור מודולים לקורס כדי לראות התקדמות.
+                                                        No data available. Create course modules to see progress.
                                                     </td>
                                                 </tr>
                                             ) : (
@@ -152,13 +152,13 @@ const StudentStatusOverview = () => {
                                                     const completed = item.students || 0;
                                                     const percentage = total > 0 ? Math.min(Math.round((completed / total) * 100), 100) : 0;
                                                     
-                                                    let difficulty = "קל";
+                                                    let difficulty = "Easy";
                                                     let diffColor = "bg-emerald-500/10 text-emerald-500 border-emerald-500/20 dark:bg-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30";
                                                     if (idx % 3 === 1) {
-                                                        difficulty = "בינוני";
+                                                        difficulty = "Medium";
                                                         diffColor = "bg-amber-500/10 text-amber-600 border-amber-500/20 dark:bg-amber-500/20 dark:text-amber-400 dark:border-amber-500/30";
                                                     } else if (idx % 3 === 2) {
-                                                        difficulty = "מאתגר";
+                                                        difficulty = "Challenging";
                                                         diffColor = "bg-rose-500/10 text-rose-500 border-rose-500/20 dark:bg-rose-500/20 dark:text-rose-400 dark:border-rose-500/30";
                                                     }
 
@@ -174,7 +174,7 @@ const StudentStatusOverview = () => {
                                                                 </div>
                                                             </td>
                                                             <td className="px-5 py-4 font-medium text-slate-600 dark:text-white/70 whitespace-nowrap">
-                                                                {completed} מתוך {total} סטודנטים
+                                                                {completed} of {total} students
                                                             </td>
                                                             <td className="px-5 py-4 whitespace-nowrap">
                                                                 <span className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg border ${diffColor}`}>
@@ -191,12 +191,12 @@ const StudentStatusOverview = () => {
                             )}
                         </div>
                         <div className="mt-6 text-center text-xs text-slate-400 dark:text-white/40 font-bold relative z-10 uppercase tracking-wider">
-                            רשימת מודולי הלימוד ורמות ההתקדמות של הכיתה
+                            List of learning modules and class progress levels
                         </div>
                     </div>
 
                     {/* At Risk Panel */}
-                    <div className="bg-white dark:bg-white/5 border border-slate-200/80 dark:border-white/10 p-6 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] flex flex-col h-full relative group overflow-hidden" dir="rtl">
+                    <div className="bg-white dark:bg-white/5 border border-slate-200/80 dark:border-white/10 p-6 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] flex flex-col h-full relative group overflow-hidden">
                         <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-orange-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
                         
                         <h3 className="font-display font-bold text-xl text-slate-800 dark:text-white mb-6 flex items-center justify-between relative z-10 drop-shadow-sm dark:drop-shadow-md">
@@ -214,16 +214,16 @@ const StudentStatusOverview = () => {
                                         </div>
                                     )}
                                     <div className="flex-1 min-w-[140px] text-right">
-                                        <p className="text-sm font-bold text-slate-800 dark:text-white truncate drop-shadow-sm leading-tight">{item.student?.name || 'סטודנט'}</p>
+                                        <p className="text-sm font-bold text-slate-800 dark:text-white truncate drop-shadow-sm leading-tight">{item.student?.name || 'Student'}</p>
                                         <p className="text-[11px] text-red-500 dark:text-red-400 font-medium mt-0.5 truncate leading-tight">
-                                            {item.issue === 'Never started' ? 'טרם החל ללמוד' : 
-                                             item.issue?.startsWith('Inactive for') ? `לא היה פעיל ${item.issue.split(' ')[2]} ימים` : 
-                                             item.issue === 'Low progress' ? 'קצב התקדמות נמוך' : 
+                                            {item.issue === 'Never started' ? 'Has not started yet' : 
+                                             item.issue?.startsWith('Inactive for') ? `Inactive for ${item.issue.split(' ')[2]} days` : 
+                                             item.issue === 'Low progress' ? 'Low progress rate' : 
                                              item.issue}
                                         </p>
                                     </div>
                                     <button className="text-xs font-bold text-slate-700 dark:text-white bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/20 border border-slate-200/50 dark:border-white/5 px-3 py-2 rounded-xl transition-colors shadow-inner flex-shrink-0">
-                                        שלח הודעה
+                                        Send Message
                                     </button>
                                 </div>
                             ))}
@@ -232,7 +232,7 @@ const StudentStatusOverview = () => {
                                     <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-white/5 flex items-center justify-center mb-3">
                                         <Trophy size={20} className="text-emerald-500/50 dark:text-emerald-400/50" />
                                     </div>
-                                    אין סטודנטים בסיכון כרגע.
+                                    No students at risk currently.
                                 </div>
                             )}
                         </div>
