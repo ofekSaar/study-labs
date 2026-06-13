@@ -27,7 +27,7 @@ const Leaderboard = ({ courseId }) => {
             setIsLoading(true);
             try {
                 const endpoint = courseId
-                    ? `/api/courses/${courseId}/leaderboard?period=${period}`
+                    ? `/api/progress/course/${courseId}/leaderboard?period=${period}`
                     : `/api/progress/leaderboard?period=${period}`;
                 const { data } = await api.get(endpoint);
                 

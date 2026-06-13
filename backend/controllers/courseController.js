@@ -219,6 +219,8 @@ export const createCourse = async (req, res, next) => {
       gamification: safeJSONParse(gamification, 'gamification'),
       isPublished: false,
       generationStatus: 'generating',
+      generationStartedAt: new Date(),
+      generationAttempts: 1,
     });
 
     // Return immediately — don't wait for AI pipeline
@@ -265,7 +267,15 @@ async function generateRoadmapInBackground(course, syllabusData, materialsData, 
   }
 
   try {
-    console.log(`[Background] Starting AI generation for course ${course._id}...`);
+    console.log(`[Background] Starting AI generation for course ${course._id} (attempt ${course.generationAttempts})...`);
+
+    // Persist the timestamp at the actual moment generation begins so that the
+    // recovery window is measured from this point, not from when the HTTP
+    // response was sent.
+    await Course.findByIdAndUpdate(course._id, {
+      generationStartedAt: new Date(),
+      generationAttempts: course.generationAttempts,
+    });
 
     const roadmapResult = await generateRoadmap({
       courseId: course._id.toString(),
@@ -352,12 +362,111 @@ async function generateRoadmapInBackground(course, syllabusData, materialsData, 
     console.log(`[Background] ✅ Course ${course._id} generation complete! ${roadmapResult.nodes?.length || 0} nodes created.`);
   } catch (error) {
     console.error(`[Background] ❌ Course ${course._id} generation failed:`, error.message);
-    course.generationStatus = 'failed';
-    course.generationError = error.message;
-    course.isPublished = false; // Do not publish failed courses
-    await course.save();
+    // Persist the failure with an atomic field update rather than course.save():
+    // save() re-validates the whole document, and if that throws here (in a
+    // fire-and-forget background task) the rejection is unhandled and crashes
+    // the process. A scoped findByIdAndUpdate can't fail full-doc validation,
+    // and we still guard it so the failure handler itself can never throw.
+    try {
+      await Course.findByIdAndUpdate(course._id, {
+        generationStatus: 'failed',
+        generationError: error.message,
+        isPublished: false, // Do not publish failed courses
+      });
+    } catch (persistError) {
+      console.error(`[Background] ❌ Failed to record generation failure for course ${course._id}:`, persistError.message);
+    }
   }
 }
+
+/** How long a course may sit in 'generating' before it is retriable as stuck. */
+const STUCK_GENERATION_THRESHOLD_MS = 20 * 60 * 1000; // 20 minutes — mirrors aiService.js
+
+/** Max total generation attempts: 1 initial + 1 retry. After this, no further retries are allowed. */
+const MAX_GENERATION_ATTEMPTS = 2;
+
+/**
+ * Retry course generation (Instructor owner only).
+ *
+ * Allowed when generationStatus is:
+ *   - 'failed'  — an explicit failure was recorded
+ *   - 'generating' AND generationStartedAt is older than STUCK_GENERATION_THRESHOLD_MS
+ *     (i.e. stuck after a server restart before recovery ran)
+ *
+ * Retries are capped at MAX_GENERATION_ATTEMPTS (1 initial + 1 retry). Once a course
+ * has been attempted that many times, it can no longer be regenerated.
+ */
+export const regenerateCourse = async (req, res, next) => {
+  try {
+    const course = await Course.findById(req.params.courseId);
+    if (!course) throw createError(404, 'Course not found');
+
+    if (course.instructor.toString() !== req.user._id.toString()) {
+      throw createError(403, 'You can only regenerate your own courses');
+    }
+
+    // Cap retries: 1 initial attempt + 2 retries. Once exhausted, the course stays failed for good.
+    if (course.generationAttempts >= MAX_GENERATION_ATTEMPTS) {
+      throw createError(
+        409,
+        `Course generation has already been attempted ${course.generationAttempts} times ` +
+          `(max ${MAX_GENERATION_ATTEMPTS}: 1 initial + 1 retry). No further retries are allowed.`
+      );
+    }
+
+    const isStuckGenerating =
+      course.generationStatus === 'generating' &&
+      course.generationStartedAt &&
+      Date.now() - course.generationStartedAt.getTime() > STUCK_GENERATION_THRESHOLD_MS;
+
+    const isRetriable = course.generationStatus === 'failed' || isStuckGenerating;
+
+    if (!isRetriable) {
+      throw createError(
+        409,
+        `Course cannot be regenerated in its current state ('${course.generationStatus}'). ` +
+          'Only failed or stuck courses may be retried.'
+      );
+    }
+
+    // Reset generation state and increment attempt counter atomically.
+    const updatedCourse = await Course.findByIdAndUpdate(
+      course._id,
+      {
+        $set: {
+          generationStatus: 'generating',
+          generationError: null,
+          generationStartedAt: new Date(),
+          isPublished: false,
+        },
+        $inc: { generationAttempts: 1 },
+      },
+      { new: true }
+    );
+
+    // Respond immediately — generation runs in the background.
+    res.json({
+      status: 'success',
+      message: 'Course regeneration started.',
+      data: {
+        courseId: updatedCourse._id,
+        generationAttempts: updatedCourse.generationAttempts,
+      },
+    });
+
+    // Re-use the same background pipeline as initial creation.
+    generateRoadmapInBackground(
+      updatedCourse,
+      course.syllabus,
+      course.materials,
+      course.title,
+      course.description,
+      false // analyzeImages — preserve original default; no way to recover this flag safely
+    );
+  } catch (error) {
+    next(error);
+  }
+};
 
 /**
  * Update a course (Instructor owner only).
@@ -485,7 +594,17 @@ export const getCourseNodes = async (req, res, next) => {
       status: 'success',
       data: {
         nodes: nodesWithStatus,
-        course: { title: course.title, level: course.level, color: course.color },
+        course: {
+          title: course.title,
+          level: course.level,
+          color: course.color,
+          // Expose generation state so CourseMap can render the generating/failed
+          // views (and the instructor retry button) on a direct page load.
+          generationStatus: course.generationStatus,
+          generationError: course.generationError,
+          generationProgress: course.generationProgress,
+          generationAttempts: course.generationAttempts,
+        },
       },
     });
   } catch (error) {

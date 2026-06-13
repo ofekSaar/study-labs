@@ -10,6 +10,7 @@ import { fileURLToPath } from 'url';
 import swaggerUi from 'swagger-ui-express';
 
 import connectDB from './config/db.js';
+import { recoverStuckGenerations } from './services/aiService.js';
 import configurePassport from './config/passport.js';
 import swaggerSpec from './config/swagger.js';
 import errorHandler from './middleware/errorHandler.js';
@@ -90,6 +91,7 @@ app.use(errorHandler);
 // ── Start Server ─────────────────────────────
 const startServer = async () => {
   await connectDB();
+  await recoverStuckGenerations(); // flip courses stuck in 'generating' (e.g. from a restart) to 'failed' so they can be retried
 
   app.listen(PORT, () => {
     console.log(`\n🚀 StudyLabs API running on http://localhost:${PORT}`);

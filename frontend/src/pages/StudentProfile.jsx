@@ -11,18 +11,14 @@ import { motion } from 'framer-motion';
 
 const StudentProfile = () => {
     const { user } = useCourseStore();
-    const { 
-        activeAvatar, 
-        activeTitle, 
-        unlockedAvatars, 
-        unlockedTitles, 
-        selectAvatar, 
-        selectTitle, 
+    const {
+        activeAvatar,
+        activeTitle,
+        unlockedAvatars,
+        unlockedTitles,
+        selectAvatar,
+        selectTitle,
         stats,
-        coins,
-        streakShields,
-        xpBoosts,
-        buyItem
     } = useGamificationStore();
 
     const currentAvatar = AVATARS.concat(SHOP_ITEMS.avatars).find(a => a.id === activeAvatar) || { emoji: '🎓', name: 'Student' };

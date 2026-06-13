@@ -1,23 +1,25 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import LoginPage from './pages/LoginPage';
 import ProtectedRoute from './components/auth/ProtectedRoute';
-import Dashboard from './pages/Dashboard';
-import LessonQuiz from './pages/LessonQuiz';
-import CourseMap from './pages/CourseMap';
-import InstructorDashboard from './pages/InstructorDashboard';
-import StudentStatusOverview from './pages/StudentStatusOverview';
-import CourseWizard from './pages/CourseWizard';
-import ManagedCourses from './pages/ManagedCourses';
-import MyEnrollments from './pages/MyEnrollments';
-import MyCourses from './pages/MyCourses';
-import EnrollmentRequests from './pages/EnrollmentRequests';
-import AuthCallback from './pages/AuthCallback';
-import RoleSelectPage from './pages/RoleSelectPage';
 import useAuthStore from './store/authStore';
 import useSettingsStore from './store/settingsStore';
-import StudentProfile from './pages/StudentProfile';
-import StudyShop from './pages/StudyShop';
+
+// Route-level page screens — loaded only when their route is first visited.
+const LoginPage = lazy(() => import('./pages/LoginPage'));
+const AuthCallback = lazy(() => import('./pages/AuthCallback'));
+const RoleSelectPage = lazy(() => import('./pages/RoleSelectPage'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const MyCourses = lazy(() => import('./pages/MyCourses'));
+const MyEnrollments = lazy(() => import('./pages/MyEnrollments'));
+const CourseMap = lazy(() => import('./pages/CourseMap'));
+const LessonQuiz = lazy(() => import('./pages/LessonQuiz'));
+const StudentProfile = lazy(() => import('./pages/StudentProfile'));
+const StudyShop = lazy(() => import('./pages/StudyShop'));
+const InstructorDashboard = lazy(() => import('./pages/InstructorDashboard'));
+const StudentStatusOverview = lazy(() => import('./pages/StudentStatusOverview'));
+const CourseWizard = lazy(() => import('./pages/CourseWizard'));
+const EnrollmentRequests = lazy(() => import('./pages/EnrollmentRequests'));
+const ManagedCourses = lazy(() => import('./pages/ManagedCourses'));
 
 const ThemeWrapper = ({ children }) => {
   const { theme } = useSettingsStore();
@@ -60,6 +62,11 @@ function App() {
     <BrowserRouter>
       <ThemeWrapper>
         <AuthWrapper>
+          <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-slate-900">
+              <div className="animate-spin w-8 h-8 border-4 border-studylabs-blue border-t-transparent rounded-full"></div>
+            </div>
+          }>
           <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
@@ -176,6 +183,7 @@ function App() {
         {/* Catch all */}
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
+          </Suspense>
       </AuthWrapper>
       </ThemeWrapper>
     </BrowserRouter>
