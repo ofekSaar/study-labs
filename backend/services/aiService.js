@@ -1,9 +1,62 @@
 /**
  * AI Service Client.
- * 
+ *
  * Interacts with the local FastAPI AI Engine container.
  */
 import path from 'path';
+import Course from '../models/Course.js';
+
+/**
+ * How long (in milliseconds) a course may sit in 'generating' before it is
+ * considered stuck.  Matches the 20-minute HTTP timeout used by generateRoadmap.
+ */
+const STUCK_GENERATION_THRESHOLD_MS = 20 * 60 * 1000; // 20 minutes
+
+/**
+ * Startup recovery — marks courses that are stuck in 'generating' as 'failed'
+ * so instructors can retry them.
+ *
+ * A course is considered stuck when its generationStartedAt is older than
+ * STUCK_GENERATION_THRESHOLD_MS.  Courses without a generationStartedAt
+ * (created before this field was introduced) are recovered after the same
+ * threshold relative to their updatedAt timestamp.
+ *
+ * USAGE: call this once after the database connection is established.
+ * Add the following two lines to backend/server.js inside startServer(),
+ * immediately after `await connectDB()`:
+ *
+ *   import { recoverStuckGenerations } from './services/aiService.js';
+ *   await recoverStuckGenerations();
+ */
+export const recoverStuckGenerations = async () => {
+  const cutoff = new Date(Date.now() - STUCK_GENERATION_THRESHOLD_MS);
+
+  const result = await Course.updateMany(
+    {
+      generationStatus: 'generating',
+      // Recover courses that were explicitly stamped and are past the deadline,
+      // OR legacy courses (no stamp) whose updatedAt indicates they were generating
+      // before the threshold.
+      $or: [
+        { generationStartedAt: { $lt: cutoff } },
+        { generationStartedAt: null, updatedAt: { $lt: cutoff } },
+      ],
+    },
+    {
+      $set: {
+        generationStatus: 'failed',
+        generationError: 'Generation interrupted (server restart) — please retry.',
+        isPublished: false,
+      },
+    }
+  );
+
+  if (result.modifiedCount > 0) {
+    console.log(`[AI Service] Recovered ${result.modifiedCount} stuck course(s) — marked as failed.`);
+  } else {
+    console.log('[AI Service] No stuck courses found on startup.');
+  }
+};
 
 const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://ai-engine:8000';
 const AI_SERVICE_API_KEY = process.env.AI_SERVICE_API_KEY || '';

@@ -219,6 +219,8 @@ export const createCourse = async (req, res, next) => {
       gamification: safeJSONParse(gamification, 'gamification'),
       isPublished: false,
       generationStatus: 'generating',
+      generationStartedAt: new Date(),
+      generationAttempts: 1,
     });
 
     // Return immediately — don't wait for AI pipeline
@@ -265,7 +267,15 @@ async function generateRoadmapInBackground(course, syllabusData, materialsData, 
   }
 
   try {
-    console.log(`[Background] Starting AI generation for course ${course._id}...`);
+    console.log(`[Background] Starting AI generation for course ${course._id} (attempt ${course.generationAttempts})...`);
+
+    // Persist the timestamp at the actual moment generation begins so that the
+    // recovery window is measured from this point, not from when the HTTP
+    // response was sent.
+    await Course.findByIdAndUpdate(course._id, {
+      generationStartedAt: new Date(),
+      generationAttempts: course.generationAttempts,
+    });
 
     const roadmapResult = await generateRoadmap({
       courseId: course._id.toString(),
@@ -358,6 +368,80 @@ async function generateRoadmapInBackground(course, syllabusData, materialsData, 
     await course.save();
   }
 }
+
+/** How long a course may sit in 'generating' before it is retriable as stuck. */
+const STUCK_GENERATION_THRESHOLD_MS = 20 * 60 * 1000; // 20 minutes — mirrors aiService.js
+
+/**
+ * Retry course generation (Instructor owner only).
+ *
+ * Allowed when generationStatus is:
+ *   - 'failed'  — an explicit failure was recorded
+ *   - 'generating' AND generationStartedAt is older than STUCK_GENERATION_THRESHOLD_MS
+ *     (i.e. stuck after a server restart before recovery ran)
+ */
+export const regenerateCourse = async (req, res, next) => {
+  try {
+    const course = await Course.findById(req.params.courseId);
+    if (!course) throw createError(404, 'Course not found');
+
+    if (course.instructor.toString() !== req.user._id.toString()) {
+      throw createError(403, 'You can only regenerate your own courses');
+    }
+
+    const isStuckGenerating =
+      course.generationStatus === 'generating' &&
+      course.generationStartedAt &&
+      Date.now() - course.generationStartedAt.getTime() > STUCK_GENERATION_THRESHOLD_MS;
+
+    const isRetriable = course.generationStatus === 'failed' || isStuckGenerating;
+
+    if (!isRetriable) {
+      throw createError(
+        409,
+        `Course cannot be regenerated in its current state ('${course.generationStatus}'). ` +
+          'Only failed or stuck courses may be retried.'
+      );
+    }
+
+    // Reset generation state and increment attempt counter atomically.
+    const updatedCourse = await Course.findByIdAndUpdate(
+      course._id,
+      {
+        $set: {
+          generationStatus: 'generating',
+          generationError: null,
+          generationStartedAt: new Date(),
+          isPublished: false,
+        },
+        $inc: { generationAttempts: 1 },
+      },
+      { new: true }
+    );
+
+    // Respond immediately — generation runs in the background.
+    res.json({
+      status: 'success',
+      message: 'Course regeneration started.',
+      data: {
+        courseId: updatedCourse._id,
+        generationAttempts: updatedCourse.generationAttempts,
+      },
+    });
+
+    // Re-use the same background pipeline as initial creation.
+    generateRoadmapInBackground(
+      updatedCourse,
+      course.syllabus,
+      course.materials,
+      course.title,
+      course.description,
+      false // analyzeImages — preserve original default; no way to recover this flag safely
+    );
+  } catch (error) {
+    next(error);
+  }
+};
 
 /**
  * Update a course (Instructor owner only).

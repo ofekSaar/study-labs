@@ -6,6 +6,8 @@ import {
   getStats,
   getCourseProgress,
   completeNode,
+  getGlobalLeaderboard,
+  getCourseLeaderboard,
 } from '../controllers/progressController.js';
 
 const router = Router();
@@ -124,5 +126,102 @@ router.post(
   validate,
   completeNode
 );
+
+/**
+ * @swagger
+ * /api/progress/leaderboard:
+ *   get:
+ *     summary: Global leaderboard ranked by total XP across all courses
+ *     tags: [Progress]
+ *     parameters:
+ *       - in: query
+ *         name: period
+ *         schema:
+ *           type: string
+ *           enum: [weekly, monthly, allTime]
+ *         description: >
+ *           Time window for ranking. Note: the data model stores only cumulative
+ *           XP without per-event timestamps, so all period values return the
+ *           all-time ranking.
+ *     responses:
+ *       200:
+ *         description: Leaderboard entries
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 leaderboard:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       rank:
+ *                         type: number
+ *                       userId:
+ *                         type: string
+ *                       name:
+ *                         type: string
+ *                       avatar:
+ *                         type: string
+ *                       xp:
+ *                         type: number
+ *                       level:
+ *                         type: string
+ *                       isYou:
+ *                         type: boolean
+ */
+router.get('/leaderboard', authenticate, getGlobalLeaderboard);
+
+/**
+ * @swagger
+ * /api/progress/course/{courseId}/leaderboard:
+ *   get:
+ *     summary: Course-scoped leaderboard ranked by per-course XP
+ *     tags: [Progress]
+ *     parameters:
+ *       - in: path
+ *         name: courseId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: period
+ *         schema:
+ *           type: string
+ *           enum: [weekly, monthly, allTime]
+ *         description: >
+ *           Time window for ranking. Note: the data model stores only cumulative
+ *           XP without per-event timestamps, so all period values return the
+ *           all-time ranking.
+ *     responses:
+ *       200:
+ *         description: Course leaderboard entries
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 leaderboard:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       rank:
+ *                         type: number
+ *                       userId:
+ *                         type: string
+ *                       name:
+ *                         type: string
+ *                       avatar:
+ *                         type: string
+ *                       xp:
+ *                         type: number
+ *                       level:
+ *                         type: string
+ *                       isYou:
+ *                         type: boolean
+ */
+router.get('/course/:courseId/leaderboard', authenticate, getCourseLeaderboard);
 
 export default router;
