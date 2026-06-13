@@ -1,4 +1,3 @@
-/* global global, jest, describe, beforeAll, afterAll, beforeEach, test, expect */
 import { act } from 'react';
 import useAuthStoreModule from '../store/authStore';
 

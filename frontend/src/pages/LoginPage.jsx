@@ -64,7 +64,7 @@ const LoginPage = () => {
                 {/* Hero Content */}
                 <div className="relative z-10 space-y-8">
                     <div>
-                        <h1 className="text-5xl font-black text-white leading-tight mb-4">
+                        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white leading-tight mb-4">
                             Learn Smarter.<br />
                             <span style={{ background: 'linear-gradient(90deg, #818cf8, #c084fc)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
                                 Level Up Faster.
@@ -110,7 +110,7 @@ const LoginPage = () => {
             </div>
 
             {/* ── Right Login Panel ─────────────────────────── */}
-            <div className="flex-1 flex flex-col items-center justify-center p-8 relative"
+            <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-8 relative"
                 style={{ background: 'linear-gradient(160deg, #f8faff 0%, #f0f4ff 50%, #f5f0ff 100%)' }}>
 
                 {/* Background blobs */}
@@ -119,7 +119,7 @@ const LoginPage = () => {
                 <div className="absolute bottom-0 left-0 w-48 h-48 rounded-full opacity-40 pointer-events-none"
                     style={{ background: 'radial-gradient(circle, rgba(124,58,237,0.12), transparent)', filter: 'blur(40px)', transform: 'translate(-30%, 30%)' }} />
 
-                <div className="w-full max-w-sm relative z-10 page-enter">
+                <div className="w-full max-w-sm mx-4 relative z-10 page-enter">
 
                     {/* Mobile logo */}
                     <div className="lg:hidden flex items-center gap-3 mb-10 justify-center">
@@ -133,7 +133,7 @@ const LoginPage = () => {
                     </div>
 
                     {/* Card */}
-                    <div className="glass-card rounded-3xl p-8">
+                    <div className="glass-card rounded-3xl p-5 sm:p-8">
                         <div className="text-center mb-8">
                             <h2 className="text-2xl font-black text-gray-900 mb-2">Welcome Back 👋</h2>
                             <p className="text-gray-500 text-sm">Sign in to continue your learning journey</p>

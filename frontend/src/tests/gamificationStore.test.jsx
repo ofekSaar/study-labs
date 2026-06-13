@@ -1,8 +1,7 @@
-/* global global, jest, describe, beforeAll, afterAll, beforeEach, afterEach, test, expect */
 import { act } from 'react';
 import useGamificationStoreModule from '../store/gamificationStore';
 import { AVATARS, TITLES } from '../constants/gamification';
-import BADGES, { checkBadges } from '../utils/badges';
+import BADGES from '../utils/badges';
 import soundsModule from '../utils/soundManager';
 import useToastStoreModule from '../store/toastStore';
 

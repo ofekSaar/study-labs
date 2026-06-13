@@ -27,7 +27,7 @@ const Leaderboard = ({ courseId }) => {
             setIsLoading(true);
             try {
                 const endpoint = courseId
-                    ? `/api/courses/${courseId}/leaderboard?period=${period}`
+                    ? `/api/progress/course/${courseId}/leaderboard?period=${period}`
                     : `/api/progress/leaderboard?period=${period}`;
                 const { data } = await api.get(endpoint);
                 
@@ -55,11 +55,11 @@ const Leaderboard = ({ courseId }) => {
     }, [courseId, period, currentUserEmoji, currentUser?.totalXP]);
 
     return (
-        <div className="glass-card rounded-3xl p-5 relative overflow-hidden group h-full flex flex-col" dir="rtl">
+        <div className="glass-card rounded-3xl p-3 sm:p-5 relative overflow-hidden group h-full flex flex-col" dir="rtl">
             <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-purple-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
 
             {/* Header */}
-            <div className="relative z-10 flex items-center justify-between mb-5">
+            <div className="relative z-10 flex items-center justify-between mb-3 sm:mb-5">
                 <div className="flex items-center gap-2">
                     <div className="w-8 h-8 rounded-xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20">
                         <Trophy size={16} className="text-amber-500 fill-amber-500/25" />

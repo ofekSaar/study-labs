@@ -25,12 +25,12 @@ const InstructorDashboard = () => {
                     style={{ background: 'radial-gradient(circle, rgba(79,110,247,0.10) 0%, transparent 70%)', filter: 'blur(40px)' }} />
             </div>
 
-            <div className="relative z-[1] space-y-8 p-6 md:p-8 pb-32 max-w-[1200px] mx-auto">
+            <div className="relative z-[1] space-y-8 p-4 sm:p-6 md:p-8 pb-32 max-w-[1200px] mx-auto">
 
                 {/* Actions Bar */}
                 <div>
-                    <h1 className="text-4xl font-display font-black text-slate-800 dark:text-white drop-shadow-sm dark:drop-shadow-md tracking-tight">Instructor Dashboard</h1>
-                    <p className="text-slate-500 dark:text-white/60 text-lg mt-1 font-medium">Manage your courses, view general stats, and create new programs.</p>
+                    <h1 className="text-2xl sm:text-3xl md:text-4xl font-display font-black text-slate-800 dark:text-white drop-shadow-sm dark:drop-shadow-md tracking-tight">Instructor Dashboard</h1>
+                    <p className="text-slate-500 dark:text-white/60 text-base sm:text-lg mt-1 font-medium">Manage your courses, view general stats, and create new programs.</p>
                 </div>
 
                 {/* Dashboard Metrics and Action Cards */}
@@ -39,7 +39,7 @@ const InstructorDashboard = () => {
                         <div className="animate-spin w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full"></div>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-4xl">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 max-w-4xl">
                         <MetricCard
                             label="Total Courses"
                             value={courses.length}

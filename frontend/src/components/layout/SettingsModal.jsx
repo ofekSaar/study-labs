@@ -49,11 +49,11 @@ const SettingsModal = ({ isOpen, onClose, isInstructor = false }) => {
                     initial={{ opacity: 0, scale: 0.95, y: 10 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                    className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-white/5 max-h-[90vh] flex flex-col"
+                    className="relative w-full max-w-lg mx-4 sm:mx-auto bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-white/5 max-h-[85vh] flex flex-col"
                 >
                     {/* Header */}
-                    <div className="p-6 border-b border-slate-100 dark:border-white/5 flex items-center justify-between">
-                        <h2 className="text-2xl font-black text-slate-900 dark:text-white">Settings & Customization</h2>
+                    <div className="p-4 sm:p-6 border-b border-slate-100 dark:border-white/5 flex items-center justify-between">
+                        <h2 className="text-lg sm:text-2xl font-black text-slate-900 dark:text-white">Settings & Customization</h2>
                         <button 
                             onClick={onClose}
                             className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-white/10 text-slate-500 dark:text-slate-400 transition-colors"
@@ -63,7 +63,7 @@ const SettingsModal = ({ isOpen, onClose, isInstructor = false }) => {
                     </div>
 
                     {/* Scrollable Settings Panel */}
-                    <div className="flex-1 p-6 overflow-y-auto space-y-8 custom-scrollbar">
+                    <div className="flex-1 p-4 sm:p-6 overflow-y-auto space-y-6 sm:space-y-8 custom-scrollbar">
                         
                         {/* Theme Selection */}
                         <div>
@@ -226,7 +226,7 @@ const SettingsModal = ({ isOpen, onClose, isInstructor = false }) => {
                     </div>
 
                     {/* Footer */}
-                    <div className="p-6 border-t border-slate-100 dark:border-white/5 flex justify-end bg-slate-50 dark:bg-black/10">
+                    <div className="p-4 sm:p-6 border-t border-slate-100 dark:border-white/5 flex justify-end bg-slate-50 dark:bg-black/10">
                         <button 
                             onClick={onClose}
                             className="px-6 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold rounded-xl hover:bg-slate-800 dark:hover:bg-slate-100 transition-colors text-xs uppercase tracking-wider"

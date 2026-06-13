@@ -34,13 +34,13 @@ const StudyShop = () => {
     return (
         <StudentLayout title="Study Shop">
             <ConfettiEffect />
-            <div className="max-w-6xl mx-auto px-4 py-8 space-y-8 pb-24">
+            <div className="max-w-6xl mx-auto px-4 py-4 sm:py-8 space-y-8 pb-24">
                 
                 {/* ── Shop Banner & Coin Balance ── */}
                 <motion.div 
                     initial={{ y: -20, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
-                    className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-slate-900 via-indigo-950 to-purple-950 border border-indigo-500/20 p-8 md:p-10 shadow-[0_10px_30px_rgba(99,102,241,0.15)]"
+                    className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-slate-900 via-indigo-950 to-purple-950 border border-indigo-500/20 p-5 sm:p-8 md:p-10 shadow-[0_10px_30px_rgba(99,102,241,0.15)]"
                 >
                     {/* Glowing background details */}
                     <div className="absolute top-0 right-0 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -78,7 +78,7 @@ const StudyShop = () => {
                     variants={containerVariants}
                     initial="hidden"
                     animate="show"
-                    className="grid grid-cols-1 lg:grid-cols-3 gap-8"
+                    className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"
                 >
                     
                     {/* Category 1: Avatars */}

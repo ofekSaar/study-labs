@@ -1,0 +1,130 @@
+name: CI
+
+# Runs on every PR targeting main, on direct pushes to main, and can be
+# triggered manually from the Actions tab.
+on:
+  pull_request:
+    branches: ["main"]
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Job 1: Frontend — lint, test, build
+  # ---------------------------------------------------------------------------
+  frontend:
+    name: Frontend (lint + test + build)
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    env:
+      CI: true
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Node 24: the frontend is a static Vite build (Node is build/test
+      # tooling only, not a runtime), and Jest 30's require(ESM) path needs
+      # Node >= 24.9 to load the ESM store modules. Node 20 fails to run the
+      # suite ("Jest's require(ESM) requires Node v24.9+").
+      - name: Set up Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          # Key the npm cache to the frontend lockfile so backend installs
+          # do not pollute and vice-versa.
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      # ESLint — fail fast before running the slower build/test steps.
+      - name: Lint
+        run: npm run lint
+
+      # Jest with jsdom (--experimental-vm-modules already baked into the
+      # npm test script in frontend/package.json).
+      - name: Test
+        run: npm test
+
+      # Vite production build — catches type/import errors that tests miss.
+      - name: Build
+        run: npm run build
+
+  # ---------------------------------------------------------------------------
+  # Job 2: Backend — test only (no server required)
+  # ---------------------------------------------------------------------------
+  backend:
+    name: Backend (test)
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: backend
+
+    env:
+      CI: true
+      NODE_ENV: test
+      # JWT_SECRET is read by server.js at module load time — before the
+      # beforeAll() in tests can set process.env.JWT_SECRET. Providing a
+      # dummy value here prevents a crash on import. Tests override it
+      # themselves (see backend/tests/auth.test.js line 9).
+      JWT_SECRET: ci-dummy-secret-not-used-in-prod
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Jest with mongodb-memory-server — spins up an in-process MongoDB
+      # instance, so NO external database service container is needed.
+      # cross-env and --forceExit/--detectOpenHandles are baked into the
+      # npm test script in backend/package.json.
+      - name: Test
+        run: npm test
+
+  # ---------------------------------------------------------------------------
+  # Job 3 (DISABLED): AI Engine — placeholder for future pytest suite
+  #
+  # Uncomment when ai-engine/ gains tests. Steps needed:
+  #   1. actions/setup-python@v5 with python-version: "3.11"
+  #   2. pip install -r ai-engine/requirements.txt
+  #   3. pip install pytest pytest-asyncio httpx
+  #   4. pytest ai-engine/tests/ -v
+  #
+  # Also add USE_MOCK_AI: "True" to the env block so tests never call real LLMs.
+  # ---------------------------------------------------------------------------
+  # ai-engine:
+  #   name: AI Engine (pytest)
+  #   runs-on: ubuntu-latest
+  #   defaults:
+  #     run:
+  #       working-directory: ai-engine
+  #   env:
+  #     CI: true
+  #     USE_MOCK_AI: "True"
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: actions/setup-python@v5
+  #       with:
+  #         python-version: "3.11"
+  #         cache: pip
+  #     - name: Install dependencies
+  #       run: pip install -r requirements.txt && pip install pytest pytest-asyncio httpx
+  #     - name: Test
+  #       run: pytest tests/ -v

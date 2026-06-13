@@ -62,9 +62,9 @@ const MyEnrollments = () => {
                     style={{ background: 'radial-gradient(circle, rgba(124,58,237,0.10) 0%, transparent 70%)', filter: 'blur(40px)' }} />
             </div>
 
-            <div className="relative z-[1] p-6 max-w-[1600px] mx-auto pb-32">
+            <div className="relative z-[1] p-4 sm:p-6 max-w-[1600px] mx-auto pb-32">
                 <div className="mb-10">
-                    <h1 className="font-display text-4xl font-black text-slate-900 dark:text-white mb-4 tracking-tight drop-shadow-sm dark:drop-shadow-md">Discover Courses</h1>
+                    <h1 className="font-display text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 dark:text-white mb-4 tracking-tight drop-shadow-sm dark:drop-shadow-md">Discover Courses</h1>
                     <p className="text-slate-500 dark:text-white/60 text-lg font-medium">Browse available courses and request enrollment.</p>
                 </div>
  
@@ -73,7 +73,7 @@ const MyEnrollments = () => {
                         <div className="animate-spin w-8 h-8 border-4 border-studylabs-blue border-t-transparent rounded-full"></div>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                         {availableCourses.map((course) => {
                             // Find if there's an existing enrollment request for this course
                             const enrollment = myEnrollments.find(e => e.course._id === course._id || e.course === course._id);

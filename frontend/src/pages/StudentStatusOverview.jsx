@@ -60,21 +60,21 @@ const StudentStatusOverview = () => {
                     style={{ background: 'radial-gradient(circle, rgba(79,110,247,0.10) 0%, transparent 70%)', filter: 'blur(40px)' }} />
             </div>
 
-            <div className="relative z-[1] space-y-8 p-6 md:p-8 pb-32 max-w-[1600px] mx-auto">
+            <div className="relative z-[1] space-y-8 p-4 sm:p-6 md:p-8 pb-32 max-w-[1600px] mx-auto">
 
                 {/* Actions Bar */}
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
-                        <h1 className="text-4xl font-display font-black text-slate-800 dark:text-white drop-shadow-sm dark:drop-shadow-md tracking-tight">Student Status Overview</h1>
+                        <h1 className="text-2xl sm:text-3xl md:text-4xl font-display font-black text-slate-800 dark:text-white drop-shadow-sm dark:drop-shadow-md tracking-tight">Student Status Overview</h1>
                         <p className="text-slate-500 dark:text-white/60 text-lg mt-1 font-medium">Track your students' progress, engagement, and mastery levels.</p>
                     </div>
 
                     {/* Course selector */}
-                    <div className="relative">
-                        <select 
+                    <div className="relative w-full md:w-auto">
+                        <select
                             value={selectedCourseId}
                             onChange={(e) => setSelectedCourseId(e.target.value)}
-                            className="bg-white dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-xl pl-10 pr-4 py-2 text-sm font-bold text-slate-700 dark:text-white shadow-inner focus:outline-none focus:border-purple-500 appearance-none cursor-pointer min-w-[200px]"
+                            className="w-full md:min-w-[200px] bg-white dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-xl pl-10 pr-4 py-2 text-sm font-bold text-slate-700 dark:text-white shadow-inner focus:outline-none focus:border-purple-500 appearance-none cursor-pointer"
                             style={{ WebkitAppearance: 'none', backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%238B5CF6\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6 9 12 15 18 9\'/%3e%3c/svg%3e")', backgroundRepeat: 'no-repeat', backgroundPosition: 'left 1rem center', backgroundSize: '1em' }}
                         >
                             {courses.map(c => (

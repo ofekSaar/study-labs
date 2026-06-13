@@ -84,16 +84,16 @@ const ManagedCourses = () => {
                     style={{ background: 'radial-gradient(circle, rgba(79,110,247,0.10) 0%, transparent 70%)', filter: 'blur(40px)' }} />
             </div>
 
-            <div className="relative z-[1] max-w-6xl mx-auto px-6 py-8 pb-32 animate-fade-in">
+            <div className="relative z-[1] max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-8 pb-32 animate-fade-in">
                 
                 {/* Header & Search */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 sm:mb-12">
                     <div>
-                        <h1 className="text-4xl font-display font-black text-slate-800 dark:text-white drop-shadow-sm dark:drop-shadow-md tracking-tight">Managed Courses</h1>
+                        <h1 className="text-2xl sm:text-3xl md:text-4xl font-display font-black text-slate-800 dark:text-white drop-shadow-sm dark:drop-shadow-md tracking-tight">Managed Courses</h1>
                         <p className="text-slate-500 dark:text-white/60 text-lg mt-1 font-medium">View, search, and manage all your created courses.</p>
                     </div>
-                    <div className="flex items-center gap-4 w-full md:w-auto">
-                        <div className="relative flex-1 md:w-80">
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
+                        <div className="relative flex-1 sm:w-80">
                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-white/40" size={18} />
                             <input 
                                 type="text"
@@ -118,7 +118,7 @@ const ManagedCourses = () => {
                         <div className="animate-spin w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full"></div>
                     </div>
                 ) : filteredCourses.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                         {filteredCourses.map(course => {
                             const deptStyle = getDeptStyle(course.department);
 

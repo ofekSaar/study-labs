@@ -37,7 +37,7 @@ const StreakCalendar = () => {
     ];
 
     return (
-        <div className="glass-card rounded-3xl p-5 relative overflow-hidden group" dir="rtl">
+        <div className="glass-card rounded-3xl p-3 sm:p-5 relative overflow-hidden group" dir="rtl">
             <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 via-red-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
 
             <div className="relative z-10">
@@ -53,18 +53,18 @@ const StreakCalendar = () => {
                 </div>
 
                 {/* Day headers */}
-                <div className="grid grid-cols-7 gap-1 mb-1">
+                <div className="grid grid-cols-7 gap-0.5 sm:gap-1 mb-0.5 sm:mb-1">
                     {DAYS.map((d, index) => (
-                        <div key={index} className="text-center text-[10px] font-black text-slate-400 dark:text-white/30">
+                        <div key={index} className="text-center text-[9px] sm:text-[10px] font-black text-slate-400 dark:text-white/30">
                             {d}
                         </div>
                     ))}
                 </div>
 
                 {/* Calendar grid */}
-                <div className="space-y-1">
+                <div className="space-y-0.5 sm:space-y-1">
                     {weeks.map((week, wi) => (
-                        <div key={wi} className="grid grid-cols-7 gap-1">
+                        <div key={wi} className="grid grid-cols-7 gap-0.5 sm:gap-1">
                             {week.map((day, di) => {
                                 // In RTL, the next day in calendar (di + 1) is to the left of the current day.
                                 // If current day is active and the next day in the week is also active, draw a bridge.
@@ -81,7 +81,7 @@ const StreakCalendar = () => {
                                             transition={{ delay: (wi * 7 + di) * 0.015 }}
                                             title={day.iso}
                                             className={`
-                                                w-full h-full rounded-lg flex items-center justify-center text-[10px] font-extrabold relative z-10 select-none transition-all duration-255
+                                                w-full h-full rounded-lg flex items-center justify-center text-[9px] sm:text-[10px] font-extrabold relative z-10 select-none transition-all duration-255
                                                 ${day.isToday
                                                     ? 'ring-2 ring-indigo-500 ring-offset-1 ring-offset-transparent'
                                                     : ''

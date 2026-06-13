@@ -1,4 +1,3 @@
-/* global global, jest, describe, beforeAll, beforeEach, test, expect */
 import { act } from 'react';
 import useEnrollmentStoreModule from '../store/enrollmentStore';
 

@@ -119,6 +119,18 @@ const courseSchema = new mongoose.Schema(
       type: String,
       default: 'Initializing AI Engine...',
     },
+    // Tracks when the most recent generation attempt started so stuck jobs can
+    // be detected after a server restart.
+    generationStartedAt: {
+      type: Date,
+      default: null,
+    },
+    // Monotonically increasing counter — incremented on every attempt (initial
+    // creation + each manual retry).  Useful for debugging and rate-limiting.
+    generationAttempts: {
+      type: Number,
+      default: 0,
+    },
     aiEvaluation: {
       status: {
         type: String,

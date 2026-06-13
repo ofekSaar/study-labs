@@ -45,6 +45,15 @@ async def retry_with_backoff(coro_fn, max_retries=3, base_delay=2.0):
 # Initialize LLMs list in priority order
 LLMS = []
 
+if os.environ.get("COLLEGE_API_BASE"):
+    LLMS.append(("CollegeLLM", OpenAI(
+        model=os.environ.get("COLLEGE_MODEL", "gpt-oss-120b"),
+        api_key=os.environ.get("COLLEGE_API_KEY", "college"),
+        api_base=os.environ.get("COLLEGE_API_BASE"),
+        request_timeout=180.0,
+        verify_ssl=False,
+    )))
+
 if os.environ.get("OPEN_ROUTE_API_KEY"):
     LLMS.append(("OpenRouter", OpenAI(
         model="gpt-4o", 

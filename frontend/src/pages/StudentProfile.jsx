@@ -11,18 +11,14 @@ import { motion } from 'framer-motion';
 
 const StudentProfile = () => {
     const { user } = useCourseStore();
-    const { 
-        activeAvatar, 
-        activeTitle, 
-        unlockedAvatars, 
-        unlockedTitles, 
-        selectAvatar, 
-        selectTitle, 
+    const {
+        activeAvatar,
+        activeTitle,
+        unlockedAvatars,
+        unlockedTitles,
+        selectAvatar,
+        selectTitle,
         stats,
-        coins,
-        streakShields,
-        xpBoosts,
-        buyItem
     } = useGamificationStore();
 
     const currentAvatar = AVATARS.concat(SHOP_ITEMS.avatars).find(a => a.id === activeAvatar) || { emoji: '🎓', name: 'Student' };
@@ -47,7 +43,7 @@ const StudentProfile = () => {
                 
                 {/* ── Page Header ── */}
                 <header>
-                    <h1 className="text-4xl font-display font-black text-slate-800 dark:text-white drop-shadow-sm tracking-tight">Student Profile</h1>
+                    <h1 className="text-2xl sm:text-3xl md:text-4xl font-display font-black text-slate-800 dark:text-white drop-shadow-sm tracking-tight">Student Profile</h1>
                     <p className="text-indigo-600 dark:text-indigo-200 mt-1 font-medium">Manage your digital identity, view your achievements, and track your progress.</p>
                 </header>
 
@@ -153,7 +149,7 @@ const StudentProfile = () => {
                         <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-indigo-500/5 pointer-events-none" />
                         <h3 className="font-display font-bold text-lg text-slate-800 dark:text-white mb-6 relative z-10">Select Active Avatar</h3>
                         
-                        <div className="grid grid-cols-4 sm:grid-cols-7 gap-4 relative z-10">
+                        <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-7 gap-4 relative z-10">
                             {AVATARS.concat(SHOP_ITEMS.avatars).map(avatar => {
                                 const isUnlocked = unlockedAvatars.includes(avatar.id) || (avatar.levelReq !== undefined && level >= avatar.levelReq);
                                 const isActive = activeAvatar === avatar.id;
@@ -226,7 +222,7 @@ const StudentProfile = () => {
                     <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 pointer-events-none" />
                     
                     <div className="relative z-10 mb-6">
-                        <h3 className="font-display font-black text-2xl text-slate-800 dark:text-white flex items-center gap-2">
+                        <h3 className="font-display font-black text-xl sm:text-2xl text-slate-800 dark:text-white flex items-center gap-2">
                             <Trophy className="text-amber-500" />
                             Level Rewards Roadmap
                         </h3>
@@ -234,7 +230,7 @@ const StudentProfile = () => {
                     </div>
 
                     {/* Timeline row */}
-                    <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
+                    <div className="relative z-10 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4">
                         {[
                             { level: 1, emoji: '🎓', avatar: 'Student', title: 'Beginner', desc: 'Initial Unlock' },
                             { level: 2, emoji: '📚', avatar: 'Scholar', title: 'Curious Learner', desc: 'Bronze Milestone' },

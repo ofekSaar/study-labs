@@ -11,9 +11,9 @@ const XPHeader = () => {
             initial={{ y: -30, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-            className="absolute top-0 w-full z-20 px-6 py-4 flex items-center justify-end pointer-events-none"
+            className="absolute top-0 w-full z-20 px-3 sm:px-6 py-3 sm:py-4 flex items-center justify-end pointer-events-none"
         >
-            <div className="flex items-center gap-2 pointer-events-auto rounded-2xl px-3 py-2 border border-white/10"
+            <div className="flex items-center gap-1 sm:gap-2 pointer-events-auto rounded-2xl px-2 sm:px-3 py-1.5 sm:py-2 border border-white/10"
                 style={{
                     background: 'rgba(15, 23, 42, 0.75)',
                     backdropFilter: 'blur(20px)',
@@ -22,7 +22,7 @@ const XPHeader = () => {
                 }}>
 
                 {/* Streak */}
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl"
+                <div className="flex items-center gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl"
                     style={{ background: 'rgba(245,158,11,0.15)' }}>
                     <Flame size={18} className="text-orange-400 fill-orange-400" style={{ filter: 'drop-shadow(0 0 6px rgba(245,158,11,0.8))' }} />
                     <div className="flex flex-col leading-none">
@@ -34,7 +34,7 @@ const XPHeader = () => {
                 <div className="w-px h-6 bg-white/10" />
 
                 {/* XP */}
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl"
+                <div className="flex items-center gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl"
                     style={{ background: 'rgba(79,110,247,0.15)' }}>
                     <Zap size={18} className="text-indigo-400 fill-indigo-400" style={{ filter: 'drop-shadow(0 0 6px rgba(79,110,247,0.8))' }} />
                     <div className="flex flex-col leading-none">
@@ -46,7 +46,7 @@ const XPHeader = () => {
                 <div className="w-px h-6 bg-white/10" />
 
                 {/* Trophy level */}
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl"
+                <div className="flex items-center gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl"
                     style={{ background: 'rgba(16,185,129,0.15)' }}>
                     <Trophy size={18} className="text-emerald-400" style={{ filter: 'drop-shadow(0 0 6px rgba(16,185,129,0.7))' }} />
                     <div className="flex flex-col leading-none">
