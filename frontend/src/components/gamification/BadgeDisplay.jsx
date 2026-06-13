@@ -26,7 +26,7 @@ const BadgeDisplay = () => {
 
             {/* Badge Grid scrollable container */}
             <div className="flex-1 overflow-y-auto max-h-[340px] pr-1.5 custom-scrollbar relative z-10 space-y-4">
-                <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                     {BADGES.map((badge, idx) => {
                         const isUnlocked = unlockedBadges.includes(badge.id);
                         const rarity = RARITY_STYLES[badge.rarity] || RARITY_STYLES.common;
@@ -52,7 +52,7 @@ const BadgeDisplay = () => {
                                 )}
 
                                 {/* Emoji Icon inside an animated circle */}
-                                <div className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl transition-transform duration-300 group-hover:scale-110 select-none ${
+                                <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-xl sm:text-2xl transition-transform duration-300 group-hover:scale-110 select-none ${
                                     isUnlocked 
                                         ? 'bg-white dark:bg-slate-800 shadow-md border border-white/20' 
                                         : 'bg-slate-200/50 dark:bg-white/5'

@@ -55,11 +55,11 @@ const EnrollmentRequests = () => {
 
     return (
         <InstructorLayout title="Enrollment Requests">
-            <div className="p-6 md:p-8 max-w-6xl mx-auto pb-32 space-y-8">
+            <div className="p-4 sm:p-6 md:p-8 max-w-6xl mx-auto pb-32 space-y-8">
                 
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
                     <div>
-                        <h1 className="font-display text-4xl font-extrabold text-gray-900 mb-2 tracking-tight">Enrollments</h1>
+                        <h1 className="font-display text-2xl sm:text-3xl md:text-4xl font-extrabold text-gray-900 mb-2 tracking-tight">Enrollments</h1>
                         <p className="text-gray-500">Manage student access requests to your courses.</p>
                     </div>
                     

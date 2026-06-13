@@ -36,15 +36,15 @@ const NodeDrawer = () => {
                         animate={{ x: 0 }}
                         exit={{ x: '100%' }}
                         transition={{ type: 'spring', damping: 26, stiffness: 220 }}
-                        className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-white/5 shadow-2xl z-50 flex flex-col"
+                        className="fixed right-0 top-0 bottom-0 w-full max-w-[calc(100vw-2rem)] sm:max-w-md bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-white/5 shadow-2xl z-50 flex flex-col"
                     >
                         {/* Header */}
-                        <div className="p-6 border-b border-slate-100 dark:border-white/5 flex items-center justify-between bg-slate-50/50 dark:bg-white/1">
+                        <div className="p-4 sm:p-6 border-b border-slate-100 dark:border-white/5 flex items-center justify-between bg-slate-50/50 dark:bg-white/1">
                             <div>
                                 <span className="text-[10px] font-black text-indigo-500 dark:text-indigo-400 uppercase tracking-widest">
                                     {selectedNode.type || 'Lesson'}
                                 </span>
-                                <h2 className="text-2xl font-black text-slate-800 dark:text-white mt-1 leading-tight">
+                                <h2 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-white mt-1 leading-tight">
                                     {selectedNode.title}
                                 </h2>
                             </div>
@@ -57,7 +57,7 @@ const NodeDrawer = () => {
                         </div>
 
                         {/* Content */}
-                        <div className="flex-1 p-6 overflow-y-auto space-y-6 custom-scrollbar">
+                        <div className="flex-1 p-4 sm:p-6 overflow-y-auto space-y-6 custom-scrollbar">
                             
                             {/* XP Reward card with gradient glow */}
                             <div className="relative overflow-hidden bg-gradient-to-br from-indigo-500 to-purple-600 rounded-3xl p-5 shadow-[0_0_20px_rgba(99,102,241,0.25)] text-white group">
@@ -117,7 +117,7 @@ const NodeDrawer = () => {
                         </div>
 
                         {/* Footer / CTA */}
-                        <div className="p-6 pb-8 border-t border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-black/20">
+                        <div className="p-4 sm:p-6 pb-6 sm:pb-8 border-t border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-black/20">
                             <button
                                 onClick={handleStart}
                                 className="w-full py-4 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-400 hover:to-purple-400 text-white rounded-2xl font-black text-lg shadow-[0_0_20px_rgba(99,102,241,0.3)] transition-all flex items-center justify-center gap-2"

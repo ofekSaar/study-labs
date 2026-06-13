@@ -90,8 +90,7 @@ const GameMapComponent = ({ nodes }) => {
 
     return (
         <div
-            className="relative w-full overflow-hidden bg-gray-50 rounded-3xl shadow-sm border border-gray-200"
-            style={{ height: '600px' }} // Visible viewport height
+            className="relative w-full overflow-hidden bg-gray-50 rounded-3xl shadow-sm border border-gray-200 h-[420px] sm:h-[520px] lg:h-[600px]"
         >
             <div
                 ref={containerRef}

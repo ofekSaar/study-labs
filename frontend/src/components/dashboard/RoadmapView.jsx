@@ -40,7 +40,7 @@ const RoadmapView = () => {
     const progressPercentage = totalNodes > 0 ? Math.round((completedNodes / totalNodes) * 100) : 0;
 
     return (
-        <div className="p-5" dir="rtl">
+        <div className="p-3 sm:p-5" dir="rtl">
             {/* Header section (Compact) */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 pb-5 border-b border-slate-200/60 dark:border-white/10 text-right">
                 <div>

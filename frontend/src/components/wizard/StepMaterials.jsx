@@ -114,7 +114,7 @@ const StepMaterials = () => {
                 {syllabus.length === 0 ? (
                     <div
                         {...getSyllabusProps()}
-                        className={`border-4 border-dashed rounded-3xl p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-colors ${isSyllabusDragActive ? 'border-studylabs-blue bg-blue-50' : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'}`}
+                        className={`border-4 border-dashed rounded-3xl p-4 sm:p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-colors ${isSyllabusDragActive ? 'border-studylabs-blue bg-blue-50' : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'}`}
                     >
                         <input {...getSyllabusInputProps()} />
                         <div className="w-12 h-12 bg-blue-100 text-studylabs-blue rounded-full flex items-center justify-center mb-3">
@@ -153,7 +153,7 @@ const StepMaterials = () => {
                 <h4 className="font-bold text-gray-700">Course Materials <span className="text-sm font-normal text-gray-400">(Optional)</span></h4>
                 <div
                     {...getMaterialsProps()}
-                    className={`border-4 border-dashed rounded-3xl p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-colors ${isMaterialsDragActive ? 'border-studylabs-blue bg-blue-50' : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'}`}
+                    className={`border-4 border-dashed rounded-3xl p-4 sm:p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-colors ${isMaterialsDragActive ? 'border-studylabs-blue bg-blue-50' : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'}`}
                 >
                     <input {...getMaterialsInputProps()} />
                     <div className="w-12 h-12 bg-gray-100 text-gray-500 rounded-full flex items-center justify-center mb-3">

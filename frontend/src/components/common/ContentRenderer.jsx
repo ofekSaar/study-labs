@@ -20,14 +20,24 @@ const ContentRenderer = ({ content, className = '', inline = false }) => {
 
     const components = {
         // Apply dir="auto" to common block elements to let the browser handle RTL per-paragraph
-        p: ({ node: _node, ...props }) => <p dir="auto" {...props} />,
-        li: ({ node: _node, ...props }) => <li dir="auto" {...props} />,
-        h1: ({ node: _node, ...props }) => <h1 dir="auto" {...props} />,
-        h2: ({ node: _node, ...props }) => <h2 dir="auto" {...props} />,
-        h3: ({ node: _node, ...props }) => <h3 dir="auto" {...props} />,
-        h4: ({ node: _node, ...props }) => <h4 dir="auto" {...props} />,
-        h5: ({ node: _node, ...props }) => <h5 dir="auto" {...props} />,
-        h6: ({ node: _node, ...props }) => <h6 dir="auto" {...props} />,
+        p: ({ node: _node, ...props }) => <p dir="auto" className="break-words" {...props} />,
+        li: ({ node: _node, ...props }) => <li dir="auto" className="break-words" {...props} />,
+        h1: ({ node: _node, ...props }) => <h1 dir="auto" className="break-words" {...props} />,
+        h2: ({ node: _node, ...props }) => <h2 dir="auto" className="break-words" {...props} />,
+        h3: ({ node: _node, ...props }) => <h3 dir="auto" className="break-words" {...props} />,
+        h4: ({ node: _node, ...props }) => <h4 dir="auto" className="break-words" {...props} />,
+        h5: ({ node: _node, ...props }) => <h5 dir="auto" className="break-words" {...props} />,
+        h6: ({ node: _node, ...props }) => <h6 dir="auto" className="break-words" {...props} />,
+        pre: ({ node: _node, ...props }) => <pre className="overflow-x-auto max-w-full" {...props} />,
+        code: ({ node: _node, inline, ...props }) => inline
+            ? <code className="break-words" {...props} />
+            : <code className="block overflow-x-auto" {...props} />,
+        img: ({ node: _node, ...props }) => <img className="max-w-full h-auto" {...props} />,
+        table: ({ node: _node, ...props }) => (
+            <div className="overflow-x-auto max-w-full">
+                <table {...props} />
+            </div>
+        ),
     };
 
     if (inline) {
@@ -46,9 +56,9 @@ const ContentRenderer = ({ content, className = '', inline = false }) => {
     }
 
     return (
-        <div 
-            dir="auto" 
-            className={`content-renderer ${hasRTL ? 'rtl-content' : 'ltr-content'} ${className}`}
+        <div
+            dir="auto"
+            className={`content-renderer max-w-full overflow-hidden ${hasRTL ? 'rtl-content' : 'ltr-content'} ${className}`}
         >
             <ReactMarkdown 
                 remarkPlugins={[remarkGfm, remarkMath]} 

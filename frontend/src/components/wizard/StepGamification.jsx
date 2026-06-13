@@ -30,7 +30,7 @@ const StepGamification = () => {
             </label>
 
             {/* XP Multiplier */}
-            <div className="bg-white p-6 rounded-2xl border border-gray-200">
+            <div className="bg-white p-4 sm:p-6 rounded-2xl border border-gray-200">
                 <div className="flex items-center gap-3 mb-4">
                     <div className="p-2 bg-orange-50 text-orange-600 rounded-lg">
                         <Star size={24} />

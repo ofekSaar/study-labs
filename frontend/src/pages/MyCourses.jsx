@@ -30,13 +30,13 @@ const MyCourses = () => {
                     style={{ background: 'radial-gradient(circle, rgba(124,58,237,0.10) 0%, transparent 70%)', filter: 'blur(40px)' }} />
             </div>
 
-            <div className="relative z-[1] max-w-[1600px] mx-auto px-6 py-8 pb-32 animate-fade-in">
+            <div className="relative z-[1] max-w-[1600px] mx-auto px-4 sm:px-6 py-4 sm:py-6 md:py-8 pb-32 animate-fade-in">
                 
                 {/* Header & Search */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                     <div>
-                        <h1 className="text-4xl font-display font-black text-slate-900 dark:text-white drop-shadow-sm dark:drop-shadow-md tracking-tight">My Courses</h1>
-                        <p className="text-slate-500 dark:text-white/60 text-lg mt-1 font-medium">Pick up where you left off in your learning journey.</p>
+                        <h1 className="text-2xl sm:text-3xl md:text-4xl font-display font-black text-slate-900 dark:text-white drop-shadow-sm dark:drop-shadow-md tracking-tight">My Courses</h1>
+                        <p className="text-slate-500 dark:text-white/60 text-base sm:text-lg mt-1 font-medium">Pick up where you left off in your learning journey.</p>
                     </div>
                     <div className="flex items-center gap-3 w-full md:w-auto">
                         <div className="relative flex-1 md:w-80">
@@ -86,7 +86,7 @@ const MyCourses = () => {
                                 </div>
                                 
                                 <div className="relative z-10 flex-1 flex flex-col">
-                                    <h3 className="font-display font-bold text-2xl text-slate-900 dark:text-white mb-2 line-clamp-2 drop-shadow-sm dark:drop-shadow-md">
+                                    <h3 className="font-display font-bold text-xl sm:text-2xl text-slate-900 dark:text-white mb-2 line-clamp-2 drop-shadow-sm dark:drop-shadow-md">
                                         {course.title || 'Untitled Course'}
                                     </h3>
                                     <p className="text-slate-500 dark:text-white/60 text-sm mb-6 line-clamp-2 flex-1">
