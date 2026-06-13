@@ -5,7 +5,7 @@ import Enrollment from '../models/Enrollment.js';
 import Progress from '../models/Progress.js';
 import QuizAttempt from '../models/QuizAttempt.js';
 import storage from '../services/storage/index.js';
-import { generateRoadmap } from '../services/aiService.js';
+import { generateRoadmap, evaluateCourse } from '../services/aiService.js';
 
 const safeJSONParse = (str, fieldName) => {
   if (!str) return undefined;
@@ -305,6 +305,42 @@ async function generateRoadmapInBackground(course, syllabusData, materialsData, 
       await CourseNode.insertMany(nodes);
     } else {
       throw new Error('AI failed to generate any lessons. The syllabus might be empty or too complex.');
+    }
+
+    // Run evaluation via AI Judge
+    course.aiEvaluation = { status: 'evaluating' };
+    await course.save();
+
+    console.log(`[Background] Starting AI Judge evaluation for course ${course._id}...`);
+    try {
+      const evaluationResult = await evaluateCourse({
+        courseId: course._id.toString(),
+        syllabus: syllabusData.storagePath,
+        courseStructure: roadmapResult.courseStructure,
+      });
+
+      course.aiEvaluation = {
+        status: 'completed',
+        score: evaluationResult.score,
+        feedback: evaluationResult.feedback,
+        criteriaBreakdown: evaluationResult.criteria_breakdown,
+        evaluatedAt: new Date(),
+      };
+      console.log(`[Background] AI Judge evaluation complete. Score: ${evaluationResult.score}`);
+
+      if (evaluationResult.score < 50) {
+        throw new Error(`Course generation failed quality check. AI Judge Score: ${evaluationResult.score}. Feedback: ${evaluationResult.feedback}`);
+      }
+    } catch (evalError) {
+      console.error(`[Background] Evaluation failed:`, evalError.message);
+      course.aiEvaluation.status = 'failed';
+      // If the error was our explicit < 50 error, throw it so the generation fails.
+      if (evalError.message.includes('failed quality check')) {
+        throw evalError;
+      }
+      // Otherwise, the evaluation itself failed, but we still generated the nodes. 
+      // Let's decide to publish it anyway if it's just an API failure, but warn.
+      console.warn(`[Background] Proceeding to publish despite evaluation API failure.`);
     }
 
     // Publish the course & mark as ready

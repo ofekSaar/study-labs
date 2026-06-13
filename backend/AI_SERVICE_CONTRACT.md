@@ -130,6 +130,58 @@ POST /api/evaluate-answer
 
 ---
 
+## Endpoint 3: Evaluate Generated Course
+
+Evaluates the overall quality of a generated course structure against its original syllabus.
+
+### Request
+
+```
+POST /api/evaluate-course/
+```
+
+**Body:**
+
+```json
+{
+  "courseId": "663a1b...",
+  "syllabusPath": "/app/uploads/syllabus.pdf",
+  "courseStructure": {
+    "Introduction to Data Structures": {
+      "Arrays & Strings": { ... }
+    }
+  }
+}
+```
+
+| Field             | Type   | Required | Description                       |
+| ----------------- | ------ | -------- | --------------------------------- |
+| `courseId`        | string | Yes      | MongoDB ObjectId of the course    |
+| `syllabusPath`    | string | Yes      | Absolute path to the syllabus file|
+| `courseStructure` | object | Yes      | The generated course structure    |
+
+### Expected Response
+
+```json
+{
+  "score": 85,
+  "feedback": "The course successfully covers the basics of the syllabus, but lacks detail in the advanced modules.",
+  "criteria_breakdown": {
+    "syllabusCoverage": "Good coverage of chapters 1-4, missed chapter 5.",
+    "contentQuality": "The lessons are well-structured.",
+    "questionQuality": "Quizzes are relevant and test the material adequately."
+  }
+}
+```
+
+| Field                | Type           | Description                                      |
+| -------------------- | -------------- | ------------------------------------------------ |
+| `score`              | number (0-100) | Quality score out of 100                         |
+| `feedback`           | string         | Detailed feedback for the course quality         |
+| `criteria_breakdown` | object         | Breakdown of observations by criteria            |
+
+---
+
 ## Error Responses
 
 All errors should follow this format:

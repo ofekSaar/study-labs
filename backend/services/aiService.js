@@ -160,7 +160,7 @@ export const generateRoadmap = async ({
   }
 
   console.log(`[AI Service] Transformed ${nodes.length} nodes (${nodes.filter(n => n.quizData).length} with quizzes, ${nodes.filter(n => n.lessonContent).length} with summaries)`);
-  return { nodes };
+  return { nodes, courseStructure: data.course_structure };
 };
 
 /**
@@ -188,5 +188,71 @@ export const evaluateAnswer = async ({ question, answer, aiPromptContext }) => {
   }
 
   return response.json();
+};
+
+/**
+ * Evaluates the generated course against its syllabus using AI.
+ * 
+ * @param {object} params
+ * @param {string} params.courseId - Course ID
+ * @param {string} params.syllabus - Storage path for the syllabus
+ * @param {object} params.courseStructure - The raw course structure returned by the AI
+ * @returns {Promise<object>} - Evaluation result { score, feedback, criteria_breakdown }
+ */
+export const evaluateCourse = async ({ courseId, syllabus, courseStructure }) => {
+  const uploadDir = process.env.UPLOAD_DIR || './uploads';
+  const syllabusPath = path.resolve(uploadDir, syllabus);
+
+  console.log(`[AI Service] Evaluating course quality for Course ID: ${courseId}`);
+
+  // Using native http module to avoid timeout issues for potentially long evaluation
+  const http = await import('http');
+  const url = new URL(`${AI_SERVICE_URL}/api/evaluate-course/`);
+  
+  const postData = JSON.stringify({ 
+    courseId, 
+    syllabusPath, 
+    courseStructure
+  });
+
+  const options = {
+    hostname: url.hostname,
+    port: url.port,
+    path: url.pathname,
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${AI_SERVICE_API_KEY}`,
+      'Content-Length': Buffer.byteLength(postData)
+    },
+    timeout: 600000 // 10 minutes upper limit for evaluation
+  };
+
+  return new Promise((resolve, reject) => {
+    const req = http.request(options, (res) => {
+      let body = '';
+      res.on('data', (chunk) => body += chunk);
+      res.on('end', () => {
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          try {
+            resolve(JSON.parse(body));
+          } catch (e) {
+            reject(new Error(`Failed to parse AI evaluation response: ${e.message}`));
+          }
+        } else {
+          reject(new Error(`AI Service Evaluation Error (${res.statusCode}): ${body}`));
+        }
+      });
+    });
+
+    req.on('error', (e) => reject(new Error(`AI Evaluation Request Failed: ${e.message}`)));
+    req.on('timeout', () => {
+      req.destroy();
+      reject(new Error('AI Evaluation Request Timed Out'));
+    });
+
+    req.write(postData);
+    req.end();
+  });
 };
 
