@@ -45,6 +45,9 @@ async def retry_with_backoff(coro_fn, max_retries=3, base_delay=2.0):
 # Initialize LLMs list in priority order
 LLMS = []
 
+if os.environ.get("OPENAI_API_KEY"):
+    LLMS.append(("OpenAI", OpenAI(model="gpt-4o-mini", request_timeout=180.0, max_retries=3)))
+
 if os.environ.get("COLLEGE_API_BASE"):
     try:
         import httpx
@@ -60,9 +63,6 @@ if os.environ.get("COLLEGE_API_BASE"):
         logger.info("CollegeLLM registered successfully.")
     except Exception as e:
         logger.warning(f"Failed to initialize CollegeLLM: {e}")
-
-if os.environ.get("OPENAI_API_KEY"):
-    LLMS.append(("OpenAI", OpenAI(model="gpt-4o-mini", request_timeout=180.0, max_retries=3)))
 
 if os.environ.get("OPEN_ROUTE_API_KEY"):
     LLMS.append(("OpenRouter", OpenAI(
