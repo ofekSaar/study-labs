@@ -14,9 +14,20 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          # Check if main has commits ahead of production
+          AHEAD=$(git rev-list origin/production..origin/main --count 2>/dev/null || echo "0")
+          if [ "$AHEAD" = "0" ]; then
+            echo "main is not ahead of production — nothing to merge."
+            exit 0
+          fi
+          # Check if a PR already exists
+          EXISTING=$(gh pr list --base production --head main --state open --json number --jq '.[0].number' 2>/dev/null || echo "")
+          if [ -n "$EXISTING" ]; then
+            echo "PR #$EXISTING already open — skipping creation."
+            exit 0
+          fi
           gh pr create \
             --base production \
             --head main \
             --title "chore: sync main → production" \
-            --body "Automated PR created after push to main. Review and merge to trigger deployment." \
-            || echo "PR already exists or nothing to merge."
+            --body "Automated PR created after push to main. Review and merge to trigger deployment."
