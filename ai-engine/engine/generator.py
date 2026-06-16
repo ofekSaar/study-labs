@@ -61,18 +61,18 @@ if os.environ.get("COLLEGE_API_BASE"):
     except Exception as e:
         logger.warning(f"Failed to initialize CollegeLLM: {e}")
 
+if os.environ.get("OPENAI_API_KEY"):
+    LLMS.append(("OpenAI", OpenAI(model="gpt-4o-mini", request_timeout=180.0, max_retries=3)))
+
 if os.environ.get("OPEN_ROUTE_API_KEY"):
     LLMS.append(("OpenRouter", OpenAI(
-        model="gpt-4o", 
+        model="gpt-4o",
         api_key=os.environ.get("OPEN_ROUTE_API_KEY"),
         api_base="https://openrouter.ai/api/v1"
     )))
 
 if os.environ.get("GEMINI_API_KEY"):
     LLMS.append(("Gemini", Gemini(model="models/gemini-flash-latest", api_key=os.environ.get("GEMINI_API_KEY"))))
-
-if os.environ.get("OPENAI_API_KEY"):
-    LLMS.append(("OpenAI", OpenAI(model="gpt-4o-mini", request_timeout=180.0, max_retries=3)))
     
 if not LLMS:
     logger.warning("No API Keys found. AI features will fail unless Mock Mode is active.")
