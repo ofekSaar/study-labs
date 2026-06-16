@@ -24,6 +24,9 @@ jobs:
           echo "COLLEGE_API_BASE=https://10.10.248.21/v1" >> .env
           echo "COLLEGE_MODEL=gpt-oss-120b" >> .env
           echo "COLLEGE_API_KEY=college" >> .env
+          echo "VITE_API_URL=https://studylabs.cs.colman.ac.il" >> .env
+          echo "GOOGLE_CALLBACK_URL=https://studylabs.cs.colman.ac.il/api/auth/google/callback" >> .env
+          echo "CLIENT_URL=https://studylabs.cs.colman.ac.il" >> .env
 
       - name: Free disk space
         run: |

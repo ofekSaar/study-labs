@@ -39,8 +39,8 @@ services:
       JWT_EXPIRES_IN: 7d
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
-      GOOGLE_CALLBACK_URL: http://localhost:5001/api/auth/google/callback
-      CLIENT_URL: http://localhost:5173
+      GOOGLE_CALLBACK_URL: ${GOOGLE_CALLBACK_URL:-http://localhost:5001/api/auth/google/callback}
+      CLIENT_URL: ${CLIENT_URL:-http://localhost:5173}
       AI_SERVICE_URL: ${AI_SERVICE_URL:-http://ai-engine:8000}
       AI_SERVICE_API_KEY: ${AI_SERVICE_API_KEY:-}
       STORAGE_TYPE: local
@@ -65,7 +65,7 @@ services:
       - ./frontend:/app
       - /app/node_modules
     environment:
-      VITE_API_URL: http://localhost:5001
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:5001}
     depends_on:
       - backend
 
