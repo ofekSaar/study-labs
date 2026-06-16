@@ -106,7 +106,7 @@ const LessonQuiz = () => {
     if (isLoading) {
         return (
             <StudentLayout title="Loading Lesson...">
-                <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center gap-4 p-20">
+                <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center gap-4 p-4 sm:p-8 md:p-12">
                     <div className="animate-spin w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full"></div>
                     <p className="text-slate-500 dark:text-white/40 font-medium">Preparing your lesson materials...</p>
                 </div>
@@ -125,7 +125,7 @@ const LessonQuiz = () => {
                         initial={{ scale: 0.7, opacity: 0, y: 30 }}
                         animate={{ scale: 1, opacity: 1, y: 0 }}
                         transition={{ type: 'spring', damping: 14 }}
-                        className="bg-gradient-to-b from-slate-900 to-slate-950 border border-indigo-500/30 rounded-3xl p-8 max-w-sm w-full mx-4 text-center shadow-[0_0_60px_rgba(99,102,241,0.25)] relative overflow-hidden"
+                        className="bg-gradient-to-b from-slate-900 to-slate-950 border border-indigo-500/30 rounded-3xl p-5 sm:p-8 max-w-sm w-full mx-4 text-center shadow-[0_0_60px_rgba(99,102,241,0.25)] relative overflow-hidden"
                     >
                         {/* Glow */}
                         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-indigo-500/15 blur-3xl rounded-full pointer-events-none" />
@@ -147,7 +147,7 @@ const LessonQuiz = () => {
                             }
                         </motion.div>
 
-                        <h2 className="text-3xl font-black text-white mb-1 relative z-10">
+                        <h2 className="text-2xl sm:text-3xl font-black text-white mb-1 relative z-10">
                             {showReward.isPerfect ? '🎉 Perfect Score!' : 'Awesome Job!'}
                         </h2>
                         {showReward.isPerfect && (
@@ -210,15 +210,15 @@ const LessonQuiz = () => {
                         </div>
                     </div>
 
-                    <div className="flex-1 max-w-3xl mx-auto w-full p-6 md:p-12">
+                    <div className="flex-1 max-w-5xl mx-auto w-full p-4 sm:p-6 md:p-12">
                         <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-100 dark:border-white/10 overflow-hidden">
-                            <div className="bg-indigo-500/5 dark:bg-indigo-500/10 px-8 py-6 border-b border-slate-100 dark:border-white/10 flex items-center gap-3">
+                            <div className="bg-indigo-500/5 dark:bg-indigo-500/10 px-4 sm:px-8 py-4 sm:py-6 border-b border-slate-100 dark:border-white/10 flex items-center gap-3">
                                 <div className="w-10 h-10 bg-indigo-500 rounded-xl flex items-center justify-center text-white">
                                     <BookOpen size={20} />
                                 </div>
                                 <h2 className="text-xl font-display font-bold text-slate-900 dark:text-white">Study Guide</h2>
                             </div>
-                            <div className="p-8 md:p-10 prose prose-slate dark:prose-invert max-w-none">
+                            <div className="p-4 sm:p-8 md:p-10 prose prose-slate dark:prose-invert max-w-none">
                                 {nodeData?.content ? (
                                     <ContentRenderer content={nodeData.content} className="text-slate-700 dark:text-slate-300 leading-relaxed" />
                                 ) : (
@@ -226,7 +226,7 @@ const LessonQuiz = () => {
                                 )}
                             </div>
 
-                            <div className="p-8 bg-slate-50 dark:bg-black/20 border-t border-slate-100 dark:border-white/10 flex flex-col md:flex-row items-center justify-between gap-6">
+                            <div className="p-4 sm:p-8 bg-slate-50 dark:bg-black/20 border-t border-slate-100 dark:border-white/10 flex flex-col md:flex-row items-center justify-between gap-4 sm:gap-6">
                                 <div className="flex items-center gap-3">
                                     <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center">
                                         <GraduationCap size={24} />
@@ -269,7 +269,7 @@ const LessonQuiz = () => {
                     </div>
                 </div>
 
-                <div className="flex-1 p-6 md:p-12">
+                <div className="flex-1 p-4 sm:p-6 md:p-12">
                     {quizData.length > 0 ? (
                         <QuizEngine questions={quizData} onComplete={handleComplete} />
                     ) : (

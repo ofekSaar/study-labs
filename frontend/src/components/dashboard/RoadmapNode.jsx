@@ -40,7 +40,7 @@ const RoadmapNode = ({ node, onClick, alignment, isSelected }) => {
                 <p className={`text-[9px] font-black text-indigo-500 dark:text-indigo-400 uppercase tracking-widest mt-1.5 flex items-center gap-1 ${
                     alignment === 'left' ? 'justify-end' : 'justify-start'
                 }`}>
-                    {node.type === 'quiz' ? 'בוחן 📝' : node.type === 'exam' ? 'מבחן 🏆' : 'שיעור 📖'}
+                    {node.type === 'quiz' ? 'Quiz 📝' : node.type === 'exam' ? 'Exam 🏆' : 'Lesson 📖'}
                 </p>
             </div>
 
@@ -50,7 +50,7 @@ const RoadmapNode = ({ node, onClick, alignment, isSelected }) => {
                 whileTap={!isLocked ? { scale: 0.95 } : {}}
                 onClick={!isLocked ? onClick : undefined}
                 className={`
-                    relative w-18 h-18 rounded-full border-b-4 flex items-center justify-center transition-all duration-300 z-20
+                    relative w-16 h-16 sm:w-20 sm:h-20 rounded-full border-b-4 flex items-center justify-center transition-all duration-300 z-20
                     ${getNodeStyles()}
                 `}
             >
@@ -77,7 +77,7 @@ const RoadmapNode = ({ node, onClick, alignment, isSelected }) => {
             </motion.button>
 
             {/* Mobile Title (Below Node) */}
-            <div className="md:hidden absolute top-20 text-center w-32">
+            <div className="md:hidden absolute top-20 text-center max-w-[8rem] w-[40vw]">
                 <h3 className={`font-black text-xs uppercase tracking-wider leading-tight ${
                     isLocked ? 'text-slate-400 dark:text-white/20' : 'text-slate-800 dark:text-white'
                 }`}>

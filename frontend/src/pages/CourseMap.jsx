@@ -3,16 +3,21 @@ import { useParams, useNavigate } from 'react-router-dom';
 import StudentLayout from '../components/layout/StudentLayout';
 import InstructorLayout from '../components/layout/InstructorLayout';
 import GameMapComponent from '../components/map/GameMap';
-import { ChevronLeft, Loader2 } from 'lucide-react';
+import { ChevronLeft, Loader2, RotateCcw } from 'lucide-react';
 import useAuthStore from '../store/authStore';
 import useCourseStore from '../store/courseStore';
+
+/** Total generation attempts allowed (1 initial + 1 retry) — mirrors the backend cap. */
+const MAX_GENERATION_ATTEMPTS = 2;
 
 const CourseMap = () => {
     const { id: courseId } = useParams();
     const navigate = useNavigate();
     const { role } = useAuthStore();
-    const { fetchCourseNodes, courses, isLoading: storeLoading } = useCourseStore();
+    const { fetchCourseNodes, regenerateCourse, courses, isLoading: storeLoading } = useCourseStore();
     const [localLoading, setLocalLoading] = useState(true);
+    const [retrying, setRetrying] = useState(false);
+    const [retryError, setRetryError] = useState(null);
 
     const Layout = role === 'instructor' ? InstructorLayout : StudentLayout;
 
@@ -38,6 +43,22 @@ const CourseMap = () => {
     }, [courseId, localLoading, fetchCourseNodes]);
 
     const course = courses.find(c => c.id === courseId || c._id === courseId);
+
+    const attemptsUsed = course?.generationAttempts || 1;
+    const canRetry = attemptsUsed < MAX_GENERATION_ATTEMPTS;
+
+    const handleRetry = async () => {
+        setRetrying(true);
+        setRetryError(null);
+        try {
+            await regenerateCourse(courseId);
+            // Store flips status to 'generating'; the poller below picks it up automatically.
+        } catch (error) {
+            setRetryError(error.message || 'Failed to restart generation.');
+        } finally {
+            setRetrying(false);
+        }
+    };
 
     // Auto-poll while roadmap is still generating
     useEffect(() => {
@@ -97,8 +118,8 @@ const CourseMap = () => {
     if (!course) {
         return (
             <Layout title="Course Not Found">
-                <div className="text-center p-20">
-                    <h2 className="text-2xl font-bold text-gray-800 mb-4">Course Not Found</h2>
+                <div className="text-center p-4 sm:p-8 md:p-12">
+                    <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4">Course Not Found</h2>
                     <button onClick={() => navigate(-1)} className="text-studylabs-blue font-bold flex items-center gap-2 mx-auto">
                         <ChevronLeft size={20} /> Go Back
                     </button>
@@ -112,7 +133,7 @@ const CourseMap = () => {
             <div className="min-h-screen md:min-h-0 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white transition-colors duration-300">
 
                 {/* Mobile-only Course Header */}
-                <div className="md:hidden px-6 py-6 flex items-center justify-between bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-white/5">
+                <div className="md:hidden px-4 py-4 flex items-center justify-between bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-white/5">
                     <button
                         onClick={() => navigate(-1)}
                         className="w-10 h-10 bg-slate-100 dark:bg-white/5 rounded-full flex items-center justify-center hover:bg-slate-200 dark:hover:bg-white/10 transition text-slate-700 dark:text-white"
@@ -144,10 +165,37 @@ const CourseMap = () => {
                         {nodes.length > 0 ? (
                             <GameMapComponent nodes={nodes} />
                         ) : course?.generationStatus === 'failed' ? (
-                            <div className="text-center py-20 bg-red-50 dark:bg-red-950/10 rounded-2xl border-2 border-dashed border-red-200 dark:border-red-900/20">
+                            <div className="text-center py-12 sm:py-16 px-4 bg-red-50 dark:bg-red-950/10 rounded-2xl border-2 border-dashed border-red-200 dark:border-red-900/20">
                                 <p className="text-red-500 dark:text-red-400 font-bold text-lg">Generation Failed</p>
                                 <p className="text-sm text-red-400 dark:text-red-500/60 mt-2">{course.generationError || 'An error occurred during AI generation.'}</p>
-                                <p className="text-xs text-red-300 dark:text-red-500/40 mt-4">Try creating the course again or contact support.</p>
+
+                                {role === 'instructor' ? (
+                                    canRetry ? (
+                                        <>
+                                            <button
+                                                onClick={handleRetry}
+                                                disabled={retrying}
+                                                className="mt-6 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-studylabs-blue text-white text-sm font-bold shadow-sm hover:bg-studylabs-dark transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                                            >
+                                                <RotateCcw size={16} className={retrying ? 'animate-spin' : ''} />
+                                                {retrying ? 'Restarting…' : 'Retry Generation'}
+                                            </button>
+                                            <p className="text-xs text-red-300 dark:text-red-500/40 mt-3">
+                                                You have 1 retry available.
+                                            </p>
+                                        </>
+                                    ) : (
+                                        <p className="text-xs font-medium text-red-400 dark:text-red-500/60 mt-6">
+                                            Maximum retries reached — this course can no longer be regenerated.
+                                        </p>
+                                    )
+                                ) : (
+                                    <p className="text-xs text-red-300 dark:text-red-500/40 mt-4">Please contact your instructor.</p>
+                                )}
+
+                                {retryError && (
+                                    <p className="text-xs text-red-500 dark:text-red-400 mt-3 max-w-sm mx-auto">{retryError}</p>
+                                )}
                             </div>
                         ) : (
                             <div className="text-center py-20 bg-slate-50 dark:bg-slate-900/40 rounded-2xl border-2 border-dashed border-slate-200 dark:border-white/5">

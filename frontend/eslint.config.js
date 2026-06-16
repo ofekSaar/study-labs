@@ -17,7 +17,7 @@ export default defineConfig([
       ecmaVersion: 2020,
       globals: {
         ...globals.browser,
-        ...globals.jest,
+        process: 'readonly',
       },
       parserOptions: {
         ecmaVersion: 'latest',
@@ -26,10 +26,19 @@ export default defineConfig([
       },
     },
     rules: {
-      'no-unused-vars': ['error', { 
+      'no-unused-vars': ['error', {
         varsIgnorePattern: '^[A-Z_]|_.*|motion',
         argsIgnorePattern: '^_'
       }],
+    },
+  },
+  {
+    files: ['**/*.test.{js,jsx}', 'src/tests/**/*.{js,jsx}'],
+    languageOptions: {
+      globals: {
+        ...globals.jest,
+        ...globals.node,
+      },
     },
   },
 ])

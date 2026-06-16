@@ -13,7 +13,7 @@ const StepAIConfig = () => {
             <p className="text-gray-500 mb-6">Fine-tune how our AI generates the learning map.</p>
 
             {/* Node Count Slider */}
-            <div className="bg-white p-6 rounded-2xl border border-gray-200">
+            <div className="bg-white p-4 sm:p-6 rounded-2xl border border-gray-200">
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                         <div className="p-2 bg-purple-50 text-purple-600 rounded-lg">
@@ -41,7 +41,7 @@ const StepAIConfig = () => {
             </div>
 
             {/* Quiz Frequency Slider */}
-            <div className="bg-white p-6 rounded-2xl border border-gray-200">
+            <div className="bg-white p-4 sm:p-6 rounded-2xl border border-gray-200">
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                         <div className="p-2 bg-yellow-50 text-yellow-600 rounded-lg">

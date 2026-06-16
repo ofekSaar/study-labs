@@ -7,28 +7,28 @@ import { Search, BookOpen, Clock, Users, ArrowRight, Loader2, AlertCircle, Trash
 // Department styling presets for premium color coding
 const getDeptStyle = (dept) => {
     const d = dept?.toLowerCase() || 'other';
-    if (d === 'computer science' || d === 'cs' || d === 'software' || d === 'מדעי המחשב') {
+    if (d === 'computer science' || d === 'cs' || d === 'software') {
         return {
             bg: 'bg-purple-500/10 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 border-purple-500/20 dark:border-purple-500/30',
             glow: 'rgba(168,85,247,0.15)',
             iconBg: 'bg-purple-500/20 dark:bg-purple-500/30 text-purple-600 dark:text-purple-400 border-purple-500/30'
         };
     }
-    if (d === 'mathematics' || d === 'math' || d === 'מתמטיקה') {
+    if (d === 'mathematics' || d === 'math') {
         return {
             bg: 'bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 border-blue-500/20 dark:border-blue-500/30',
             glow: 'rgba(59,130,246,0.15)',
             iconBg: 'bg-blue-500/20 dark:bg-blue-500/30 text-blue-600 dark:text-blue-400 border-blue-500/30'
         };
     }
-    if (d === 'science' || d === 'biology' || d === 'chemistry' || d === 'physics' || d === 'מדעים') {
+    if (d === 'science' || d === 'biology' || d === 'chemistry' || d === 'physics') {
         return {
             bg: 'bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 dark:border-emerald-500/30',
             glow: 'rgba(16,185,129,0.15)',
             iconBg: 'bg-emerald-500/20 dark:bg-emerald-500/30 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
         };
     }
-    if (d === 'business' || d === 'economics' || d === 'marketing' || d === 'מנהל עסקים') {
+    if (d === 'business' || d === 'economics' || d === 'marketing') {
         return {
             bg: 'bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 border-amber-500/20 dark:border-amber-500/30',
             glow: 'rgba(245,158,11,0.15)',
@@ -84,16 +84,16 @@ const ManagedCourses = () => {
                     style={{ background: 'radial-gradient(circle, rgba(79,110,247,0.10) 0%, transparent 70%)', filter: 'blur(40px)' }} />
             </div>
 
-            <div className="relative z-[1] max-w-6xl mx-auto px-6 py-8 pb-32 animate-fade-in">
+            <div className="relative z-[1] max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-8 pb-32 animate-fade-in">
                 
                 {/* Header & Search */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 sm:mb-12">
                     <div>
-                        <h1 className="text-4xl font-display font-black text-slate-800 dark:text-white drop-shadow-sm dark:drop-shadow-md tracking-tight">Managed Courses</h1>
+                        <h1 className="text-2xl sm:text-3xl md:text-4xl font-display font-black text-slate-800 dark:text-white drop-shadow-sm dark:drop-shadow-md tracking-tight">Managed Courses</h1>
                         <p className="text-slate-500 dark:text-white/60 text-lg mt-1 font-medium">View, search, and manage all your created courses.</p>
                     </div>
-                    <div className="flex items-center gap-4 w-full md:w-auto">
-                        <div className="relative flex-1 md:w-80">
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
+                        <div className="relative flex-1 sm:w-80">
                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-white/40" size={18} />
                             <input 
                                 type="text"
@@ -118,7 +118,7 @@ const ManagedCourses = () => {
                         <div className="animate-spin w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full"></div>
                     </div>
                 ) : filteredCourses.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                         {filteredCourses.map(course => {
                             const deptStyle = getDeptStyle(course.department);
 

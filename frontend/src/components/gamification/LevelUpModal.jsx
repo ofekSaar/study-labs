@@ -37,10 +37,10 @@ const LevelUpModal = () => {
                         exit={{ scale: 0.8, opacity: 0, y: 20 }}
                         transition={{ type: 'spring', damping: 14, stiffness: 200 }}
                         onClick={e => e.stopPropagation()}
-                        className="relative w-full max-w-sm mx-4 text-center overflow-hidden"
+                        className="relative w-full max-w-sm mx-4 text-center overflow-hidden max-h-[90vh] overflow-y-auto"
                     >
                         {/* Card background */}
-                        <div className="relative bg-gradient-to-b from-slate-900 to-indigo-950 border border-indigo-500/30 rounded-3xl p-8 shadow-[0_0_80px_rgba(99,102,241,0.3)]">
+                        <div className="relative bg-gradient-to-b from-slate-900 to-indigo-950 border border-indigo-500/30 rounded-3xl p-5 sm:p-8 shadow-[0_0_80px_rgba(99,102,241,0.3)]">
                             {/* Animated rings */}
                             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                                 <motion.div
@@ -60,15 +60,15 @@ const LevelUpModal = () => {
                                 initial={{ scale: 0, rotate: -180 }}
                                 animate={{ scale: 1, rotate: 0 }}
                                 transition={{ delay: 0.2, type: 'spring', stiffness: 300, damping: 15 }}
-                                className="relative mx-auto mb-6 w-28 h-28"
+                                className="relative mx-auto mb-4 sm:mb-6 w-20 h-20 sm:w-28 sm:h-28"
                             >
-                                <div className="w-28 h-28 rounded-full bg-gradient-to-br from-indigo-400 via-purple-500 to-pink-500 flex items-center justify-center shadow-[0_0_40px_rgba(99,102,241,0.6)]">
+                                <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-full bg-gradient-to-br from-indigo-400 via-purple-500 to-pink-500 flex items-center justify-center shadow-[0_0_40px_rgba(99,102,241,0.6)]">
                                     <motion.div
                                         animate={{ rotate: 360 }}
                                         transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
                                         className="absolute inset-0 rounded-full border-4 border-dashed border-white/20"
                                     />
-                                    <span className="text-5xl font-black text-white z-10 relative">{newLevel}</span>
+                                    <span className="text-4xl sm:text-5xl font-black text-white z-10 relative">{newLevel}</span>
                                 </div>
                                 <motion.div
                                     initial={{ scale: 0 }}
@@ -87,7 +87,7 @@ const LevelUpModal = () => {
                                 transition={{ delay: 0.35 }}
                             >
                                 <p className="text-indigo-300 text-sm font-bold uppercase tracking-widest mb-1">Level Up!</p>
-                                <h2 className="text-4xl font-black text-white mb-1">Level {newLevel}</h2>
+                                <h2 className="text-3xl sm:text-4xl font-black text-white mb-1">Level {newLevel}</h2>
                                 <p className="text-purple-300 text-lg font-bold mb-6">{title}</p>
                             </motion.div>
 

@@ -109,12 +109,21 @@ const useCourseStore = create((set) => ({
             set((state) => {
                 const exists = state.courses.some(c => c.id === courseId || c._id === courseId);
                 
+                // Generation metadata travels with the course payload — keep it in sync so the
+                // failed/generating states (and the retry button) render on a direct page load.
+                const genMeta = {
+                    generationStatus: courseMeta.generationStatus,
+                    generationError: courseMeta.generationError,
+                    generationProgress: courseMeta.generationProgress,
+                    generationAttempts: courseMeta.generationAttempts,
+                };
+
                 if (exists) {
                     // Update existing course with fetched nodes
                     return {
                         courses: state.courses.map((c) =>
                             (c.id === courseId || c._id === courseId)
-                                ? { ...c, nodes }
+                                ? { ...c, ...genMeta, nodes }
                                 : c
                         ),
                     };
@@ -130,6 +139,7 @@ const useCourseStore = create((set) => ({
                                 level: courseMeta.level || 'Beginner',
                                 color: courseMeta.color || 'bg-studylabs-blue',
                                 progress: 0,
+                                ...genMeta,
                                 nodes,
                             },
                         ],
@@ -186,6 +196,32 @@ const useCourseStore = create((set) => ({
             }));
         } catch (error) {
             console.error('Failed to delete course:', error);
+            throw error;
+        }
+    },
+
+    // ── Retry a failed/stuck course generation ─────
+    regenerateCourse: async (courseId) => {
+        try {
+            const { data } = await api.post(`/api/courses/${courseId}/regenerate`);
+            // Flip the course back to 'generating' so CourseMap's poller resumes.
+            set((state) => ({
+                courses: state.courses.map((c) =>
+                    (c.id === courseId || c._id === courseId)
+                        ? {
+                            ...c,
+                            generationStatus: 'generating',
+                            generationError: null,
+                            generationProgress: 'Restarting AI generation...',
+                            generationAttempts: data?.generationAttempts ?? (c.generationAttempts || 1) + 1,
+                            nodes: [],
+                        }
+                        : c
+                ),
+            }));
+            return data;
+        } catch (error) {
+            console.error('Failed to regenerate course:', error);
             throw error;
         }
     },

@@ -27,7 +27,7 @@ const Leaderboard = ({ courseId }) => {
             setIsLoading(true);
             try {
                 const endpoint = courseId
-                    ? `/api/courses/${courseId}/leaderboard?period=${period}`
+                    ? `/api/progress/course/${courseId}/leaderboard?period=${period}`
                     : `/api/progress/leaderboard?period=${period}`;
                 const { data } = await api.get(endpoint);
                 
@@ -40,12 +40,12 @@ const Leaderboard = ({ courseId }) => {
             } catch {
                 // Mock leaderboard when API not yet implemented
                 setEntries([
-                    { rank: 1, name: 'אלכס ק.', xp: 1850, avatar: '🥷', isYou: false },
-                    { rank: 2, name: 'שרה מ.', xp: 1620, avatar: '🦄', isYou: false },
-                    { rank: 3, name: 'דוד ל.', xp: 1410, avatar: '🧠', isYou: false },
-                    { rank: 4, name: 'אתה', xp: currentUser?.totalXP || 0, avatar: currentUserEmoji, isYou: true },
-                    { rank: 5, name: 'אמה ר.', xp: 980, avatar: '🦊', isYou: false },
-                    { rank: 6, name: 'תום ב.', xp: 760, avatar: '🦁', isYou: false },
+                    { rank: 1, name: 'Alex K.', xp: 1850, avatar: '🥷', isYou: false },
+                    { rank: 2, name: 'Sarah M.', xp: 1620, avatar: '🦄', isYou: false },
+                    { rank: 3, name: 'David L.', xp: 1410, avatar: '🧠', isYou: false },
+                    { rank: 4, name: 'You', xp: currentUser?.totalXP || 0, avatar: currentUserEmoji, isYou: true },
+                    { rank: 5, name: 'Emma R.', xp: 980, avatar: '🦊', isYou: false },
+                    { rank: 6, name: 'Tom B.', xp: 760, avatar: '🦁', isYou: false },
                 ]);
             } finally {
                 setIsLoading(false);
@@ -55,11 +55,11 @@ const Leaderboard = ({ courseId }) => {
     }, [courseId, period, currentUserEmoji, currentUser?.totalXP]);
 
     return (
-        <div className="glass-card rounded-3xl p-5 relative overflow-hidden group h-full flex flex-col" dir="rtl">
+        <div className="glass-card rounded-3xl p-3 sm:p-5 relative overflow-hidden group h-full flex flex-col" dir="rtl">
             <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-purple-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
 
             {/* Header */}
-            <div className="relative z-10 flex items-center justify-between mb-5">
+            <div className="relative z-10 flex items-center justify-between mb-3 sm:mb-5">
                 <div className="flex items-center gap-2">
                     <div className="w-8 h-8 rounded-xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20">
                         <Trophy size={16} className="text-amber-500 fill-amber-500/25" />
@@ -134,7 +134,7 @@ const Leaderboard = ({ courseId }) => {
                                         {entry.name}
                                         {entry.isYou && (
                                             <span className="mr-1.5 text-[9px] font-black text-white bg-indigo-500/80 dark:bg-indigo-500/90 px-1.5 py-0.5 rounded-md uppercase tracking-wider shadow-[0_2px_4px_rgba(99,102,241,0.2)]">
-                                                אתה
+                                                You
                                             </span>
                                         )}
                                     </span>

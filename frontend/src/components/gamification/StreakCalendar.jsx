@@ -4,7 +4,7 @@ import { Flame } from 'lucide-react';
 import useGamificationStore from '../../store/gamificationStore';
 import useCourseStore from '../../store/courseStore';
 
-const DAYS = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'];
+const DAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
 const StreakCalendar = () => {
     const { activityLog } = useGamificationStore();
@@ -37,7 +37,7 @@ const StreakCalendar = () => {
     ];
 
     return (
-        <div className="glass-card rounded-3xl p-5 relative overflow-hidden group" dir="rtl">
+        <div className="glass-card rounded-3xl p-3 sm:p-5 relative overflow-hidden group" dir="rtl">
             <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 via-red-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
 
             <div className="relative z-10">
@@ -48,23 +48,23 @@ const StreakCalendar = () => {
                     </p>
                     <div className="flex items-center gap-1.5 bg-orange-500/10 border border-orange-500/20 px-2.5 py-1 rounded-xl">
                         <Flame size={14} className="text-orange-500 fill-orange-500/40" />
-                        <span className="text-xs font-black text-orange-500">{streak} ימים</span>
+                        <span className="text-xs font-black text-orange-500">{streak} days</span>
                     </div>
                 </div>
 
                 {/* Day headers */}
-                <div className="grid grid-cols-7 gap-1 mb-1">
+                <div className="grid grid-cols-7 gap-0.5 sm:gap-1 mb-0.5 sm:mb-1">
                     {DAYS.map((d, index) => (
-                        <div key={index} className="text-center text-[10px] font-black text-slate-400 dark:text-white/30">
+                        <div key={index} className="text-center text-[9px] sm:text-[10px] font-black text-slate-400 dark:text-white/30">
                             {d}
                         </div>
                     ))}
                 </div>
 
                 {/* Calendar grid */}
-                <div className="space-y-1">
+                <div className="space-y-0.5 sm:space-y-1">
                     {weeks.map((week, wi) => (
-                        <div key={wi} className="grid grid-cols-7 gap-1">
+                        <div key={wi} className="grid grid-cols-7 gap-0.5 sm:gap-1">
                             {week.map((day, di) => {
                                 // In RTL, the next day in calendar (di + 1) is to the left of the current day.
                                 // If current day is active and the next day in the week is also active, draw a bridge.
@@ -81,7 +81,7 @@ const StreakCalendar = () => {
                                             transition={{ delay: (wi * 7 + di) * 0.015 }}
                                             title={day.iso}
                                             className={`
-                                                w-full h-full rounded-lg flex items-center justify-center text-[10px] font-extrabold relative z-10 select-none transition-all duration-255
+                                                w-full h-full rounded-lg flex items-center justify-center text-[9px] sm:text-[10px] font-extrabold relative z-10 select-none transition-all duration-255
                                                 ${day.isToday
                                                     ? 'ring-2 ring-indigo-500 ring-offset-1 ring-offset-transparent'
                                                     : ''
@@ -108,11 +108,11 @@ const StreakCalendar = () => {
                 <div className="flex items-center gap-3 mt-3 justify-end">
                     <div className="flex items-center gap-1.5">
                         <div className="w-3 h-3 rounded bg-slate-200 dark:bg-white/10" />
-                        <span className="text-[10px] text-slate-400 dark:text-white/30 font-bold">ללא פעילות</span>
+                        <span className="text-[10px] text-slate-400 dark:text-white/30 font-bold">Inactive</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                         <div className="w-3 h-3 rounded bg-gradient-to-br from-orange-400 to-red-500" />
-                        <span className="text-[10px] text-slate-400 dark:text-white/30 font-bold">יום פעיל</span>
+                        <span className="text-[10px] text-slate-400 dark:text-white/30 font-bold">Active day</span>
                     </div>
                 </div>
             </div>

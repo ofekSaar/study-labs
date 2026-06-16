@@ -11,6 +11,7 @@ import {
   getNodeContent,
   updateNodeContent,
   getCourseAnalytics,
+  regenerateCourse,
 } from '../controllers/courseController.js';
 
 const router = Router();
@@ -320,5 +321,46 @@ router.put('/:id/nodes/:nodeId/content', authenticate, authorize('instructor'), 
  *         description: Not course owner
  */
 router.get('/:id/analytics', authenticate, authorize('instructor'), getCourseAnalytics);
+
+/**
+ * @swagger
+ * /api/courses/{courseId}/regenerate:
+ *   post:
+ *     summary: Retry AI generation for a failed or stuck course (Instructor owner only)
+ *     tags: [Courses]
+ *     parameters:
+ *       - in: path
+ *         name: courseId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the course to regenerate
+ *     responses:
+ *       200:
+ *         description: Regeneration started
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     courseId:
+ *                       type: string
+ *                     generationAttempts:
+ *                       type: number
+ *       403:
+ *         description: Not course owner
+ *       404:
+ *         description: Course not found
+ *       409:
+ *         description: Course is not in a retriable state
+ */
+router.post('/:courseId/regenerate', authenticate, authorize('instructor'), regenerateCourse);
 
 export default router;

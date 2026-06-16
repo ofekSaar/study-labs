@@ -1,4 +1,3 @@
-/* global global, jest, describe, beforeAll, beforeEach, test, expect, afterAll */
 import { act } from 'react';
 import useCourseStoreModule from '../store/courseStore';
 

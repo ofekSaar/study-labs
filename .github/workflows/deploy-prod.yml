@@ -34,6 +34,11 @@ jobs:
         run: |
           docker compose down
           docker compose up --build -d
+          # Remove dangling images and keep only the 5 most recent image versions per service
+          docker image prune -f
+          for image in study-labs-backend study-labs-frontend study-labs-ai-engine; do
+            docker images "$image" --format "{{.ID}}" | tail -n +6 | xargs -r docker rmi -f || true
+          done
           sleep 20
 
       - name: Smoke test — health checks
