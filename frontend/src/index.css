@@ -149,6 +149,12 @@ body {
     100% { background-position: -200% 0; }
 }
 
+.dark .shimmer {
+    background: linear-gradient(90deg, rgba(30,27,75,0.6) 25%, rgba(49,46,129,0.5) 50%, rgba(30,27,75,0.6) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+
 /* ── Dot Grid Background ─────────────────────────────── */
 .dot-grid {
     background-image: radial-gradient(circle, rgba(99, 102, 241, 0.07) 1.2px, transparent 1.2px);
@@ -358,6 +364,29 @@ body {
     background-size: 40px 40px !important;
     color: #f0f0f5 !important;
 }
+/* ── Reduced-Motion Accessibility ───────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+    /* Disable decorative looping animations */
+    .shimmer,
+    .dark .shimmer,
+    .xp-bar-animated,
+    .map-path-animated,
+    .badge-glow-gold,
+    .fire-flicker,
+    .challenge-active,
+    .rank-1-shine,
+    .avatar-frame-gold,
+    .avatar-frame-diamond { animation: none !important; }
+
+    /* Pulse ring is purely decorative — hide it */
+    .pulse-ring::after { display: none; }
+}
+
 .theme-cyberpunk .glass-card {
     background: rgba(6, 6, 12, 0.85) !important;
     border: 2px solid #00f0ff !important;

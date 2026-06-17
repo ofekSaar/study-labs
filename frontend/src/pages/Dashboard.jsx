@@ -5,13 +5,15 @@ import RoadmapView from '../components/dashboard/RoadmapView';
 import NodeDrawer from '../components/dashboard/NodeDrawer';
 import useCourseStore from '../store/courseStore';
 import useGamificationStore from '../store/gamificationStore';
-import { Trophy, Flame, Zap, Award, Target } from 'lucide-react';
+import { Trophy, Flame, Zap, Award, Target, BookOpen } from 'lucide-react';
 import DailyChallengeCard from '../components/gamification/DailyChallengeCard';
 import LevelUpModal from '../components/gamification/LevelUpModal';
 import ConfettiEffect from '../components/gamification/ConfettiEffect';
 import LeaguesPanel from '../components/gamification/LeaguesPanel';
 import QuestPanel from '../components/gamification/QuestPanel';
 import XPMultiplierBanner from '../components/gamification/XPMultiplierBanner';
+import LoadingSkeleton from '../components/common/LoadingSkeleton';
+import EmptyState from '../components/common/EmptyState';
 
 const Dashboard = () => {
     const { courses, fetchCourses, fetchStats, isLoading, user, selectedCourseId } = useCourseStore();
@@ -27,8 +29,53 @@ const Dashboard = () => {
     if (isLoading && courses.length === 0) {
         return (
             <StudentLayout title="Dashboard">
-                <div className="flex justify-center p-4 sm:p-8 md:p-12">
-                    <div className="animate-spin w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full"></div>
+                {/* Ambient background orbs visible during skeleton load */}
+                <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+                    <div className="absolute inset-0 dot-grid opacity-60" />
+                    <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full"
+                        style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 70%)', filter: 'blur(40px)' }} />
+                    <div className="absolute top-1/2 -right-32 w-80 h-80 rounded-full"
+                        style={{ background: 'radial-gradient(circle, rgba(124,58,237,0.10) 0%, transparent 70%)', filter: 'blur(40px)' }} />
+                </div>
+                <div className="relative z-[1] p-4 lg:p-6 max-w-[1600px] mx-auto flex flex-col gap-6">
+                    {/* Header skeleton */}
+                    <div className="flex justify-between items-center">
+                        <LoadingSkeleton rows={2} heights={['h-8', 'h-4']} className="w-64" />
+                        <div className="shimmer h-12 w-36 rounded-2xl" />
+                    </div>
+                    {/* Bento skeleton */}
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                        <div className="lg:col-span-8 glass-card rounded-3xl p-6 min-h-[480px]">
+                            <LoadingSkeleton rows={6} heights={['h-5', 'h-4', 'h-4', 'h-4', 'h-4', 'h-4']} />
+                        </div>
+                        <div className="lg:col-span-4 flex flex-col gap-5">
+                            <div className="glass-card rounded-3xl p-5">
+                                <LoadingSkeleton rows={4} heights={['h-5', 'h-20', 'h-4', 'h-8']} />
+                            </div>
+                            <div className="glass-card rounded-3xl p-5">
+                                <LoadingSkeleton rows={3} heights={['h-5', 'h-4', 'h-10']} />
+                            </div>
+                        </div>
+                    </div>
+                    {/* Quests skeleton */}
+                    <div className="glass-card rounded-3xl p-5">
+                        <LoadingSkeleton rows={4} heights={['h-5', 'h-16', 'h-16', 'h-16']} />
+                    </div>
+                </div>
+            </StudentLayout>
+        );
+    }
+
+    if (!isLoading && courses.length === 0) {
+        return (
+            <StudentLayout title="Dashboard">
+                <div className="p-4 lg:p-12 max-w-xl mx-auto pt-24">
+                    <EmptyState
+                        icon={BookOpen}
+                        title="No courses yet"
+                        description="Browse available courses and enroll to start earning XP and levelling up."
+                        action={{ label: 'Browse Courses', onClick: () => window.location.href = '/courses' }}
+                    />
                 </div>
             </StudentLayout>
         );

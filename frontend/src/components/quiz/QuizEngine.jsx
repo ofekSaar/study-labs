@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { CheckCircle, XCircle, ArrowRight, BrainCircuit, Loader2, Clock, Zap, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { CheckCircle, XCircle, ArrowRight, BrainCircuit, Loader2, Clock, Zap, AlertCircle, Flame } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ContentRenderer from '../common/ContentRenderer';
 import { isRTL } from '../../utils/rtl';
@@ -19,7 +19,9 @@ const QuizEngine = ({ questions, onComplete }) => {
     const [timeLeft, setTimeLeft] = useState(30);
     const [speedBonusActive, setSpeedBonusActive] = useState(false);
     const [isTimeUp, setIsTimeUp] = useState(false);
+    const [consecutiveCorrect, setConsecutiveCorrect] = useState(0);
 
+    const submitBtnRef = useRef(null);
     const { incrementStat } = useGamificationStore();
 
     const currentQuestion = questions[currentIndex];
@@ -84,15 +86,14 @@ const QuizEngine = ({ questions, onComplete }) => {
             setScore(s => s + gainedXP);
             sounds.correct();
             setSpeedBonusActive(gotSpeedBonus);
-            
-            // Gamification stats
-            if (gotSpeedBonus) {
-                incrementStat('fast_answers');
-            }
+            setConsecutiveCorrect(prev => prev + 1);
+
+            if (gotSpeedBonus) incrementStat('fast_answers');
             incrementStat('no_mistake_streak', prev => prev + 1);
         } else {
             sounds.wrong();
-            incrementStat('no_mistake_streak', 0); // reset streak
+            setConsecutiveCorrect(0);
+            incrementStat('no_mistake_streak', 0);
         }
 
         setIsSubmitted(true);
@@ -146,6 +147,7 @@ const QuizEngine = ({ questions, onComplete }) => {
             setFeedback(null);
             setIsTimeUp(false);
             setSpeedBonusActive(false);
+            // consecutiveCorrect carries across questions — only reset on wrong answer
         } else {
             sounds.quizComplete();
             
@@ -158,6 +160,19 @@ const QuizEngine = ({ questions, onComplete }) => {
             onComplete(score);
         }
     };
+
+    // Enter advances / submits when an answer is ready (placed after handleNext to avoid TDZ)
+    useEffect(() => {
+        const onKey = (e) => {
+            if (e.key !== 'Enter') return;
+            if (isEvaluating) return;
+            if (isSummaryQuestion) { handleNext(); return; }
+            if (!isSubmitted && selectedOption !== null) { submitBtnRef.current?.click(); return; }
+            if (isSubmitted) { handleNext(); }
+        };
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+    }); // no dep array — picks up fresh closures each render
 
     return (
         <div className="max-w-2xl mx-auto bg-white dark:bg-slate-900 rounded-3xl shadow-xl overflow-hidden border border-slate-100 dark:border-white/5 min-h-[520px] flex flex-col transition-all duration-300">
@@ -219,14 +234,28 @@ const QuizEngine = ({ questions, onComplete }) => {
                         </motion.div>
                     ) : !isOpenQuestion ? (
                         // MCQ RENDER
-                        <div className="space-y-3">
+                        <div>
+                            <AnimatePresence>
+                                {consecutiveCorrect >= 2 && (
+                                    <motion.div
+                                        initial={{ scale: 0, opacity: 0 }}
+                                        animate={{ scale: 1, opacity: 1 }}
+                                        exit={{ scale: 0, opacity: 0 }}
+                                        className="flex items-center gap-2 mb-3 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-400/40 w-fit mx-auto"
+                                    >
+                                        <Flame size={14} className="text-amber-400" />
+                                        <span className="text-sm font-bold text-amber-300">{consecutiveCorrect}x Streak!</span>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                            <div className="space-y-3" role="radiogroup" aria-label="Answer options">
                             {currentQuestion.options.map((opt, idx) => {
                                 const isSelected = selectedOption === idx;
                                 const showCorrect = isSubmitted && idx === currentQuestion.correctAnswerIndex;
                                 const showWrong = isSubmitted && isSelected && !feedback.isCorrect;
                                 const optDirection = isRTL(opt) ? 'rtl' : 'ltr';
 
-                                let baseStyle = "w-full p-4 rounded-2xl border-2 transition-all duration-200 flex items-center justify-between group shadow-sm text-sm font-bold ";
+                                let baseStyle = "w-full p-4 rounded-2xl border-2 transition-all duration-200 flex items-center justify-between group shadow-sm text-sm font-bold focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 outline-none ";
                                 baseStyle += optDirection === 'rtl' ? 'text-right flex-row-reverse' : 'text-left';
 
                                 if (isSubmitted) {
@@ -241,6 +270,8 @@ const QuizEngine = ({ questions, onComplete }) => {
                                 return (
                                     <motion.button
                                         key={idx}
+                                        role="radio"
+                                        aria-checked={isSelected}
                                         onClick={() => { sounds.click(); !isSubmitted && setSelectedOption(idx); }}
                                         disabled={isSubmitted}
                                         whileHover={!isSubmitted ? { scale: 1.01 } : {}}
@@ -254,6 +285,7 @@ const QuizEngine = ({ questions, onComplete }) => {
                                     </motion.button>
                                 );
                             })}
+                            </div>
                         </div>
                     ) : (
                         // OPEN QUESTION RENDER

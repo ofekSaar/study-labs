@@ -1,7 +1,19 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useEffect } from 'react';
+import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
 import { Zap, Flame, Trophy } from 'lucide-react';
 import useCourseStore from '../../store/courseStore';
+
+const AnimatedNumber = ({ value }) => {
+    const mv = useMotionValue(value);
+    const display = useTransform(mv, v => Math.round(v).toLocaleString());
+
+    useEffect(() => {
+        const controls = animate(mv, value, { duration: 0.7, ease: 'easeOut' });
+        return controls.stop;
+    }, [value]); // eslint-disable-line
+
+    return <motion.span>{display}</motion.span>;
+};
 
 const XPHeader = () => {
     const { user } = useCourseStore();
@@ -26,7 +38,7 @@ const XPHeader = () => {
                     style={{ background: 'rgba(245,158,11,0.15)' }}>
                     <Flame size={18} className="text-orange-400 fill-orange-400" style={{ filter: 'drop-shadow(0 0 6px rgba(245,158,11,0.8))' }} />
                     <div className="flex flex-col leading-none">
-                        <span className="font-black text-base text-white">{user?.streak ?? 0}</span>
+                        <span className="font-black text-base text-white"><AnimatedNumber value={user?.streak ?? 0} /></span>
                         <span className="text-[9px] uppercase font-bold text-orange-400 tracking-widest">Streak</span>
                     </div>
                 </div>
@@ -38,7 +50,7 @@ const XPHeader = () => {
                     style={{ background: 'rgba(79,110,247,0.15)' }}>
                     <Zap size={18} className="text-indigo-400 fill-indigo-400" style={{ filter: 'drop-shadow(0 0 6px rgba(79,110,247,0.8))' }} />
                     <div className="flex flex-col leading-none">
-                        <span className="font-black text-base text-white">{user?.totalXP ?? 0}</span>
+                        <span className="font-black text-base text-white"><AnimatedNumber value={user?.totalXP ?? 0} /></span>
                         <span className="text-[9px] uppercase font-bold text-indigo-400 tracking-widest">Total XP</span>
                     </div>
                 </div>
@@ -51,7 +63,7 @@ const XPHeader = () => {
                     <Trophy size={18} className="text-emerald-400" style={{ filter: 'drop-shadow(0 0 6px rgba(16,185,129,0.7))' }} />
                     <div className="flex flex-col leading-none">
                         <span className="font-black text-base text-white">
-                            {user?.totalXP ? Math.floor(user.totalXP / 100) + 1 : 1}
+                            <AnimatedNumber value={user?.totalXP ? Math.floor(user.totalXP / 100) + 1 : 1} />
                         </span>
                         <span className="text-[9px] uppercase font-bold text-emerald-400 tracking-widest">Level</span>
                     </div>

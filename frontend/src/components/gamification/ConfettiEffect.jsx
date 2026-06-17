@@ -13,6 +13,12 @@ const ConfettiEffect = () => {
     useEffect(() => {
         if (!triggerConfetti) return;
 
+        // Respect the user's motion preference — skip the animation entirely
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            clearConfetti();
+            return;
+        }
+
         const canvas = canvasRef.current;
         if (!canvas) return;
         const ctx = canvas.getContext('2d');

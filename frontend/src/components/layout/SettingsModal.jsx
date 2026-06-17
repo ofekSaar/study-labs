@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Moon, Sun, Volume2, VolumeX, Sparkles, Monitor, Award, Lock } from 'lucide-react';
 import useSettingsStore from '../../store/settingsStore';
@@ -10,6 +10,37 @@ import useAuthStore from '../../store/authStore';
 const SettingsModal = ({ isOpen, onClose, isInstructor = false }) => {
     const { theme, setTheme, animationsEnabled, toggleAnimations, soundEnabled, toggleSound } = useSettingsStore();
     const { activeAvatar, activeTitle, unlockedAvatars, unlockedTitles, selectAvatar, selectTitle } = useGamificationStore();
+    const panelRef = useRef(null);
+    const previousFocusRef = useRef(null);
+
+    useEffect(() => {
+        if (isOpen) {
+            previousFocusRef.current = document.activeElement;
+            setTimeout(() => panelRef.current?.focus(), 50);
+        } else if (previousFocusRef.current) {
+            previousFocusRef.current.focus();
+        }
+    }, [isOpen]);
+
+    useEffect(() => {
+        if (!isOpen) return;
+        const handleKey = (e) => {
+            if (e.key === 'Escape') { onClose(); return; }
+            if (e.key !== 'Tab') return;
+            const focusable = panelRef.current?.querySelectorAll(
+                'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+            );
+            if (!focusable?.length) return;
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+            if (e.shiftKey ? document.activeElement === first : document.activeElement === last) {
+                e.preventDefault();
+                (e.shiftKey ? last : first).focus();
+            }
+        };
+        document.addEventListener('keydown', handleKey);
+        return () => document.removeEventListener('keydown', handleKey);
+    }, [isOpen, onClose]);
 
     if (!isOpen) return null;
 
@@ -46,14 +77,19 @@ const SettingsModal = ({ isOpen, onClose, isInstructor = false }) => {
                 />
                 
                 <motion.div
+                    ref={panelRef}
+                    tabIndex={-1}
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="settings-title"
                     initial={{ opacity: 0, scale: 0.95, y: 10 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                    className="relative w-full max-w-lg mx-4 sm:mx-auto bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-white/5 max-h-[85vh] flex flex-col"
+                    className="relative w-full max-w-lg mx-4 sm:mx-auto bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-white/5 max-h-[85vh] flex flex-col outline-none"
                 >
                     {/* Header */}
                     <div className="p-4 sm:p-6 border-b border-slate-100 dark:border-white/5 flex items-center justify-between">
-                        <h2 className="text-lg sm:text-2xl font-black text-slate-900 dark:text-white">Settings & Customization</h2>
+                        <h2 id="settings-title" className="text-lg sm:text-2xl font-black text-slate-900 dark:text-white">Settings & Customization</h2>
                         <button 
                             onClick={onClose}
                             className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-white/10 text-slate-500 dark:text-slate-400 transition-colors"

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Star, Zap, ChevronUp } from 'lucide-react';
 import useGamificationStore from '../../store/gamificationStore';
@@ -10,12 +10,40 @@ const LEVEL_TITLES = [
 
 const LevelUpModal = () => {
     const { showLevelUp, newLevel, dismissLevelUp, setTriggerConfetti } = useGamificationStore();
+    const panelRef = useRef(null);
+    const previousFocusRef = useRef(null);
 
     useEffect(() => {
         if (showLevelUp) {
             setTriggerConfetti('level_up');
+            previousFocusRef.current = document.activeElement;
+            // Focus the panel so keyboard users can immediately interact
+            setTimeout(() => panelRef.current?.focus(), 50);
+        } else if (previousFocusRef.current) {
+            previousFocusRef.current.focus();
         }
     }, [showLevelUp, setTriggerConfetti]);
+
+    // Esc to dismiss + focus trap
+    useEffect(() => {
+        if (!showLevelUp) return;
+        const handleKey = (e) => {
+            if (e.key === 'Escape') { dismissLevelUp(); return; }
+            if (e.key !== 'Tab') return;
+            const focusable = panelRef.current?.querySelectorAll(
+                'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+            );
+            if (!focusable?.length) return;
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+            if (e.shiftKey ? document.activeElement === first : document.activeElement === last) {
+                e.preventDefault();
+                (e.shiftKey ? last : first).focus();
+            }
+        };
+        document.addEventListener('keydown', handleKey);
+        return () => document.removeEventListener('keydown', handleKey);
+    }, [showLevelUp, dismissLevelUp]);
 
     const title = LEVEL_TITLES[Math.min(newLevel, LEVEL_TITLES.length - 1)] || 'Legend+';
     const xpForLevel = (newLevel - 1) * 100;
@@ -32,12 +60,17 @@ const LevelUpModal = () => {
                     onClick={dismissLevelUp}
                 >
                     <motion.div
+                        ref={panelRef}
+                        tabIndex={-1}
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="levelup-title"
                         initial={{ scale: 0.5, opacity: 0, y: 40 }}
                         animate={{ scale: 1, opacity: 1, y: 0 }}
                         exit={{ scale: 0.8, opacity: 0, y: 20 }}
                         transition={{ type: 'spring', damping: 14, stiffness: 200 }}
                         onClick={e => e.stopPropagation()}
-                        className="relative w-full max-w-sm mx-4 text-center overflow-hidden max-h-[90vh] overflow-y-auto"
+                        className="relative w-full max-w-sm mx-4 text-center overflow-hidden max-h-[90vh] overflow-y-auto outline-none"
                     >
                         {/* Card background */}
                         <div className="relative bg-gradient-to-b from-slate-900 to-indigo-950 border border-indigo-500/30 rounded-3xl p-5 sm:p-8 shadow-[0_0_80px_rgba(99,102,241,0.3)]">
@@ -87,7 +120,7 @@ const LevelUpModal = () => {
                                 transition={{ delay: 0.35 }}
                             >
                                 <p className="text-indigo-300 text-sm font-bold uppercase tracking-widest mb-1">Level Up!</p>
-                                <h2 className="text-3xl sm:text-4xl font-black text-white mb-1">Level {newLevel}</h2>
+                                <h2 id="levelup-title" className="text-3xl sm:text-4xl font-black text-white mb-1">Level {newLevel}</h2>
                                 <p className="text-purple-300 text-lg font-bold mb-6">{title}</p>
                             </motion.div>
 
