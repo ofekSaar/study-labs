@@ -43,7 +43,7 @@ const LessonQuiz = () => {
             }
         };
         fetchData();
-    }, [id]);
+    }, [id, courseId]);
 
     const { courses, fetchCourseNodes } = useCourseStore();
 

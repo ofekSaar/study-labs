@@ -7,10 +7,9 @@ const DailyChallengeCard = () => {
     const { dailyChallenge, dailyChallengeCompleted, generateDailyChallenge } = useGamificationStore();
     const [timeLeft, setTimeLeft] = useState('');
 
-    // Generate if needed
     useEffect(() => {
         generateDailyChallenge();
-    }, []);
+    }, [generateDailyChallenge]);
 
     // Countdown to midnight
     useEffect(() => {

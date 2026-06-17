@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Shield, Trophy, ArrowUpCircle, ArrowDownCircle, AlertCircle, Clock } from 'lucide-react';
 import { motion } from 'framer-motion';
 import useCourseStore from '../../store/courseStore';
@@ -26,7 +26,7 @@ const LeaguesPanel = () => {
     const prevLeagueName = leagueIndex > 0 ? LEAGUES[leagueIndex - 1].name : null;
 
     // Local countdown timer mockup
-    const [timeLeft, setTimeLeft] = useState('נותרו: 3 ימים, 11 שעות');
+    const [timeLeft] = useState('נותרו: 3 ימים, 11 שעות');
 
     // Create league competitors where user is dynamically positioned based on their XP
     const baseCompetitors = [
@@ -64,14 +64,14 @@ const LeaguesPanel = () => {
                     </h3>
                     <p className="text-xs text-slate-400 dark:text-white/40 mt-1 flex items-center justify-center sm:justify-start gap-1">
                         <Clock size={12} />
-                        <span>סבב הליגה מסתיים בעוד 3 ימים • התקדם כדי לעלות לדרגה הבאה</span>
+                        <span>{timeLeft} • התקדם כדי לעלות לדרגה הבאה</span>
                     </p>
                 </div>
             </div>
 
             {/* Competitors List */}
             <div className="relative z-10 flex-1 space-y-2.5 mt-4 overflow-y-auto max-h-[320px] custom-scrollbar">
-                {rankedList.map((entry, idx) => {
+                {rankedList.map((entry) => {
                     const isPromotionZone = entry.rank <= 3;
                     const isDemotionZone = entry.rank >= rankedList.length - 1;
                     

@@ -1,12 +1,14 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { useDropzone } from 'react-dropzone';
 import { UploadCloud, FileText, Video, X, Presentation, FileSpreadsheet, Image, Info } from 'lucide-react';
 
 const StepMaterials = () => {
     const { register, setValue, watch, formState: { errors } } = useFormContext();
-    const syllabus = watch('syllabus') || [];
-    const materials = watch('materials') || [];
+    const watchedSyllabus = watch('syllabus');
+    const syllabus = useMemo(() => watchedSyllabus || [], [watchedSyllabus]);
+    const watchedMaterials = watch('materials');
+    const materials = useMemo(() => watchedMaterials || [], [watchedMaterials]);
     const analyzeImages = watch('analyzeImages');
 
     // --- Syllabus Dropzone ---

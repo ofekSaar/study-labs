@@ -93,7 +93,7 @@ const ConfettiEffect = () => {
             if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
             clearTimeout(timeout);
         };
-    }, [triggerConfetti]);
+    }, [triggerConfetti, clearConfetti, confettiReason]);
 
     return (
         <canvas

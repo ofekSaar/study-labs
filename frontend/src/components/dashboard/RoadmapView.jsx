@@ -8,16 +8,19 @@ const RoadmapView = () => {
     const course = courses.find(c => c.id === selectedCourseId);
     const [isLoadingNodes, setIsLoadingNodes] = useState(false);
 
+    const courseId = course?.id;
+    const hasNoNodes = course && (!course.nodes || course.nodes.length === 0);
+
     useEffect(() => {
-        if (course && (!course.nodes || course.nodes.length === 0)) {
+        if (hasNoNodes && courseId) {
             const loadNodes = async () => {
                 setIsLoadingNodes(true);
-                await fetchCourseNodes(course.id);
+                await fetchCourseNodes(courseId);
                 setIsLoadingNodes(false);
             };
             loadNodes();
         }
-    }, [course?.id, fetchCourseNodes]);
+    }, [courseId, hasNoNodes, fetchCourseNodes]);
 
     // Safety check
     if (!course) return (

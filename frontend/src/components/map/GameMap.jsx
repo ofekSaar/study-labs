@@ -102,13 +102,19 @@ const GameMapComponent = ({ nodes }) => {
     const totalHeight = Math.max(600, nodes.length * NODE_SPACING + BASE_PADDING_TOP * 2);
 
     useEffect(() => {
-        if (containerRef.current) {
-            setDimensions({
-                width: containerRef.current.clientWidth,
-                height: totalHeight
-            });
-        }
-    }, [totalHeight, containerRef.current?.clientWidth]);
+        const handleResize = () => {
+            if (containerRef.current) {
+                setDimensions({
+                    width: containerRef.current.clientWidth,
+                    height: totalHeight
+                });
+            }
+        };
+
+        handleResize();
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, [totalHeight]);
 
     const configuredNodes = nodes.map((node, index) => {
         if (dimensions.width === 0) return { ...node, px: 0, py: 0 };
