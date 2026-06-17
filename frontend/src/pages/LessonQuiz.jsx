@@ -21,8 +21,7 @@ const LessonQuiz = () => {
     const [showReward, setShowReward] = useState(null);
 
     // Gamification
-    const { setTriggerConfetti, checkLevelUp, logActivity, completeChallenge, dailyChallenge, getXPMultiplier } = useGamificationStore();
-    const { user } = useCourseStore();
+    const { setTriggerConfetti, applyServerReward, logActivity, completeChallenge, dailyChallenge } = useGamificationStore();
 
     useEffect(() => {
         const fetchData = async () => {
@@ -54,11 +53,13 @@ const LessonQuiz = () => {
                 answers: answersData || []
             });
 
+            let progressResult = null;
             try {
-                await api.post('/api/progress/complete-node', {
+                const res = await api.post('/api/progress/complete-node', {
                     courseId: courseId,
                     nodeId: id
                 });
+                progressResult = res?.data || null;
             } catch (progressErr) {
                 console.log('Progress update skipped:', progressErr.message);
             }
@@ -88,15 +89,22 @@ const LessonQuiz = () => {
                 completeChallenge();
             }
 
-            // Apply XP Multiplier!
-            const { multiplier } = getXPMultiplier();
-            const boostedScore = Math.round(score * multiplier);
+            // Adopt the authoritative reward from the server (XP, coins, level,
+            // badges). The server already applied the multiplier to the graded
+            // score — the client only renders the outcome.
+            if (progressResult) {
+                applyServerReward(progressResult);
+            }
 
-            // Check for level up
-            const prevXP = user?.totalXP || 0;
-            checkLevelUp(prevXP, prevXP + boostedScore);
+            const awardedXp = progressResult?.xpAwarded ?? score;
+            const multiplier = progressResult?.multiplier ?? 1;
 
-            setShowReward({ score: boostedScore, nextNodeId: nextNode ? nextNode._id : null, isPerfect });
+            setShowReward({
+                score: awardedXp,
+                multiplier,
+                nextNodeId: nextNode ? nextNode._id : null,
+                isPerfect,
+            });
 
         } catch (error) {
             alert(error.message || 'Failed to submit quiz');
@@ -167,6 +175,20 @@ const LessonQuiz = () => {
                             </motion.span>
                             <Zap size={18} className="text-emerald-400 fill-emerald-400/30" />
                         </div>
+
+                        {showReward.multiplier > 1 && (
+                            <motion.div
+                                initial={{ scale: 0, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                transition={{ delay: 0.55, type: 'spring', stiffness: 220 }}
+                                className="inline-flex items-center gap-1.5 mb-6 -mt-3 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-400/40 relative z-10"
+                            >
+                                <Zap size={14} className="text-amber-400 fill-amber-400/40" />
+                                <span className="text-sm font-bold text-amber-300">
+                                    {showReward.multiplier}x Bonus applied!
+                                </span>
+                            </motion.div>
+                        )}
 
                         <motion.button
                             initial={{ opacity: 0, y: 10 }}

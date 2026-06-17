@@ -29,6 +29,7 @@ ai-engine/uploads/
 # Frontend builds
 frontend/dist/
 frontend/build/
+frontend/coverage/
 
 # Docker
 .dockerignore

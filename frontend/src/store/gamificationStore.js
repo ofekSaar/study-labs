@@ -219,13 +219,10 @@ const useGamificationStore = create(
             checkLevelUp: (previousXP, newXP) => {
                 const oldLevel = Math.floor(previousXP / 100) + 1;
                 const newLevel = Math.floor(newXP / 100) + 1;
-                
-                // Award coins equal to XP difference
-                const xpEarned = newXP - previousXP;
-                if (xpEarned > 0) {
-                    set(state => ({ coins: (state.coins || 0) + xpEarned }));
-                }
-                
+
+                // NOTE: coins are minted server-side (gamificationService) — the
+                // client no longer mints them here. This function now only drives
+                // the level-up celebration + cosmetic unlocks.
                 get().updateStat('total_xp', newXP);
                 get().updateStat('level', newLevel);
 
@@ -263,6 +260,60 @@ const useGamificationStore = create(
                     return true;
                 }
                 return false;
+            },
+
+            /**
+             * Adopt the authoritative reward result returned by the server
+             * (from POST /complete-node or /quests/:id/claim). The server owns
+             * XP, level, coins and badge unlocks — the client just renders the
+             * outcome (level-up modal, cosmetic unlocks, badge + confetti).
+             */
+            applyServerReward: (result) => {
+                if (!result) return;
+
+                const prevLevel = get().stats.level || 1;
+                const newLevel = result.newLevel ?? prevLevel;
+
+                set(state => ({
+                    coins: result.newCoins ?? state.coins,
+                    stats: {
+                        ...state.stats,
+                        total_xp: result.userTotalXp ?? state.stats.total_xp,
+                        level: newLevel,
+                    },
+                    unlockedBadges: result.newBadges?.length
+                        ? [...new Set([...state.unlockedBadges, ...result.newBadges])]
+                        : state.unlockedBadges,
+                }));
+
+                // Cosmetic unlocks gated by the new level
+                const newlyUnlockedAvatars = AVATARS.filter(a => a.levelReq <= newLevel && !get().unlockedAvatars.includes(a.id)).map(a => a.id);
+                const newlyUnlockedTitles = TITLES.filter(t => t.levelReq <= newLevel && !get().unlockedTitles.includes(t.id)).map(t => t.id);
+                if (newlyUnlockedAvatars.length > 0 || newlyUnlockedTitles.length > 0) {
+                    set(state => ({
+                        unlockedAvatars: [...state.unlockedAvatars, ...newlyUnlockedAvatars],
+                        unlockedTitles: [...state.unlockedTitles, ...newlyUnlockedTitles],
+                    }));
+                }
+
+                // Badge toasts for server-granted badges
+                if (result.newBadges?.length) {
+                    setTimeout(() => {
+                        result.newBadges.forEach(badgeId => {
+                            const b = BADGES.find(x => x.id === badgeId);
+                            if (b) useToastStore.getState().badge(b.name, b.icon);
+                        });
+                        sounds.badge();
+                        get().setTriggerConfetti('badge_unlock');
+                    }, 500);
+                }
+
+                // Level-up celebration
+                if (result.leveledUp || newLevel > prevLevel) {
+                    set({ showLevelUp: true, newLevel });
+                    sounds.levelUp();
+                    get().setTriggerConfetti('level_up');
+                }
             },
 
             logActivity: () => {
@@ -451,22 +502,30 @@ const useGamificationStore = create(
                 const progress = questsProgress[questId] ?? 0;
                 if (progress < quest.target) return; // not completed yet
 
-                // Claim reward
+                // Optimistically mark claimed for snappy UI
                 set(state => ({
                     questsClaimed: [...state.questsClaimed, questId]
                 }));
 
-                // Actually add XP to the user level progression
-                const prevXP = get().stats.total_xp || 0;
-                get().checkLevelUp(prevXP, prevXP + quest.xp);
-
-                // Reward standard XP notification
+                // Reward notification (optimistic)
                 setTimeout(() => {
                     useToastStore.getState().xp(quest.xp, `Quest Reward: ${quest.title}`);
                     sounds.perfectScore();
                     get().setTriggerConfetti('quest_complete');
                 }, 100);
-                get().syncGamificationState();
+
+                // The server validates progress and grants the canonical XP/coins.
+                // Adopt its authoritative result; roll back the claim on failure.
+                api.post(`/api/progress/quests/${questId}/claim`)
+                    .then(res => {
+                        if (res?.data) get().applyServerReward(res.data);
+                    })
+                    .catch(err => {
+                        console.error('[Gamification Store] Quest claim failed:', err.message);
+                        set(state => ({
+                            questsClaimed: state.questsClaimed.filter(id => id !== questId)
+                        }));
+                    });
             },
             buyItem: async (itemType, itemId, cost) => {
                 const { coins, unlockedAvatars, unlockedTitles, unlockedThemes, unlockedFrames } = get();

@@ -5,6 +5,18 @@ import Enrollment from '../models/Enrollment.js';
 import User from '../models/User.js';
 import * as gamificationService from '../services/gamificationService.js';
 import { getIO } from '../config/socket.js';
+import XpEvent from '../models/XpEvent.js';
+import { QUEST_BY_ID } from '../constants/quests.js';
+
+/**
+ * Map a leaderboard period to a {createdAt: {$gte}} match, or null for all-time.
+ */
+const periodToSince = (period) => {
+  const now = Date.now();
+  if (period === 'weekly') return new Date(now - 7 * 24 * 60 * 60 * 1000);
+  if (period === 'monthly') return new Date(now - 30 * 24 * 60 * 60 * 1000);
+  return null; // allTime
+};
 
 /**
  * Get aggregate student stats (totalXP, streak, level).
@@ -75,10 +87,7 @@ export const completeNode = async (req, res, next) => {
 
 /**
  * Shape a raw aggregation result into the leaderboard entry the frontend expects.
- * NOTE: The Progress schema stores only cumulative totalXP with no per-event
- * timestamps, so period-based filtering (weekly/monthly) is not possible.
- * All period values return the all-time ranking. A future migration that
- * introduces an XpEvent collection with timestamps would unlock real windowing.
+ * Rows must expose `_id` (student), `totalXP`, `name`, and `avatar`.
  *
  * @param {object[]} rows   - Aggregation pipeline results
  * @param {string}   userId - Current user's _id string for isYou flagging
@@ -102,36 +111,32 @@ const shapeLeaderboardEntries = (rows, userId) =>
  */
 export const getGlobalLeaderboard = async (req, res, next) => {
   try {
-    // period param is accepted but has no effect — see comment on shapeLeaderboardEntries
     const TOP_N = 50;
+    const since = periodToSince(req.query.period);
 
-    const rows = await Progress.aggregate([
-      {
-        $group: {
-          _id: '$student',
-          totalXP: { $sum: '$totalXP' },
-        },
-      },
-      { $sort: { totalXP: -1 } },
-      { $limit: TOP_N },
-      {
-        $lookup: {
-          from: 'users',
-          localField: '_id',
-          foreignField: '_id',
-          as: 'userDoc',
-        },
-      },
-      { $unwind: '$userDoc' },
-      {
-        $project: {
-          _id: 1,
-          totalXP: 1,
-          name: '$userDoc.name',
-          avatar: '$userDoc.avatar',
-        },
-      },
-    ]);
+    let rows;
+    if (since) {
+      // Windowed ranking: sum XpEvents within the period.
+      rows = await XpEvent.aggregate([
+        { $match: { createdAt: { $gte: since } } },
+        { $group: { _id: '$student', totalXP: { $sum: '$xpAwarded' } } },
+        { $sort: { totalXP: -1 } },
+        { $limit: TOP_N },
+        { $lookup: { from: 'users', localField: '_id', foreignField: '_id', as: 'userDoc' } },
+        { $unwind: '$userDoc' },
+        { $project: { _id: 1, totalXP: 1, name: '$userDoc.name', avatar: '$userDoc.avatar' } },
+      ]);
+    } else {
+      // All-time: cumulative Progress totals (fast, denormalized).
+      rows = await Progress.aggregate([
+        { $group: { _id: '$student', totalXP: { $sum: '$totalXP' } } },
+        { $sort: { totalXP: -1 } },
+        { $limit: TOP_N },
+        { $lookup: { from: 'users', localField: '_id', foreignField: '_id', as: 'userDoc' } },
+        { $unwind: '$userDoc' },
+        { $project: { _id: 1, totalXP: 1, name: '$userDoc.name', avatar: '$userDoc.avatar' } },
+      ]);
+    }
 
     const leaderboard = shapeLeaderboardEntries(rows, req.user._id);
 
@@ -164,38 +169,107 @@ export const getCourseLeaderboard = async (req, res, next) => {
     }
 
     const enrolledStudentIds = enrollments.map((e) => e.student);
+    const courseObjectId = new mongoose.Types.ObjectId(courseId);
+    const since = periodToSince(req.query.period);
 
-    const rows = await Progress.aggregate([
-      {
-        $match: {
-          course: { $eq: new mongoose.Types.ObjectId(courseId) },
-          student: { $in: enrolledStudentIds },
+    let rows;
+    if (since) {
+      // Windowed ranking: sum this course's XpEvents within the period.
+      rows = await XpEvent.aggregate([
+        {
+          $match: {
+            course: courseObjectId,
+            student: { $in: enrolledStudentIds },
+            createdAt: { $gte: since },
+          },
         },
-      },
-      { $sort: { totalXP: -1 } },
-      { $limit: TOP_N },
-      {
-        $lookup: {
-          from: 'users',
-          localField: 'student',
-          foreignField: '_id',
-          as: 'userDoc',
+        { $group: { _id: '$student', totalXP: { $sum: '$xpAwarded' } } },
+        { $sort: { totalXP: -1 } },
+        { $limit: TOP_N },
+        { $lookup: { from: 'users', localField: '_id', foreignField: '_id', as: 'userDoc' } },
+        { $unwind: '$userDoc' },
+        { $project: { _id: 1, totalXP: 1, name: '$userDoc.name', avatar: '$userDoc.avatar' } },
+      ]);
+    } else {
+      rows = await Progress.aggregate([
+        {
+          $match: {
+            course: { $eq: courseObjectId },
+            student: { $in: enrolledStudentIds },
+          },
         },
-      },
-      { $unwind: '$userDoc' },
-      {
-        $project: {
-          _id: '$student',
-          totalXP: 1,
-          name: '$userDoc.name',
-          avatar: '$userDoc.avatar',
+        { $sort: { totalXP: -1 } },
+        { $limit: TOP_N },
+        { $lookup: { from: 'users', localField: 'student', foreignField: '_id', as: 'userDoc' } },
+        { $unwind: '$userDoc' },
+        {
+          $project: {
+            _id: '$student',
+            totalXP: 1,
+            name: '$userDoc.name',
+            avatar: '$userDoc.avatar',
+          },
         },
-      },
-    ]);
+      ]);
+    }
 
     const leaderboard = shapeLeaderboardEntries(rows, req.user._id);
 
     res.json({ leaderboard });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * POST /api/progress/quests/:questId/claim
+ * Claim a completed quest's XP reward. The server validates that the recorded
+ * progress meets the quest target and that it has not already been claimed,
+ * then grants the canonical reward — the client cannot mint quest XP itself.
+ */
+export const claimQuest = async (req, res, next) => {
+  try {
+    const { questId } = req.params;
+
+    const quest = QUEST_BY_ID[questId];
+    if (!quest) {
+      return next(createError(400, `Unknown quest: ${questId}`));
+    }
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return next(createError(404, 'User not found'));
+    }
+
+    if (user.questsClaimed.includes(questId)) {
+      return next(createError(400, 'Quest already claimed'));
+    }
+
+    const progress = user.questsProgress?.get
+      ? user.questsProgress.get(questId) || 0
+      : user.questsProgress?.[questId] || 0;
+    if (progress < quest.target) {
+      return next(createError(400, 'Quest not yet completed'));
+    }
+
+    user.questsClaimed = [...user.questsClaimed, questId];
+    const grant = await gamificationService.grantXp(user, {
+      baseXp: quest.xp,
+      source: 'quest',
+      reasons: [`Quest Reward: ${questId}`],
+    });
+
+    res.json({
+      status: 'success',
+      data: {
+        questId,
+        ...grant,
+        coins: user.coins,
+        stats: user.stats,
+        unlockedBadges: user.unlockedBadges,
+        questsClaimed: user.questsClaimed,
+      },
+    });
   } catch (error) {
     next(error);
   }
@@ -281,9 +355,7 @@ export const syncGamificationState = async (req, res, next) => {
     }
 
     const {
-      coins,
       streakShields,
-      xpBoosts,
       weekendFreezes,
       unlockedBadges,
       stats,
@@ -302,13 +374,22 @@ export const syncGamificationState = async (req, res, next) => {
       unlockedFrames
     } = req.body;
 
-    if (coins !== undefined) user.coins = coins;
+    // ── Server-owned, NOT accepted from the client (anti-cheat) ─────────────
+    // `coins`, `xpBoosts`, and stats.total_xp / stats.level are minted and
+    // computed exclusively by the server (see gamificationService). A tampered
+    // sync payload can no longer inflate the economy. Activity-flavored stats
+    // (lessons_completed, perfect_quizzes, fast_answers, ...) remain
+    // client-tracked since they only gate cosmetic badges.
     if (streakShields !== undefined) user.streakShields = streakShields;
-    if (xpBoosts !== undefined) user.xpBoosts = xpBoosts;
     if (weekendFreezes !== undefined) user.weekendFreezes = weekendFreezes;
-    if (unlockedBadges !== undefined) user.unlockedBadges = unlockedBadges;
+    // Union badges so neither side clobbers the other's unlocks.
+    if (Array.isArray(unlockedBadges)) {
+      user.unlockedBadges = [...new Set([...user.unlockedBadges, ...unlockedBadges])];
+    }
     if (stats !== undefined) {
-      user.stats = { ...user.stats.toObject(), ...stats };
+      // Strip the server-owned fields before merging.
+      const { total_xp, level, ...clientStats } = stats;
+      user.stats = { ...user.stats.toObject(), ...clientStats };
     }
     if (questsProgress !== undefined) user.questsProgress = questsProgress;
     if (questsClaimed !== undefined) user.questsClaimed = questsClaimed;
