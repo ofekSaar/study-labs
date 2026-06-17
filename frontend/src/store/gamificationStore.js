@@ -3,9 +3,9 @@ import { persist } from 'zustand/middleware';
 import BADGES, { checkBadges } from '../utils/badges';
 import useToastStore from './toastStore';
 import sounds from '../utils/soundManager';
-import { AVATARS, INSTRUCTOR_AVATARS, TITLES, QUEST_DEFINITIONS, SHOP_ITEMS } from '../constants/gamification';
+import { AVATARS, INSTRUCTOR_AVATARS, TITLES, QUEST_DEFINITIONS, SHOP_ITEMS, FRAMES, THEMES } from '../constants/gamification';
 
-export { AVATARS, INSTRUCTOR_AVATARS, TITLES, QUEST_DEFINITIONS, SHOP_ITEMS };
+export { AVATARS, INSTRUCTOR_AVATARS, TITLES, QUEST_DEFINITIONS, SHOP_ITEMS, FRAMES, THEMES };
 
 const useGamificationStore = create(
     persist(
@@ -14,6 +14,7 @@ const useGamificationStore = create(
             coins: 100,
             streakShields: 0,
             xpBoosts: 0,
+            weekendFreezes: 0,
 
             // Level Up state
             showLevelUp: false,
@@ -25,6 +26,12 @@ const useGamificationStore = create(
             activeTitle: 'beginner',
             unlockedAvatars: ['default'],
             unlockedTitles: ['beginner'],
+
+            // Themes & Avatar Frames state
+            activeTheme: 'default',
+            unlockedThemes: ['default'],
+            activeFrame: 'default',
+            unlockedFrames: ['default'],
 
             // Daily Challenge state
             dailyChallenge: null,
@@ -66,6 +73,8 @@ const useGamificationStore = create(
             // ── Actions ──────────────────────────────────────
             selectAvatar: (avatarId) => set({ activeAvatar: avatarId }),
             selectTitle: (titleId) => set({ activeTitle: titleId }),
+            selectTheme: (themeId) => set({ activeTheme: themeId }),
+            selectFrame: (frameId) => set({ activeFrame: frameId }),
 
             triggerLevelUp: (newLevel) => {
                 set({ showLevelUp: true, newLevel });
@@ -363,7 +372,7 @@ const useGamificationStore = create(
                 }, 100);
             },
             buyItem: (itemType, itemId, cost) => {
-                const { coins, unlockedAvatars, unlockedTitles } = get();
+                const { coins, unlockedAvatars, unlockedTitles, unlockedThemes, unlockedFrames } = get();
                 if (coins < cost) {
                     useToastStore.getState().success(
                         'Insufficient Coins!',
@@ -382,6 +391,14 @@ const useGamificationStore = create(
                     useToastStore.getState().success('Already Owned', 'You already own this title!', 3000);
                     return false;
                 }
+                if (itemType === 'themes' && unlockedThemes.includes(itemId)) {
+                    useToastStore.getState().success('Already Owned', 'You already own this theme!', 3000);
+                    return false;
+                }
+                if (itemType === 'frames' && unlockedFrames.includes(itemId)) {
+                    useToastStore.getState().success('Already Owned', 'You already own this frame!', 3000);
+                    return false;
+                }
 
                 // Deduct coins
                 set(state => ({ coins: state.coins - cost }));
@@ -395,6 +412,14 @@ const useGamificationStore = create(
                     set(state => ({ unlockedTitles: [...state.unlockedTitles, itemId] }));
                     const item = SHOP_ITEMS.titles.find(x => x.id === itemId);
                     useToastStore.getState().success('Purchase Successful!', `Unlocked Title: ${item.name}`, 4000);
+                } else if (itemType === 'themes') {
+                    set(state => ({ unlockedThemes: [...state.unlockedThemes, itemId] }));
+                    const item = SHOP_ITEMS.themes.find(x => x.id === itemId);
+                    useToastStore.getState().success('Purchase Successful!', `Unlocked Theme: ${item.name}`, 4000);
+                } else if (itemType === 'frames') {
+                    set(state => ({ unlockedFrames: [...state.unlockedFrames, itemId] }));
+                    const item = SHOP_ITEMS.frames.find(x => x.id === itemId);
+                    useToastStore.getState().success('Purchase Successful!', `Unlocked Frame: ${item.name}`, 4000);
                 } else if (itemType === 'powerups') {
                     if (itemId === 'streak_shield') {
                         set(state => ({ streakShields: (state.streakShields || 0) + 1 }));
@@ -402,6 +427,9 @@ const useGamificationStore = create(
                     } else if (itemId === 'xp_boost') {
                         set(state => ({ xpBoosts: (state.xpBoosts || 0) + 1 }));
                         useToastStore.getState().success('Purchase Successful!', 'Acquired 1 XP Boost Token (2x) ⚡', 4000);
+                    } else if (itemId === 'weekend_freeze') {
+                        set(state => ({ weekendFreezes: (state.weekendFreezes || 0) + 1 }));
+                        useToastStore.getState().success('Purchase Successful!', 'Acquired 1 Weekend Freeze 🥶', 4000);
                     }
                 }
 
@@ -416,6 +444,7 @@ const useGamificationStore = create(
                 coins: state.coins,
                 streakShields: state.streakShields,
                 xpBoosts: state.xpBoosts,
+                weekendFreezes: state.weekendFreezes,
                 activityLog: state.activityLog,
                 dailyChallenge: state.dailyChallenge,
                 dailyChallengeCompleted: state.dailyChallengeCompleted,
@@ -429,7 +458,11 @@ const useGamificationStore = create(
                 activeAvatar: state.activeAvatar,
                 activeTitle: state.activeTitle,
                 unlockedAvatars: state.unlockedAvatars,
-                unlockedTitles: state.unlockedTitles
+                unlockedTitles: state.unlockedTitles,
+                activeTheme: state.activeTheme,
+                unlockedThemes: state.unlockedThemes,
+                activeFrame: state.activeFrame,
+                unlockedFrames: state.unlockedFrames
             }),
         }
     )

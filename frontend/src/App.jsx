@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import useAuthStore from './store/authStore';
 import useSettingsStore from './store/settingsStore';
+import useGamificationStore from './store/gamificationStore';
 
 // Route-level page screens — loaded only when their route is first visited.
 const LoginPage = lazy(() => import('./pages/LoginPage'));
@@ -23,10 +24,11 @@ const ManagedCourses = lazy(() => import('./pages/ManagedCourses'));
 
 const ThemeWrapper = ({ children }) => {
   const { theme } = useSettingsStore();
+  const { activeTheme } = useGamificationStore();
 
   React.useEffect(() => {
     const root = window.document.documentElement;
-    root.classList.remove('light', 'dark');
+    root.classList.remove('light', 'dark', 'theme-arcade', 'theme-space', 'theme-cyberpunk');
 
     if (theme === 'system') {
       const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
@@ -34,7 +36,11 @@ const ThemeWrapper = ({ children }) => {
     } else {
       root.classList.add(theme);
     }
-  }, [theme]);
+
+    if (activeTheme && activeTheme !== 'default') {
+      root.classList.add(`theme-${activeTheme}`);
+    }
+  }, [theme, activeTheme]);
 
   return children;
 };

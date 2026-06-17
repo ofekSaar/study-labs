@@ -2,7 +2,7 @@ import React from 'react';
 import StudentLayout from '../components/layout/StudentLayout';
 import useCourseStore from '../store/courseStore';
 import useGamificationStore from '../store/gamificationStore';
-import { AVATARS, TITLES, SHOP_ITEMS } from '../constants/gamification';
+import { AVATARS, TITLES, SHOP_ITEMS, FRAMES, THEMES } from '../constants/gamification';
 import Leaderboard from '../components/gamification/Leaderboard';
 import StreakCalendar from '../components/gamification/StreakCalendar';
 import BadgeDisplay from '../components/gamification/BadgeDisplay';
@@ -14,10 +14,16 @@ const StudentProfile = () => {
     const {
         activeAvatar,
         activeTitle,
+        activeTheme,
+        activeFrame,
         unlockedAvatars,
         unlockedTitles,
+        unlockedThemes,
+        unlockedFrames,
         selectAvatar,
         selectTitle,
+        selectTheme,
+        selectFrame,
         stats,
     } = useGamificationStore();
 
@@ -55,7 +61,7 @@ const StudentProfile = () => {
                         <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-purple-500/5 opacity-40 pointer-events-none" />
                         
                         <div className="relative mb-4 mt-2">
-                            <div className="w-24 h-24 rounded-3xl bg-slate-50 dark:bg-slate-800 border-2 border-indigo-500 flex items-center justify-center text-5xl shadow-[0_8px_30px_rgba(99,102,241,0.2)] select-none transition-transform duration-300 group-hover:scale-105">
+                            <div className={`w-24 h-24 rounded-3xl bg-slate-50 dark:bg-slate-800 border-2 border-indigo-500 flex items-center justify-center text-5xl select-none transition-transform duration-300 group-hover:scale-105 avatar-frame-${activeFrame}`}>
                                 {currentAvatar.emoji}
                             </div>
                             <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full border-2 border-white dark:border-slate-900 flex items-center justify-center text-white text-xs font-black shadow-sm">
@@ -204,6 +210,81 @@ const StudentProfile = () => {
                                         }`}
                                     >
                                         <span>{title.name}</span>
+                                        {!isUnlocked ? (
+                                            <Lock size={12} className="text-slate-400 dark:text-white/20" />
+                                        ) : (
+                                            isActive && <Check size={12} className="stroke-[3]" />
+                                        )}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                </div>
+
+                {/* ── Third Row: Customize Themes & Avatar Frames ── */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    
+                    {/* Theme Picker Card */}
+                    <div className="bg-white/80 dark:bg-white/5 border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-md relative overflow-hidden group font-medium" dir="rtl">
+                        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 pointer-events-none" />
+                        <h3 className="font-display font-bold text-lg text-slate-800 dark:text-white mb-6 relative z-10 text-right">בחירת ערכת נושא פעילה</h3>
+                        
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 relative z-10">
+                            {THEMES.map(themeItem => {
+                                const isUnlocked = unlockedThemes.includes(themeItem.id);
+                                const isActive = activeTheme === themeItem.id;
+
+                                return (
+                                    <button
+                                        key={themeItem.id}
+                                        onClick={() => isUnlocked && selectTheme(themeItem.id)}
+                                        disabled={!isUnlocked}
+                                        className={`h-16 rounded-2xl flex flex-col items-center justify-center border-2 transition-all relative ${
+                                            isActive
+                                                ? 'bg-gradient-to-tr from-indigo-600 to-purple-600 border-transparent text-white shadow-[0_4px_12px_rgba(99,102,241,0.3)] scale-102 font-bold'
+                                                : isUnlocked
+                                                    ? 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-white/5 text-slate-800 dark:text-white hover:bg-slate-100 dark:hover:bg-white/10'
+                                                    : 'bg-slate-100/50 dark:bg-slate-950/40 border-slate-200/50 dark:border-white/5 text-slate-400 dark:text-white/20 opacity-60 cursor-not-allowed'
+                                        }`}
+                                    >
+                                        <span className="text-xs font-bold">{themeItem.name}</span>
+                                        {!isUnlocked && (
+                                            <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-slate-800/80 text-white flex items-center justify-center border border-white/20">
+                                                <Lock size={10} />
+                                            </div>
+                                        )}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    {/* Frame Picker Card */}
+                    <div className="bg-white/80 dark:bg-white/5 border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-md relative overflow-hidden group font-medium" dir="rtl">
+                        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 pointer-events-none" />
+                        <h3 className="font-display font-bold text-lg text-slate-800 dark:text-white mb-6 relative z-10 text-right">בחירת מסגרת אווטאר</h3>
+
+                        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3.5 relative z-10">
+                            {FRAMES.map(frameItem => {
+                                const isUnlocked = unlockedFrames.includes(frameItem.id);
+                                const isActive = activeFrame === frameItem.id;
+
+                                return (
+                                    <button
+                                        key={frameItem.id}
+                                        onClick={() => isUnlocked && selectFrame(frameItem.id)}
+                                        disabled={!isUnlocked}
+                                        className={`px-4 py-3 rounded-2xl border-2 transition-all text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 relative ${
+                                            isActive
+                                                ? 'bg-gradient-to-tr from-indigo-600 to-purple-600 border-transparent text-white shadow-[0_4px_12px_rgba(99,102,241,0.3)] scale-102'
+                                                : isUnlocked
+                                                    ? 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-white/5 text-slate-700 dark:text-white hover:bg-slate-100 dark:hover:bg-white/10'
+                                                    : 'bg-slate-100/50 dark:bg-slate-950/40 border-slate-200/50 dark:border-white/5 text-slate-400 dark:text-white/20 opacity-60 cursor-not-allowed'
+                                        }`}
+                                    >
+                                        <span>{frameItem.name}</span>
                                         {!isUnlocked ? (
                                             <Lock size={12} className="text-slate-400 dark:text-white/20" />
                                         ) : (
