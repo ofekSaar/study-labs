@@ -94,7 +94,7 @@ const Leaderboard = ({ courseId }) => {
                         <button
                             key={p}
                             onClick={() => setPeriod(p)}
-                            className={`text-[10px] font-black px-3 py-1.5 rounded-lg transition-all ${
+                            className={`text-[10px] font-black px-3 py-2.5 rounded-lg transition-all ${
                                 period === p
                                     ? 'bg-white dark:bg-white/10 text-indigo-600 dark:text-indigo-300 shadow-sm border border-slate-200/20 dark:border-white/5'
                                     : 'text-slate-400 dark:text-white/40 hover:text-slate-600 dark:hover:text-white/60'

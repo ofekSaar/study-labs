@@ -275,13 +275,13 @@ const StudentLayout = ({ children }) => {
     return (
         <div className="min-h-screen flex font-sans bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300">
             {/* ── Desktop Sidebar ── */}
-            <aside className="hidden md:flex flex-col w-72 sticky top-0 h-screen z-30 sidebar-theme">
+            <aside className="hidden lg:flex flex-col w-72 sticky top-0 h-screen z-30 sidebar-theme">
                 <SidebarContent {...sidebarProps} />
             </aside>
 
             {/* ── Mobile Overlay ── */}
             {isSidebarOpen && (
-                <div className="fixed inset-0 z-50 md:hidden">
+                <div className="fixed inset-0 z-50 lg:hidden">
                     <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsSidebarOpen(false)} />
                     <aside className="absolute left-0 top-0 bottom-0 w-[85vw] max-w-72 sidebar-theme shadow-2xl">
                         <div className="absolute top-4 right-4 z-10">

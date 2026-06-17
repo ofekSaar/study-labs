@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { BookOpen, HelpCircle, Trophy, Lock, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const MapNode = ({ status, x, y, label, onClick, index, type, xpReward = 150 }) => {
+const MapNode = ({ status, x, y, label, onClick, index, type, xpReward = 150, isCurrent = false }) => {
     const [isHovered, setIsHovered] = useState(false);
 
     const getStyles = () => {
@@ -71,6 +71,9 @@ const MapNode = ({ status, x, y, label, onClick, index, type, xpReward = 150 }) 
             <button
                 onClick={onClick}
                 disabled={status === 'locked'}
+                aria-label={`${label} — ${status === 'completed' ? 'Completed' : status === 'active' ? 'Available' : 'Locked'}, +${xpReward} XP`}
+                aria-disabled={status === 'locked'}
+                aria-current={isCurrent ? 'true' : undefined}
                 className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 relative ${getStyles()}`}
             >
                 {getIcon()}
@@ -96,8 +99,9 @@ const GameMapComponent = ({ nodes }) => {
     const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
 
     const NODE_SPACING = 120;
-    const PATH_AMPLITUDE = 85; 
+    const PATH_AMPLITUDE = dimensions.width > 0 && dimensions.width < 500 ? 40 : 85;
     const BASE_PADDING_TOP = 80;
+    const prefersReducedMotion = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     const totalHeight = Math.max(600, nodes.length * NODE_SPACING + BASE_PADDING_TOP * 2);
 
@@ -172,6 +176,7 @@ const GameMapComponent = ({ nodes }) => {
                             strokeWidth="14"
                             strokeLinecap="round"
                             className="opacity-30 dark:opacity-10"
+                            aria-hidden="true"
                         />
                         
                         {/* Glowing flowing active path */}
@@ -182,7 +187,8 @@ const GameMapComponent = ({ nodes }) => {
                             strokeWidth="8"
                             strokeLinecap="round"
                             strokeDasharray="16 12"
-                            className="map-path-animated opacity-85"
+                            className={prefersReducedMotion ? 'opacity-85' : 'map-path-animated opacity-85'}
+                            aria-hidden="true"
                         />
                     </svg>
 
@@ -194,6 +200,7 @@ const GameMapComponent = ({ nodes }) => {
                             x={node.px}
                             y={node.py}
                             index={index}
+                            isCurrent={node.status === 'active'}
                         />
                     ))}
                 </div>
