@@ -4,6 +4,7 @@ import { Trophy, Medal, Award, TrendingUp, Crown } from 'lucide-react';
 import api from '../../utils/api';
 import useCourseStore from '../../store/courseStore';
 import useGamificationStore, { AVATARS } from '../../store/gamificationStore';
+import { io } from 'socket.io-client';
 
 const RANK_STYLES = [
     { bg: 'from-amber-300 via-yellow-400 to-amber-500', text: 'text-amber-950', icon: <Crown size={14} className="animate-bounce" />, shadow: 'shadow-[0_4px_12px_rgba(245,158,11,0.45)]' },
@@ -17,10 +18,31 @@ const Leaderboard = ({ courseId }) => {
     const [entries, setEntries] = useState([]);
     const [period, setPeriod] = useState('weekly');
     const [isLoading, setIsLoading] = useState(true);
+    const [refreshKey, setRefreshKey] = useState(0);
     const { user: currentUser } = useCourseStore();
     const { activeAvatar } = useGamificationStore();
     
     const currentUserEmoji = AVATARS.find(a => a.id === activeAvatar)?.emoji || '🎓';
+
+    // Socket.io updates for real-time leaderboards
+    useEffect(() => {
+        const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5005';
+        const socket = io(API_BASE_URL, {
+            withCredentials: true
+        });
+
+        socket.on('leaderboard_update', (data) => {
+            console.log('[Socket] Leaderboard updated by user:', data);
+            // Only refresh if the update is for the current course, or if both are global (null)
+            if (!courseId || data.courseId === courseId) {
+                setRefreshKey(prev => prev + 1);
+            }
+        });
+
+        return () => {
+            socket.disconnect();
+        };
+    }, [courseId]);
 
     useEffect(() => {
         const fetchLeaderboard = async () => {
@@ -52,7 +74,7 @@ const Leaderboard = ({ courseId }) => {
             }
         };
         fetchLeaderboard();
-    }, [courseId, period, currentUserEmoji, currentUser?.totalXP]);
+    }, [courseId, period, currentUserEmoji, currentUser?.totalXP, refreshKey]);
 
     return (
         <div className="glass-card rounded-3xl p-3 sm:p-5 relative overflow-hidden group h-full flex flex-col" dir="rtl">

@@ -6,6 +6,7 @@ import GameMapComponent from '../components/map/GameMap';
 import { ChevronLeft, Loader2, RotateCcw } from 'lucide-react';
 import useAuthStore from '../store/authStore';
 import useCourseStore from '../store/courseStore';
+import { io } from 'socket.io-client';
 
 /** Total generation attempts allowed (1 initial + 1 retry) — mirrors the backend cap. */
 const MAX_GENERATION_ATTEMPTS = 2;
@@ -60,24 +61,44 @@ const CourseMap = () => {
         }
     };
 
-    // Auto-poll while roadmap is still generating
+    // Socket.io real-time updates while roadmap is generating
     useEffect(() => {
-        if (!course) return;
+        if (!courseId) return;
 
-        const hasNodes = course.nodes && course.nodes.length > 0;
-        const isFailed = course.generationStatus === 'failed';
-        const isReady = course.generationStatus === 'ready';
+        const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5005';
+        const socket = io(API_BASE_URL, {
+            withCredentials: true
+        });
 
-        // Only poll if course exists, has no nodes yet, and hasn't failed or completed
-        if (hasNodes || isFailed || isReady || localLoading) return;
+        console.log('[Socket] Connecting to server for course updates...');
+        
+        socket.on('connect', () => {
+            console.log('[Socket] Connected to server, joining room...');
+            socket.emit('join_course', courseId);
+        });
 
-        const interval = setInterval(async () => {
-            console.log('[CourseMap] Polling for nodes...');
-            await fetchCourseNodes(courseId);
-        }, 3000); // Poll every 3 seconds
+        socket.on('course_generation_status', async (data) => {
+            console.log('[Socket] Received course generation status:', data);
+            if (data.courseId === courseId) {
+                await fetchCourseNodes(courseId);
+            }
+        });
 
-        return () => clearInterval(interval);
-    }, [courseId, course, localLoading, fetchCourseNodes]);
+        const isGenerating = course?.generationStatus === 'generating';
+
+        // Periodic backup poll as a robust fallback
+        const backupInterval = setInterval(async () => {
+            if (isGenerating) {
+                console.log('[CourseMap] Backup polling nodes...');
+                await fetchCourseNodes(courseId);
+            }
+        }, 10000);
+
+        return () => {
+            socket.disconnect();
+            clearInterval(backupInterval);
+        };
+    }, [courseId, course?.generationStatus, fetchCourseNodes]);
     
     // Map backend status to frontend map statuses
     const nodes = (course?.nodes || []).map((node, index) => {

@@ -6,6 +6,7 @@ import Progress from '../models/Progress.js';
 import QuizAttempt from '../models/QuizAttempt.js';
 import storage from '../services/storage/index.js';
 import { generateRoadmap, evaluateCourse } from '../services/aiService.js';
+import { getIO } from '../config/socket.js';
 
 const safeJSONParse = (str, fieldName) => {
   if (!str) return undefined;
@@ -360,6 +361,19 @@ async function generateRoadmapInBackground(course, syllabusData, materialsData, 
     await course.save();
 
     console.log(`[Background] ✅ Course ${course._id} generation complete! ${roadmapResult.nodes?.length || 0} nodes created.`);
+    
+    // Broadcast ready event to sockets in room
+    try {
+      const io = getIO();
+      if (io) {
+        io.to(`course_${course._id}`).emit('course_generation_status', {
+          status: 'ready',
+          courseId: course._id.toString()
+        });
+      }
+    } catch (socketErr) {
+      console.error('[Background] Failed to emit course ready socket:', socketErr.message);
+    }
   } catch (error) {
     console.error(`[Background] ❌ Course ${course._id} generation failed:`, error.message);
     // Persist the failure with an atomic field update rather than course.save():
@@ -373,6 +387,20 @@ async function generateRoadmapInBackground(course, syllabusData, materialsData, 
         generationError: error.message,
         isPublished: false, // Do not publish failed courses
       });
+      
+      // Broadcast failed event to sockets in room
+      try {
+        const io = getIO();
+        if (io) {
+          io.to(`course_${course._id}`).emit('course_generation_status', {
+            status: 'failed',
+            courseId: course._id.toString(),
+            error: error.message
+          });
+        }
+      } catch (socketErr) {
+        console.error('[Background] Failed to emit course failed socket:', socketErr.message);
+      }
     } catch (persistError) {
       console.error(`[Background] ❌ Failed to record generation failure for course ${course._id}:`, persistError.message);
     }

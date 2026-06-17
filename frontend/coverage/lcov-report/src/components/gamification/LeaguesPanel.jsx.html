@@ -1,0 +1,553 @@
+
+<!doctype html>
+<html lang="en">
+
+<head>
+    <title>Code coverage report for src/components/gamification/LeaguesPanel.jsx</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../../../prettify.css" />
+    <link rel="stylesheet" href="../../../base.css" />
+    <link rel="shortcut icon" type="image/x-icon" href="../../../favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../../../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+    
+<body>
+<div class='wrapper'>
+    <div class='pad1'>
+        <h1><a href="../../../index.html">All files</a> / <a href="index.html">src/components/gamification</a> LeaguesPanel.jsx</h1>
+        <div class='clearfix'>
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">0% </span>
+                <span class="quiet">Statements</span>
+                <span class='fraction'>0/20</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">0% </span>
+                <span class="quiet">Branches</span>
+                <span class='fraction'>0/32</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">0% </span>
+                <span class="quiet">Functions</span>
+                <span class='fraction'>0/4</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">0% </span>
+                <span class="quiet">Lines</span>
+                <span class='fraction'>0/19</span>
+            </div>
+        
+            
+        </div>
+        <p class="quiet">
+            Press <em>n</em> or <em>j</em> to go to the next uncovered block, <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
+        </p>
+        <template id="filterTemplate">
+            <div class="quiet">
+                Filter:
+                <input type="search" id="fileSearch">
+            </div>
+        </template>
+    </div>
+    <div class='status-line low'></div>
+    <pre><table class="coverage">
+<tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
+<a name='L2'></a><a href='#L2'>2</a>
+<a name='L3'></a><a href='#L3'>3</a>
+<a name='L4'></a><a href='#L4'>4</a>
+<a name='L5'></a><a href='#L5'>5</a>
+<a name='L6'></a><a href='#L6'>6</a>
+<a name='L7'></a><a href='#L7'>7</a>
+<a name='L8'></a><a href='#L8'>8</a>
+<a name='L9'></a><a href='#L9'>9</a>
+<a name='L10'></a><a href='#L10'>10</a>
+<a name='L11'></a><a href='#L11'>11</a>
+<a name='L12'></a><a href='#L12'>12</a>
+<a name='L13'></a><a href='#L13'>13</a>
+<a name='L14'></a><a href='#L14'>14</a>
+<a name='L15'></a><a href='#L15'>15</a>
+<a name='L16'></a><a href='#L16'>16</a>
+<a name='L17'></a><a href='#L17'>17</a>
+<a name='L18'></a><a href='#L18'>18</a>
+<a name='L19'></a><a href='#L19'>19</a>
+<a name='L20'></a><a href='#L20'>20</a>
+<a name='L21'></a><a href='#L21'>21</a>
+<a name='L22'></a><a href='#L22'>22</a>
+<a name='L23'></a><a href='#L23'>23</a>
+<a name='L24'></a><a href='#L24'>24</a>
+<a name='L25'></a><a href='#L25'>25</a>
+<a name='L26'></a><a href='#L26'>26</a>
+<a name='L27'></a><a href='#L27'>27</a>
+<a name='L28'></a><a href='#L28'>28</a>
+<a name='L29'></a><a href='#L29'>29</a>
+<a name='L30'></a><a href='#L30'>30</a>
+<a name='L31'></a><a href='#L31'>31</a>
+<a name='L32'></a><a href='#L32'>32</a>
+<a name='L33'></a><a href='#L33'>33</a>
+<a name='L34'></a><a href='#L34'>34</a>
+<a name='L35'></a><a href='#L35'>35</a>
+<a name='L36'></a><a href='#L36'>36</a>
+<a name='L37'></a><a href='#L37'>37</a>
+<a name='L38'></a><a href='#L38'>38</a>
+<a name='L39'></a><a href='#L39'>39</a>
+<a name='L40'></a><a href='#L40'>40</a>
+<a name='L41'></a><a href='#L41'>41</a>
+<a name='L42'></a><a href='#L42'>42</a>
+<a name='L43'></a><a href='#L43'>43</a>
+<a name='L44'></a><a href='#L44'>44</a>
+<a name='L45'></a><a href='#L45'>45</a>
+<a name='L46'></a><a href='#L46'>46</a>
+<a name='L47'></a><a href='#L47'>47</a>
+<a name='L48'></a><a href='#L48'>48</a>
+<a name='L49'></a><a href='#L49'>49</a>
+<a name='L50'></a><a href='#L50'>50</a>
+<a name='L51'></a><a href='#L51'>51</a>
+<a name='L52'></a><a href='#L52'>52</a>
+<a name='L53'></a><a href='#L53'>53</a>
+<a name='L54'></a><a href='#L54'>54</a>
+<a name='L55'></a><a href='#L55'>55</a>
+<a name='L56'></a><a href='#L56'>56</a>
+<a name='L57'></a><a href='#L57'>57</a>
+<a name='L58'></a><a href='#L58'>58</a>
+<a name='L59'></a><a href='#L59'>59</a>
+<a name='L60'></a><a href='#L60'>60</a>
+<a name='L61'></a><a href='#L61'>61</a>
+<a name='L62'></a><a href='#L62'>62</a>
+<a name='L63'></a><a href='#L63'>63</a>
+<a name='L64'></a><a href='#L64'>64</a>
+<a name='L65'></a><a href='#L65'>65</a>
+<a name='L66'></a><a href='#L66'>66</a>
+<a name='L67'></a><a href='#L67'>67</a>
+<a name='L68'></a><a href='#L68'>68</a>
+<a name='L69'></a><a href='#L69'>69</a>
+<a name='L70'></a><a href='#L70'>70</a>
+<a name='L71'></a><a href='#L71'>71</a>
+<a name='L72'></a><a href='#L72'>72</a>
+<a name='L73'></a><a href='#L73'>73</a>
+<a name='L74'></a><a href='#L74'>74</a>
+<a name='L75'></a><a href='#L75'>75</a>
+<a name='L76'></a><a href='#L76'>76</a>
+<a name='L77'></a><a href='#L77'>77</a>
+<a name='L78'></a><a href='#L78'>78</a>
+<a name='L79'></a><a href='#L79'>79</a>
+<a name='L80'></a><a href='#L80'>80</a>
+<a name='L81'></a><a href='#L81'>81</a>
+<a name='L82'></a><a href='#L82'>82</a>
+<a name='L83'></a><a href='#L83'>83</a>
+<a name='L84'></a><a href='#L84'>84</a>
+<a name='L85'></a><a href='#L85'>85</a>
+<a name='L86'></a><a href='#L86'>86</a>
+<a name='L87'></a><a href='#L87'>87</a>
+<a name='L88'></a><a href='#L88'>88</a>
+<a name='L89'></a><a href='#L89'>89</a>
+<a name='L90'></a><a href='#L90'>90</a>
+<a name='L91'></a><a href='#L91'>91</a>
+<a name='L92'></a><a href='#L92'>92</a>
+<a name='L93'></a><a href='#L93'>93</a>
+<a name='L94'></a><a href='#L94'>94</a>
+<a name='L95'></a><a href='#L95'>95</a>
+<a name='L96'></a><a href='#L96'>96</a>
+<a name='L97'></a><a href='#L97'>97</a>
+<a name='L98'></a><a href='#L98'>98</a>
+<a name='L99'></a><a href='#L99'>99</a>
+<a name='L100'></a><a href='#L100'>100</a>
+<a name='L101'></a><a href='#L101'>101</a>
+<a name='L102'></a><a href='#L102'>102</a>
+<a name='L103'></a><a href='#L103'>103</a>
+<a name='L104'></a><a href='#L104'>104</a>
+<a name='L105'></a><a href='#L105'>105</a>
+<a name='L106'></a><a href='#L106'>106</a>
+<a name='L107'></a><a href='#L107'>107</a>
+<a name='L108'></a><a href='#L108'>108</a>
+<a name='L109'></a><a href='#L109'>109</a>
+<a name='L110'></a><a href='#L110'>110</a>
+<a name='L111'></a><a href='#L111'>111</a>
+<a name='L112'></a><a href='#L112'>112</a>
+<a name='L113'></a><a href='#L113'>113</a>
+<a name='L114'></a><a href='#L114'>114</a>
+<a name='L115'></a><a href='#L115'>115</a>
+<a name='L116'></a><a href='#L116'>116</a>
+<a name='L117'></a><a href='#L117'>117</a>
+<a name='L118'></a><a href='#L118'>118</a>
+<a name='L119'></a><a href='#L119'>119</a>
+<a name='L120'></a><a href='#L120'>120</a>
+<a name='L121'></a><a href='#L121'>121</a>
+<a name='L122'></a><a href='#L122'>122</a>
+<a name='L123'></a><a href='#L123'>123</a>
+<a name='L124'></a><a href='#L124'>124</a>
+<a name='L125'></a><a href='#L125'>125</a>
+<a name='L126'></a><a href='#L126'>126</a>
+<a name='L127'></a><a href='#L127'>127</a>
+<a name='L128'></a><a href='#L128'>128</a>
+<a name='L129'></a><a href='#L129'>129</a>
+<a name='L130'></a><a href='#L130'>130</a>
+<a name='L131'></a><a href='#L131'>131</a>
+<a name='L132'></a><a href='#L132'>132</a>
+<a name='L133'></a><a href='#L133'>133</a>
+<a name='L134'></a><a href='#L134'>134</a>
+<a name='L135'></a><a href='#L135'>135</a>
+<a name='L136'></a><a href='#L136'>136</a>
+<a name='L137'></a><a href='#L137'>137</a>
+<a name='L138'></a><a href='#L138'>138</a>
+<a name='L139'></a><a href='#L139'>139</a>
+<a name='L140'></a><a href='#L140'>140</a>
+<a name='L141'></a><a href='#L141'>141</a>
+<a name='L142'></a><a href='#L142'>142</a>
+<a name='L143'></a><a href='#L143'>143</a>
+<a name='L144'></a><a href='#L144'>144</a>
+<a name='L145'></a><a href='#L145'>145</a>
+<a name='L146'></a><a href='#L146'>146</a>
+<a name='L147'></a><a href='#L147'>147</a>
+<a name='L148'></a><a href='#L148'>148</a>
+<a name='L149'></a><a href='#L149'>149</a>
+<a name='L150'></a><a href='#L150'>150</a>
+<a name='L151'></a><a href='#L151'>151</a>
+<a name='L152'></a><a href='#L152'>152</a>
+<a name='L153'></a><a href='#L153'>153</a>
+<a name='L154'></a><a href='#L154'>154</a>
+<a name='L155'></a><a href='#L155'>155</a>
+<a name='L156'></a><a href='#L156'>156</a>
+<a name='L157'></a><a href='#L157'>157</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import React, { useState } from 'react';
+import { Shield, Trophy, ArrowUpCircle, ArrowDownCircle, AlertCircle, Clock } from 'lucide-react';
+import { motion } from 'framer-motion';
+import useCourseStore from '../../store/courseStore';
+import useGamificationStore from '../../store/gamificationStore';
+&nbsp;
+const LEAGUES = <span class="cstat-no" title="statement not covered" >[</span>
+    { name: 'ליגת הארד', color: 'from-amber-600 to-amber-700', shieldColor: '#cd7f32', border: 'border-amber-500/20' },
+    { name: 'ליגת הכסף', color: 'from-slate-300 to-slate-400', shieldColor: '#c0c0c0', border: 'border-slate-350/20' },
+    { name: 'ליגת הזהב', color: 'from-yellow-400 to-amber-500', shieldColor: '#ffd700', border: 'border-amber-400/30' },
+    { name: 'ליגת הפלטינה', color: 'from-indigo-400 to-purple-500', shieldColor: '#a855f7', border: 'border-purple-400/30' },
+    { name: 'ליגת היהלום', color: 'from-cyan-400 via-blue-500 to-indigo-600', shieldColor: '#22d3ee', border: 'border-cyan-400/40' }
+];
+&nbsp;
+const LeaguesPanel = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >()</span> =&gt; {</span>
+    const { user: currentUser } = <span class="cstat-no" title="statement not covered" >useCourseStore();</span>
+    const { stats } = <span class="cstat-no" title="statement not covered" >useGamificationStore();</span>
+&nbsp;
+    const xp = <span class="cstat-no" title="statement not covered" >currentUser?.totalXP ?? stats.total_xp ?? 0;</span>
+    
+    // Dynamically calculate which league the user is in based on level
+    const userLevel = <span class="cstat-no" title="statement not covered" >stats.level || 1;</span>
+    const leagueIndex = <span class="cstat-no" title="statement not covered" >Math.min(Math.floor((userLevel - 1) / 2), LEAGUES.length - 1);</span>
+    const activeLeague = <span class="cstat-no" title="statement not covered" >LEAGUES[leagueIndex];</span>
+    const nextLeagueName = <span class="cstat-no" title="statement not covered" >leagueIndex &lt; LEAGUES.length - 1 ? LEAGUES[leagueIndex + 1].name : null;</span>
+    const prevLeagueName = <span class="cstat-no" title="statement not covered" >leagueIndex &gt; 0 ? LEAGUES[leagueIndex - 1].name : null;</span>
+&nbsp;
+    // Local countdown timer mockup
+    const [timeLeft] = <span class="cstat-no" title="statement not covered" >useState('נותרו: 3 ימים, 11 שעות');</span>
+&nbsp;
+    // Create league competitors where user is dynamically positioned based on their XP
+    const baseCompetitors = <span class="cstat-no" title="statement not covered" >[</span>
+        { name: 'ליאור כהן', xp: 2150, avatar: '🥷' },
+        { name: 'נועה לוי', xp: 1980, avatar: '🦄' },
+        { name: 'עידו מזרחי', xp: 1720, avatar: '🧠' },
+        { name: 'שירה אלבז', xp: 1250, avatar: '🦊' },
+        { name: 'אמיר אברהם', xp: 950, avatar: '🦁' },
+        { name: 'מיכל יוסף', xp: 810, avatar: '🐼' }
+    ];
+&nbsp;
+    const allParticipants = <span class="cstat-no" title="statement not covered" >[</span>
+        ...baseCompetitors,
+        { name: 'אתה (משתמש)', xp: xp, avatar: '🎓', isYou: true }
+    ].sort(<span class="fstat-no" title="function not covered" >(a</span>, b) =&gt; <span class="cstat-no" title="statement not covered" >b.xp - a.xp)</span>;
+&nbsp;
+    // Map ranks after sort
+    const rankedList = <span class="cstat-no" title="statement not covered" >allParticipants.map(<span class="fstat-no" title="function not covered" >(p</span>, idx) =&gt; (<span class="cstat-no" title="statement not covered" >{ ...p, rank: idx + 1 })</span>);</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >    return (</span>
+        &lt;div className="glass-card rounded-3xl p-5 shadow-lg relative overflow-hidden group flex flex-col h-full font-medium" dir="rtl"&gt;
+            &lt;div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-purple-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" /&gt;
+&nbsp;
+            {/* Header / Active League Shield Banner */}
+            &lt;div className="relative z-10 flex flex-col sm:flex-row items-center gap-4 pb-5 border-b border-slate-200/60 dark:border-white/10"&gt;
+                &lt;div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${activeLeague.color} flex items-center justify-center text-white shadow-md border-b-2 border-black/10 flex-shrink-0 animate-pulse`}&gt;
+                    &lt;Shield size={32} fill="rgba(255,255,255,0.25)" className="stroke-[2]" /&gt;
+                &lt;/div&gt;
+                &lt;div className="text-center sm:text-right flex-1 min-w-0"&gt;
+                    &lt;h3 className="text-lg font-black text-slate-800 dark:text-white flex items-center justify-center sm:justify-start gap-2"&gt;
+                        &lt;span&gt;הליגה השבועית שלך:&lt;/span&gt;
+                        &lt;span className={`bg-gradient-to-r ${activeLeague.color} bg-clip-text text-transparent`}&gt;
+                            {activeLeague.name}
+                        &lt;/span&gt;
+                    &lt;/h3&gt;
+                    &lt;p className="text-xs text-slate-400 dark:text-white/40 mt-1 flex items-center justify-center sm:justify-start gap-1"&gt;
+                        &lt;Clock size={12} /&gt;
+                        &lt;span&gt;{timeLeft} • התקדם כדי לעלות לדרגה הבאה&lt;/span&gt;
+                    &lt;/p&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;
+&nbsp;
+            {/* Competitors List */}
+            &lt;div className="relative z-10 flex-1 space-y-2.5 mt-4 overflow-y-auto max-h-[320px] custom-scrollbar"&gt;
+                {rankedList.map(<span class="fstat-no" title="function not covered" >(e</span>ntry) =&gt; {
+                    const isPromotionZone = <span class="cstat-no" title="statement not covered" >entry.rank &lt;= 3;</span>
+                    const isDemotionZone = <span class="cstat-no" title="statement not covered" >entry.rank &gt;= rankedList.length - 1;</span>
+                    
+<span class="cstat-no" title="statement not covered" >                    return (</span>
+                        &lt;div
+                            key={entry.name}
+                            className={`flex items-center gap-3 p-3 rounded-2xl transition-all duration-300 border ${
+                                entry.isYou
+                                    ? 'bg-gradient-to-l from-indigo-500/10 via-purple-500/10 to-transparent border-indigo-500/30 dark:border-indigo-400/40 shadow-md shadow-indigo-500/5'
+                                    : 'bg-white dark:bg-slate-900/60 hover:bg-slate-50 dark:hover:bg-white/3 border-slate-200/50 dark:border-white/5 shadow-sm'
+                            }`}
+                        &gt;
+                            {/* Rank Indicator and Zone Arrows */}
+                            &lt;div className="w-8 flex flex-col items-center justify-center flex-shrink-0"&gt;
+                                &lt;span className={`text-xs font-black ${entry.isYou ? 'text-indigo-500 font-extrabold' : 'text-slate-500 dark:text-white/40'}`}&gt;
+                                    #{entry.rank}
+                                &lt;/span&gt;
+                                {isPromotionZone &amp;&amp; (
+                                    &lt;ArrowUpCircle size={12} className="text-emerald-500 mt-0.5" title="אזור עלייה" /&gt;
+                                )}
+                                {isDemotionZone &amp;&amp; prevLeagueName &amp;&amp; (
+                                    &lt;ArrowDownCircle size={12} className="text-rose-500 mt-0.5" title="אזור ירידה" /&gt;
+                                )}
+                            &lt;/div&gt;
+&nbsp;
+                            {/* User Avatar */}
+                            &lt;div className={`w-9 h-9 rounded-xl flex items-center justify-center text-xl flex-shrink-0 border transition-all duration-300 ${
+                                entry.isYou
+                                    ? 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white border-indigo-600 shadow-md'
+                                    : 'bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-white/70 border-slate-200/60 dark:border-white/10 shadow-sm'
+                            }`}&gt;
+                                {entry.avatar}
+                            &lt;/div&gt;
+&nbsp;
+                            {/* User Name */}
+                            &lt;span className={`text-xs font-bold flex-1 truncate text-right ${
+                                entry.isYou
+                                    ? 'text-indigo-600 dark:text-indigo-400 font-black'
+                                    : 'text-slate-800 dark:text-white/95'
+                            }`}&gt;
+                                {entry.isYou ? currentUser?.name || 'אתה' : entry.name}
+                                {entry.isYou &amp;&amp; (
+                                    &lt;span className="mr-1.5 text-[8px] font-black text-white bg-indigo-500/80 dark:bg-indigo-500/90 px-1.5 py-0.5 rounded-md uppercase shadow-sm"&gt;
+                                        אתה
+                                    &lt;/span&gt;
+                                )}
+                            &lt;/span&gt;
+&nbsp;
+                            {/* Score Display */}
+                            &lt;div className="flex items-center gap-1.5 bg-slate-50 dark:bg-white/5 border border-slate-200/40 dark:border-white/5 px-2.5 py-1 rounded-xl text-[10px] font-black text-slate-600 dark:text-white/70"&gt;
+                                &lt;Trophy size={11} className="text-amber-500 fill-amber-500/10" /&gt;
+                                &lt;span&gt;{entry.xp.toLocaleString()} XP&lt;/span&gt;
+                            &lt;/div&gt;
+                        &lt;/div&gt;
+                    );
+                })}
+            &lt;/div&gt;
+&nbsp;
+            {/* Promotion/Demotion Zone Legend */}
+            &lt;div className="relative z-10 grid grid-cols-2 gap-4 mt-5 pt-4 border-t border-slate-200/60 dark:border-white/10 text-xs"&gt;
+                &lt;div className="flex items-start gap-1.5 text-emerald-600 dark:text-emerald-400"&gt;
+                    &lt;ArrowUpCircle size={14} className="mt-0.5 shrink-0" /&gt;
+                    &lt;div&gt;
+                        &lt;p className="font-bold"&gt;טופ 3: אזור עלייה&lt;/p&gt;
+                        &lt;p className="text-[10px] text-slate-400 dark:text-white/30"&gt;עליה ל{nextLeagueName || 'הדרגה העליונה'}&lt;/p&gt;
+                    &lt;/div&gt;
+                &lt;/div&gt;
+                {prevLeagueName &amp;&amp; (
+                    &lt;div className="flex items-start gap-1.5 text-rose-500 dark:text-rose-400"&gt;
+                        &lt;ArrowDownCircle size={14} className="mt-0.5 shrink-0" /&gt;
+                        &lt;div&gt;
+                            &lt;p className="font-bold"&gt;בוטום 2: אזור סכנה&lt;/p&gt;
+                            &lt;p className="text-[10px] text-slate-400 dark:text-white/30"&gt;ירידה ל{prevLeagueName}&lt;/p&gt;
+                        &lt;/div&gt;
+                    &lt;/div&gt;
+                )}
+            &lt;/div&gt;
+        &lt;/div&gt;
+    );
+};
+&nbsp;
+export default LeaguesPanel;
+&nbsp;</pre></td></tr></table></pre>
+
+                <div class='push'></div><!-- for sticky footer -->
+            </div><!-- /wrapper -->
+            <div class='footer quiet pad2 space-top1 center small'>
+                Code coverage generated by
+                <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
+                at 2026-06-17T13:14:08.300Z
+            </div>
+        <script src="../../../prettify.js"></script>
+        <script>
+            window.onload = function () {
+                prettyPrint();
+            };
+        </script>
+        <script src="../../../sorter.js"></script>
+        <script src="../../../block-navigation.js"></script>
+    </body>
+</html>
+    

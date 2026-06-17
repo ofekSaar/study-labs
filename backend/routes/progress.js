@@ -8,6 +8,10 @@ import {
   completeNode,
   getGlobalLeaderboard,
   getCourseLeaderboard,
+  getGamificationState,
+  syncGamificationState,
+  buyShopItem,
+  updateActiveCustomizations,
 } from '../controllers/progressController.js';
 
 const router = Router();
@@ -48,6 +52,12 @@ const router = Router();
  *                       type: number
  */
 router.get('/stats', authenticate, authorize('student'), getStats);
+
+// Gamification persistence and customization endpoints
+router.get('/gamification', authenticate, getGamificationState);
+router.put('/gamification/sync', authenticate, syncGamificationState);
+router.post('/gamification/shop/buy', authenticate, buyShopItem);
+router.put('/gamification/active', authenticate, updateActiveCustomizations);
 
 /**
  * @swagger

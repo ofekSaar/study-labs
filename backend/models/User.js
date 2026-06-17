@@ -39,6 +39,93 @@ const userSchema = new mongoose.Schema(
       enum: ['student', 'instructor', null],
       default: null,
     },
+    // Gamification state persistence
+    coins: {
+      type: Number,
+      default: 100,
+    },
+    streakShields: {
+      type: Number,
+      default: 0,
+    },
+    xpBoosts: {
+      type: Number,
+      default: 0,
+    },
+    weekendFreezes: {
+      type: Number,
+      default: 0,
+    },
+    activeAvatar: {
+      type: String,
+      default: 'default',
+    },
+    activeTitle: {
+      type: String,
+      default: 'beginner',
+    },
+    unlockedAvatars: {
+      type: [String],
+      default: ['default'],
+    },
+    unlockedTitles: {
+      type: [String],
+      default: ['beginner'],
+    },
+    activeTheme: {
+      type: String,
+      default: 'default',
+    },
+    unlockedThemes: {
+      type: [String],
+      default: ['default'],
+    },
+    activeFrame: {
+      type: String,
+      default: 'default',
+    },
+    unlockedFrames: {
+      type: [String],
+      default: ['default'],
+    },
+    unlockedBadges: {
+      type: [String],
+      default: [],
+    },
+    stats: {
+      lessons_completed: { type: Number, default: 0 },
+      perfect_quizzes: { type: Number, default: 0 },
+      streak: { type: Number, default: 0 },
+      fast_answers: { type: Number, default: 0 },
+      no_mistake_streak: { type: Number, default: 0 },
+      level: { type: Number, default: 1 },
+      total_xp: { type: Number, default: 0 },
+      night_study: { type: Number, default: 0 },
+      early_study: { type: Number, default: 0 },
+      daily_challenges: { type: Number, default: 0 },
+      courses_completed: { type: Number, default: 0 },
+    },
+    questsProgress: {
+      type: Map,
+      of: Number,
+      default: {},
+    },
+    questsClaimed: {
+      type: [String],
+      default: [],
+    },
+    dailyChallengeCompleted: {
+      type: Boolean,
+      default: false,
+    },
+    lastChallengeDate: {
+      type: String,
+      default: null,
+    },
+    activityLog: {
+      type: [String],
+      default: [],
+    },
   },
   {
     timestamps: true,

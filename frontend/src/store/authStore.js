@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import api, { getToken, setToken, removeToken } from '../utils/api.js';
+import useGamificationStore from './gamificationStore.js';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5005';
 
@@ -29,6 +30,7 @@ const useAuthStore = create((set) => ({
                 isAuthenticated: true,
                 isLoading: false,
             });
+            useGamificationStore.getState().fetchGamificationState();
         } catch {
             removeToken();
             set({ user: null, role: null, isAuthenticated: false, isLoading: false });
@@ -48,6 +50,7 @@ const useAuthStore = create((set) => ({
                 isAuthenticated: true,
                 isLoading: false,
             });
+            useGamificationStore.getState().fetchGamificationState();
             return data.user;
         } catch {
             removeToken();
