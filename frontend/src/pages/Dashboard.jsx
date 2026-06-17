@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import StudentLayout from '../components/layout/StudentLayout';
 import RoadmapView from '../components/dashboard/RoadmapView';
@@ -16,6 +17,7 @@ import LoadingSkeleton from '../components/common/LoadingSkeleton';
 import EmptyState from '../components/common/EmptyState';
 
 const Dashboard = () => {
+    const navigate = useNavigate();
     const { courses, fetchCourses, fetchStats, isLoading, user, selectedCourseId } = useCourseStore();
     const { logActivity, generateDailyChallenge } = useGamificationStore();
 
@@ -74,7 +76,7 @@ const Dashboard = () => {
                         icon={BookOpen}
                         title="No courses yet"
                         description="Browse available courses and enroll to start earning XP and levelling up."
-                        action={{ label: 'Browse Courses', onClick: () => window.location.href = '/courses' }}
+                        action={{ label: 'Browse Courses', onClick: () => navigate('/my-courses') }}
                     />
                 </div>
             </StudentLayout>

@@ -1,6 +1,7 @@
 import React from 'react';
 import StudentLayout from '../components/layout/StudentLayout';
 import useCourseStore from '../store/courseStore';
+import useAuthStore from '../store/authStore';
 import useGamificationStore from '../store/gamificationStore';
 import { AVATARS, TITLES, SHOP_ITEMS, FRAMES, THEMES } from '../constants/gamification';
 import Leaderboard from '../components/gamification/Leaderboard';
@@ -10,7 +11,11 @@ import { Trophy, Zap, Flame, User, Mail, Shield, Check, Lock, Sparkles, Coins, S
 import { motion } from 'framer-motion';
 
 const StudentProfile = () => {
-    const { user } = useCourseStore();
+    const { user: courseUser } = useCourseStore();
+    const { user: authUser } = useAuthStore();
+    // Real profile data (name, email, role) comes from authStore (Google OAuth).
+    // XP/streak/level come from courseStore which fetches /api/progress/stats.
+    const user = { ...courseUser, ...authUser };
     const {
         activeAvatar,
         activeTitle,
