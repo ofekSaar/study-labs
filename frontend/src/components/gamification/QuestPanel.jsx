@@ -10,7 +10,7 @@ const QuestPanel = () => {
 
     useEffect(() => {
         initializeQuests();
-    }, []);
+    }, [initializeQuests]);
 
     const quests = activeQuests[activeTab] || [];
 

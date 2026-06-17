@@ -11,8 +11,11 @@ const StudyShop = () => {
         coins,
         unlockedAvatars, 
         unlockedTitles, 
+        unlockedThemes,
+        unlockedFrames,
         streakShields,
         xpBoosts,
+        weekendFreezes,
         buyItem
     } = useGamificationStore();
 
@@ -78,7 +81,7 @@ const StudyShop = () => {
                     variants={containerVariants}
                     initial="hidden"
                     animate="show"
-                    className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"
+                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
                 >
                     
                     {/* Category 1: Avatars */}
@@ -166,14 +169,102 @@ const StudyShop = () => {
                         </div>
                     </motion.div>
 
-                    {/* Category 3: Power-ups */}
+                    {/* Category 3: Premium Themes */}
+                    <motion.div 
+                        variants={itemVariants}
+                        className="bg-white/80 dark:bg-white/5 border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-md relative overflow-hidden flex flex-col"
+                    >
+                        <div className="absolute inset-0 bg-gradient-to-b from-blue-500/5 to-transparent pointer-events-none" />
+                        <h3 className="font-display font-black text-xl text-slate-800 dark:text-white flex items-center gap-2 mb-2 relative z-10">
+                            🌌 UI Themes
+                        </h3>
+                        <p className="text-slate-500 dark:text-white/50 text-xs mb-6 relative z-10">
+                            Unlock unique UI skins to change your entire dashboard look.
+                        </p>
+
+                        <div className="space-y-4 flex-1 relative z-10">
+                            {SHOP_ITEMS.themes.map(item => {
+                                const isOwned = unlockedThemes.includes(item.id);
+                                return (
+                                    <div 
+                                        key={item.id} 
+                                        className="bg-white dark:bg-slate-900/50 border border-slate-200/60 dark:border-white/5 rounded-2xl p-4 flex items-center justify-between gap-4 transition hover:border-indigo-500/30"
+                                    >
+                                        <div className="flex items-center gap-3 min-w-0">
+                                            <span className="text-2xl select-none bg-slate-100 dark:bg-white/5 w-12 h-12 rounded-xl flex items-center justify-center border border-slate-200/30 dark:border-white/5">{item.emoji}</span>
+                                            <div className="min-w-0">
+                                                <p className="font-black text-slate-800 dark:text-white text-sm truncate">{item.name}</p>
+                                                <p className="text-[10px] text-slate-400 dark:text-white/40 mt-1 leading-snug">{item.description}</p>
+                                            </div>
+                                        </div>
+                                        {isOwned ? (
+                                            <span className="text-[10px] font-black text-emerald-500 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-xl uppercase shrink-0">Owned</span>
+                                        ) : (
+                                            <button
+                                                onClick={() => buyItem('themes', item.id, item.cost)}
+                                                className="bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-950 font-black text-xs px-4 py-2 rounded-xl flex items-center gap-1 transition shadow-sm shrink-0"
+                                            >
+                                                🪙 {item.cost}
+                                            </button>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </motion.div>
+
+                    {/* Category 4: Glowing Borders */}
+                    <motion.div 
+                        variants={itemVariants}
+                        className="bg-white/80 dark:bg-white/5 border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-md relative overflow-hidden flex flex-col"
+                    >
+                        <div className="absolute inset-0 bg-gradient-to-b from-rose-500/5 to-transparent pointer-events-none" />
+                        <h3 className="font-display font-black text-xl text-slate-800 dark:text-white flex items-center gap-2 mb-2 relative z-10">
+                            🖼️ Glowing Borders
+                        </h3>
+                        <p className="text-slate-500 dark:text-white/50 text-xs mb-6 relative z-10">
+                            Equip legendary glowing borders around your avatar.
+                        </p>
+
+                        <div className="space-y-4 flex-1 relative z-10">
+                            {SHOP_ITEMS.frames.map(item => {
+                                const isOwned = unlockedFrames.includes(item.id);
+                                return (
+                                    <div 
+                                        key={item.id} 
+                                        className="bg-white dark:bg-slate-900/50 border border-slate-200/60 dark:border-white/5 rounded-2xl p-4 flex items-center justify-between gap-4 transition hover:border-indigo-500/30"
+                                    >
+                                        <div className="flex items-center gap-3 min-w-0">
+                                            <span className="text-2xl select-none bg-slate-100 dark:bg-white/5 w-12 h-12 rounded-xl flex items-center justify-center border border-slate-200/30 dark:border-white/5">{item.emoji}</span>
+                                            <div className="min-w-0">
+                                                <p className="font-black text-slate-800 dark:text-white text-sm truncate">{item.name}</p>
+                                                <p className="text-[10px] text-slate-400 dark:text-white/40 mt-1 leading-snug">{item.description}</p>
+                                            </div>
+                                        </div>
+                                        {isOwned ? (
+                                            <span className="text-[10px] font-black text-emerald-500 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-xl uppercase shrink-0">Owned</span>
+                                        ) : (
+                                            <button
+                                                onClick={() => buyItem('frames', item.id, item.cost)}
+                                                className="bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-950 font-black text-xs px-4 py-2 rounded-xl flex items-center gap-1 transition shadow-sm shrink-0"
+                                            >
+                                                🪙 {item.cost}
+                                            </button>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </motion.div>
+
+                    {/* Category 5: Power-ups */}
                     <motion.div 
                         variants={itemVariants}
                         className="bg-white/80 dark:bg-white/5 border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-md relative overflow-hidden flex flex-col"
                     >
                         <div className="absolute inset-0 bg-gradient-to-b from-amber-500/5 to-transparent pointer-events-none" />
                         <h3 className="font-display font-black text-xl text-slate-800 dark:text-white flex items-center gap-2 mb-2 relative z-10">
-                            ⚡ Consumable Boosters
+                            ⚡ Boosters & Powerups
                         </h3>
                         <p className="text-slate-500 dark:text-white/50 text-xs mb-6 relative z-10">
                             Equip items that help preserve your streaks or multiply earned XP.
@@ -181,7 +272,7 @@ const StudyShop = () => {
 
                         <div className="space-y-4 flex-1 relative z-10">
                             {SHOP_ITEMS.powerups.map(item => {
-                                const ownedCount = item.id === 'streak_shield' ? streakShields : xpBoosts;
+                                const ownedCount = item.id === 'streak_shield' ? streakShields : (item.id === 'xp_boost' ? xpBoosts : weekendFreezes);
                                 return (
                                     <div 
                                         key={item.id} 

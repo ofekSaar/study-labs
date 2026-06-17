@@ -45,7 +45,7 @@ const NavItem = ({ icon, label, active, onClick }) => (
 );
 
 const SidebarContent = ({ location, navigate, courses, selectedCourseId, setSelectedCourse, _courseUser, user, setIsSidebarOpen, setIsSettingsOpen, handleLogout }) => {
-    const { activeAvatar, activeTitle, stats } = useGamificationStore();
+    const { activeAvatar, activeTitle, activeFrame, stats } = useGamificationStore();
     const [isCourseDropdownOpen, setIsCourseDropdownOpen] = React.useState(false);
     
     // Find active customizable representations
@@ -192,7 +192,7 @@ const SidebarContent = ({ location, navigate, courses, selectedCourseId, setSele
                 >
                     <div className="relative flex-shrink-0">
                         {/* Selected Customizable Emoji Avatar */}
-                        <div className="w-10 h-10 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-2xl shadow-sm transition-transform duration-300 group-hover/sidebar-profile:scale-110 select-none">
+                        <div className={`w-10 h-10 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-2xl shadow-sm transition-transform duration-300 group-hover/sidebar-profile:scale-110 select-none avatar-frame-${activeFrame}`}>
                             {currentAvatar.emoji}
                         </div>
                         <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-400 rounded-full border-2 border-white dark:border-slate-900" />

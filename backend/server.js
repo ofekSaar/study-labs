@@ -14,6 +14,8 @@ import { recoverStuckGenerations } from './services/aiService.js';
 import configurePassport from './config/passport.js';
 import swaggerSpec from './config/swagger.js';
 import errorHandler from './middleware/errorHandler.js';
+import { createServer } from 'http';
+import { initSocket } from './config/socket.js';
 
 // Routes
 import authRoutes from './routes/auth.js';
@@ -93,7 +95,10 @@ const startServer = async () => {
   await connectDB();
   await recoverStuckGenerations(); // flip courses stuck in 'generating' (e.g. from a restart) to 'failed' so they can be retried
 
-  app.listen(PORT, () => {
+  const server = createServer(app);
+  initSocket(server);
+
+  server.listen(PORT, () => {
     console.log(`\n🚀 StudyLabs API running on http://localhost:${PORT}`);
     console.log(`📚 API Docs: http://localhost:${PORT}/api-docs`);
     console.log(`🏥 Health: http://localhost:${PORT}/api/health`);

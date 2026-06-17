@@ -3,6 +3,17 @@ import useAuthStoreModule from '../store/authStore';
 
 const useAuthStore = useAuthStoreModule.default || useAuthStoreModule;
 
+jest.mock('../store/gamificationStore', () => {
+    return {
+        __esModule: true,
+        default: {
+            getState: () => ({
+                fetchGamificationState: jest.fn()
+            })
+        }
+    };
+});
+
 // Set up global fetch mock
 beforeAll(() => {
     global.fetch = jest.fn();

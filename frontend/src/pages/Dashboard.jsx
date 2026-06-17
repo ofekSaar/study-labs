@@ -9,6 +9,7 @@ import { Trophy, Flame, Zap, Award, Target } from 'lucide-react';
 import DailyChallengeCard from '../components/gamification/DailyChallengeCard';
 import LevelUpModal from '../components/gamification/LevelUpModal';
 import ConfettiEffect from '../components/gamification/ConfettiEffect';
+import LeaguesPanel from '../components/gamification/LeaguesPanel';
 import QuestPanel from '../components/gamification/QuestPanel';
 import XPMultiplierBanner from '../components/gamification/XPMultiplierBanner';
 
@@ -144,9 +145,10 @@ const Dashboard = () => {
                             </div>
                         </div>
 
-                        {/* Side Panel: Daily Challenge */}
+                        {/* Side Panel: Daily Challenge & Leagues */}
                         <div className="space-y-5">
                             <DailyChallengeCard />
+                            <LeaguesPanel />
                         </div>
 
                     </div>

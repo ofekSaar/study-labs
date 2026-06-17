@@ -8,6 +8,11 @@ import {
   completeNode,
   getGlobalLeaderboard,
   getCourseLeaderboard,
+  getGamificationState,
+  syncGamificationState,
+  buyShopItem,
+  updateActiveCustomizations,
+  claimQuest,
 } from '../controllers/progressController.js';
 
 const router = Router();
@@ -48,6 +53,14 @@ const router = Router();
  *                       type: number
  */
 router.get('/stats', authenticate, authorize('student'), getStats);
+
+// Gamification persistence and customization endpoints
+router.get('/gamification', authenticate, getGamificationState);
+router.put('/gamification/sync', authenticate, syncGamificationState);
+router.post('/gamification/shop/buy', authenticate, buyShopItem);
+router.put('/gamification/active', authenticate, updateActiveCustomizations);
+// Claim a completed quest's reward (server validates progress + pays canonical XP)
+router.post('/quests/:questId/claim', authenticate, authorize('student'), claimQuest);
 
 /**
  * @swagger
@@ -140,9 +153,8 @@ router.post(
  *           type: string
  *           enum: [weekly, monthly, allTime]
  *         description: >
- *           Time window for ranking. Note: the data model stores only cumulative
- *           XP without per-event timestamps, so all period values return the
- *           all-time ranking.
+ *           Time window for ranking. weekly/monthly aggregate XpEvent records
+ *           within the window; allTime (default) uses cumulative Progress totals.
  *     responses:
  *       200:
  *         description: Leaderboard entries
@@ -191,9 +203,8 @@ router.get('/leaderboard', authenticate, getGlobalLeaderboard);
  *           type: string
  *           enum: [weekly, monthly, allTime]
  *         description: >
- *           Time window for ranking. Note: the data model stores only cumulative
- *           XP without per-event timestamps, so all period values return the
- *           all-time ranking.
+ *           Time window for ranking. weekly/monthly aggregate XpEvent records
+ *           within the window; allTime (default) uses cumulative Progress totals.
  *     responses:
  *       200:
  *         description: Course leaderboard entries

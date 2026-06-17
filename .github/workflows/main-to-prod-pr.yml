@@ -4,11 +4,21 @@ on:
   push:
     branches: [ "main" ]
 
+# GITHUB_TOKEN needs pull-requests: write to open PRs.
+# contents: read is needed by checkout; pull-requests: write by gh pr create.
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
   create-pr:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Full history + all remote refs so git rev-list can compare
+          # origin/production..origin/main without "unknown revision" errors.
+          fetch-depth: 0
 
       - name: Open PR to production
         env:

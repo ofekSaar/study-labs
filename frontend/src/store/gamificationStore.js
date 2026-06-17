@@ -3,9 +3,10 @@ import { persist } from 'zustand/middleware';
 import BADGES, { checkBadges } from '../utils/badges';
 import useToastStore from './toastStore';
 import sounds from '../utils/soundManager';
-import { AVATARS, INSTRUCTOR_AVATARS, TITLES, QUEST_DEFINITIONS, SHOP_ITEMS } from '../constants/gamification';
+import api from '../utils/api.js';
+import { AVATARS, INSTRUCTOR_AVATARS, TITLES, QUEST_DEFINITIONS, SHOP_ITEMS, FRAMES, THEMES } from '../constants/gamification';
 
-export { AVATARS, INSTRUCTOR_AVATARS, TITLES, QUEST_DEFINITIONS, SHOP_ITEMS };
+export { AVATARS, INSTRUCTOR_AVATARS, TITLES, QUEST_DEFINITIONS, SHOP_ITEMS, FRAMES, THEMES };
 
 const useGamificationStore = create(
     persist(
@@ -14,6 +15,7 @@ const useGamificationStore = create(
             coins: 100,
             streakShields: 0,
             xpBoosts: 0,
+            weekendFreezes: 0,
 
             // Level Up state
             showLevelUp: false,
@@ -25,6 +27,12 @@ const useGamificationStore = create(
             activeTitle: 'beginner',
             unlockedAvatars: ['default'],
             unlockedTitles: ['beginner'],
+
+            // Themes & Avatar Frames state
+            activeTheme: 'default',
+            unlockedThemes: ['default'],
+            activeFrame: 'default',
+            unlockedFrames: ['default'],
 
             // Daily Challenge state
             dailyChallenge: null,
@@ -64,8 +72,99 @@ const useGamificationStore = create(
             questsClaimed: [], // array of claimed questIds
 
             // ── Actions ──────────────────────────────────────
-            selectAvatar: (avatarId) => set({ activeAvatar: avatarId }),
-            selectTitle: (titleId) => set({ activeTitle: titleId }),
+            fetchGamificationState: async () => {
+                try {
+                    const res = await api.get('/api/progress/gamification');
+                    if (res && res.data) {
+                        set({
+                            coins: res.data.coins ?? 100,
+                            streakShields: res.data.streakShields ?? 0,
+                            xpBoosts: res.data.xpBoosts ?? 0,
+                            weekendFreezes: res.data.weekendFreezes ?? 0,
+                            activeAvatar: res.data.activeAvatar ?? 'default',
+                            activeTitle: res.data.activeTitle ?? 'beginner',
+                            unlockedAvatars: res.data.unlockedAvatars ?? ['default'],
+                            unlockedTitles: res.data.unlockedTitles ?? ['beginner'],
+                            activeTheme: res.data.activeTheme ?? 'default',
+                            unlockedThemes: res.data.unlockedThemes ?? ['default'],
+                            activeFrame: res.data.activeFrame ?? 'default',
+                            unlockedFrames: res.data.unlockedFrames ?? ['default'],
+                            unlockedBadges: res.data.unlockedBadges ?? [],
+                            stats: res.data.stats ?? get().stats,
+                            questsProgress: res.data.questsProgress ?? {},
+                            questsClaimed: res.data.questsClaimed ?? [],
+                            dailyChallengeCompleted: res.data.dailyChallengeCompleted ?? false,
+                            lastChallengeDate: res.data.lastChallengeDate ?? null,
+                            activityLog: res.data.activityLog ?? [],
+                        });
+                    }
+                } catch (error) {
+                    console.error('[Gamification Store] Failed to fetch state:', error.message);
+                }
+            },
+
+            syncGamificationState: async () => {
+                try {
+                    const state = get();
+                    const payload = {
+                        coins: state.coins,
+                        streakShields: state.streakShields,
+                        xpBoosts: state.xpBoosts,
+                        weekendFreezes: state.weekendFreezes,
+                        unlockedBadges: state.unlockedBadges,
+                        stats: state.stats,
+                        questsProgress: state.questsProgress,
+                        questsClaimed: state.questsClaimed,
+                        dailyChallengeCompleted: state.dailyChallengeCompleted,
+                        lastChallengeDate: state.lastChallengeDate,
+                        activityLog: state.activityLog,
+                        activeAvatar: state.activeAvatar,
+                        activeTitle: state.activeTitle,
+                        unlockedAvatars: state.unlockedAvatars,
+                        unlockedTitles: state.unlockedTitles,
+                        activeTheme: state.activeTheme,
+                        unlockedThemes: state.unlockedThemes,
+                        activeFrame: state.activeFrame,
+                        unlockedFrames: state.unlockedFrames
+                    };
+                    await api.put('/api/progress/gamification/sync', payload);
+                } catch (error) {
+                    console.error('[Gamification Store] Failed to sync state:', error.message);
+                }
+            },
+
+            selectAvatar: async (avatarId) => {
+                set({ activeAvatar: avatarId });
+                try {
+                    await api.put('/api/progress/gamification/active', { activeAvatar: avatarId });
+                } catch (err) {
+                    console.error('[Gamification Store] Failed to save active avatar:', err);
+                }
+            },
+            selectTitle: async (titleId) => {
+                set({ activeTitle: titleId });
+                try {
+                    await api.put('/api/progress/gamification/active', { activeTitle: titleId });
+                } catch (err) {
+                    console.error('[Gamification Store] Failed to save active title:', err);
+                }
+            },
+            selectTheme: async (themeId) => {
+                set({ activeTheme: themeId });
+                try {
+                    await api.put('/api/progress/gamification/active', { activeTheme: themeId });
+                } catch (err) {
+                    console.error('[Gamification Store] Failed to save active theme:', err);
+                }
+            },
+            selectFrame: async (frameId) => {
+                set({ activeFrame: frameId });
+                try {
+                    await api.put('/api/progress/gamification/active', { activeFrame: frameId });
+                } catch (err) {
+                    console.error('[Gamification Store] Failed to save active frame:', err);
+                }
+            },
 
             triggerLevelUp: (newLevel) => {
                 set({ showLevelUp: true, newLevel });
@@ -120,13 +219,10 @@ const useGamificationStore = create(
             checkLevelUp: (previousXP, newXP) => {
                 const oldLevel = Math.floor(previousXP / 100) + 1;
                 const newLevel = Math.floor(newXP / 100) + 1;
-                
-                // Award coins equal to XP difference
-                const xpEarned = newXP - previousXP;
-                if (xpEarned > 0) {
-                    set(state => ({ coins: (state.coins || 0) + xpEarned }));
-                }
-                
+
+                // NOTE: coins are minted server-side (gamificationService) — the
+                // client no longer mints them here. This function now only drives
+                // the level-up celebration + cosmetic unlocks.
                 get().updateStat('total_xp', newXP);
                 get().updateStat('level', newLevel);
 
@@ -166,6 +262,60 @@ const useGamificationStore = create(
                 return false;
             },
 
+            /**
+             * Adopt the authoritative reward result returned by the server
+             * (from POST /complete-node or /quests/:id/claim). The server owns
+             * XP, level, coins and badge unlocks — the client just renders the
+             * outcome (level-up modal, cosmetic unlocks, badge + confetti).
+             */
+            applyServerReward: (result) => {
+                if (!result) return;
+
+                const prevLevel = get().stats.level || 1;
+                const newLevel = result.newLevel ?? prevLevel;
+
+                set(state => ({
+                    coins: result.newCoins ?? state.coins,
+                    stats: {
+                        ...state.stats,
+                        total_xp: result.userTotalXp ?? state.stats.total_xp,
+                        level: newLevel,
+                    },
+                    unlockedBadges: result.newBadges?.length
+                        ? [...new Set([...state.unlockedBadges, ...result.newBadges])]
+                        : state.unlockedBadges,
+                }));
+
+                // Cosmetic unlocks gated by the new level
+                const newlyUnlockedAvatars = AVATARS.filter(a => a.levelReq <= newLevel && !get().unlockedAvatars.includes(a.id)).map(a => a.id);
+                const newlyUnlockedTitles = TITLES.filter(t => t.levelReq <= newLevel && !get().unlockedTitles.includes(t.id)).map(t => t.id);
+                if (newlyUnlockedAvatars.length > 0 || newlyUnlockedTitles.length > 0) {
+                    set(state => ({
+                        unlockedAvatars: [...state.unlockedAvatars, ...newlyUnlockedAvatars],
+                        unlockedTitles: [...state.unlockedTitles, ...newlyUnlockedTitles],
+                    }));
+                }
+
+                // Badge toasts for server-granted badges
+                if (result.newBadges?.length) {
+                    setTimeout(() => {
+                        result.newBadges.forEach(badgeId => {
+                            const b = BADGES.find(x => x.id === badgeId);
+                            if (b) useToastStore.getState().badge(b.name, b.icon);
+                        });
+                        sounds.badge();
+                        get().setTriggerConfetti('badge_unlock');
+                    }, 500);
+                }
+
+                // Level-up celebration
+                if (result.leveledUp || newLevel > prevLevel) {
+                    set({ showLevelUp: true, newLevel });
+                    sounds.levelUp();
+                    get().setTriggerConfetti('level_up');
+                }
+            },
+
             logActivity: () => {
                 const today = new Date().toISOString().split('T')[0];
                 const { activityLog } = get();
@@ -185,6 +335,7 @@ const useGamificationStore = create(
                         });
                     set({ activityLog: pruned });
                 }
+                get().syncGamificationState();
             },
 
             generateDailyChallenge: () => {
@@ -209,6 +360,7 @@ const useGamificationStore = create(
 
                 // Also initialize/regenerate daily/weekly quests
                 get().initializeQuests();
+                get().syncGamificationState();
             },
 
             completeChallenge: () => {
@@ -216,6 +368,7 @@ const useGamificationStore = create(
                 set({ dailyChallengeCompleted: true });
                 get().updateStat('daily_challenges', (get().stats.daily_challenges || 0) + 1);
                 sounds.streak();
+                get().syncGamificationState();
             },
 
             setLeaderboard: (data) => set({ leaderboard: data, leaderboardFetchedAt: Date.now() }),
@@ -253,6 +406,7 @@ const useGamificationStore = create(
 
                     return { stats: updatedStats };
                 });
+                get().syncGamificationState();
             },
 
             incrementStat: (statName, amount = 1) => {
@@ -292,6 +446,7 @@ const useGamificationStore = create(
                         milestone: milestones
                     }
                 });
+                get().syncGamificationState();
             },
 
             incrementQuestProgress: (actionType, amount = 1) => {
@@ -329,6 +484,7 @@ const useGamificationStore = create(
 
                     return { questsProgress: newProgress };
                 });
+                get().syncGamificationState();
             },
 
             claimQuestReward: (questId) => {
@@ -346,24 +502,33 @@ const useGamificationStore = create(
                 const progress = questsProgress[questId] ?? 0;
                 if (progress < quest.target) return; // not completed yet
 
-                // Claim reward
+                // Optimistically mark claimed for snappy UI
                 set(state => ({
                     questsClaimed: [...state.questsClaimed, questId]
                 }));
 
-                // Actually add XP to the user level progression
-                const prevXP = get().stats.total_xp || 0;
-                get().checkLevelUp(prevXP, prevXP + quest.xp);
-
-                // Reward standard XP notification
+                // Reward notification (optimistic)
                 setTimeout(() => {
                     useToastStore.getState().xp(quest.xp, `Quest Reward: ${quest.title}`);
                     sounds.perfectScore();
                     get().setTriggerConfetti('quest_complete');
                 }, 100);
+
+                // The server validates progress and grants the canonical XP/coins.
+                // Adopt its authoritative result; roll back the claim on failure.
+                api.post(`/api/progress/quests/${questId}/claim`)
+                    .then(res => {
+                        if (res?.data) get().applyServerReward(res.data);
+                    })
+                    .catch(err => {
+                        console.error('[Gamification Store] Quest claim failed:', err.message);
+                        set(state => ({
+                            questsClaimed: state.questsClaimed.filter(id => id !== questId)
+                        }));
+                    });
             },
-            buyItem: (itemType, itemId, cost) => {
-                const { coins, unlockedAvatars, unlockedTitles } = get();
+            buyItem: async (itemType, itemId, cost) => {
+                const { coins, unlockedAvatars, unlockedTitles, unlockedThemes, unlockedFrames } = get();
                 if (coins < cost) {
                     useToastStore.getState().success(
                         'Insufficient Coins!',
@@ -382,32 +547,60 @@ const useGamificationStore = create(
                     useToastStore.getState().success('Already Owned', 'You already own this title!', 3000);
                     return false;
                 }
-
-                // Deduct coins
-                set(state => ({ coins: state.coins - cost }));
-
-                // Grant item
-                if (itemType === 'avatars') {
-                    set(state => ({ unlockedAvatars: [...state.unlockedAvatars, itemId] }));
-                    const item = SHOP_ITEMS.avatars.find(x => x.id === itemId);
-                    useToastStore.getState().success('Purchase Successful!', `Unlocked Avatar: ${item.emoji} ${item.name}`, 4000);
-                } else if (itemType === 'titles') {
-                    set(state => ({ unlockedTitles: [...state.unlockedTitles, itemId] }));
-                    const item = SHOP_ITEMS.titles.find(x => x.id === itemId);
-                    useToastStore.getState().success('Purchase Successful!', `Unlocked Title: ${item.name}`, 4000);
-                } else if (itemType === 'powerups') {
-                    if (itemId === 'streak_shield') {
-                        set(state => ({ streakShields: (state.streakShields || 0) + 1 }));
-                        useToastStore.getState().success('Purchase Successful!', 'Acquired 1 Streak Shield 🛡️', 4000);
-                    } else if (itemId === 'xp_boost') {
-                        set(state => ({ xpBoosts: (state.xpBoosts || 0) + 1 }));
-                        useToastStore.getState().success('Purchase Successful!', 'Acquired 1 XP Boost Token (2x) ⚡', 4000);
-                    }
+                if (itemType === 'themes' && unlockedThemes.includes(itemId)) {
+                    useToastStore.getState().success('Already Owned', 'You already own this theme!', 3000);
+                    return false;
+                }
+                if (itemType === 'frames' && unlockedFrames.includes(itemId)) {
+                    useToastStore.getState().success('Already Owned', 'You already own this frame!', 3000);
+                    return false;
                 }
 
-                sounds.badge();
-                get().setTriggerConfetti('quest_complete');
-                return true;
+                try {
+                    const res = await api.post('/api/progress/gamification/shop/buy', { category: itemType, itemId });
+                    if (res && res.data) {
+                        set({
+                            coins: res.data.coins,
+                            streakShields: res.data.streakShields,
+                            xpBoosts: res.data.xpBoosts,
+                            weekendFreezes: res.data.weekendFreezes,
+                            unlockedAvatars: res.data.unlockedAvatars,
+                            unlockedTitles: res.data.unlockedTitles,
+                            unlockedThemes: res.data.unlockedThemes,
+                            unlockedFrames: res.data.unlockedFrames
+                        });
+
+                        if (itemType === 'avatars') {
+                            const item = SHOP_ITEMS.avatars.find(x => x.id === itemId);
+                            useToastStore.getState().success('Purchase Successful!', `Unlocked Avatar: ${item.emoji} ${item.name}`, 4000);
+                        } else if (itemType === 'titles') {
+                            const item = SHOP_ITEMS.titles.find(x => x.id === itemId);
+                            useToastStore.getState().success('Purchase Successful!', `Unlocked Title: ${item.name}`, 4000);
+                        } else if (itemType === 'themes') {
+                            const item = SHOP_ITEMS.themes.find(x => x.id === itemId);
+                            useToastStore.getState().success('Purchase Successful!', `Unlocked Theme: ${item.name}`, 4000);
+                        } else if (itemType === 'frames') {
+                            const item = SHOP_ITEMS.frames.find(x => x.id === itemId);
+                            useToastStore.getState().success('Purchase Successful!', `Unlocked Frame: ${item.name}`, 4000);
+                        } else if (itemType === 'powerups') {
+                            if (itemId === 'streak_shield') {
+                                useToastStore.getState().success('Purchase Successful!', 'Acquired 1 Streak Shield 🛡️', 4000);
+                            } else if (itemId === 'xp_boost') {
+                                useToastStore.getState().success('Purchase Successful!', 'Acquired 1 XP Boost Token (2x) ⚡', 4000);
+                            } else if (itemId === 'weekend_freeze') {
+                                useToastStore.getState().success('Purchase Successful!', 'Acquired 1 Weekend Freeze 🥶', 4000);
+                            }
+                        }
+
+                        sounds.badge();
+                        get().setTriggerConfetti('quest_complete');
+                        return true;
+                    }
+                } catch (err) {
+                    console.error('[Gamification Store] Purchase failed:', err);
+                    useToastStore.getState().success('Purchase Failed', err.message || 'Server error', 3000);
+                }
+                return false;
             }
         }),
         {
@@ -416,6 +609,7 @@ const useGamificationStore = create(
                 coins: state.coins,
                 streakShields: state.streakShields,
                 xpBoosts: state.xpBoosts,
+                weekendFreezes: state.weekendFreezes,
                 activityLog: state.activityLog,
                 dailyChallenge: state.dailyChallenge,
                 dailyChallengeCompleted: state.dailyChallengeCompleted,
@@ -429,7 +623,11 @@ const useGamificationStore = create(
                 activeAvatar: state.activeAvatar,
                 activeTitle: state.activeTitle,
                 unlockedAvatars: state.unlockedAvatars,
-                unlockedTitles: state.unlockedTitles
+                unlockedTitles: state.unlockedTitles,
+                activeTheme: state.activeTheme,
+                unlockedThemes: state.unlockedThemes,
+                activeFrame: state.activeFrame,
+                unlockedFrames: state.unlockedFrames
             }),
         }
     )

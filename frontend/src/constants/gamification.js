@@ -46,6 +46,21 @@ export const QUEST_DEFINITIONS = {
     ]
 };
 
+export const FRAMES = [
+    { id: 'default', name: 'No Frame', levelReq: 1 },
+    { id: 'bronze', name: 'Bronze Glow', levelReq: 1 },
+    { id: 'silver', name: 'Silver Glow', levelReq: 1 },
+    { id: 'gold', name: 'Gold Shine', levelReq: 1 },
+    { id: 'diamond', name: 'Diamond Sparkle', levelReq: 1 }
+];
+
+export const THEMES = [
+    { id: 'default', name: 'Default Mode', levelReq: 1 },
+    { id: 'arcade', name: 'Retro Arcade', levelReq: 1 },
+    { id: 'space', name: 'Space Nebula', levelReq: 1 },
+    { id: 'cyberpunk', name: 'Neon Cyberpunk', levelReq: 1 }
+];
+
 export const SHOP_ITEMS = {
     avatars: [
         { id: 'wizard_scholar', emoji: '🧙‍♂️', name: 'Wizard Scholar', cost: 150, description: 'A mystical master of educational wisdom.' },
@@ -57,8 +72,20 @@ export const SHOP_ITEMS = {
         { id: 'ultimate_mind', name: 'Ultimate Mind', cost: 200, description: 'Capable of storing infinite amounts of material.' },
         { id: 'legendary_scholar', name: 'Legendary Scholar', cost: 350, description: 'Your achievements will be spoken of for generations.' }
     ],
+    themes: [
+        { id: 'arcade', emoji: '🕹️', name: 'Retro Arcade Theme', cost: 200, description: 'Pixelated aesthetics and green phosphorescent fonts.' },
+        { id: 'space', emoji: '🌌', name: 'Space Nebula Theme', cost: 350, description: 'Deep space cosmic background with star constellations.' },
+        { id: 'cyberpunk', emoji: '🤖', name: 'Neon Cyberpunk Theme', cost: 500, description: 'Cybernetic neon styles with glitch and sharp clip designs.' }
+    ],
+    frames: [
+        { id: 'bronze', emoji: '🟫', name: 'Bronze Glow Frame', cost: 100, description: 'Covers your avatar in a warm bronze glow.' },
+        { id: 'silver', emoji: '⬜', name: 'Silver Glow Frame', cost: 180, description: 'Sleek silver futuristic border.' },
+        { id: 'gold', emoji: '🟨', name: 'Gold Shine Frame', cost: 300, description: 'Bright glowing gold frame.' },
+        { id: 'diamond', emoji: '💎', name: 'Diamond Sparkle Frame', cost: 500, description: 'Exclusive diamond border that sparkles and shifts colors.' }
+    ],
     powerups: [
         { id: 'streak_shield', emoji: '🛡️', name: 'Streak Shield', cost: 75, description: 'Saves your streak if you miss a day.' },
-        { id: 'xp_boost', emoji: '⚡', name: 'XP Boost Token (2x)', cost: 120, description: 'Doubles all XP earned from your next quiz.' }
+        { id: 'xp_boost', emoji: '⚡', name: 'XP Boost Token (2x)', cost: 120, description: 'Doubles all XP earned from your next quiz.' },
+        { id: 'weekend_freeze', emoji: '🥶', name: 'Weekend Freeze', cost: 150, description: 'Freezes your streak during the weekend.' }
     ]
 };

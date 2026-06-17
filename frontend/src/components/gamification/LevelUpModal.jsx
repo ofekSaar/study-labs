@@ -15,7 +15,7 @@ const LevelUpModal = () => {
         if (showLevelUp) {
             setTriggerConfetti('level_up');
         }
-    }, [showLevelUp]);
+    }, [showLevelUp, setTriggerConfetti]);
 
     const title = LEVEL_TITLES[Math.min(newLevel, LEVEL_TITLES.length - 1)] || 'Legend+';
     const xpForLevel = (newLevel - 1) * 100;
