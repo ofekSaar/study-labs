@@ -13,11 +13,32 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.PAT_TOKEN }}
 
-      - name: Merge production into main
+      - name: Sync production into main (hotfixes only)
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git remote set-url origin https://x-access-token:${{ secrets.PAT_TOKEN }}@github.com/${{ github.repository }}
+
+          # Count commits on production that are not reachable from main.
+          # When a PR is squash-merged into production the squash commit has a
+          # new SHA, so it looks "ahead" even though the content already exists
+          # on main. We detect this by checking whether the diff is empty.
+          AHEAD=$(git rev-list origin/main..origin/production --count)
+          if [ "$AHEAD" = "0" ]; then
+            echo "Production has no commits ahead of main — nothing to sync."
+            exit 0
+          fi
+
+          # If production IS ahead, check whether the diff is empty (squash
+          # artifact whose content is already on main).
+          DIFF=$(git diff origin/main...origin/production)
+          if [ -z "$DIFF" ]; then
+            echo "Production is $AHEAD commit(s) ahead but diff is empty — squash-merge artifact, skipping."
+            exit 0
+          fi
+
+          # Genuine hotfix on production — merge it back to main.
+          echo "Genuine changes detected ($AHEAD commit(s)). Merging production into main."
           git checkout main
           git merge origin/production --no-edit
           git push origin main
