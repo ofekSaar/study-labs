@@ -51,12 +51,12 @@ const CourseProgressCard = ({ courses, navigate }) => {
         <div className="glass-card rounded-3xl p-5 shadow-lg">
             <div className="flex items-center justify-between mb-4">
                 <h3 className="text-sm font-black text-slate-800 dark:text-white flex items-center gap-2">
-                    <TrendingUp size={16} className="text-indigo-400" />
+                    <TrendingUp size={16} className="text-orange-400" />
                     My Courses
                 </h3>
                 <button
                     onClick={() => navigate('/my-courses')}
-                    className="text-[11px] font-bold text-indigo-500 dark:text-indigo-300 hover:text-indigo-600 dark:hover:text-indigo-200 flex items-center gap-1 transition-colors"
+                    className="text-[11px] font-bold text-orange-500 dark:text-orange-300 hover:text-orange-600 dark:hover:text-orange-200 flex items-center gap-1 transition-colors"
                 >
                     View all <ArrowRight size={12} />
                 </button>
@@ -74,7 +74,7 @@ const CourseProgressCard = ({ courses, navigate }) => {
                             onClick={() => navigate(`/course/${course.id || course._id}`)}
                         >
                             <div className="flex items-center justify-between mb-1.5">
-                                <span className="text-xs font-bold text-slate-700 dark:text-white/80 truncate max-w-[160px] group-hover/course:text-indigo-500 dark:group-hover/course:text-indigo-300 transition-colors">
+                                <span className="text-xs font-bold text-slate-700 dark:text-white/80 truncate max-w-[160px] group-hover/course:text-orange-500 dark:group-hover/course:text-orange-300 transition-colors">
                                     {course.title}
                                 </span>
                                 <div className="flex items-center gap-1.5 shrink-0">
@@ -88,7 +88,7 @@ const CourseProgressCard = ({ courses, navigate }) => {
                                 <motion.div
                                     className={`h-full rounded-full ${isDone
                                         ? 'bg-gradient-to-r from-emerald-400 to-teal-500'
-                                        : 'bg-gradient-to-r from-indigo-500 to-purple-500'}`}
+                                        : 'bg-gradient-to-r from-orange-500 to-amber-400'}`}
                                     initial={{ width: 0 }}
                                     animate={{ width: `${pct}%` }}
                                     transition={{ duration: 1, ease: 'easeOut' }}
@@ -124,7 +124,7 @@ const Dashboard = () => {
                 <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
                     <div className="absolute inset-0 dot-grid opacity-60" />
                     <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full"
-                        style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 70%)', filter: 'blur(40px)' }} />
+                        style={{ background: 'radial-gradient(circle, rgba(217,119,87,0.12) 0%, transparent 70%)', filter: 'blur(40px)' }} />
                 </div>
                 <div className="relative z-[1] p-4 lg:p-6 max-w-[1600px] mx-auto flex flex-col gap-6">
                     <LoadingSkeleton rows={2} heights={['h-8', 'h-4']} className="w-72" />
@@ -174,9 +174,9 @@ const Dashboard = () => {
             <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
                 <div className="absolute inset-0 dot-grid opacity-60" />
                 <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full"
-                    style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 70%)', filter: 'blur(40px)' }} />
+                    style={{ background: 'radial-gradient(circle, rgba(217,119,87,0.12) 0%, transparent 70%)', filter: 'blur(40px)' }} />
                 <div className="absolute top-1/2 -right-32 w-80 h-80 rounded-full"
-                    style={{ background: 'radial-gradient(circle, rgba(124,58,237,0.10) 0%, transparent 70%)', filter: 'blur(40px)' }} />
+                    style={{ background: 'radial-gradient(circle, rgba(124,58,237,0.08) 0%, transparent 70%)', filter: 'blur(40px)' }} />
                 <div className="absolute -bottom-20 left-1/3 w-72 h-72 rounded-full"
                     style={{ background: 'radial-gradient(circle, rgba(16,185,129,0.08) 0%, transparent 70%)', filter: 'blur(40px)' }} />
             </div>
@@ -194,7 +194,7 @@ const Dashboard = () => {
                         <h1 className="text-2xl sm:text-3xl font-display font-black text-slate-900 dark:text-white drop-shadow-sm">
                             {getGreeting()}, {user?.name?.split(' ')[0] || 'Student'} 👋
                         </h1>
-                        <p className="text-slate-500 dark:text-indigo-200/70 mt-0.5 font-medium text-sm">
+                        <p className="text-slate-500 dark:text-orange-200/70 mt-0.5 font-medium text-sm">
                             {inProgressCourses.length > 0
                                 ? `You have ${inProgressCourses.length} course${inProgressCourses.length > 1 ? 's' : ''} in progress — keep it up!`
                                 : completedCourses.length > 0
@@ -205,7 +205,7 @@ const Dashboard = () => {
                     </div>
                     <button
                         onClick={() => navigate('/my-courses')}
-                        className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white text-sm font-bold rounded-2xl shadow-lg shadow-indigo-500/25 transition-all hover:shadow-indigo-500/40 hover:-translate-y-0.5 shrink-0"
+                        className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-white text-sm font-bold rounded-2xl shadow-lg shadow-orange-500/25 transition-all hover:shadow-orange-500/40 hover:-translate-y-0.5 shrink-0"
                     >
                         <BookOpen size={15} />
                         Browse Courses
@@ -221,7 +221,7 @@ const Dashboard = () => {
                     className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3"
                 >
                     <StatCard icon={Trophy} value={level} label="Level" color="bg-amber-500" glow="text-amber-500 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
-                    <StatCard icon={Zap} value={(user?.totalXP ?? 0).toLocaleString()} label="Total XP" color="bg-indigo-500" glow="text-indigo-500 fill-indigo-500/20 drop-shadow-[0_0_8px_rgba(99,102,241,0.5)]" />
+                    <StatCard icon={Zap} value={(user?.totalXP ?? 0).toLocaleString()} label="Total XP" color="bg-orange-500" glow="text-orange-500 fill-orange-500/20 drop-shadow-[0_0_8px_rgba(217,119,87,0.6)]" />
                     <StatCard icon={Flame} value={user?.streak ?? 0} label="Day Streak" color="bg-orange-500" glow="text-orange-500 fill-orange-500/20 drop-shadow-[0_0_8px_rgba(249,115,22,0.5)]" />
                     <StatCard icon={BookOpen} value={courses.length} label="Enrolled" color="bg-teal-500" glow="text-teal-500 drop-shadow-[0_0_8px_rgba(20,184,166,0.5)]" />
                     <StatCard icon={Star} value={unlockedBadges?.length ?? 0} label="Badges" color="bg-purple-500" glow="text-purple-500 fill-purple-500/10 drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]" />
@@ -240,20 +240,20 @@ const Dashboard = () => {
                         transition={{ duration: 0.4, delay: 0.2 }}
                         className="lg:col-span-8 glass-card rounded-3xl shadow-lg flex flex-col overflow-hidden relative group/roadmap min-h-[500px]"
                     >
-                        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-purple-500/5 pointer-events-none opacity-50 transition-opacity group-hover/roadmap:opacity-100 duration-1000" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-orange-500/8 to-amber-500/4 pointer-events-none opacity-50 transition-opacity group-hover/roadmap:opacity-100 duration-1000" />
 
                         {/* Roadmap header with course selector */}
                         <div className="p-4 sm:p-5 border-b border-slate-200 dark:border-white/10 bg-slate-100/50 dark:bg-black/20 z-10 backdrop-blur-md">
                             <div className="flex items-center justify-between gap-3 flex-wrap">
                                 <h2 className="text-base font-bold text-slate-800 dark:text-white flex items-center gap-2">
-                                    <Target size={18} className="text-indigo-500 dark:text-indigo-400" />
+                                    <Target size={18} className="text-orange-500 dark:text-orange-400" />
                                     Learning Path
                                 </h2>
                                 {courses.length > 1 && (
                                     <select
                                         value={selectedCourseId || ''}
                                         onChange={e => setSelectedCourse(e.target.value)}
-                                        className="text-xs font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-1.5 text-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer max-w-[200px] truncate"
+                                        className="text-xs font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-1.5 text-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500 cursor-pointer max-w-[200px] truncate"
                                     >
                                         {courses.map(c => (
                                             <option key={c.id || c._id} value={c.id || c._id}>{c.title}</option>
@@ -264,7 +264,7 @@ const Dashboard = () => {
                                     <div className="flex items-center gap-2 ml-auto">
                                         <div className="h-1.5 w-24 bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden">
                                             <div
-                                                className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-700"
+                                                className="h-full bg-gradient-to-r from-orange-500 to-amber-400 rounded-full transition-all duration-700"
                                                 style={{ width: `${Math.round(currentCourse.progress ?? 0)}%` }}
                                             />
                                         </div>
@@ -290,11 +290,11 @@ const Dashboard = () => {
                     >
                         {/* XP Progress Card */}
                         <div className="glass-card rounded-3xl p-5 shadow-lg relative overflow-hidden">
-                            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 pointer-events-none" />
+                            <div className="absolute inset-0 bg-gradient-to-br from-orange-500/4 to-amber-500/4 pointer-events-none" />
                             <div className="flex items-center justify-between mb-3">
                                 <h3 className="text-xs font-black text-slate-500 dark:text-white/50 uppercase tracking-widest">XP Progress</h3>
-                                <span className="text-xs font-black text-indigo-500 dark:text-indigo-300 flex items-center gap-1">
-                                    <Zap size={12} className="fill-indigo-500/30" />
+                                <span className="text-xs font-black text-orange-500 dark:text-orange-300 flex items-center gap-1">
+                                    <Zap size={12} className="fill-orange-500/30" />
                                     Level {level}
                                 </span>
                             </div>
@@ -321,7 +321,7 @@ const Dashboard = () => {
                                 </div>
                                 <button
                                     onClick={() => navigate('/shop')}
-                                    className="text-[11px] font-bold text-indigo-500 dark:text-indigo-300 hover:text-indigo-600 flex items-center gap-1 transition-colors"
+                                    className="text-[11px] font-bold text-orange-500 dark:text-orange-300 hover:text-orange-600 flex items-center gap-1 transition-colors"
                                 >
                                     Shop <ArrowRight size={11} />
                                 </button>
