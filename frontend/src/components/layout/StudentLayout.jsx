@@ -14,8 +14,8 @@ const Logo = ({ size = 32 }) => (
         className="rounded-xl flex items-center justify-center flex-shrink-0"
         style={{
             width: size, height: size,
-            background: 'linear-gradient(135deg, #4F6EF7, #7C3AED)',
-            boxShadow: '0 0 16px rgba(79,110,247,0.5)',
+            background: 'linear-gradient(135deg, #D97757, #C4613D)',
+            boxShadow: '0 0 16px rgba(217,119,87,0.5)',
         }}
     >
         <svg width={size * 0.55} height={size * 0.55} viewBox="0 0 24 24" fill="none">
@@ -31,16 +31,16 @@ const NavItem = ({ icon, label, active, onClick }) => (
         onClick={onClick}
         className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 relative group ${
             active
-                ? 'text-indigo-600 dark:text-white bg-indigo-600/10 dark:bg-indigo-500/20 border border-indigo-500/20 dark:border-indigo-500/40'
+                ? 'text-orange-600 dark:text-orange-300 bg-orange-500/10 dark:bg-orange-500/15 border border-orange-500/20 dark:border-orange-500/30'
                 : 'text-slate-600 dark:text-white/50 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5'
         }`}
     >
-        {active && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-r-full bg-indigo-600 dark:bg-indigo-400" />}
-        <span className={`transition-colors ${active ? 'text-indigo-600 dark:text-indigo-300' : 'text-slate-400 dark:text-white/40 group-hover:text-slate-700 dark:group-hover:text-white/70'}`}>
+        {active && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-r-full bg-orange-500 dark:bg-orange-400" />}
+        <span className={`transition-colors ${active ? 'text-orange-600 dark:text-orange-300' : 'text-slate-400 dark:text-white/40 group-hover:text-slate-700 dark:group-hover:text-white/70'}`}>
             {icon}
         </span>
         <span>{label}</span>
-        {active && <ChevronRight size={14} className="ml-auto text-indigo-600 dark:text-indigo-400" />}
+        {active && <ChevronRight size={14} className="ml-auto text-orange-600 dark:text-orange-400" />}
     </button>
 );
 
@@ -115,19 +115,19 @@ const SidebarContent = ({ location, navigate, courses, selectedCourseId, setSele
                                     onClick={() => setIsCourseDropdownOpen(!isCourseDropdownOpen)}
                                     className={`w-full text-left flex items-center justify-between p-3 rounded-2xl border transition-all duration-300 ${
                                         isCourseDropdownOpen 
-                                            ? 'bg-slate-100 dark:bg-white/10 border-indigo-500/30' 
+                                            ? 'bg-slate-100 dark:bg-white/10 border-orange-500/30'
                                             : 'bg-white dark:bg-white/5 border-slate-200 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-white/8'
                                     }`}
                                 >
                                     <div className="flex items-center gap-3 min-w-0">
-                                        <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-600 text-white flex items-center justify-center text-xs font-black shadow-sm shrink-0">
+                                        <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-orange-500 to-amber-500 text-white flex items-center justify-center text-xs font-black shadow-sm shrink-0">
                                             {(selectedCourse.title || '').substring(0, 2).toUpperCase()}
                                         </div>
                                         <div className="min-w-0">
                                             <p className="text-xs font-black text-slate-800 dark:text-white truncate leading-tight">
                                                 {selectedCourse.title || 'Untitled Course'}
                                             </p>
-                                            <p className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 mt-0.5">
+                                            <p className="text-[10px] font-bold text-orange-600 dark:text-orange-400 mt-0.5">
                                                 {completedNodes}/{totalNodes} Stages ({selectedCourse.progress || 0}%)
                                             </p>
                                         </div>
@@ -157,7 +157,7 @@ const SidebarContent = ({ location, navigate, courses, selectedCourseId, setSele
                                                     }}
                                                     className={`w-full text-left p-2.5 rounded-xl transition-colors flex items-center gap-3 ${
                                                         isCurrent
-                                                            ? 'bg-indigo-600/10 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 border border-indigo-500/10 dark:border-indigo-500/20 font-black'
+                                                            ? 'bg-orange-500/10 dark:bg-orange-500/20 text-orange-600 dark:text-orange-400 border border-orange-500/10 dark:border-orange-500/20 font-black'
                                                             : 'hover:bg-slate-200/50 dark:hover:bg-white/5 text-slate-600 dark:text-white/60'
                                                     }`}
                                                 >
@@ -204,7 +204,7 @@ const SidebarContent = ({ location, navigate, courses, selectedCourseId, setSele
                         </p>
                         
                         {/* Customizable Title */}
-                        <p className="text-[8px] font-black text-indigo-500 dark:text-indigo-400 uppercase tracking-widest leading-none mt-1 select-none">
+                        <p className="text-[8px] font-black text-orange-500 dark:text-orange-400 uppercase tracking-widest leading-none mt-1 select-none">
                             {currentTitle.name}
                         </p>
                         
@@ -215,8 +215,8 @@ const SidebarContent = ({ location, navigate, courses, selectedCourseId, setSele
                                 <span className="text-[9px] font-black">Lvl {stats.level || 1}</span>
                             </div>
                             <div className="w-1 h-1 rounded-full bg-slate-300 dark:bg-white/20" />
-                            <div className="flex items-center gap-0.5 text-indigo-600 dark:text-indigo-400" title="Total XP">
-                                <Zap size={10} className="fill-indigo-500/15" />
+                            <div className="flex items-center gap-0.5 text-orange-600 dark:text-orange-400" title="Total XP">
+                                <Zap size={10} className="fill-orange-500/15" />
                                 <span className="text-[9px] font-black">{stats.total_xp || 0}</span>
                             </div>
                             <div className="w-1 h-1 rounded-full bg-slate-300 dark:bg-white/20" />

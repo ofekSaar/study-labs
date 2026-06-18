@@ -162,7 +162,7 @@ const GameMapComponent = ({ nodes }) => {
                     <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 0 }}>
                         <defs>
                             <linearGradient id="pathGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                                <stop offset="0%" stopColor="#4F6EF7" />
+                                <stop offset="0%" stopColor="#D97757" />
                                 <stop offset="50%" stopColor="#7C3AED" />
                                 <stop offset="100%" stopColor="#EC4899" />
                             </linearGradient>
