@@ -30,13 +30,13 @@ const userSchema = new mongoose.Schema(
     },
     roles: {
       type: [String],
-      enum: ['student', 'instructor'],
+      enum: ['student', 'instructor', 'admin'],
       default: [],
     },
     // Keep for backward compatibility, maps to primary role
     role: {
       type: String,
-      enum: ['student', 'instructor', null],
+      enum: ['student', 'instructor', 'admin', null],
       default: null,
     },
     // Gamification state persistence
@@ -124,6 +124,17 @@ const userSchema = new mongoose.Schema(
     },
     activityLog: {
       type: [String],
+      default: [],
+    },
+    purchaseHistory: {
+      type: [
+        {
+          category: String,
+          itemId: String,
+          cost: Number,
+          purchasedAt: { type: Date, default: Date.now },
+        },
+      ],
       default: [],
     },
   },

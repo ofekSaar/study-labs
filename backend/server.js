@@ -24,6 +24,9 @@ import enrollmentRoutes from './routes/enrollments.js';
 import progressRoutes from './routes/progress.js';
 import quizRoutes from './routes/quizzes.js';
 import aiRoutes from './routes/ai.js';
+import adminRoutes from './routes/admin.js';
+import { authenticate, requireAdmin } from './middleware/auth.js';
+import { seedShopPrices } from './models/SystemConfig.js';
 
 // ── Setup ────────────────────────────────────
 const __filename = fileURLToPath(import.meta.url);
@@ -78,6 +81,7 @@ app.use('/api/enrollments', enrollmentRoutes);
 app.use('/api/progress', progressRoutes);
 app.use('/api/quizzes', quizRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/admin', authenticate, requireAdmin, adminRoutes);
 
 // ── 404 Handler ──────────────────────────────
 app.use((req, res) => {
@@ -93,6 +97,7 @@ app.use(errorHandler);
 // ── Start Server ─────────────────────────────
 const startServer = async () => {
   await connectDB();
+  await seedShopPrices();
   await recoverStuckGenerations(); // flip courses stuck in 'generating' (e.g. from a restart) to 'failed' so they can be retried
 
   const server = createServer(app);

@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import Progress from '../models/Progress.js';
 import Enrollment from '../models/Enrollment.js';
 import User from '../models/User.js';
+import SystemConfig, { DEFAULT_SHOP_PRICES } from '../models/SystemConfig.js';
 import * as gamificationService from '../services/gamificationService.js';
 import { getIO } from '../config/socket.js';
 import XpEvent from '../models/XpEvent.js';
@@ -275,34 +276,10 @@ export const claimQuest = async (req, res, next) => {
   }
 };
 
-const SHOP_PRICES = {
-  avatars: {
-    wizard_scholar: 150,
-    cyber_learner: 250,
-    unicorn_scholar: 400
-  },
-  titles: {
-    knowledge_alchemist: 100,
-    ultimate_mind: 200,
-    legendary_scholar: 350
-  },
-  themes: {
-    arcade: 200,
-    space: 350,
-    cyberpunk: 500
-  },
-  frames: {
-    bronze: 100,
-    silver: 180,
-    gold: 300,
-    diamond: 500
-  },
-  powerups: {
-    streak_shield: 75,
-    xp_boost: 120,
-    weekend_freeze: 150
-  }
-};
+async function getShopPrices() {
+  const config = await SystemConfig.findOne({ key: 'shopPrices' });
+  return config ? config.value : DEFAULT_SHOP_PRICES;
+}
 
 /**
  * GET /api/progress/gamification
@@ -448,7 +425,8 @@ export const buyShopItem = async (req, res, next) => {
       return next(createError(400, 'Category and Item ID are required'));
     }
 
-    const priceMap = SHOP_PRICES[category];
+    const shopPrices = await getShopPrices();
+    const priceMap = shopPrices[category];
     if (!priceMap) {
       return next(createError(400, `Invalid category: ${category}`));
     }
@@ -467,10 +445,8 @@ export const buyShopItem = async (req, res, next) => {
       return next(createError(400, 'Insufficient coins'));
     }
 
-    // Deduct coins
     user.coins -= cost;
 
-    // Apply the item effects
     if (category === 'powerups') {
       if (itemId === 'streak_shield') {
         user.streakShields = (user.streakShields || 0) + 1;
@@ -480,22 +456,16 @@ export const buyShopItem = async (req, res, next) => {
         user.weekendFreezes = (user.weekendFreezes || 0) + 1;
       }
     } else if (category === 'avatars') {
-      if (!user.unlockedAvatars.includes(itemId)) {
-        user.unlockedAvatars.push(itemId);
-      }
+      if (!user.unlockedAvatars.includes(itemId)) user.unlockedAvatars.push(itemId);
     } else if (category === 'titles') {
-      if (!user.unlockedTitles.includes(itemId)) {
-        user.unlockedTitles.push(itemId);
-      }
+      if (!user.unlockedTitles.includes(itemId)) user.unlockedTitles.push(itemId);
     } else if (category === 'themes') {
-      if (!user.unlockedThemes.includes(itemId)) {
-        user.unlockedThemes.push(itemId);
-      }
+      if (!user.unlockedThemes.includes(itemId)) user.unlockedThemes.push(itemId);
     } else if (category === 'frames') {
-      if (!user.unlockedFrames.includes(itemId)) {
-        user.unlockedFrames.push(itemId);
-      }
+      if (!user.unlockedFrames.includes(itemId)) user.unlockedFrames.push(itemId);
     }
+
+    user.purchaseHistory.push({ category, itemId, cost, purchasedAt: new Date() });
 
     await user.save();
 
@@ -509,8 +479,26 @@ export const buyShopItem = async (req, res, next) => {
         unlockedAvatars: user.unlockedAvatars,
         unlockedTitles: user.unlockedTitles,
         unlockedThemes: user.unlockedThemes,
-        unlockedFrames: user.unlockedFrames
+        unlockedFrames: user.unlockedFrames,
+        purchaseHistory: user.purchaseHistory.slice().reverse(),
       }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * GET /api/progress/gamification/purchase-history
+ * Returns the user's shop purchase history (newest first).
+ */
+export const getPurchaseHistory = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user._id).select('purchaseHistory');
+    if (!user) return next(createError(404, 'User not found'));
+    res.json({
+      status: 'success',
+      data: { purchaseHistory: (user.purchaseHistory || []).slice().reverse() },
     });
   } catch (error) {
     next(error);

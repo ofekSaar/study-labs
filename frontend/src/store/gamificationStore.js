@@ -71,6 +71,9 @@ const useGamificationStore = create(
             questsProgress: {}, // maps questId -> current number
             questsClaimed: [], // array of claimed questIds
 
+            // Purchase history
+            purchaseHistory: [],
+
             // ── Actions ──────────────────────────────────────
             fetchGamificationState: async () => {
                 try {
@@ -97,6 +100,13 @@ const useGamificationStore = create(
                             lastChallengeDate: res.data.lastChallengeDate ?? null,
                             activityLog: res.data.activityLog ?? [],
                         });
+                        // Fetch purchase history separately (not in main gamification state)
+                        try {
+                            const histRes = await api.get('/api/progress/gamification/purchase-history');
+                            if (histRes?.data?.purchaseHistory) {
+                                set({ purchaseHistory: histRes.data.purchaseHistory });
+                            }
+                        } catch { /* non-critical */ }
                     }
                 } catch (error) {
                     console.error('[Gamification Store] Failed to fetch state:', error.message);
@@ -559,7 +569,7 @@ const useGamificationStore = create(
                 try {
                     const res = await api.post('/api/progress/gamification/shop/buy', { category: itemType, itemId });
                     if (res && res.data) {
-                        set({
+                        set(state => ({
                             coins: res.data.coins,
                             streakShields: res.data.streakShields,
                             xpBoosts: res.data.xpBoosts,
@@ -567,8 +577,9 @@ const useGamificationStore = create(
                             unlockedAvatars: res.data.unlockedAvatars,
                             unlockedTitles: res.data.unlockedTitles,
                             unlockedThemes: res.data.unlockedThemes,
-                            unlockedFrames: res.data.unlockedFrames
-                        });
+                            unlockedFrames: res.data.unlockedFrames,
+                            purchaseHistory: res.data.purchaseHistory ?? state.purchaseHistory,
+                        }));
 
                         if (itemType === 'avatars') {
                             const item = SHOP_ITEMS.avatars.find(x => x.id === itemId);

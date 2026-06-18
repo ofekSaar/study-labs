@@ -21,6 +21,7 @@ const StudentStatusOverview = lazy(() => import('./pages/StudentStatusOverview')
 const CourseWizard = lazy(() => import('./pages/CourseWizard'));
 const EnrollmentRequests = lazy(() => import('./pages/EnrollmentRequests'));
 const ManagedCourses = lazy(() => import('./pages/ManagedCourses'));
+const AdminPage = lazy(() => import('./pages/AdminPage'));
 
 const ThemeWrapper = ({ children }) => {
   const { theme } = useSettingsStore();
@@ -184,6 +185,16 @@ function App() {
               <CourseMap />
             </ProtectedRoute>
           } 
+        />
+
+        {/* Admin routes — nested so /admin/* all go to AdminPage's internal router */}
+        <Route
+          path="/admin/*"
+          element={
+            <ProtectedRoute allowedRole="admin">
+              <AdminPage />
+            </ProtectedRoute>
+          }
         />
 
         {/* Catch all */}
