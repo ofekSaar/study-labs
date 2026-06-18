@@ -11,6 +11,7 @@ import {
   getGamificationState,
   syncGamificationState,
   buyShopItem,
+  getPurchaseHistory,
   updateActiveCustomizations,
   claimQuest,
 } from '../controllers/progressController.js';
@@ -58,6 +59,7 @@ router.get('/stats', authenticate, authorize('student'), getStats);
 router.get('/gamification', authenticate, getGamificationState);
 router.put('/gamification/sync', authenticate, syncGamificationState);
 router.post('/gamification/shop/buy', authenticate, buyShopItem);
+router.get('/gamification/purchase-history', authenticate, getPurchaseHistory);
 router.put('/gamification/active', authenticate, updateActiveCustomizations);
 // Claim a completed quest's reward (server validates progress + pays canonical XP)
 router.post('/quests/:questId/claim', authenticate, authorize('student'), claimQuest);

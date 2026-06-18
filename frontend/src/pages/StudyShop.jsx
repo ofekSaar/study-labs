@@ -1,12 +1,54 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import StudentLayout from '../components/layout/StudentLayout';
 import useGamificationStore from '../store/gamificationStore';
 import { SHOP_ITEMS } from '../constants/gamification';
-import { Coins, ShoppingBag, Lock, Check, Sparkles, HelpCircle, Zap, Shield, Loader2 } from 'lucide-react';
-import { motion, useSpring, useTransform } from 'framer-motion';
+import { Coins, ShoppingBag, Zap, HelpCircle, Clock, Star } from 'lucide-react';
+import { motion, useSpring, useTransform, AnimatePresence } from 'framer-motion';
 import ConfettiEffect from '../components/gamification/ConfettiEffect';
+import ItemPreviewModal from '../components/shop/ItemPreviewModal';
 
-// Animated coin counter — springs to the new value whenever `coins` changes
+// ── Helpers ───────────────────────────────────────────────────────────────
+
+const RARITY = {
+    common: { label: 'Common', color: '#94a3b8', bg: 'bg-slate-500/10', border: 'border-slate-500/20', text: 'text-slate-400' },
+    rare: { label: 'Rare', color: '#6366f1', bg: 'bg-indigo-500/10', border: 'border-indigo-500/20', text: 'text-indigo-400' },
+    epic: { label: 'Epic', color: '#a855f7', bg: 'bg-purple-500/10', border: 'border-purple-500/20', text: 'text-purple-400' },
+    legendary: { label: 'Legendary', color: '#f59e0b', bg: 'bg-amber-500/10', border: 'border-amber-500/20', text: 'text-amber-400' },
+};
+
+const CATEGORIES = [
+    { id: 'all', label: 'All', icon: '🛒' },
+    { id: 'avatars', label: 'Avatars', icon: '🧙‍♂️' },
+    { id: 'titles', label: 'Titles', icon: '🌟' },
+    { id: 'themes', label: 'Themes', icon: '🌌' },
+    { id: 'frames', label: 'Frames', icon: '🖼️' },
+    { id: 'powerups', label: 'Power-ups', icon: '⚡' },
+    { id: 'history', label: 'History', icon: '🕐' },
+];
+
+const CATEGORY_ACCENT = {
+    avatars: 'indigo',
+    titles: 'purple',
+    themes: 'blue',
+    frames: 'rose',
+    powerups: 'amber',
+};
+
+// Rotate the featured item daily using day-of-year as a seed
+function getFeaturedItem() {
+    const allItems = [
+        ...SHOP_ITEMS.avatars.map(i => ({ ...i, category: 'avatars' })),
+        ...SHOP_ITEMS.titles.map(i => ({ ...i, category: 'titles' })),
+        ...SHOP_ITEMS.themes.map(i => ({ ...i, category: 'themes' })),
+        ...SHOP_ITEMS.frames.map(i => ({ ...i, category: 'frames' })),
+    ];
+    const now = new Date();
+    const dayOfYear = Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 86400000);
+    return allItems[dayOfYear % allItems.length];
+}
+
+// ── Sub-components ────────────────────────────────────────────────────────
+
 const CoinDisplay = ({ coins }) => {
     const spring = useSpring(coins ?? 0, { stiffness: 80, damping: 18 });
     const display = useTransform(spring, v => Math.round(v).toLocaleString());
@@ -14,42 +56,252 @@ const CoinDisplay = ({ coins }) => {
     return <motion.span>{display}</motion.span>;
 };
 
-// Shared buy button — handles disabled state + per-item loading spinner
-const BuyButton = ({ item, category, coins, buyItem }) => {
-    const [buying, setBuying] = useState(false);
-    const canAfford = (coins ?? 0) >= item.cost;
-
-    const handleBuy = async () => {
-        if (!canAfford || buying) return;
-        setBuying(true);
-        try { await buyItem(category, item.id, item.cost); } finally { setBuying(false); }
-    };
-
+const RarityBadge = ({ rarity }) => {
+    const r = RARITY[rarity] ?? RARITY.common;
     return (
-        <button
-            onClick={handleBuy}
-            disabled={!canAfford || buying}
-            aria-label={canAfford ? `Buy ${item.name} for ${item.cost} coins` : `Not enough coins for ${item.name}`}
-            className={`font-black text-xs px-4 py-2.5 rounded-xl flex items-center gap-1.5 transition shadow-sm shrink-0 min-w-[72px] justify-center
-                ${canAfford && !buying
-                    ? 'bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-950 cursor-pointer'
-                    : 'bg-slate-200 dark:bg-white/10 text-slate-400 dark:text-white/30 cursor-not-allowed opacity-60'
-                }`}
-        >
-            {buying
-                ? <Loader2 size={14} className="animate-spin" />
-                : <><span>🪙</span> {item.cost}</>
-            }
-        </button>
+        <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border ${r.bg} ${r.border} ${r.text}`}>
+            {r.label}
+        </span>
     );
 };
 
-// Shared "Owned" badge
-const OwnedBadge = () => (
-    <span className="text-[10px] font-black text-emerald-500 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-xl uppercase shrink-0">
-        Owned
-    </span>
-);
+const ItemCard = ({ item, category, isOwned, ownedCount, onPreview }) => {
+    const r = RARITY[item.rarity] ?? RARITY.common;
+    const isPowerup = category === 'powerups';
+
+    return (
+        <motion.div
+            layout
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            onClick={() => onPreview(item, category)}
+            className="group relative bg-white dark:bg-white/[0.03] border border-slate-200/60 dark:border-white/[0.06] rounded-2xl p-4 flex items-center justify-between gap-4 cursor-pointer hover:border-indigo-400/40 dark:hover:border-indigo-500/30 transition-all hover:shadow-lg"
+            style={{ '--accent': r.color }}
+        >
+            {/* glow on hover */}
+            <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
+                style={{ boxShadow: `inset 0 0 0 1px ${r.color}22` }} />
+
+            <div className="flex items-center gap-3 min-w-0">
+                {category === 'frames' ? (
+                    <div className="w-14 h-14 shrink-0 flex items-center justify-center">
+                        <div
+                            className="w-11 h-11 rounded-full flex items-center justify-center text-xl border-2"
+                            style={{
+                                borderColor: item.glowColor ?? r.color,
+                                boxShadow: `0 0 10px ${item.glowColor ?? r.color}99, 0 0 20px ${item.glowColor ?? r.color}44`,
+                                background: `${item.glowColor ?? r.color}11`,
+                            }}
+                        >
+                            🎓
+                        </div>
+                    </div>
+                ) : item.emoji ? (
+                    <div
+                        className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl shrink-0 border"
+                        style={{
+                            background: `${r.color}11`,
+                            borderColor: `${r.color}33`,
+                            boxShadow: `0 0 12px ${r.color}22`,
+                        }}
+                    >
+                        {item.emoji}
+                    </div>
+                ) : (
+                    <div
+                        className="w-14 h-14 rounded-xl flex items-center justify-center text-xs font-black shrink-0 border uppercase tracking-wider"
+                        style={{ background: `${r.color}11`, borderColor: `${r.color}33`, color: r.color }}
+                    >
+                        {item.name.slice(0, 2)}
+                    </div>
+                )}
+                <div className="min-w-0">
+                    <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
+                        <p className="font-black text-slate-800 dark:text-white text-sm truncate">{item.name}</p>
+                        {item.isNew && (
+                            <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 shrink-0">New</span>
+                        )}
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                        <RarityBadge rarity={item.rarity} />
+                        {isPowerup && ownedCount > 0 && (
+                            <span className="text-[10px] font-black px-1.5 py-0.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400">×{ownedCount}</span>
+                        )}
+                    </div>
+                    <p className="text-[11px] text-slate-400 dark:text-white/35 mt-1 leading-snug line-clamp-1">{item.description}</p>
+                </div>
+            </div>
+
+            <div className="shrink-0">
+                {isOwned && !isPowerup ? (
+                    <span className="text-[10px] font-black text-emerald-500 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-xl uppercase">✓ Owned</span>
+                ) : (
+                    <div className="flex flex-col items-end gap-1">
+                        <span className="font-black text-amber-500 text-sm flex items-center gap-1">🪙 {item.cost}</span>
+                        <span className="text-[10px] text-white/30">tap to preview</span>
+                    </div>
+                )}
+            </div>
+        </motion.div>
+    );
+};
+
+const FeaturedBanner = ({ item, coins, isOwned, onPreview }) => {
+    const r = RARITY[item.rarity] ?? RARITY.legendary;
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="relative rounded-3xl overflow-hidden border cursor-pointer group"
+            style={{ borderColor: `${r.color}33`, background: `linear-gradient(135deg, ${r.color}11 0%, transparent 60%)` }}
+            onClick={() => onPreview(item, item.category)}
+        >
+            <div className="absolute inset-0 pointer-events-none" style={{ background: `radial-gradient(ellipse at 80% 50%, ${r.color}15 0%, transparent 70%)` }} />
+            <div className="relative z-10 p-5 sm:p-7 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                    {item.category === 'frames' ? (
+                        <div className="w-16 h-16 shrink-0 flex items-center justify-center">
+                            <div
+                                className="w-12 h-12 rounded-full flex items-center justify-center text-2xl border-2"
+                                style={{
+                                    borderColor: item.glowColor ?? r.color,
+                                    boxShadow: `0 0 14px ${item.glowColor ?? r.color}aa, 0 0 28px ${item.glowColor ?? r.color}44`,
+                                    background: `${item.glowColor ?? r.color}11`,
+                                }}
+                            >
+                                🎓
+                            </div>
+                        </div>
+                    ) : (
+                        <div
+                            className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl border shrink-0"
+                            style={{ background: `${r.color}15`, borderColor: `${r.color}33`, boxShadow: `0 0 24px ${r.color}33` }}
+                        >
+                            {item.emoji ?? '✨'}
+                        </div>
+                    )}
+                    <div>
+                        <div className="flex items-center gap-2 mb-1">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-amber-400 bg-amber-400/10 border border-amber-400/20 px-2 py-0.5 rounded-full">
+                                ⭐ Deal of the Day
+                            </span>
+                            <RarityBadge rarity={item.rarity} />
+                        </div>
+                        <p className="font-black text-slate-800 dark:text-white text-lg leading-tight">{item.name}</p>
+                        <p className="text-slate-500 dark:text-white/40 text-xs mt-0.5">{item.description}</p>
+                    </div>
+                </div>
+                <div className="sm:text-right shrink-0">
+                    {isOwned ? (
+                        <span className="text-sm font-black text-emerald-400">✓ You own this</span>
+                    ) : (
+                        <>
+                            <p className="font-black text-amber-400 text-xl">🪙 {item.cost}</p>
+                            <button
+                                className="mt-1.5 text-xs font-black px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 transition group-hover:scale-105"
+                                onClick={e => { e.stopPropagation(); onPreview(item, item.category); }}
+                                disabled={coins < item.cost}
+                            >
+                                {coins >= item.cost ? 'Preview & Buy' : 'Not enough coins'}
+                            </button>
+                        </>
+                    )}
+                </div>
+            </div>
+        </motion.div>
+    );
+};
+
+const CategorySection = ({ categoryId, coins, unlocked, powerupCounts, onPreview }) => {
+    const items = categoryId === 'all'
+        ? [
+            ...SHOP_ITEMS.avatars.map(i => ({ ...i, _cat: 'avatars' })),
+            ...SHOP_ITEMS.titles.map(i => ({ ...i, _cat: 'titles' })),
+            ...SHOP_ITEMS.themes.map(i => ({ ...i, _cat: 'themes' })),
+            ...SHOP_ITEMS.frames.map(i => ({ ...i, _cat: 'frames' })),
+            ...SHOP_ITEMS.powerups.map(i => ({ ...i, _cat: 'powerups' })),
+        ]
+        : SHOP_ITEMS[categoryId].map(i => ({ ...i, _cat: categoryId }));
+
+    return (
+        <div>
+            {categoryId === 'all' ? (
+                Object.entries({ avatars: 'Avatars', titles: 'Titles', themes: 'Themes', frames: 'Frames', powerups: 'Power-ups' }).map(([cat, label]) => (
+                    <div key={cat} className="mb-8">
+                        <h3 className="font-black text-slate-700 dark:text-white/60 text-xs uppercase tracking-widest mb-3 flex items-center gap-2">
+                            {CATEGORIES.find(c => c.id === cat)?.icon} {label}
+                        </h3>
+                        <div className="space-y-3">
+                            {SHOP_ITEMS[cat].map(item => {
+                                const isOwned = unlocked[cat]?.includes(item.id);
+                                const ownedCount = cat === 'powerups' ? (powerupCounts[item.id] ?? 0) : 0;
+                                return (
+                                    <ItemCard key={item.id} item={item} category={cat}
+                                        isOwned={isOwned} ownedCount={ownedCount} onPreview={onPreview} />
+                                );
+                            })}
+                        </div>
+                    </div>
+                ))
+            ) : (
+                <div className="space-y-3">
+                    {items.map(item => {
+                        const cat = item._cat;
+                        const isOwned = unlocked[cat]?.includes(item.id);
+                        const ownedCount = cat === 'powerups' ? (powerupCounts[item.id] ?? 0) : 0;
+                        return (
+                            <ItemCard key={item.id} item={item} category={cat} coins={coins}
+                                isOwned={isOwned} ownedCount={ownedCount} onPreview={onPreview} />
+                        );
+                    })}
+                </div>
+            )}
+        </div>
+    );
+};
+
+const CATEGORY_ICONS = { avatars: '🧙‍♂️', titles: '🌟', themes: '🌌', frames: '🖼️', powerups: '⚡' };
+
+const PurchaseHistory = ({ history }) => {
+    if (!history || history.length === 0) {
+        return (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+                <span className="text-4xl mb-3">🛒</span>
+                <p className="text-slate-500 dark:text-white/40 text-sm">No purchases yet.</p>
+                <p className="text-slate-400 dark:text-white/25 text-xs mt-1">Items you buy will appear here.</p>
+            </div>
+        );
+    }
+    return (
+        <div className="space-y-3">
+            {history.map((entry, i) => {
+                const allItems = SHOP_ITEMS[entry.category] ?? [];
+                const item = allItems.find(x => x.id === entry.itemId);
+                return (
+                    <div key={i} className="flex items-center justify-between gap-4 bg-white dark:bg-white/[0.03] border border-slate-200/60 dark:border-white/[0.06] rounded-2xl p-4">
+                        <div className="flex items-center gap-3">
+                            <span className="text-2xl">{item?.emoji ?? CATEGORY_ICONS[entry.category] ?? '📦'}</span>
+                            <div>
+                                <p className="font-black text-slate-800 dark:text-white text-sm">{item?.name ?? entry.itemId}</p>
+                                <p className="text-xs text-slate-400 dark:text-white/35 capitalize">{entry.category}</p>
+                            </div>
+                        </div>
+                        <div className="text-right shrink-0">
+                            <p className="font-black text-amber-500 text-sm">🪙 {entry.cost}</p>
+                            <p className="text-[10px] text-slate-400 dark:text-white/30">
+                                {entry.purchasedAt ? new Date(entry.purchasedAt).toLocaleDateString() : ''}
+                            </p>
+                        </div>
+                    </div>
+                );
+            })}
+        </div>
+    );
+};
+
+// ── Main Page ─────────────────────────────────────────────────────────────
 
 const StudyShop = () => {
     const {
@@ -61,261 +313,169 @@ const StudyShop = () => {
         streakShields,
         xpBoosts,
         weekendFreezes,
-        buyItem
+        purchaseHistory,
+        buyItem,
     } = useGamificationStore();
 
-    const containerVariants = {
-        hidden: { opacity: 0 },
-        show: { opacity: 1, transition: { staggerChildren: 0.1 } }
+    const [activeTab, setActiveTab] = useState('all');
+    const [previewItem, setPreviewItem] = useState(null);
+    const [previewCategory, setPreviewCategory] = useState(null);
+
+    const featured = useMemo(() => getFeaturedItem(), []);
+
+    const unlocked = {
+        avatars: unlockedAvatars,
+        titles: unlockedTitles,
+        themes: unlockedThemes,
+        frames: unlockedFrames,
+        powerups: [],
     };
-    const itemVariants = { hidden: { y: 20, opacity: 0 }, show: { y: 0, opacity: 1 } };
+
+    const powerupCounts = {
+        streak_shield: streakShields,
+        xp_boost: xpBoosts,
+        weekend_freeze: weekendFreezes,
+    };
+
+    const isFeaturedOwned = unlocked[featured.category]?.includes(featured.id);
+
+    const openPreview = (item, category) => {
+        setPreviewItem(item);
+        setPreviewCategory(category);
+    };
+    const closePreview = () => { setPreviewItem(null); setPreviewCategory(null); };
 
     return (
         <StudentLayout title="Study Shop">
             <ConfettiEffect />
-            <div className="max-w-6xl mx-auto px-4 py-4 sm:py-8 space-y-8 pb-24">
 
-                {/* ── Shop Banner & Coin Balance ── */}
+            {previewItem && (
+                <ItemPreviewModal
+                    item={previewItem}
+                    category={previewCategory}
+                    coins={coins}
+                    isOwned={
+                        previewCategory === 'powerups'
+                            ? false
+                            : unlocked[previewCategory]?.includes(previewItem.id)
+                    }
+                    onBuy={buyItem}
+                    onClose={closePreview}
+                />
+            )}
+
+            <div className="max-w-3xl mx-auto px-4 py-6 pb-24 space-y-6">
+
+                {/* ── Banner ── */}
                 <motion.div
-                    initial={{ y: -20, opacity: 0 }}
+                    initial={{ y: -16, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
-                    className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-slate-900 via-indigo-950 to-purple-950 border border-indigo-500/20 p-5 sm:p-8 md:p-10 shadow-[0_10px_30px_rgba(99,102,241,0.15)]"
+                    className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-slate-900 via-indigo-950 to-purple-950 border border-indigo-500/20 p-6 sm:p-8 shadow-[0_10px_30px_rgba(99,102,241,0.15)]"
                 >
-                    <div className="absolute top-0 right-0 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
-                    <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
-
-                    <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-                        <div className="space-y-2 max-w-xl">
+                    <div className="absolute top-0 right-0 w-72 h-72 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+                    <div className="absolute bottom-0 left-0 w-56 h-56 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
+                    <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+                        <div className="space-y-1.5">
                             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-xs font-black uppercase tracking-wider">
-                                <Sparkles size={12} /> Gamified Economy
+                                <ShoppingBag size={11} /> Gamified Economy
                             </div>
-                            <h1 className="text-3xl md:text-4xl font-display font-black text-white leading-tight">
-                                Welcome to the Study Shop
-                            </h1>
-                            <p className="text-slate-400 text-sm md:text-base leading-relaxed">
-                                Spend your earned Study Coins to customize your avatar, unlock prestige titles, and activate power-ups. Answering questions correctly in quizzes awards you coins!
+                            <h1 className="text-3xl font-display font-black text-white leading-tight">Study Shop</h1>
+                            <p className="text-slate-400 text-sm leading-relaxed max-w-sm">
+                                Spend your Study Coins on avatars, titles, themes, frames, and power-ups.
                             </p>
                         </div>
-
-                        {/* Animated coin balance */}
                         <motion.div
-                            whileHover={{ scale: 1.05 }}
-                            className="bg-amber-500/10 border border-amber-500/20 rounded-3xl p-6 flex items-center gap-4 shadow-[inset_0_2px_4px_rgba(245,158,11,0.05)] md:w-72 justify-center"
+                            whileHover={{ scale: 1.04 }}
+                            className="bg-amber-500/10 border border-amber-500/20 rounded-2xl px-6 py-4 flex items-center gap-3 sm:w-52 justify-center shrink-0"
                         >
-                            <span className="text-4xl select-none animate-bounce">🪙</span>
+                            <span className="text-3xl animate-bounce select-none">🪙</span>
                             <div>
-                                <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest leading-none">Your Balance</p>
-                                <p className="text-3xl font-black text-amber-400 mt-1.5 font-display">
-                                    <CoinDisplay coins={coins} /> Coins
+                                <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest leading-none">Balance</p>
+                                <p className="text-2xl font-black text-amber-400 mt-1 font-display">
+                                    <CoinDisplay coins={coins} />
                                 </p>
                             </div>
                         </motion.div>
                     </div>
                 </motion.div>
 
-                {/* ── Shop Grid ── */}
-                <motion.div
-                    variants={containerVariants}
-                    initial="hidden"
-                    animate="show"
-                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
-                >
-                    {/* Category 1: Avatars */}
-                    <motion.div variants={itemVariants}
-                        className="bg-white/80 dark:bg-white/5 border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-md relative overflow-hidden flex flex-col"
+                {/* ── Featured Deal ── */}
+                <FeaturedBanner item={featured} coins={coins} isOwned={isFeaturedOwned} onPreview={openPreview} />
+
+                {/* ── Category Tabs ── */}
+                <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                    {CATEGORIES.map(cat => (
+                        <button
+                            key={cat.id}
+                            onClick={() => setActiveTab(cat.id)}
+                            className={`shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-black transition-all border ${
+                                activeTab === cat.id
+                                    ? 'bg-indigo-600 border-indigo-500 text-white shadow-md'
+                                    : 'bg-white dark:bg-white/5 border-slate-200/60 dark:border-white/10 text-slate-600 dark:text-white/50 hover:border-indigo-500/30 hover:text-indigo-600 dark:hover:text-white'
+                            }`}
+                        >
+                            <span>{cat.icon}</span> {cat.label}
+                            {cat.id === 'history' && purchaseHistory?.length > 0 && (
+                                <span className="ml-0.5 w-4 h-4 rounded-full bg-amber-500 text-slate-950 text-[9px] flex items-center justify-center font-black">
+                                    {purchaseHistory.length > 9 ? '9+' : purchaseHistory.length}
+                                </span>
+                            )}
+                        </button>
+                    ))}
+                </div>
+
+                {/* ── Content ── */}
+                <AnimatePresence mode="wait">
+                    <motion.div
+                        key={activeTab}
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -4 }}
+                        transition={{ duration: 0.15 }}
                     >
-                        <div className="absolute inset-0 bg-gradient-to-b from-indigo-500/5 to-transparent pointer-events-none" />
-                        <h3 className="font-display font-black text-xl text-slate-800 dark:text-white flex items-center gap-2 mb-2 relative z-10">
-                            🧙‍♂️ Premium Avatars
+                        {activeTab === 'history' ? (
+                            <PurchaseHistory history={purchaseHistory} />
+                        ) : (
+                            <CategorySection
+                                categoryId={activeTab}
+                                coins={coins}
+                                unlocked={unlocked}
+                                powerupCounts={powerupCounts}
+                                onPreview={openPreview}
+                            />
+                        )}
+                    </motion.div>
+                </AnimatePresence>
+
+                {/* ── How to Earn ── */}
+                {activeTab !== 'history' && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="bg-white/80 dark:bg-white/5 border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 relative overflow-hidden"
+                    >
+                        <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/5 to-transparent pointer-events-none" />
+                        <h3 className="font-display font-black text-lg text-slate-800 dark:text-white flex items-center gap-2 mb-4 relative z-10">
+                            <HelpCircle size={18} className="text-emerald-500" />
+                            How to Earn Coins
                         </h3>
-                        <p className="text-slate-500 dark:text-white/50 text-xs mb-6 relative z-10">
-                            Unlock unique emoji avatars to show off on the leaderboards.
-                        </p>
-                        <div className="space-y-4 flex-1 relative z-10">
-                            {SHOP_ITEMS.avatars.map(item => {
-                                const isOwned = unlockedAvatars.includes(item.id);
-                                return (
-                                    <div key={item.id}
-                                        className="bg-white dark:bg-slate-900/50 border border-slate-200/60 dark:border-white/5 rounded-2xl p-4 flex items-center justify-between gap-4 transition hover:border-indigo-500/30"
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <span className="text-3xl select-none bg-slate-100 dark:bg-white/5 w-14 h-14 rounded-xl flex items-center justify-center border border-slate-200/30 dark:border-white/5">{item.emoji}</span>
-                                            <div>
-                                                <p className="font-black text-slate-800 dark:text-white text-sm">{item.name}</p>
-                                                <p className="text-[10px] text-slate-400 dark:text-white/40 mt-1 leading-snug">{item.description}</p>
-                                            </div>
-                                        </div>
-                                        {isOwned ? <OwnedBadge /> : <BuyButton item={item} category="avatars" coins={coins} buyItem={buyItem} />}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 relative z-10">
+                            {[
+                                { icon: <Zap size={18} />, color: 'emerald', title: 'Correct Answers', body: 'Each correct quiz answer earns XP, which converts 1:1 to coins. Perfect scores give a bonus!' },
+                                { icon: '🔥', color: 'orange', title: 'Daily Streak', body: 'Keeping a study streak applies an XP multiplier — the longer your streak, the more coins per quiz.' },
+                                { icon: '👑', color: 'purple', title: 'Quests & Challenges', body: 'Complete daily challenges and quests in your Dashboard for instant coin bundles.' },
+                            ].map(({ icon, color, title, body }) => (
+                                <div key={title} className="bg-slate-50/50 dark:bg-black/20 rounded-2xl p-4 border border-slate-200/40 dark:border-white/5">
+                                    <div className={`w-9 h-9 rounded-xl bg-${color}-500/10 text-${color}-500 flex items-center justify-center mb-2.5`}>
+                                        {typeof icon === 'string' ? <span>{icon}</span> : icon}
                                     </div>
-                                );
-                            })}
+                                    <h4 className="font-bold text-slate-800 dark:text-white text-sm mb-1">{title}</h4>
+                                    <p className="text-slate-500 dark:text-white/40 text-xs leading-relaxed">{body}</p>
+                                </div>
+                            ))}
                         </div>
                     </motion.div>
-
-                    {/* Category 2: Custom Titles */}
-                    <motion.div variants={itemVariants}
-                        className="bg-white/80 dark:bg-white/5 border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-md relative overflow-hidden flex flex-col"
-                    >
-                        <div className="absolute inset-0 bg-gradient-to-b from-purple-500/5 to-transparent pointer-events-none" />
-                        <h3 className="font-display font-black text-xl text-slate-800 dark:text-white flex items-center gap-2 mb-2 relative z-10">
-                            🌟 Custom Titles
-                        </h3>
-                        <p className="text-slate-500 dark:text-white/50 text-xs mb-6 relative z-10">
-                            Prestige titles to wear below your name on your profile.
-                        </p>
-                        <div className="space-y-4 flex-1 relative z-10">
-                            {SHOP_ITEMS.titles.map(item => {
-                                const isOwned = unlockedTitles.includes(item.id);
-                                return (
-                                    <div key={item.id}
-                                        className="bg-white dark:bg-slate-900/50 border border-slate-200/60 dark:border-white/5 rounded-2xl p-4 flex items-center justify-between gap-4 transition hover:border-indigo-500/30"
-                                    >
-                                        <div>
-                                            <p className="font-black text-slate-800 dark:text-white text-sm uppercase tracking-wider">{item.name}</p>
-                                            <p className="text-[10px] text-slate-400 dark:text-white/40 mt-1 leading-snug">{item.description}</p>
-                                        </div>
-                                        {isOwned ? <OwnedBadge /> : <BuyButton item={item} category="titles" coins={coins} buyItem={buyItem} />}
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </motion.div>
-
-                    {/* Category 3: UI Themes */}
-                    <motion.div variants={itemVariants}
-                        className="bg-white/80 dark:bg-white/5 border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-md relative overflow-hidden flex flex-col"
-                    >
-                        <div className="absolute inset-0 bg-gradient-to-b from-blue-500/5 to-transparent pointer-events-none" />
-                        <h3 className="font-display font-black text-xl text-slate-800 dark:text-white flex items-center gap-2 mb-2 relative z-10">
-                            🌌 UI Themes
-                        </h3>
-                        <p className="text-slate-500 dark:text-white/50 text-xs mb-6 relative z-10">
-                            Unlock unique UI skins to change your entire dashboard look.
-                        </p>
-                        <div className="space-y-4 flex-1 relative z-10">
-                            {SHOP_ITEMS.themes.map(item => {
-                                const isOwned = unlockedThemes.includes(item.id);
-                                return (
-                                    <div key={item.id}
-                                        className="bg-white dark:bg-slate-900/50 border border-slate-200/60 dark:border-white/5 rounded-2xl p-4 flex items-center justify-between gap-4 transition hover:border-indigo-500/30"
-                                    >
-                                        <div className="flex items-center gap-3 min-w-0">
-                                            <span className="text-2xl select-none bg-slate-100 dark:bg-white/5 w-12 h-12 rounded-xl flex items-center justify-center border border-slate-200/30 dark:border-white/5">{item.emoji}</span>
-                                            <div className="min-w-0">
-                                                <p className="font-black text-slate-800 dark:text-white text-sm truncate">{item.name}</p>
-                                                <p className="text-[10px] text-slate-400 dark:text-white/40 mt-1 leading-snug">{item.description}</p>
-                                            </div>
-                                        </div>
-                                        {isOwned ? <OwnedBadge /> : <BuyButton item={item} category="themes" coins={coins} buyItem={buyItem} />}
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </motion.div>
-
-                    {/* Category 4: Glowing Borders */}
-                    <motion.div variants={itemVariants}
-                        className="bg-white/80 dark:bg-white/5 border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-md relative overflow-hidden flex flex-col"
-                    >
-                        <div className="absolute inset-0 bg-gradient-to-b from-rose-500/5 to-transparent pointer-events-none" />
-                        <h3 className="font-display font-black text-xl text-slate-800 dark:text-white flex items-center gap-2 mb-2 relative z-10">
-                            🖼️ Glowing Borders
-                        </h3>
-                        <p className="text-slate-500 dark:text-white/50 text-xs mb-6 relative z-10">
-                            Equip legendary glowing borders around your avatar.
-                        </p>
-                        <div className="space-y-4 flex-1 relative z-10">
-                            {SHOP_ITEMS.frames.map(item => {
-                                const isOwned = unlockedFrames.includes(item.id);
-                                return (
-                                    <div key={item.id}
-                                        className="bg-white dark:bg-slate-900/50 border border-slate-200/60 dark:border-white/5 rounded-2xl p-4 flex items-center justify-between gap-4 transition hover:border-indigo-500/30"
-                                    >
-                                        <div className="flex items-center gap-3 min-w-0">
-                                            <span className="text-2xl select-none bg-slate-100 dark:bg-white/5 w-12 h-12 rounded-xl flex items-center justify-center border border-slate-200/30 dark:border-white/5">{item.emoji}</span>
-                                            <div className="min-w-0">
-                                                <p className="font-black text-slate-800 dark:text-white text-sm truncate">{item.name}</p>
-                                                <p className="text-[10px] text-slate-400 dark:text-white/40 mt-1 leading-snug">{item.description}</p>
-                                            </div>
-                                        </div>
-                                        {isOwned ? <OwnedBadge /> : <BuyButton item={item} category="frames" coins={coins} buyItem={buyItem} />}
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </motion.div>
-
-                    {/* Category 5: Power-ups (stackable — always purchasable if affordable) */}
-                    <motion.div variants={itemVariants}
-                        className="bg-white/80 dark:bg-white/5 border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-md relative overflow-hidden flex flex-col"
-                    >
-                        <div className="absolute inset-0 bg-gradient-to-b from-amber-500/5 to-transparent pointer-events-none" />
-                        <h3 className="font-display font-black text-xl text-slate-800 dark:text-white flex items-center gap-2 mb-2 relative z-10">
-                            ⚡ Boosters & Powerups
-                        </h3>
-                        <p className="text-slate-500 dark:text-white/50 text-xs mb-6 relative z-10">
-                            Equip items that help preserve your streaks or multiply earned XP.
-                        </p>
-                        <div className="space-y-4 flex-1 relative z-10">
-                            {SHOP_ITEMS.powerups.map(item => {
-                                const ownedCount = item.id === 'streak_shield' ? streakShields : (item.id === 'xp_boost' ? xpBoosts : weekendFreezes);
-                                return (
-                                    <div key={item.id}
-                                        className="bg-white dark:bg-slate-900/50 border border-slate-200/60 dark:border-white/5 rounded-2xl p-4 flex items-center justify-between gap-4 transition hover:border-indigo-500/30"
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <span className="text-2xl select-none bg-slate-100 dark:bg-white/5 w-14 h-14 rounded-xl flex items-center justify-center border border-slate-200/30 dark:border-white/5">{item.emoji}</span>
-                                            <div>
-                                                <p className="font-black text-slate-800 dark:text-white text-sm">
-                                                    {item.name}
-                                                    {ownedCount > 0 && (
-                                                        <span className="ml-2 px-1.5 py-0.5 bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 rounded-md text-[10px] font-black">x{ownedCount}</span>
-                                                    )}
-                                                </p>
-                                                <p className="text-[10px] text-slate-400 dark:text-white/40 mt-1 leading-snug">{item.description}</p>
-                                            </div>
-                                        </div>
-                                        <BuyButton item={item} category="powerups" coins={coins} buyItem={buyItem} />
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </motion.div>
-
-                </motion.div>
-
-                {/* ── How to earn points & coins ── */}
-                <motion.div
-                    initial={{ y: 20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    className="bg-white/80 dark:bg-white/5 border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-md relative overflow-hidden group"
-                >
-                    <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/5 to-transparent pointer-events-none" />
-                    <h3 className="font-display font-black text-xl text-slate-800 dark:text-white flex items-center gap-2 mb-4 relative z-10">
-                        <HelpCircle className="text-emerald-500" />
-                        How to Earn Points & Coins?
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10">
-                        <div className="bg-slate-50/50 dark:bg-black/25 rounded-2xl p-4 border border-slate-200/50 dark:border-white/5">
-                            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-black mb-3">
-                                <Zap size={20} />
-                            </div>
-                            <h4 className="font-bold text-slate-800 dark:text-white text-sm mb-1">Answer Questions Correctly</h4>
-                            <p className="text-slate-500 dark:text-white/40 text-xs leading-relaxed">Each correct answer in a quiz awards you XP. Perfect scores give a massive bonus, and all earned XP matches with equivalent Coins! 🪙</p>
-                        </div>
-                        <div className="bg-slate-50/50 dark:bg-black/25 rounded-2xl p-4 border border-slate-200/50 dark:border-white/5">
-                            <div className="w-10 h-10 rounded-xl bg-orange-500/10 text-orange-600 dark:text-orange-400 flex items-center justify-center font-black mb-3">🔥</div>
-                            <h4 className="font-bold text-slate-800 dark:text-white text-sm mb-1">Keep a Streak Going</h4>
-                            <p className="text-slate-500 dark:text-white/40 text-xs leading-relaxed">Completing study activities daily increases your streak multiplier. Higher streaks award multiplier boosts to all quiz XP earnings!</p>
-                        </div>
-                        <div className="bg-slate-50/50 dark:bg-black/25 rounded-2xl p-4 border border-slate-200/50 dark:border-white/5">
-                            <div className="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center font-black mb-3">👑</div>
-                            <h4 className="font-bold text-slate-800 dark:text-white text-sm mb-1">Daily Challenges & Quests</h4>
-                            <p className="text-slate-500 dark:text-white/40 text-xs leading-relaxed">Complete daily tasks or long-term quests in your dashboard to earn instant heavy coin bundles and level-up rewards.</p>
-                        </div>
-                    </div>
-                </motion.div>
-
+                )}
             </div>
         </StudentLayout>
     );
