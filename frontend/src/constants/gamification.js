@@ -61,31 +61,33 @@ export const THEMES = [
     { id: 'cyberpunk', name: 'Neon Cyberpunk', levelReq: 1 }
 ];
 
+// rarity: 'common' | 'rare' | 'epic' | 'legendary'
+// previewColors: accent colors used in the ItemPreviewModal
 export const SHOP_ITEMS = {
     avatars: [
-        { id: 'wizard_scholar', emoji: '🧙‍♂️', name: 'Wizard Scholar', cost: 150, description: 'A mystical master of educational wisdom.' },
-        { id: 'cyber_learner', emoji: '👾', name: 'Cyber Learner', cost: 250, description: 'Direct neural interface to the study database.' },
-        { id: 'unicorn_scholar', emoji: '🦄', name: 'Academic Unicorn', cost: 400, description: 'A rare creature of unparalleled brilliance.' }
+        { id: 'wizard_scholar', emoji: '🧙‍♂️', name: 'Wizard Scholar', cost: 150, description: 'A mystical master of educational wisdom.', rarity: 'rare', previewColors: ['#6366f1', '#8b5cf6'] },
+        { id: 'cyber_learner', emoji: '👾', name: 'Cyber Learner', cost: 250, description: 'Direct neural interface to the study database.', rarity: 'epic', previewColors: ['#06b6d4', '#3b82f6'] },
+        { id: 'unicorn_scholar', emoji: '🦄', name: 'Academic Unicorn', cost: 400, description: 'A rare creature of unparalleled brilliance.', rarity: 'legendary', previewColors: ['#ec4899', '#f59e0b'], isNew: true }
     ],
     titles: [
-        { id: 'knowledge_alchemist', name: 'Alchemist of Knowledge', cost: 100, description: 'Transmuting study time into pure genius.' },
-        { id: 'ultimate_mind', name: 'Ultimate Mind', cost: 200, description: 'Capable of storing infinite amounts of material.' },
-        { id: 'legendary_scholar', name: 'Legendary Scholar', cost: 350, description: 'Your achievements will be spoken of for generations.' }
+        { id: 'knowledge_alchemist', name: 'Alchemist of Knowledge', cost: 100, description: 'Transmuting study time into pure genius.', rarity: 'common', previewColors: ['#10b981', '#059669'] },
+        { id: 'ultimate_mind', name: 'Ultimate Mind', cost: 200, description: 'Capable of storing infinite amounts of material.', rarity: 'rare', previewColors: ['#6366f1', '#8b5cf6'] },
+        { id: 'legendary_scholar', name: 'Legendary Scholar', cost: 350, description: 'Your achievements will be spoken of for generations.', rarity: 'legendary', previewColors: ['#f59e0b', '#ef4444'] }
     ],
     themes: [
-        { id: 'arcade', emoji: '🕹️', name: 'Retro Arcade Theme', cost: 200, description: 'Pixelated aesthetics and green phosphorescent fonts.' },
-        { id: 'space', emoji: '🌌', name: 'Space Nebula Theme', cost: 350, description: 'Deep space cosmic background with star constellations.' },
-        { id: 'cyberpunk', emoji: '🤖', name: 'Neon Cyberpunk Theme', cost: 500, description: 'Cybernetic neon styles with glitch and sharp clip designs.' }
+        { id: 'arcade', emoji: '🕹️', name: 'Retro Arcade Theme', cost: 200, description: 'Pixelated aesthetics and green phosphorescent fonts.', rarity: 'rare', previewColors: ['#10b981', '#065f46'], swatchColors: ['#0f172a', '#10b981', '#065f46', '#d1fae5'] },
+        { id: 'space', emoji: '🌌', name: 'Space Nebula Theme', cost: 350, description: 'Deep space cosmic background with star constellations.', rarity: 'epic', previewColors: ['#6366f1', '#0f172a'], swatchColors: ['#0f172a', '#6366f1', '#8b5cf6', '#e0e7ff'] },
+        { id: 'cyberpunk', emoji: '🤖', name: 'Neon Cyberpunk Theme', cost: 500, description: 'Cybernetic neon styles with glitch and sharp clip designs.', rarity: 'legendary', previewColors: ['#ec4899', '#0f172a'], swatchColors: ['#0f172a', '#ec4899', '#06b6d4', '#f0abfc'], isNew: true }
     ],
     frames: [
-        { id: 'bronze', emoji: '🟫', name: 'Bronze Glow Frame', cost: 100, description: 'Covers your avatar in a warm bronze glow.' },
-        { id: 'silver', emoji: '⬜', name: 'Silver Glow Frame', cost: 180, description: 'Sleek silver futuristic border.' },
-        { id: 'gold', emoji: '🟨', name: 'Gold Shine Frame', cost: 300, description: 'Bright glowing gold frame.' },
-        { id: 'diamond', emoji: '💎', name: 'Diamond Sparkle Frame', cost: 500, description: 'Exclusive diamond border that sparkles and shifts colors.' }
+        { id: 'bronze', emoji: '🟫', name: 'Bronze Glow Frame', cost: 100, description: 'Covers your avatar in a warm bronze glow.', rarity: 'common', glowColor: '#92400e' },
+        { id: 'silver', emoji: '⬜', name: 'Silver Glow Frame', cost: 180, description: 'Sleek silver futuristic border.', rarity: 'rare', glowColor: '#94a3b8' },
+        { id: 'gold', emoji: '🟨', name: 'Gold Shine Frame', cost: 300, description: 'Bright glowing gold frame.', rarity: 'epic', glowColor: '#f59e0b' },
+        { id: 'diamond', emoji: '💎', name: 'Diamond Sparkle Frame', cost: 500, description: 'Exclusive diamond border that sparkles and shifts colors.', rarity: 'legendary', glowColor: '#06b6d4', isNew: true }
     ],
     powerups: [
-        { id: 'streak_shield', emoji: '🛡️', name: 'Streak Shield', cost: 75, description: 'Saves your streak if you miss a day.' },
-        { id: 'xp_boost', emoji: '⚡', name: 'XP Boost Token (2x)', cost: 120, description: 'Doubles all XP earned from your next quiz.' },
-        { id: 'weekend_freeze', emoji: '🥶', name: 'Weekend Freeze', cost: 150, description: 'Freezes your streak during the weekend.' }
+        { id: 'streak_shield', emoji: '🛡️', name: 'Streak Shield', cost: 75, description: 'Saves your streak if you miss a day.', rarity: 'common', previewColors: ['#10b981', '#065f46'], effect: 'Protects your daily study streak for 1 missed day.' },
+        { id: 'xp_boost', emoji: '⚡', name: 'XP Boost Token (2x)', cost: 120, description: 'Doubles all XP earned from your next quiz.', rarity: 'rare', previewColors: ['#f59e0b', '#92400e'], effect: 'Doubles XP earned on your very next quiz submission.' },
+        { id: 'weekend_freeze', emoji: '🥶', name: 'Weekend Freeze', cost: 150, description: 'Freezes your streak during the weekend.', rarity: 'rare', previewColors: ['#06b6d4', '#1e3a5f'], effect: 'Pauses streak decay on Saturday and Sunday.' }
     ]
 };

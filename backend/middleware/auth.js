@@ -72,6 +72,21 @@ export const authorize = (...roles) => {
 };
 
 /**
+ * Allows only users with the 'admin' role.
+ * Must be used AFTER authenticate middleware.
+ */
+export const requireAdmin = (req, res, next) => {
+  if (!req.user) {
+    return next(createError(401, 'Authentication required.'));
+  }
+  const userRoles = req.user.roles || (req.user.role ? [req.user.role] : []);
+  if (!userRoles.includes('admin')) {
+    return next(createError(403, 'Admin access required.'));
+  }
+  next();
+};
+
+/**
  * Generates a JWT token for the given user.
  * Includes both role (primary) and roles array (multi-role support).
  */
