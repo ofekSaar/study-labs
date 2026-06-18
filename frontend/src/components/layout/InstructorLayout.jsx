@@ -11,7 +11,7 @@ const Logo = ({ size = 32 }) => (
     <div className="rounded-xl flex items-center justify-center flex-shrink-0"
         style={{
             width: size, height: size,
-            background: 'linear-gradient(135deg, #7C3AED, #4F6EF7)',
+            background: 'linear-gradient(135deg, #7C3AED, #D97757)',
             boxShadow: '0 0 16px rgba(124,58,237,0.5)',
         }}>
         <svg width={size * 0.55} height={size * 0.55} viewBox="0 0 24 24" fill="none">
@@ -117,7 +117,7 @@ const SidebarContent = ({ location, navigate, user, courseUser, _setIsSidebarOpe
                 <div className="space-y-0.5">
                     {user?.roles?.includes('student') && (
                         <button onClick={() => navigate('/')}
-                            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-indigo-600 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-500/15 hover:text-indigo-700 dark:hover:text-indigo-200 transition-all">
+                            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-orange-600 dark:text-orange-300 hover:bg-orange-100 dark:hover:bg-orange-500/15 hover:text-orange-700 dark:hover:text-orange-200 transition-all">
                             <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                             </svg>

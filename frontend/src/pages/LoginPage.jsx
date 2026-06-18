@@ -37,12 +37,12 @@ const LoginPage = () => {
 
             {/* ── Left Hero Panel ─────────────────────────── */}
             <div className="hidden lg:flex flex-col justify-between w-1/2 relative overflow-hidden p-12"
-                style={{ background: 'linear-gradient(145deg, #0f172a 0%, #1e1b4b 45%, #312e81 100%)' }}>
+                style={{ background: 'linear-gradient(145deg, #1A0F0A 0%, #2D1810 45%, #4A2010 100%)' }}>
 
                 {/* Animated background orbs */}
-                <Orb style={{ width: 400, height: 400, top: '-10%', left: '-10%', background: 'rgba(79,110,247,0.25)' }} />
+                <Orb style={{ width: 400, height: 400, top: '-10%', left: '-10%', background: 'rgba(217,119,87,0.25)' }} />
                 <Orb style={{ width: 350, height: 350, bottom: '5%', right: '-5%', background: 'rgba(124,58,237,0.2)', animationDelay: '3s' }} />
-                <Orb style={{ width: 200, height: 200, top: '40%', left: '40%', background: 'rgba(16,185,129,0.15)', animationDelay: '1.5s' }} />
+                <Orb style={{ width: 200, height: 200, top: '40%', left: '40%', background: 'rgba(245,158,11,0.15)', animationDelay: '1.5s' }} />
 
                 {/* Dot grid overlay */}
                 <div className="absolute inset-0 opacity-10"
@@ -52,7 +52,7 @@ const LoginPage = () => {
                 <div className="relative z-10">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl flex items-center justify-center"
-                            style={{ background: 'linear-gradient(135deg, #4F6EF7, #7C3AED)', boxShadow: '0 0 20px rgba(79,110,247,0.5)' }}>
+                            style={{ background: 'linear-gradient(135deg, #D97757, #C4613D)', boxShadow: '0 0 20px rgba(217,119,87,0.5)' }}>
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                                 <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                             </svg>
@@ -66,7 +66,7 @@ const LoginPage = () => {
                     <div>
                         <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white leading-tight mb-4">
                             Learn Smarter.<br />
-                            <span style={{ background: 'linear-gradient(90deg, #818cf8, #c084fc)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                            <span style={{ background: 'linear-gradient(90deg, #F59E0B, #D97757)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
                                 Level Up Faster.
                             </span>
                         </h1>
@@ -94,7 +94,7 @@ const LoginPage = () => {
                 {/* Floating map nodes decoration */}
                 <div className="absolute top-1/2 right-8 transform -translate-y-1/2 space-y-6 opacity-30 pointer-events-none">
                     {[
-                        { color: '#4F6EF7', label: 'Chapter 1', done: true },
+                        { color: '#D97757', label: 'Chapter 1', done: true },
                         { color: '#7C3AED', label: 'Quiz', done: true },
                         { color: '#10B981', label: 'Project', done: false },
                     ].map((node, i) => (
@@ -111,20 +111,20 @@ const LoginPage = () => {
 
             {/* ── Right Login Panel ─────────────────────────── */}
             <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-8 relative"
-                style={{ background: 'linear-gradient(160deg, #f8faff 0%, #f0f4ff 50%, #f5f0ff 100%)' }}>
+                style={{ background: 'linear-gradient(160deg, #FFFCF9 0%, #F8F5F1 50%, #F5F0EB 100%)' }}>
 
                 {/* Background blobs */}
                 <div className="absolute top-0 right-0 w-64 h-64 rounded-full opacity-40 pointer-events-none"
-                    style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.15), transparent)', filter: 'blur(40px)', transform: 'translate(30%, -30%)' }} />
+                    style={{ background: 'radial-gradient(circle, rgba(217,119,87,0.18), transparent)', filter: 'blur(40px)', transform: 'translate(30%, -30%)' }} />
                 <div className="absolute bottom-0 left-0 w-48 h-48 rounded-full opacity-40 pointer-events-none"
-                    style={{ background: 'radial-gradient(circle, rgba(124,58,237,0.12), transparent)', filter: 'blur(40px)', transform: 'translate(-30%, 30%)' }} />
+                    style={{ background: 'radial-gradient(circle, rgba(245,158,11,0.12), transparent)', filter: 'blur(40px)', transform: 'translate(-30%, 30%)' }} />
 
                 <div className="w-full max-w-sm mx-4 relative z-10 page-enter">
 
                     {/* Mobile logo */}
                     <div className="lg:hidden flex items-center gap-3 mb-10 justify-center">
                         <div className="w-10 h-10 rounded-xl flex items-center justify-center"
-                            style={{ background: 'linear-gradient(135deg, #4F6EF7, #7C3AED)', boxShadow: '0 0 20px rgba(79,110,247,0.4)' }}>
+                            style={{ background: 'linear-gradient(135deg, #D97757, #C4613D)', boxShadow: '0 0 20px rgba(217,119,87,0.4)' }}>
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                                 <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                             </svg>
