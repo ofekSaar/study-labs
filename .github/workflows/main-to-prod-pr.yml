@@ -1,8 +1,12 @@
 name: Auto PR — main to production
 
+# Fires only after the CI workflow completes successfully on main.
+# This prevents a production PR from opening when tests are failing.
 on:
-  push:
-    branches: [ "main" ]
+  workflow_run:
+    workflows: ["CI"]
+    branches: ["main"]
+    types: [completed]
 
 # GITHUB_TOKEN needs pull-requests: write to open PRs.
 # contents: read is needed by checkout; pull-requests: write by gh pr create.
@@ -12,6 +16,8 @@ permissions:
 
 jobs:
   create-pr:
+    # Skip if CI did not pass
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
