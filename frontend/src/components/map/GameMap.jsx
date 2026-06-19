@@ -94,7 +94,7 @@ const MapNode = ({ status, x, y, label, onClick, index, type, xpReward = 150, is
     );
 };
 
-const GameMapComponent = ({ nodes }) => {
+const GameMap = ({ nodes }) => {
     const containerRef = useRef(null);
     const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
 
@@ -209,4 +209,4 @@ const GameMapComponent = ({ nodes }) => {
     );
 };
 
-export default GameMapComponent;
+export default GameMap;
