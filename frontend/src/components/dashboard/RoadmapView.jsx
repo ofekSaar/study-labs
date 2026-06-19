@@ -1,7 +1,24 @@
 import React, { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import useCourseStore from '../../store/courseStore';
-import { CheckCircle2, PlayCircle, Lock, Zap, BookOpen, Target, ChevronLeft, ChevronRight } from 'lucide-react';
+import { CheckCircle2, PlayCircle, Lock, Zap, ChevronRight, BookOpen, ClipboardList, GraduationCap } from 'lucide-react';
+
+const TYPE_CONFIG = {
+    quiz:    { label: 'Quiz',   icon: ClipboardList, color: 'text-blue-600 dark:text-blue-400',   bg: 'bg-blue-500/10',   border: 'border-blue-500/20' },
+    exam:    { label: 'Exam',   icon: GraduationCap, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-500/10',  border: 'border-amber-500/20' },
+    default: { label: 'Lesson', icon: BookOpen,       color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-500/10', border: 'border-purple-500/20' },
+};
+
+const TypeBadge = ({ type }) => {
+    const cfg = TYPE_CONFIG[type] || TYPE_CONFIG.default;
+    const Icon = cfg.icon;
+    return (
+        <span className={`inline-flex items-center gap-1 ${cfg.bg} ${cfg.color} ${cfg.border} border px-2 py-0.5 rounded-md text-[10px] font-black`}>
+            <Icon size={10} strokeWidth={2.5} />
+            {cfg.label}
+        </span>
+    );
+};
 
 const RoadmapView = () => {
     const { courses, selectedCourseId, fetchCourseNodes, setSelectedNode, selectedNode } = useCourseStore();
@@ -22,202 +39,207 @@ const RoadmapView = () => {
         }
     }, [courseId, hasNoNodes, fetchCourseNodes]);
 
-    // Safety check
     if (!course) return (
         <div className="p-12 text-center">
             <div className="text-4xl mb-3">🗺️</div>
-            <p className="text-slate-400 dark:text-white/40 font-medium">Please select a course to view the learning path</p>
+            <p className="text-slate-400 dark:text-white/40 font-medium">Select a course to view your learning path</p>
         </div>
     );
 
     if (isLoadingNodes) return (
         <div className="p-16 flex flex-col items-center gap-4">
-            <div className="w-10 h-10 rounded-full border-4 border-transparent border-t-indigo-500 border-r-purple-500 animate-spin" />
-            <p className="text-sm text-slate-400 dark:text-white/40 font-medium">Loading learning path...</p>
+            <div className="w-10 h-10 rounded-full border-4 border-transparent border-t-orange-500 border-r-amber-400 animate-spin" />
+            <p className="text-sm text-slate-400 dark:text-white/40 font-medium">Loading learning path…</p>
         </div>
     );
 
     const nodes = course.nodes || [];
-    const completedNodes = nodes.filter(n => n.status === 'completed').length;
-    const totalNodes = nodes.length;
-    const progressPercentage = totalNodes > 0 ? Math.round((completedNodes / totalNodes) * 100) : 0;
+    const completedCount = nodes.filter(n => n.status === 'completed').length;
+    const pct = nodes.length > 0 ? Math.round((completedCount / nodes.length) * 100) : 0;
 
     return (
-        <div className="p-3 sm:p-5">
-            {/* Header section (Compact) */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 pb-5 border-b border-slate-200/60 dark:border-white/10 text-left">
+        <div className="p-4 sm:p-6">
+
+            {/* ── Header ── */}
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-5">
                 <div>
-                    <span className="text-[10px] font-black text-indigo-500 dark:text-indigo-400 uppercase tracking-widest bg-indigo-500/10 px-2.5 py-1 rounded-md">Active learning path</span>
-                    <h3 className="text-xl font-display font-black text-slate-800 dark:text-white mt-2 leading-tight">{course.title}</h3>
-                </div>
-                <div className="flex items-center gap-2 self-start sm:self-center">
-                    <span className="text-xs font-bold text-slate-500 dark:text-white/50 bg-slate-100 dark:bg-white/5 px-3 py-1.5 rounded-xl border border-slate-200/50 dark:border-white/5">
-                        Level: <span className="text-indigo-600 dark:text-indigo-400 font-extrabold">{course.level || 'Beginner'}</span>
+                    <span className="inline-flex items-center gap-1.5 text-[10px] font-black text-orange-600 dark:text-orange-400 uppercase tracking-widest bg-orange-500/10 dark:bg-orange-500/15 px-2.5 py-1 rounded-lg border border-orange-500/20 mb-2">
+                        <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse" />
+                        Active learning path
                     </span>
-                    <span className="text-xs font-bold text-slate-500 dark:text-white/50 bg-slate-100 dark:bg-white/5 px-3 py-1.5 rounded-xl border border-slate-200/50 dark:border-white/5">
+                    <h3 className="text-xl font-display font-black text-slate-800 dark:text-white leading-tight">{course.title}</h3>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                    <span className="text-xs font-bold text-slate-500 dark:text-white/40 bg-slate-100 dark:bg-white/5 px-3 py-1.5 rounded-xl border border-slate-200/50 dark:border-white/5">
+                        {course.level || 'Beginner'}
+                    </span>
+                    <span className="text-xs font-bold text-slate-500 dark:text-white/40 bg-slate-100 dark:bg-white/5 px-3 py-1.5 rounded-xl border border-slate-200/50 dark:border-white/5">
                         <span className="text-slate-800 dark:text-white font-extrabold">{nodes.length}</span> lessons
                     </span>
                 </div>
             </div>
 
-            {/* Sleek Course Progress Bar */}
-            <div className="mb-6 bg-slate-50/50 dark:bg-white/[0.02] p-4 rounded-2xl border border-slate-200/60 dark:border-white/10">
-                <div className="flex justify-between items-center mb-2">
-                    <span className="text-xs font-bold text-slate-500 dark:text-white/60">Learning path progress</span>
-                    <span className="text-xs font-black text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 dark:bg-indigo-500/20 px-2.5 py-0.5 rounded-md">{progressPercentage}% Completed</span>
+            {/* ── Progress Bar ── */}
+            <div className="mb-6 bg-slate-50 dark:bg-white/[0.03] p-4 rounded-2xl border border-slate-200/60 dark:border-white/8">
+                <div className="flex justify-between items-center mb-2.5">
+                    <span className="text-xs font-bold text-slate-500 dark:text-white/50">
+                        {completedCount} of {nodes.length} lessons completed
+                    </span>
+                    <span className={`text-xs font-black px-2.5 py-0.5 rounded-lg ${
+                        pct === 100
+                            ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
+                            : 'bg-orange-500/10 text-orange-600 dark:text-orange-400'
+                    }`}>
+                        {pct}%
+                    </span>
                 </div>
-                <div className="h-2 w-full bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden shadow-inner relative">
-                    <motion.div 
-                        className="h-full bg-gradient-to-l from-indigo-500 via-purple-500 to-pink-500 rounded-full relative"
+                <div className="h-2.5 w-full bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden shadow-inner">
+                    <motion.div
+                        className={`h-full rounded-full relative ${
+                            pct === 100
+                                ? 'bg-gradient-to-r from-emerald-400 to-teal-500'
+                                : 'bg-gradient-to-r from-orange-500 to-amber-400'
+                        }`}
                         initial={{ width: 0 }}
-                        animate={{ width: `${progressPercentage}%` }}
-                        transition={{ duration: 1.2, ease: "easeOut" }}
+                        animate={{ width: `${pct}%` }}
+                        transition={{ duration: 1.2, ease: 'easeOut' }}
                     >
-                        <div className="absolute inset-0 bg-white/20 animate-pulse" />
+                        {pct > 0 && pct < 100 && (
+                            <div className="absolute inset-0 bg-white/20 animate-pulse rounded-full" />
+                        )}
                     </motion.div>
                 </div>
             </div>
 
-            {/* Compact List of Lessons */}
-            <div className="space-y-0 max-h-[400px] overflow-y-auto pr-1 pl-1 custom-scrollbar">
-                {nodes.map((node, index) => {
-                    const isCompleted = node.status === 'completed';
-                    const isCurrent = node.status === 'current';
-                    const isLocked = node.status === 'locked';
+            {/* ── Node List ── */}
+            <div className="space-y-0 max-h-[420px] overflow-y-auto pr-1 custom-scrollbar">
+                <AnimatePresence initial={false}>
+                    {nodes.map((node, index) => {
+                        const isCompleted = node.status === 'completed';
+                        const isCurrent   = node.status === 'current';
+                        const isLocked    = node.status === 'locked';
 
-                    const nodeId = node._id || node.id;
-                    const selectedNodeId = selectedNode?._id || selectedNode?.id;
-                    const isActiveSelected = selectedNodeId === nodeId;
+                        const nodeId         = node._id || node.id;
+                        const selectedNodeId = selectedNode?._id || selectedNode?.id;
+                        const isSelected     = selectedNodeId === nodeId;
 
-                    // Text for lesson types
-                    const getTypeBadge = () => {
-                        switch (node.type) {
-                            case 'quiz': 
-                                return (
-                                    <span className="flex items-center gap-1 bg-blue-500/10 text-blue-600 dark:text-blue-400 px-2.5 py-0.5 rounded-md text-[10px] font-black border border-blue-500/20">
-                                        Quiz 📝
-                                    </span>
-                                );
-                            case 'exam': 
-                                return (
-                                    <span className="flex items-center gap-1 bg-amber-500/10 text-amber-600 dark:text-amber-400 px-2.5 py-0.5 rounded-md text-[10px] font-black border border-amber-500/20">
-                                        Exam 🏆
-                                    </span>
-                                );
-                            default: 
-                                return (
-                                    <span className="flex items-center gap-1 bg-purple-500/10 text-purple-600 dark:text-purple-400 px-2.5 py-0.5 rounded-md text-[10px] font-black border border-purple-500/20">
-                                        Lesson 📖
-                                    </span>
-                                );
-                        }
-                    };
+                        const lineTop    = index === 0 ? 'bg-transparent' : (isCompleted || isCurrent ? 'bg-orange-400/30 dark:bg-orange-500/20' : 'bg-slate-200 dark:bg-white/8');
+                        const lineBottom = index === nodes.length - 1 ? 'bg-transparent' : (isCompleted ? 'bg-orange-400/30 dark:bg-orange-500/20' : 'bg-slate-200 dark:bg-white/8');
 
-                    const topLineColor = isCompleted || isCurrent 
-                        ? 'bg-indigo-500/40 dark:bg-indigo-500/30' 
-                        : 'bg-slate-200 dark:bg-white/10';
-                    const bottomLineColor = isCompleted
-                        ? 'bg-indigo-500/40 dark:bg-indigo-500/30' 
-                        : 'bg-slate-200 dark:bg-white/10';
-
-                    return (
-                        <div key={nodeId} className="flex gap-4 items-stretch">
-                            {/* Timeline Column */}
-                            <div className="flex flex-col items-center flex-shrink-0 w-12">
-                                {/* Top line */}
-                                <div className={`w-0.5 flex-1 min-h-[12px] ${index === 0 ? 'bg-transparent' : topLineColor}`} />
-                                
-                                {/* Icon container with pulse effect */}
-                                <div className="relative my-1">
-                                    {isCurrent && (
-                                        <span className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-600 opacity-40 blur-sm animate-pulse" />
-                                    )}
-                                    <div className={`
-                                        w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 border-b-2 shadow-sm transition-all duration-300 relative z-10
-                                        ${isCompleted
-                                            ? 'bg-gradient-to-br from-emerald-400 to-teal-500 border-emerald-600 text-white shadow-[0_4px_12px_rgba(16,185,129,0.25)]'
-                                            : isCurrent
-                                                ? 'bg-gradient-to-br from-indigo-500 to-purple-600 border-indigo-700 text-white shadow-[0_4px_15px_rgba(99,102,241,0.45)] scale-105'
-                                                : 'bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-400 dark:text-white/20'
-                                        }
-                                    `}>
-                                        {isCompleted && <CheckCircle2 size={20} strokeWidth={2.5} />}
-                                        {isCurrent && <PlayCircle size={20} strokeWidth={2.5} className="animate-pulse" />}
-                                        {isLocked && <Lock size={18} strokeWidth={2.5} />}
-                                    </div>
-                                </div>
-
-                                {/* Bottom line */}
-                                <div className={`w-0.5 flex-1 min-h-[12px] ${index === nodes.length - 1 ? 'bg-transparent' : bottomLineColor}`} />
-                            </div>
-
-                            {/* Content Card */}
+                        return (
                             <motion.div
-                                onClick={() => !isLocked && setSelectedNode(node)}
-                                whileHover={!isLocked ? { scale: 1.015, y: -1 } : {}}
-                                whileTap={!isLocked ? { scale: 0.99 } : {}}
-                                className={`
-                                    relative p-4 my-2.5 rounded-2xl border transition-all duration-300 flex items-center justify-between gap-4 text-left flex-1
-                                    ${isLocked 
-                                        ? 'opacity-50 bg-slate-50/30 dark:bg-white/[0.01] border-slate-200/40 dark:border-white/5 border-dashed cursor-not-allowed'
-                                        : isActiveSelected
-                                            ? 'bg-indigo-50/50 dark:bg-indigo-500/10 border-indigo-500/50 shadow-md shadow-indigo-500/5 cursor-pointer'
-                                            : isCurrent
-                                                ? 'bg-indigo-50/10 dark:bg-indigo-500/[0.02] border-indigo-500/20 hover:border-indigo-500/40 hover:bg-indigo-50/20 dark:hover:bg-indigo-500/5 shadow-sm cursor-pointer'
-                                                : 'bg-white dark:bg-slate-900/60 border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 hover:bg-slate-50/50 dark:hover:bg-white/3 shadow-sm hover:shadow cursor-pointer'
-                                    }
-                                `}
+                                key={nodeId}
+                                initial={{ opacity: 0, y: 8 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.25, delay: index * 0.04 }}
+                                className="flex gap-3 items-stretch"
                             >
-                                {/* Inner active border highlight */}
-                                {isCurrent && !isLocked && (
-                                    <div className="absolute top-0 bottom-0 right-0 w-1 bg-gradient-to-b from-indigo-500 to-purple-600 rounded-r-2xl" />
-                                )}
+                                {/* ── Timeline column ── */}
+                                <div className="flex flex-col items-center flex-shrink-0 w-10">
+                                    <div className={`w-0.5 flex-1 min-h-[10px] transition-colors duration-500 ${lineTop}`} />
 
-                                {/* Left Side: Actions/Status Badges */}
-                                <div className="flex items-center gap-3">
-                                    {isCompleted && (
-                                        <span className="hidden sm:inline-flex items-center gap-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-3 py-1.5 rounded-xl text-xs font-black border border-emerald-500/20">
-                                            Completed
-                                        </span>
-                                    )}
-                                    {isCurrent && !isLocked && (
-                                        <button className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white px-4 py-2 rounded-xl text-xs font-black shadow-[0_4px_12px_rgba(99,102,241,0.3)] hover:shadow-[0_4px_16px_rgba(99,102,241,0.45)] flex items-center gap-1 transition-all duration-300">
-                                            Start learning
-                                            <ChevronRight size={14} strokeWidth={3} />
-                                        </button>
-                                    )}
-                                    {isLocked && (
-                                        <span className="hidden sm:inline-flex items-center gap-1 bg-slate-100 dark:bg-white/5 text-slate-400 dark:text-white/20 px-3 py-1.5 rounded-xl text-xs font-black border border-slate-200/50 dark:border-white/5">
-                                            Locked
-                                        </span>
-                                    )}
-                                </div>
+                                    <div className="relative my-1.5">
+                                        {/* Glow ring for current node */}
+                                        {isCurrent && (
+                                            <span className="absolute -inset-1.5 rounded-xl bg-gradient-to-br from-orange-400 to-amber-500 opacity-35 blur-sm animate-pulse pointer-events-none" />
+                                        )}
 
-                                {/* Right Side: Text details */}
-                                <div className="min-w-0 flex-1">
-                                    <span className="text-[9px] font-black text-slate-400 dark:text-white/30 uppercase tracking-widest leading-none">Lesson {index + 1}</span>
-                                    <h4 className={`text-sm font-extrabold truncate leading-tight mt-1 transition-colors ${
-                                        isLocked 
-                                            ? 'text-slate-400 dark:text-white/20' 
-                                            : isActiveSelected
-                                                ? 'text-indigo-600 dark:text-indigo-400 font-black'
-                                                : 'text-slate-800 dark:text-white group-hover:text-indigo-500'
-                                    }`}>
-                                        {node.title}
-                                    </h4>
-                                    <div className="flex items-center gap-2 mt-1.5">
-                                        {getTypeBadge()}
-                                        <span className="text-slate-300 dark:text-white/10 text-xs">•</span>
-                                        <span className="flex items-center gap-0.5 text-indigo-500 dark:text-indigo-400 bg-indigo-500/5 dark:bg-indigo-500/10 px-2 py-0.5 rounded-md border border-indigo-500/10 text-[10px] font-bold">
-                                            <Zap size={10} className="fill-indigo-500/15" />
-                                            +{node.xpReward || 150} XP
-                                        </span>
+                                        <div className={`
+                                            w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0
+                                            border-b-2 shadow-sm transition-all duration-300 relative z-10
+                                            ${isCompleted
+                                                ? 'bg-gradient-to-br from-emerald-400 to-teal-500 border-emerald-600 text-white shadow-[0_4px_10px_rgba(16,185,129,0.3)]'
+                                                : isCurrent
+                                                    ? 'bg-gradient-to-br from-orange-500 to-amber-500 border-orange-600 text-white shadow-[0_4px_14px_rgba(217,119,87,0.5)] scale-110'
+                                                    : 'bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-300 dark:text-white/20'
+                                            }
+                                        `}>
+                                            {isCompleted && <CheckCircle2 size={18} strokeWidth={2.5} />}
+                                            {isCurrent    && <PlayCircle  size={18} strokeWidth={2.5} className="animate-pulse" />}
+                                            {isLocked     && <Lock        size={16} strokeWidth={2.5} />}
+                                        </div>
                                     </div>
+
+                                    <div className={`w-0.5 flex-1 min-h-[10px] transition-colors duration-500 ${lineBottom}`} />
                                 </div>
+
+                                {/* ── Content card ── */}
+                                <motion.div
+                                    onClick={() => !isLocked && setSelectedNode(node)}
+                                    whileHover={!isLocked ? { scale: 1.012, y: -1, transition: { duration: 0.15 } } : {}}
+                                    whileTap={!isLocked ? { scale: 0.985 } : {}}
+                                    className={`
+                                        relative my-2 rounded-2xl border transition-all duration-200
+                                        flex items-center gap-3 text-left flex-1 overflow-hidden
+                                        ${isLocked
+                                            ? 'opacity-45 bg-slate-50/30 dark:bg-white/[0.01] border-slate-200/40 dark:border-white/5 border-dashed cursor-not-allowed px-4 py-3'
+                                            : isSelected
+                                                ? 'bg-orange-50 dark:bg-orange-500/10 border-orange-400/50 shadow-md shadow-orange-500/8 cursor-pointer px-4 py-3'
+                                                : isCurrent
+                                                    ? 'bg-gradient-to-r from-orange-50/80 to-amber-50/40 dark:from-orange-500/[0.06] dark:to-amber-500/[0.02] border-orange-400/30 hover:border-orange-400/50 shadow-sm cursor-pointer px-4 py-3'
+                                                    : 'bg-white dark:bg-white/[0.03] border-slate-200 dark:border-white/8 hover:border-slate-300 dark:hover:border-white/15 hover:bg-slate-50 dark:hover:bg-white/[0.05] shadow-sm hover:shadow cursor-pointer px-4 py-3'
+                                        }
+                                    `}
+                                >
+                                    {/* Orange left accent bar for current/selected */}
+                                    {(isCurrent || isSelected) && !isLocked && (
+                                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-orange-500 to-amber-400 rounded-l-2xl" />
+                                    )}
+
+                                    {/* Node content */}
+                                    <div className="min-w-0 flex-1 pl-1">
+                                        <div className="flex items-center gap-1.5 mb-0.5">
+                                            <span className="text-[9px] font-black text-slate-400 dark:text-white/25 uppercase tracking-widest">
+                                                {index + 1}
+                                            </span>
+                                            <span className="text-slate-300 dark:text-white/10 text-[10px]">·</span>
+                                            <TypeBadge type={node.type} />
+                                        </div>
+                                        <h4 className={`text-sm font-extrabold leading-snug truncate transition-colors ${
+                                            isLocked
+                                                ? 'text-slate-400 dark:text-white/20'
+                                                : isSelected
+                                                    ? 'text-orange-600 dark:text-orange-400'
+                                                    : isCurrent
+                                                        ? 'text-slate-800 dark:text-white'
+                                                        : 'text-slate-700 dark:text-white/80'
+                                        }`}>
+                                            {node.title}
+                                        </h4>
+                                        <div className="flex items-center gap-1.5 mt-1">
+                                            <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-orange-500 dark:text-orange-400 bg-orange-500/8 dark:bg-orange-500/10 px-1.5 py-0.5 rounded border border-orange-500/10">
+                                                <Zap size={9} strokeWidth={2.5} />
+                                                +{node.xpReward || 150} XP
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    {/* Right side action */}
+                                    <div className="flex-shrink-0">
+                                        {isCompleted && (
+                                            <span className="inline-flex items-center gap-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-3 py-1.5 rounded-xl text-xs font-black border border-emerald-500/15">
+                                                <CheckCircle2 size={12} strokeWidth={2.5} />
+                                                Done
+                                            </span>
+                                        )}
+                                        {isCurrent && !isLocked && (
+                                            <button className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-white px-4 py-2 rounded-xl text-xs font-black shadow-[0_4px_12px_rgba(217,119,87,0.35)] hover:shadow-[0_4px_16px_rgba(217,119,87,0.5)] flex items-center gap-1 transition-all duration-200 whitespace-nowrap">
+                                                Start
+                                                <ChevronRight size={13} strokeWidth={3} />
+                                            </button>
+                                        )}
+                                        {isLocked && (
+                                            <Lock size={14} className="text-slate-300 dark:text-white/15 mr-1" strokeWidth={2.5} />
+                                        )}
+                                        {!isLocked && !isCompleted && !isCurrent && (
+                                            <ChevronRight size={16} className="text-slate-300 dark:text-white/20 group-hover:text-orange-400 transition-colors" strokeWidth={2} />
+                                        )}
+                                    </div>
+                                </motion.div>
                             </motion.div>
-                        </div>
-                    );
-                })}
+                        );
+                    })}
+                </AnimatePresence>
             </div>
         </div>
     );
