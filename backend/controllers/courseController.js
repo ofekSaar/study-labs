@@ -440,6 +440,49 @@ export const updateNodeContent = async (req, res, next) => {
 };
 
 /**
+ * Get all enrolled students with progress for a course (Instructor only).
+ */
+export const getCourseStudents = async (req, res, next) => {
+  try {
+    const course = await Course.findById(req.params.id);
+    if (!course) throw createError(404, 'Course not found');
+
+    assertOwner(course, 'instructor', req.user._id, 'Access denied');
+
+    const [enrollments, progressRecords, totalNodes] = await Promise.all([
+      Enrollment.find({ course: course._id, status: 'approved' }).populate('student', 'name email avatar'),
+      Progress.find({ course: course._id }),
+      CourseNode.countDocuments({ course: course._id }),
+    ]);
+
+    const progressMap = {};
+    progressRecords.forEach((p) => {
+      progressMap[p.student.toString()] = p;
+    });
+
+    const students = enrollments
+      .map(({ student }) => {
+        const p = progressMap[student._id.toString()];
+        const completedNodes = p ? p.completedNodes.length : 0;
+        return {
+          student: { _id: student._id, name: student.name, email: student.email, avatar: student.avatar },
+          completion: totalNodes > 0 ? Math.round((completedNodes / totalNodes) * 100) : 0,
+          completedNodes,
+          totalNodes,
+          totalXP: p ? p.totalXP : 0,
+          streak: p ? p.streak : 0,
+          lastActivityDate: p ? p.lastActivityDate : null,
+        };
+      })
+      .sort((a, b) => b.completion - a.completion);
+
+    res.json({ status: 'success', data: { students, totalNodes } });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
  * Get analytics for a course (Instructor only).
  */
 export const getCourseAnalytics = async (req, res, next) => {

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Home, Settings, LogOut, Menu, PlusCircle, BookOpen, ChevronRight, X, Users, Flame, Zap, Trophy, TrendingUp } from 'lucide-react';
+import { Home, Settings, LogOut, Menu, PlusCircle, BookOpen, ChevronRight, X, Users, Flame, Zap, Trophy, TrendingUp, GraduationCap } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import useAuthStore from '../../store/authStore';
 import useCourseStore from '../../store/courseStore';
@@ -67,6 +67,10 @@ const SidebarContent = ({ location, navigate, user, courseUser, _setIsSidebarOpe
                 <NavItem icon={<TrendingUp size={18} />} label="Student Status"
                     active={location.pathname === '/instructor/status'}
                     onClick={() => navigate('/instructor/status')} accent="purple" />
+
+                <NavItem icon={<GraduationCap size={18} />} label="Class Roster"
+                    active={location.pathname === '/instructor/class'}
+                    onClick={() => navigate('/instructor/class')} accent="purple" />
 
                 <NavItem icon={<PlusCircle size={18} />} label="Create Course"
                     active={location.pathname === '/instructor/create'}
