@@ -27,13 +27,20 @@ const ClassRoster = () => {
     }, [courses, selectedCourseId]);
 
     useEffect(() => {
-        if (!selectedCourseId) return;
-        setSelected(new Set());
-        setIsLoading(true);
-        api.get(`/api/courses/${selectedCourseId}/students`)
-            .then(({ data }) => setStudents(data.students || []))
-            .catch((err) => console.error('Failed to fetch students', err))
-            .finally(() => setIsLoading(false));
+        const fetchStudents = async () => {
+            if (!selectedCourseId) return;
+            setSelected(new Set());
+            setIsLoading(true);
+            try {
+                const { data } = await api.get(`/api/courses/${selectedCourseId}/students`);
+                setStudents(data.students || []);
+            } catch (err) {
+                console.error('Failed to fetch students', err);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchStudents();
     }, [selectedCourseId]);
 
     const aboveThreshold = useMemo(() => students.filter(s => s.completion >= threshold), [students, threshold]);
