@@ -1,12 +1,13 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import useAuthStore from '../../store/authStore';
-import { BarChart2, Users, BookOpen, ShoppingBag, Shield } from 'lucide-react';
+import { BarChart2, Users, BookOpen, ShoppingBag, Shield, GraduationCap } from 'lucide-react';
 
 const NAV_ITEMS = [
     { to: '/admin', label: 'Overview', icon: BarChart2, end: true },
     { to: '/admin/users', label: 'Users', icon: Users },
     { to: '/admin/courses', label: 'Courses', icon: BookOpen },
+    { to: '/admin/instructors', label: 'Instructors', icon: GraduationCap },
     { to: '/admin/shop', label: 'Shop Prices', icon: ShoppingBag },
 ];
 

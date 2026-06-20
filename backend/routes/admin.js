@@ -9,6 +9,7 @@ import {
   deleteCourse,
   getShopPrices,
   updateShopPrices,
+  getInstructors,
 } from '../controllers/adminController.js';
 
 const router = Router();
@@ -24,6 +25,8 @@ router.delete('/users/:id', deleteUser);
 router.get('/courses', getCourses);
 router.put('/courses/:id/publish', toggleCoursePublished);
 router.delete('/courses/:id', deleteCourse);
+
+router.get('/instructors', getInstructors);
 
 router.get('/shop/prices', getShopPrices);
 router.put('/shop/prices', updateShopPrices);

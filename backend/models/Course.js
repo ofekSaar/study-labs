@@ -131,6 +131,10 @@ const courseSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    generationCompletedAt: {
+      type: Date,
+      default: null,
+    },
     aiEvaluation: {
       status: {
         type: String,

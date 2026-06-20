@@ -240,6 +240,79 @@ export const getShopPrices = async (req, res, next) => {
 };
 
 /**
+ * GET /api/admin/instructors
+ * List all instructors with aggregated course/student stats.
+ */
+export const getInstructors = async (req, res, next) => {
+  try {
+    const search = req.query.search?.trim();
+    const filter = {
+      $or: [{ roles: 'instructor' }, { role: 'instructor' }],
+      ...(search
+        ? { $and: [{ $or: [{ name: { $regex: search, $options: 'i' } }, { email: { $regex: search, $options: 'i' } }] }] }
+        : {}),
+    };
+
+    const instructors = await User.find(filter)
+      .select('name email avatar roles role createdAt')
+      .sort({ createdAt: -1 })
+      .lean();
+
+    const instructorIds = instructors.map(u => u._id);
+
+    const [courseStats, enrollmentStats] = await Promise.all([
+      Course.aggregate([
+        { $match: { instructor: { $in: instructorIds } } },
+        {
+          $group: {
+            _id: '$instructor',
+            totalCourses: { $sum: 1 },
+            readyCourses: { $sum: { $cond: [{ $eq: ['$generationStatus', 'ready'] }, 1, 0] } },
+            failedCourses: { $sum: { $cond: [{ $eq: ['$generationStatus', 'failed'] }, 1, 0] } },
+          },
+        },
+      ]),
+      Enrollment.aggregate([
+        {
+          $lookup: {
+            from: 'courses',
+            localField: 'course',
+            foreignField: '_id',
+            as: 'courseDoc',
+          },
+        },
+        { $unwind: '$courseDoc' },
+        { $match: { 'courseDoc.instructor': { $in: instructorIds }, status: 'approved' } },
+        { $group: { _id: '$courseDoc.instructor', studentCount: { $sum: 1 } } },
+      ]),
+    ]);
+
+    const courseMap = Object.fromEntries(courseStats.map(s => [String(s._id), s]));
+    const studentMap = Object.fromEntries(enrollmentStats.map(s => [String(s._id), s.studentCount]));
+
+    const result = instructors.map(u => {
+      const cs = courseMap[String(u._id)] ?? { totalCourses: 0, readyCourses: 0, failedCourses: 0 };
+      return {
+        ...u,
+        stats: {
+          totalCourses: cs.totalCourses,
+          readyCourses: cs.readyCourses,
+          failedCourses: cs.failedCourses,
+          successRate: cs.totalCourses > 0
+            ? Math.round((cs.readyCourses / cs.totalCourses) * 100)
+            : null,
+          totalStudents: studentMap[String(u._id)] ?? 0,
+        },
+      };
+    });
+
+    res.json({ status: 'success', data: { instructors: result, total: result.length } });
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
  * PUT /api/admin/shop/prices
  * Update shop item prices.
  */
