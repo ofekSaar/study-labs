@@ -393,7 +393,13 @@ export const getNodeContent = async (req, res, next) => {
 
     res.json({
       status: 'success',
-      data: { nodeId: node._id, title: node.title, type: node.type, content: content || '' },
+      data: { 
+        nodeId: node._id, 
+        title: node.title, 
+        type: node.type, 
+        content: content || '', 
+        isMaterialGrounded: node.isMaterialGrounded !== false 
+      },
     });
   } catch (error) {
     next(error);
@@ -452,6 +458,77 @@ export const getCourseAnalytics = async (req, res, next) => {
     const data = await buildCourseAnalytics(course._id, course);
 
     res.json({ status: 'success', data });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Add new learning materials to an existing course and trigger differential update (Instructor owner only).
+ * Handles multipart form data with file uploads.
+ */
+export const addCourseMaterials = async (req, res, next) => {
+  try {
+    const course = await Course.findById(req.params.id);
+    if (!course) throw createError(404, 'Course not found');
+
+    assertOwner(course, 'instructor', req.user._id, 'You can only edit your own courses');
+
+    if (!req.files || !req.files.materials || req.files.materials.length === 0) {
+      throw createError(400, 'No materials files uploaded');
+    }
+
+    const newMaterialsData = [];
+    const seenFiles = new Set(course.materials.map(m => `${m.originalName}_${m.size}`));
+
+    for (const file of req.files.materials) {
+      const fileSignature = `${file.originalname}_${file.size}`;
+      if (seenFiles.has(fileSignature)) {
+        console.log(`[Course Upload Update] Skipping duplicate file: ${file.originalname}`);
+        continue;
+      }
+      seenFiles.add(fileSignature);
+      const result = await storage.upload(file, 'materials');
+      newMaterialsData.push({
+        filename: result.filename,
+        originalName: file.originalname,
+        mimetype: file.mimetype,
+        storagePath: result.storagePath,
+        size: file.size,
+      });
+    }
+
+    if (newMaterialsData.length === 0) {
+      return res.json({
+        status: 'success',
+        message: 'No new unique materials were added.',
+        data: { course },
+      });
+    }
+
+    // Append new materials and update generation status
+    course.materials.push(...newMaterialsData);
+    course.generationStatus = 'generating';
+    course.generationStartedAt = new Date();
+    await course.save();
+
+    res.json({
+      status: 'success',
+      message: 'Materials added. Course update started in background.',
+      data: { course },
+    });
+
+    // Run AI roadmap generation in update mode in background
+    generateRoadmapInBackground(
+      course,
+      course.syllabus,
+      course.materials,
+      course.title,
+      course.description,
+      false, // analyzeImages
+      true,  // isUpdate = true
+      newMaterialsData
+    );
   } catch (error) {
     next(error);
   }

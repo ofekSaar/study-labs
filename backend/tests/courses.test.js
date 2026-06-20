@@ -96,4 +96,60 @@ describe('Courses API', () => {
             expect(res.status).toBe(403);
         });
     });
+
+    describe('POST /api/courses/:id/materials', () => {
+        let course;
+
+        beforeEach(async () => {
+            course = await Course.create({
+                title: 'Existing Course',
+                department: 'cs',
+                description: 'Existing course description that is sufficiently long.',
+                instructor: instructor._id,
+                syllabus: {
+                    filename: 'syllabus.pdf',
+                    originalName: 'syllabus.pdf',
+                    mimetype: 'application/pdf',
+                    storagePath: 'uploads/syllabus.pdf',
+                    size: 100
+                },
+                materials: [],
+                isPublished: true,
+                generationStatus: 'ready'
+            });
+        });
+
+        it('should allow instructors to add materials to their course', async () => {
+            const res = await request(app)
+                .post(`/api/courses/${course._id}/materials`)
+                .set('Authorization', `Bearer ${instructorToken}`)
+                .attach('materials', Buffer.from('dummy slide content'), 'slides1.pdf');
+
+            expect(res.status).toBe(200);
+            expect(res.body.status).toBe('success');
+            expect(res.body.data.course.materials.length).toBe(1);
+            expect(res.body.data.course.materials[0].originalName).toBe('slides1.pdf');
+
+            const updated = await Course.findById(course._id);
+            expect(updated.generationStatus).toBe('generating');
+        });
+
+        it('should forbid students from adding materials', async () => {
+            const res = await request(app)
+                .post(`/api/courses/${course._id}/materials`)
+                .set('Authorization', `Bearer ${studentToken}`)
+                .attach('materials', Buffer.from('dummy slide content'), 'slides1.pdf');
+
+            expect(res.status).toBe(403);
+        });
+
+        it('should return 404 for a non-existent course', async () => {
+            const res = await request(app)
+                .post('/api/courses/60c72b2f9b1d8e25d88db9a9/materials')
+                .set('Authorization', `Bearer ${instructorToken}`)
+                .attach('materials', Buffer.from('dummy slide content'), 'slides1.pdf');
+
+            expect(res.status).toBe(404);
+        });
+    });
 });

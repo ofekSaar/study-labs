@@ -82,6 +82,10 @@ const courseNodeSchema = new mongoose.Schema(
       type: [quizQuestionSchema],
       default: undefined,
     },
+    isMaterialGrounded: {
+      type: Boolean,
+      default: true,
+    },
   },
   {
     timestamps: true,

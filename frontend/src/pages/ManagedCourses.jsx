@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import InstructorLayout from '../components/layout/InstructorLayout';
 import useCourseStore from '../store/courseStore';
 import { getDeptStyle } from '../utils/departmentStyles';
-import { Search, BookOpen, Clock, Users, ArrowRight, Loader2, AlertCircle, Trash2, GraduationCap, Sparkles } from 'lucide-react';
+import { Search, BookOpen, Clock, Users, ArrowRight, Loader2, AlertCircle, Trash2, GraduationCap, Sparkles, Info } from 'lucide-react';
 
 const ManagedCourses = () => {
     const navigate = useNavigate();
@@ -150,7 +150,31 @@ const ManagedCourses = () => {
                                         {course.aiEvaluation?.status === 'completed' && (
                                             <div className="mb-4 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200 dark:border-white/5">
                                                 <div className="flex items-center justify-between mb-1">
-                                                    <span className="text-xs font-bold text-slate-500 dark:text-slate-400">AI Judge Score</span>
+                                                    <div className="flex items-center gap-1.5 group/tooltip relative">
+                                                        <span className="text-xs font-bold text-slate-500 dark:text-slate-400">AI Judge Score</span>
+                                                        <Info size={14} className="text-slate-400 dark:text-slate-500 hover:text-purple-500 dark:hover:text-purple-400 cursor-help transition-colors" />
+                                                        
+                                                        {/* Tooltip Card */}
+                                                        <div className="absolute bottom-full left-0 mb-2 w-72 p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-white/10 shadow-xl opacity-0 scale-95 pointer-events-none group-hover/tooltip:opacity-100 group-hover/tooltip:scale-100 transition-all duration-200 z-50">
+                                                            <h4 className="font-bold text-xs text-slate-800 dark:text-white mb-2">Grading Criteria & Caps</h4>
+                                                            <ul className="space-y-2 text-[11px] leading-normal text-slate-600 dark:text-slate-300 font-medium">
+                                                                <li>
+                                                                    <strong className="text-purple-600 dark:text-purple-400">Educational:</strong> Bloom's Taxonomy standards alignment (remembering/understanding to applying/analyzing).
+                                                                </li>
+                                                                <li>
+                                                                    <strong className="text-purple-600 dark:text-purple-400">Logical Flow:</strong> Step-by-step topic progression and dependency teaching.
+                                                                </li>
+                                                                <li>
+                                                                    <strong className="text-purple-600 dark:text-purple-400">Material Grounding:</strong>
+                                                                    <div className="mt-1 pl-2 border-l border-slate-200 dark:border-white/10 space-y-1 text-slate-500 dark:text-slate-400">
+                                                                        <div>• <span className="font-semibold text-emerald-500">≥ 80% grounding</span>: No score penalty.</div>
+                                                                        <div>• <span className="font-semibold text-amber-500">50% - 79% grounding</span>: Score capped at <span className="font-bold">85</span>.</div>
+                                                                        <div>• <span className="font-semibold text-red-500">&lt; 50% grounding</span>: Score capped at <span className="font-bold">70</span>.</div>
+                                                                    </div>
+                                                                </li>
+                                                            </ul>
+                                                        </div>
+                                                    </div>
                                                     <span className={`text-sm font-black ${course.aiEvaluation.score >= 80 ? 'text-emerald-500' : course.aiEvaluation.score >= 50 ? 'text-amber-500' : 'text-red-500'}`}>
                                                         {course.aiEvaluation.score}/100
                                                     </span>

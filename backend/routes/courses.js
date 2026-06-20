@@ -12,6 +12,7 @@ import {
   updateNodeContent,
   getCourseAnalytics,
   regenerateCourse,
+  addCourseMaterials,
 } from '../controllers/courseController.js';
 
 const router = Router();
@@ -362,5 +363,44 @@ router.get('/:id/analytics', authenticate, authorize('instructor'), getCourseAna
  *         description: Course is not in a retriable state
  */
 router.post('/:courseId/regenerate', authenticate, authorize('instructor'), regenerateCourse);
+
+/**
+ * @swagger
+ * /api/courses/{id}/materials:
+ *   post:
+ *     summary: Add new learning materials and trigger differential update (Instructor owner only)
+ *     tags: [Courses]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               materials:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: binary
+ *     responses:
+ *       200:
+ *         description: Materials added and generation started in background
+ */
+router.post(
+  '/:id/materials',
+  authenticate,
+  authorize('instructor'),
+  (req, res, next) => {
+    const maxMaterials = parseInt(process.env.MAX_MATERIALS_COUNT) || 20;
+    upload.fields([{ name: 'materials', maxCount: maxMaterials }])(req, res, next);
+  },
+  addCourseMaterials
+);
 
 export default router;

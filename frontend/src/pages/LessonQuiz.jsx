@@ -240,6 +240,15 @@ const LessonQuiz = () => {
                                 </div>
                                 <h2 className="text-xl font-display font-bold text-slate-900 dark:text-white">Study Guide</h2>
                             </div>
+                            {nodeData?.isMaterialGrounded === false && (
+                                <div className="bg-amber-500/10 border-b border-amber-500/20 px-6 sm:px-8 py-3.5 flex items-center gap-3 text-amber-800 dark:text-amber-300">
+                                    <span className="text-xl">⚠️</span>
+                                    <div className="text-xs sm:text-sm font-semibold leading-normal">
+                                        <p className="font-bold text-amber-900 dark:text-amber-200">AI-Generated Content Warning</p>
+                                        <p className="opacity-90">This topic was not covered in the uploaded course materials. The summary and quiz questions were generated using the AI's general knowledge.</p>
+                                    </div>
+                                </div>
+                            )}
                             <div className="p-4 sm:p-8 md:p-10 prose prose-slate dark:prose-invert max-w-none">
                                 {nodeData?.content ? (
                                     <ContentRenderer content={nodeData.content} className="text-slate-700 dark:text-slate-300 leading-relaxed" />

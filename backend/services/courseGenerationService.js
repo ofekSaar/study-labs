@@ -43,7 +43,9 @@ export const generateRoadmapInBackground = async (
   materialsData,
   title,
   description,
-  analyzeImages = false
+  analyzeImages = false,
+  isUpdate = false,
+  newMaterialsData = []
 ) => {
   if (process.env.NODE_ENV === 'test') {
     try {
@@ -67,7 +69,7 @@ export const generateRoadmapInBackground = async (
   }
 
   try {
-    console.log(`[Background] Starting AI generation for course ${course._id} (attempt ${course.generationAttempts})...`);
+    console.log(`[Background] Starting AI generation for course ${course._id} (attempt ${course.generationAttempts}, isUpdate: ${isUpdate})...`);
 
     await Course.findByIdAndUpdate(course._id, {
       generationStartedAt: new Date(),
@@ -82,6 +84,8 @@ export const generateRoadmapInBackground = async (
       materials: materialsData.map((m) => m.storagePath),
       aiConfig: course.aiConfig,
       analyzeImages,
+      isUpdate,
+      newMaterials: newMaterialsData.map((m) => m.storagePath),
     });
 
     if (!roadmapResult.nodes || roadmapResult.nodes.length === 0) {
@@ -97,25 +101,67 @@ export const generateRoadmapInBackground = async (
       xpReward: node.xpReward || 150,
       lessonContent: node.lessonContent || null,
       quizData: node.quizData || undefined,
+      isMaterialGrounded: node.isMaterialGrounded !== false,
     }));
 
-    for (const nodeData of nodes) {
-      if (nodeData.lessonContent) {
-        const mdResult = await storage.uploadContent(
-          nodeData.lessonContent,
-          `${nodeData.title.replace(/[^a-zA-Z0-9]/g, '_')}.md`,
-          `lessons/${course._id}`
-        );
-        nodeData.lessonContentPath = mdResult.storagePath;
+    if (isUpdate) {
+      console.log(`[Background] Performing in-place update for course ${course._id} nodes...`);
+      for (const nodeData of nodes) {
+        const existingNode = await CourseNode.findOne({ course: course._id, title: nodeData.title });
+        if (existingNode) {
+          if (nodeData.lessonContent) {
+            if (existingNode.lessonContentPath) {
+              try {
+                await storage.delete(existingNode.lessonContentPath);
+              } catch (err) {
+                console.warn(`[Background] Failed to delete old lesson content: ${err.message}`);
+              }
+            }
+            const mdResult = await storage.uploadContent(
+              nodeData.lessonContent,
+              `${nodeData.title.replace(/[^a-zA-Z0-9]/g, '_')}.md`,
+              `lessons/${course._id}`
+            );
+            existingNode.lessonContentPath = mdResult.storagePath;
+            existingNode.lessonContent = nodeData.lessonContent;
+          }
+          if (nodeData.quizData) {
+            existingNode.quizData = nodeData.quizData;
+          }
+          existingNode.isMaterialGrounded = nodeData.isMaterialGrounded;
+          await existingNode.save();
+        } else {
+          // Fallback if node doesn't exist
+          if (nodeData.lessonContent) {
+            const mdResult = await storage.uploadContent(
+              nodeData.lessonContent,
+              `${nodeData.title.replace(/[^a-zA-Z0-9]/g, '_')}.md`,
+              `lessons/${course._id}`
+            );
+            nodeData.lessonContentPath = mdResult.storagePath;
+          }
+          await CourseNode.create(nodeData);
+        }
       }
+    } else {
+      console.log(`[Background] Creating new nodes for course ${course._id}...`);
+      for (const nodeData of nodes) {
+        if (nodeData.lessonContent) {
+          const mdResult = await storage.uploadContent(
+            nodeData.lessonContent,
+            `${nodeData.title.replace(/[^a-zA-Z0-9]/g, '_')}.md`,
+            `lessons/${course._id}`
+          );
+          nodeData.lessonContentPath = mdResult.storagePath;
+        }
+      }
+      await CourseNode.insertMany(nodes);
     }
-
-    await CourseNode.insertMany(nodes);
 
     course.aiEvaluation = { status: 'evaluating' };
     await course.save();
 
-    console.log(`[Background] Starting AI Judge evaluation for course ${course._id}...`);
+    console.log(`[Background] Starting AI Judge evaluation for course ${course._id} (isUpdate: ${isUpdate})...`);
     try {
       const evaluationResult = await evaluateCourse({
         courseId: course._id.toString(),
@@ -132,7 +178,7 @@ export const generateRoadmapInBackground = async (
       };
       console.log(`[Background] AI Judge evaluation complete. Score: ${evaluationResult.score}`);
 
-      if (evaluationResult.score < 50) {
+      if (evaluationResult.score < 50 && !isUpdate) {
         throw new Error(
           `Course generation failed quality check. AI Judge Score: ${evaluationResult.score}. Feedback: ${evaluationResult.feedback}`
         );
@@ -140,8 +186,8 @@ export const generateRoadmapInBackground = async (
     } catch (evalError) {
       console.error('[Background] Evaluation failed:', evalError.message);
       course.aiEvaluation.status = 'failed';
-      if (evalError.message.includes('failed quality check')) throw evalError;
-      console.warn('[Background] Proceeding to publish despite evaluation API failure.');
+      if (evalError.message.includes('failed quality check') && !isUpdate) throw evalError;
+      console.warn('[Background] Proceeding despite evaluation API failure.');
     }
 
     course.isPublished = true;
@@ -149,7 +195,7 @@ export const generateRoadmapInBackground = async (
     course.generationError = null;
     await course.save();
 
-    console.log(`[Background] ✅ Course ${course._id} generation complete! ${roadmapResult.nodes?.length || 0} nodes created.`);
+    console.log(`[Background] ✅ Course ${course._id} generation complete! ${roadmapResult.nodes?.length || 0} nodes processed.`);
     emitGenerationStatus(course._id, 'ready');
   } catch (error) {
     console.error(`[Background] ❌ Course ${course._id} generation failed:`, error.message);
