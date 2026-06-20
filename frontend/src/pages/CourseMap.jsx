@@ -70,15 +70,11 @@ const CourseMap = () => {
             withCredentials: true
         });
 
-        console.log('[Socket] Connecting to server for course updates...');
-        
         socket.on('connect', () => {
-            console.log('[Socket] Connected to server, joining room...');
             socket.emit('join_course', courseId);
         });
 
         socket.on('course_generation_status', async (data) => {
-            console.log('[Socket] Received course generation status:', data);
             if (data.courseId === courseId) {
                 await fetchCourseNodes(courseId);
             }
@@ -89,7 +85,6 @@ const CourseMap = () => {
         // Periodic backup poll as a robust fallback
         const backupInterval = setInterval(async () => {
             if (isGenerating) {
-                console.log('[CourseMap] Backup polling nodes...');
                 await fetchCourseNodes(courseId);
             }
         }, 10000);
@@ -117,9 +112,6 @@ const CourseMap = () => {
             onClick: () => {
                 if (node.type === 'quiz' || node.type === 'lesson') {
                     navigate(`/course/${courseId}/lesson/${node._id}`);
-                } else {
-                    // Future: open other node types
-                    console.log("Opening node:", node.title);
                 }
             }
         };

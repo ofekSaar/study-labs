@@ -8,6 +8,7 @@ import * as gamificationService from '../services/gamificationService.js';
 import { getIO } from '../config/socket.js';
 import XpEvent from '../models/XpEvent.js';
 import { QUEST_BY_ID } from '../constants/quests.js';
+import { TOP_LEADERBOARD_N } from '../constants/config.js';
 
 /**
  * Map a leaderboard period to a {createdAt: {$gte}} match, or null for all-time.
@@ -112,7 +113,7 @@ const shapeLeaderboardEntries = (rows, userId) =>
  */
 export const getGlobalLeaderboard = async (req, res, next) => {
   try {
-    const TOP_N = 50;
+    const TOP_N = TOP_LEADERBOARD_N;
     const since = periodToSince(req.query.period);
 
     let rows;
@@ -156,7 +157,7 @@ export const getGlobalLeaderboard = async (req, res, next) => {
 export const getCourseLeaderboard = async (req, res, next) => {
   try {
     const { courseId } = req.params;
-    const TOP_N = 50;
+    const TOP_N = TOP_LEADERBOARD_N;
 
     // Fetch IDs of all approved enrollments for this course so we only rank
     // students who legitimately belong to it.

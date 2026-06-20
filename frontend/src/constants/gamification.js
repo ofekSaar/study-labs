@@ -1,3 +1,44 @@
+// ── Shop Item Rarity ─────────────────────────────────────────────────────────
+export const RARITY = {
+    common:    { label: 'Common',    color: '#94a3b8', bg: 'bg-slate-500/10',  border: 'border-slate-500/20',  text: 'text-slate-400'  },
+    rare:      { label: 'Rare',      color: '#6366f1', bg: 'bg-indigo-500/10', border: 'border-indigo-500/20', text: 'text-indigo-400' },
+    epic:      { label: 'Epic',      color: '#a855f7', bg: 'bg-purple-500/10', border: 'border-purple-500/20', text: 'text-purple-400' },
+    legendary: { label: 'Legendary', color: '#f59e0b', bg: 'bg-amber-500/10',  border: 'border-amber-500/20',  text: 'text-amber-400'  },
+};
+
+// ── Shop Category Filters ─────────────────────────────────────────────────────
+export const SHOP_CATEGORIES = [
+    { id: 'all',      label: 'All',       icon: '🛒'    },
+    { id: 'avatars',  label: 'Avatars',   icon: '🧙‍♂️' },
+    { id: 'titles',   label: 'Titles',    icon: '🌟'    },
+    { id: 'themes',   label: 'Themes',    icon: '🌌'    },
+    { id: 'frames',   label: 'Frames',    icon: '🖼️'   },
+    { id: 'powerups', label: 'Power-ups', icon: '⚡'    },
+    { id: 'history',  label: 'History',   icon: '🕐'    },
+];
+
+export const SHOP_CATEGORY_ACCENT = {
+    avatars:  'indigo',
+    titles:   'purple',
+    themes:   'blue',
+    frames:   'rose',
+    powerups: 'amber',
+};
+
+// ── Level Milestone Roadmap ───────────────────────────────────────────────────
+export const LEVEL_MILESTONES = [
+    { level: 1, emoji: '🎓', avatar: 'Student',     title: 'Beginner',        desc: 'Initial Unlock'      },
+    { level: 2, emoji: '📚', avatar: 'Scholar',     title: 'Curious Learner', desc: 'Bronze Milestone'    },
+    { level: 3, emoji: '🧠', avatar: 'Brainiac',    title: 'Knowledge Seeker', desc: 'Silver Milestone'   },
+    { level: 4, emoji: '⚡', avatar: 'Speed Demon', title: 'Speed Runner',    desc: 'Gold Milestone'      },
+    { level: 5, emoji: '🥷', avatar: 'Code Ninja',  title: 'Code Ninja',      desc: 'Platinum Milestone'  },
+    { level: 6, emoji: '🧙‍♂️', avatar: 'AI Sorcerer', title: 'AI Sorcerer',  desc: 'Emerald Milestone'   },
+    { level: 8, emoji: '👑', avatar: 'Grandmaster', title: 'Grandmaster',     desc: 'Legendary Milestone' },
+];
+
+// ── XP-to-Level Formula ───────────────────────────────────────────────────────
+export const XP_PER_LEVEL = 100;
+
 export const AVATARS = [
     { id: 'default', emoji: '🎓', name: 'Student', levelReq: 1 },
     { id: 'scholar', emoji: '📚', name: 'Scholar', levelReq: 2 },

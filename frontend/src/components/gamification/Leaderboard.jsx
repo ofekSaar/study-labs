@@ -32,8 +32,6 @@ const Leaderboard = ({ courseId }) => {
         });
 
         socket.on('leaderboard_update', (data) => {
-            console.log('[Socket] Leaderboard updated by user:', data);
-            // Only refresh if the update is for the current course, or if both are global (null)
             if (!courseId || data.courseId === courseId) {
                 setRefreshKey(prev => prev + 1);
             }

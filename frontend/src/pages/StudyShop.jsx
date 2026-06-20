@@ -1,51 +1,12 @@
 import React, { useState, useMemo } from 'react';
 import StudentLayout from '../components/layout/StudentLayout';
 import useGamificationStore from '../store/gamificationStore';
-import { SHOP_ITEMS } from '../constants/gamification';
+import { SHOP_ITEMS, RARITY, SHOP_CATEGORIES } from '../constants/gamification';
+import { getDailyFeaturedItem } from '../utils/gamification';
 import { Coins, ShoppingBag, Zap, HelpCircle, Clock, Star } from 'lucide-react';
 import { motion, useSpring, useTransform, AnimatePresence } from 'framer-motion';
 import ConfettiEffect from '../components/gamification/ConfettiEffect';
 import ItemPreviewModal from '../components/shop/ItemPreviewModal';
-
-// ── Helpers ───────────────────────────────────────────────────────────────
-
-const RARITY = {
-    common: { label: 'Common', color: '#94a3b8', bg: 'bg-slate-500/10', border: 'border-slate-500/20', text: 'text-slate-400' },
-    rare: { label: 'Rare', color: '#6366f1', bg: 'bg-indigo-500/10', border: 'border-indigo-500/20', text: 'text-indigo-400' },
-    epic: { label: 'Epic', color: '#a855f7', bg: 'bg-purple-500/10', border: 'border-purple-500/20', text: 'text-purple-400' },
-    legendary: { label: 'Legendary', color: '#f59e0b', bg: 'bg-amber-500/10', border: 'border-amber-500/20', text: 'text-amber-400' },
-};
-
-const CATEGORIES = [
-    { id: 'all', label: 'All', icon: '🛒' },
-    { id: 'avatars', label: 'Avatars', icon: '🧙‍♂️' },
-    { id: 'titles', label: 'Titles', icon: '🌟' },
-    { id: 'themes', label: 'Themes', icon: '🌌' },
-    { id: 'frames', label: 'Frames', icon: '🖼️' },
-    { id: 'powerups', label: 'Power-ups', icon: '⚡' },
-    { id: 'history', label: 'History', icon: '🕐' },
-];
-
-const CATEGORY_ACCENT = {
-    avatars: 'indigo',
-    titles: 'purple',
-    themes: 'blue',
-    frames: 'rose',
-    powerups: 'amber',
-};
-
-// Rotate the featured item daily using day-of-year as a seed
-function getFeaturedItem() {
-    const allItems = [
-        ...SHOP_ITEMS.avatars.map(i => ({ ...i, category: 'avatars' })),
-        ...SHOP_ITEMS.titles.map(i => ({ ...i, category: 'titles' })),
-        ...SHOP_ITEMS.themes.map(i => ({ ...i, category: 'themes' })),
-        ...SHOP_ITEMS.frames.map(i => ({ ...i, category: 'frames' })),
-    ];
-    const now = new Date();
-    const dayOfYear = Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 86400000);
-    return allItems[dayOfYear % allItems.length];
-}
 
 // ── Sub-components ────────────────────────────────────────────────────────
 
@@ -231,7 +192,7 @@ const CategorySection = ({ categoryId, coins, unlocked, powerupCounts, onPreview
                 Object.entries({ avatars: 'Avatars', titles: 'Titles', themes: 'Themes', frames: 'Frames', powerups: 'Power-ups' }).map(([cat, label]) => (
                     <div key={cat} className="mb-8">
                         <h3 className="font-black text-slate-700 dark:text-white/60 text-xs uppercase tracking-widest mb-3 flex items-center gap-2">
-                            {CATEGORIES.find(c => c.id === cat)?.icon} {label}
+                            {SHOP_CATEGORIES.find(c => c.id === cat)?.icon} {label}
                         </h3>
                         <div className="space-y-3">
                             {SHOP_ITEMS[cat].map(item => {
@@ -321,7 +282,7 @@ const StudyShop = () => {
     const [previewItem, setPreviewItem] = useState(null);
     const [previewCategory, setPreviewCategory] = useState(null);
 
-    const featured = useMemo(() => getFeaturedItem(), []);
+    const featured = useMemo(() => getDailyFeaturedItem(), []);
 
     const unlocked = {
         avatars: unlockedAvatars,
@@ -404,7 +365,7 @@ const StudyShop = () => {
 
                 {/* ── Category Tabs ── */}
                 <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-                    {CATEGORIES.map(cat => (
+                    {SHOP_CATEGORIES.map(cat => (
                         <button
                             key={cat.id}
                             onClick={() => setActiveTab(cat.id)}
