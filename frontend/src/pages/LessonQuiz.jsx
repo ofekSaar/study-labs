@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import StudentLayout from '../components/layout/StudentLayout';
 import QuizEngine from '../components/quiz/QuizEngine';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ChevronLeft, BookOpen, GraduationCap, ArrowRight, Trophy, Zap, Clock, Star } from 'lucide-react';
+import { ChevronLeft, BookOpen, GraduationCap, ArrowRight, Trophy, Zap, Clock, Star, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ContentRenderer from '../components/common/ContentRenderer';
 import api from '../utils/api';
@@ -46,7 +46,7 @@ const LessonQuiz = () => {
 
     const { courses, fetchCourseNodes } = useCourseStore();
 
-    const handleComplete = async (score, answersData, isPerfectScore) => {
+    const handleComplete = async (score, answersData, isPerfectScore, correctCount, totalAnswerable) => {
         try {
             await api.post('/api/quizzes/submit', {
                 nodeId: id,
@@ -104,6 +104,8 @@ const LessonQuiz = () => {
                 multiplier,
                 nextNodeId: nextNode ? nextNode._id : null,
                 isPerfect,
+                correctCount: correctCount ?? 0,
+                totalAnswerable: totalAnswerable ?? 0,
             });
 
         } catch (error) {
@@ -124,6 +126,11 @@ const LessonQuiz = () => {
 
     // ── Reward Overlay ──
     if (showReward) {
+        const pct = showReward.totalAnswerable > 0
+            ? Math.round((showReward.correctCount / showReward.totalAnswerable) * 100)
+            : 0;
+        const passed = pct >= 70;
+
         return (
             <StudentLayout title="Quiz Complete">
                 <ConfettiEffect />
@@ -138,7 +145,7 @@ const LessonQuiz = () => {
                         {/* Glow */}
                         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-indigo-500/15 blur-3xl rounded-full pointer-events-none" />
 
-                        {/* Trophy */}
+                        {/* Icon */}
                         <motion.div
                             initial={{ scale: 0 }}
                             animate={{ scale: 1, rotate: [0, -10, 10, 0] }}
@@ -146,20 +153,26 @@ const LessonQuiz = () => {
                             className={`w-24 h-24 mx-auto rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(99,102,241,0.5)] mb-5 relative z-10 ${
                                 showReward.isPerfect
                                     ? 'bg-gradient-to-br from-yellow-400 to-orange-500'
-                                    : 'bg-gradient-to-br from-indigo-500 to-purple-500'
+                                    : passed
+                                        ? 'bg-gradient-to-br from-indigo-500 to-purple-500'
+                                        : 'bg-gradient-to-br from-slate-600 to-slate-700'
                             }`}
                         >
                             {showReward.isPerfect
                                 ? <Star size={48} className="text-white fill-white drop-shadow-md" />
-                                : <Trophy size={48} className="text-white drop-shadow-md" />
+                                : passed
+                                    ? <Trophy size={48} className="text-white drop-shadow-md" />
+                                    : <RefreshCw size={48} className="text-white drop-shadow-md" />
                             }
                         </motion.div>
 
                         <h2 className="text-2xl sm:text-3xl font-black text-white mb-1 relative z-10">
-                            {showReward.isPerfect ? '🎉 Perfect Score!' : 'Awesome Job!'}
+                            {showReward.isPerfect ? '🎉 Perfect Score!' : passed ? 'Awesome Job!' : 'Keep Practicing!'}
                         </h2>
-                        {showReward.isPerfect && (
-                            <p className="text-yellow-400 font-bold text-sm mb-3 relative z-10">You nailed every question!</p>
+                        {showReward.totalAnswerable > 0 && (
+                            <p className={`font-bold text-sm mb-3 relative z-10 ${showReward.isPerfect ? 'text-yellow-400' : passed ? 'text-indigo-400' : 'text-slate-400'}`}>
+                                {showReward.correctCount} / {showReward.totalAnswerable} correct ({pct}%)
+                            </p>
                         )}
 
                         {/* XP earned */}
