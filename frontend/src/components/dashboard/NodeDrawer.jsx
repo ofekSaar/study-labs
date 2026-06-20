@@ -126,15 +126,25 @@ const NodeDrawer = () => {
                                         const pct = Math.round((correctCount / totalAnswerable) * 100);
                                         const passed = pct >= 70;
                                         return (
-                                            <div className="flex items-center gap-4 text-slate-700 dark:text-white/80">
-                                                <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${passed ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-500' : 'bg-red-100 dark:bg-red-500/20 text-red-400'}`}>
+                                            <div className="flex items-start gap-4 text-slate-700 dark:text-white/80">
+                                                <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${passed ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-500' : 'bg-red-100 dark:bg-red-500/20 text-red-400'}`}>
                                                     <CheckCircle2 size={16} />
                                                 </div>
-                                                <div>
-                                                    <p className="text-xs font-black">Quiz Score</p>
-                                                    <p className={`text-[11px] mt-0.5 font-bold ${passed ? 'text-emerald-500 dark:text-emerald-400' : 'text-red-400 dark:text-red-400'}`}>
-                                                        {correctCount} / {totalAnswerable} correct ({pct}%)
-                                                        {passed ? ' ✓ Passed' : ' — Keep Practicing'}
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center justify-between mb-1">
+                                                        <p className="text-xs font-black">Quiz Score</p>
+                                                        <span className={`text-xs font-black px-2 py-0.5 rounded-lg ${passed ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-red-500/10 text-red-500 dark:text-red-400'}`}>
+                                                            {pct}%
+                                                        </span>
+                                                    </div>
+                                                    <div className="h-1.5 w-full bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden mb-1">
+                                                        <div
+                                                            className={`h-full rounded-full transition-all duration-700 ${passed ? 'bg-gradient-to-r from-emerald-400 to-teal-500' : 'bg-gradient-to-r from-red-400 to-red-500'}`}
+                                                            style={{ width: `${pct}%` }}
+                                                        />
+                                                    </div>
+                                                    <p className={`text-[11px] font-bold ${passed ? 'text-emerald-500 dark:text-emerald-400' : 'text-red-400'}`}>
+                                                        {correctCount} / {totalAnswerable} correct{passed ? ' ✓ Passed' : ' — Keep Practicing'}
                                                     </p>
                                                 </div>
                                             </div>
@@ -146,13 +156,23 @@ const NodeDrawer = () => {
 
                         {/* Footer / CTA */}
                         <div className="p-4 sm:p-6 pb-6 sm:pb-8 border-t border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-black/20">
-                            <button
-                                onClick={handleStart}
-                                className="w-full py-4 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-400 hover:to-purple-400 text-white rounded-2xl font-black text-lg shadow-[0_0_20px_rgba(99,102,241,0.3)] transition-all flex items-center justify-center gap-2"
-                            >
-                                <PlayCircle size={22} />
-                                Start {selectedNode.type === 'quiz' ? 'Quiz' : 'Lesson'}
-                            </button>
+                            {selectedNode.status === 'completed' ? (
+                                <button
+                                    onClick={handleStart}
+                                    className="w-full py-4 bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-500 hover:to-slate-600 dark:from-slate-700 dark:to-slate-800 dark:hover:from-slate-600 dark:hover:to-slate-700 text-white rounded-2xl font-black text-lg shadow-md transition-all flex items-center justify-center gap-2"
+                                >
+                                    <PlayCircle size={22} />
+                                    Review {selectedNode.type === 'quiz' ? 'Quiz' : 'Lesson'}
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={handleStart}
+                                    className="w-full py-4 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-400 hover:to-purple-400 text-white rounded-2xl font-black text-lg shadow-[0_0_20px_rgba(99,102,241,0.3)] transition-all flex items-center justify-center gap-2"
+                                >
+                                    <PlayCircle size={22} />
+                                    Start {selectedNode.type === 'quiz' ? 'Quiz' : 'Lesson'}
+                                </button>
+                            )}
                         </div>
                     </motion.div>
                 </>
