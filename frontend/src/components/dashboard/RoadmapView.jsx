@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import useCourseStore from '../../store/courseStore';
-import { CheckCircle2, PlayCircle, Lock, Zap, ChevronRight, BookOpen, ClipboardList, GraduationCap } from 'lucide-react';
+import { CheckCircle2, PlayCircle, Lock, Zap, ChevronRight, BookOpen, ClipboardList, GraduationCap, Clock } from 'lucide-react';
 
 const TYPE_CONFIG = {
     quiz:    { label: 'Quiz',   icon: ClipboardList, color: 'text-blue-600 dark:text-blue-400',   bg: 'bg-blue-500/10',   border: 'border-blue-500/20' },
@@ -60,25 +60,6 @@ const RoadmapView = () => {
     return (
         <div className="p-4 sm:p-6">
 
-            {/* ── Header ── */}
-            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-5">
-                <div>
-                    <span className="inline-flex items-center gap-1.5 text-[10px] font-black text-orange-600 dark:text-orange-400 uppercase tracking-widest bg-orange-500/10 dark:bg-orange-500/15 px-2.5 py-1 rounded-lg border border-orange-500/20 mb-2">
-                        <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse" />
-                        Active learning path
-                    </span>
-                    <h3 className="text-xl font-display font-black text-slate-800 dark:text-white leading-tight">{course.title}</h3>
-                </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                    <span className="text-xs font-bold text-slate-500 dark:text-white/40 bg-slate-100 dark:bg-white/5 px-3 py-1.5 rounded-xl border border-slate-200/50 dark:border-white/5">
-                        {course.level || 'Beginner'}
-                    </span>
-                    <span className="text-xs font-bold text-slate-500 dark:text-white/40 bg-slate-100 dark:bg-white/5 px-3 py-1.5 rounded-xl border border-slate-200/50 dark:border-white/5">
-                        <span className="text-slate-800 dark:text-white font-extrabold">{nodes.length}</span> lessons
-                    </span>
-                </div>
-            </div>
-
             {/* ── Progress Bar ── */}
             <div className="mb-6 bg-slate-50 dark:bg-white/[0.03] p-4 rounded-2xl border border-slate-200/60 dark:border-white/8">
                 <div className="flex justify-between items-center mb-2.5">
@@ -112,7 +93,7 @@ const RoadmapView = () => {
             </div>
 
             {/* ── Node List ── */}
-            <div className="space-y-0 max-h-[420px] overflow-y-auto pr-1 custom-scrollbar">
+            <div className="space-y-0 pb-4">
                 <AnimatePresence initial={false}>
                     {nodes.map((node, index) => {
                         const isCompleted = node.status === 'completed';
@@ -189,7 +170,7 @@ const RoadmapView = () => {
                                     {/* Node content */}
                                     <div className="min-w-0 flex-1 pl-1">
                                         <div className="flex items-center gap-1.5 mb-0.5">
-                                            <span className="text-[9px] font-black text-slate-400 dark:text-white/25 uppercase tracking-widest">
+                                            <span className="w-4 h-4 rounded-full bg-slate-200 dark:bg-white/10 flex items-center justify-center text-[9px] font-black text-slate-500 dark:text-white/40 flex-shrink-0">
                                                 {index + 1}
                                             </span>
                                             <span className="text-slate-300 dark:text-white/10 text-[10px]">·</span>
@@ -211,16 +192,34 @@ const RoadmapView = () => {
                                                 <Zap size={9} strokeWidth={2.5} />
                                                 +{node.xpReward || 150} XP
                                             </span>
+                                            <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-slate-400 dark:text-white/30">
+                                                <Clock size={9} strokeWidth={2.5} />
+                                                {node.estimatedMinutes || 45}m
+                                            </span>
                                         </div>
                                     </div>
 
                                     {/* Right side action */}
-                                    <div className="flex-shrink-0">
+                                    <div className="flex-shrink-0 flex flex-col items-end gap-1">
                                         {isCompleted && (
-                                            <span className="inline-flex items-center gap-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-3 py-1.5 rounded-xl text-xs font-black border border-emerald-500/15">
-                                                <CheckCircle2 size={12} strokeWidth={2.5} />
-                                                Done
-                                            </span>
+                                            <>
+                                                <span className="inline-flex items-center gap-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-3 py-1.5 rounded-xl text-xs font-black border border-emerald-500/15">
+                                                    <CheckCircle2 size={12} strokeWidth={2.5} />
+                                                    Done
+                                                </span>
+                                                {node.quizScore?.totalAnswerable > 0 && (() => {
+                                                    const pct = Math.round((node.quizScore.correctCount / node.quizScore.totalAnswerable) * 100);
+                                                    return (
+                                                        <span className={`text-[10px] font-black px-2 py-0.5 rounded-lg border ${
+                                                            pct >= 70
+                                                                ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/15'
+                                                                : 'bg-red-500/10 text-red-500 dark:text-red-400 border-red-500/15'
+                                                        }`}>
+                                                            {pct}%
+                                                        </span>
+                                                    );
+                                                })()}
+                                            </>
                                         )}
                                         {isCurrent && !isLocked && (
                                             <button className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-white px-4 py-2 rounded-xl text-xs font-black shadow-[0_4px_12px_rgba(217,119,87,0.35)] hover:shadow-[0_4px_16px_rgba(217,119,87,0.5)] flex items-center gap-1 transition-all duration-200 whitespace-nowrap">
@@ -235,6 +234,7 @@ const RoadmapView = () => {
                                             <ChevronRight size={16} className="text-slate-300 dark:text-white/20 group-hover:text-orange-400 transition-colors" strokeWidth={2} />
                                         )}
                                     </div>
+
                                 </motion.div>
                             </motion.div>
                         );
