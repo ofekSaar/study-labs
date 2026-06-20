@@ -107,7 +107,7 @@ const LeaguesPanel = () => {
                             </div>
 
                             {/* User Name */}
-                            <span className={`text-xs font-bold flex-1 truncate ${
+                            <span className={`text-xs font-bold flex-1 min-w-0 truncate ${
                                 entry.isYou
                                     ? 'text-indigo-600 dark:text-indigo-400 font-black'
                                     : 'text-slate-800 dark:text-white/95'
@@ -121,7 +121,7 @@ const LeaguesPanel = () => {
                             </span>
 
                             {/* Score Display */}
-                            <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-white/5 border border-slate-200/40 dark:border-white/5 px-2.5 py-1 rounded-xl text-[10px] font-black text-slate-600 dark:text-white/70">
+                            <div className="flex items-center gap-1.5 flex-shrink-0 bg-slate-50 dark:bg-white/5 border border-slate-200/40 dark:border-white/5 px-2.5 py-1 rounded-xl text-[10px] font-black text-slate-600 dark:text-white/70">
                                 <Trophy size={11} className="text-amber-500 fill-amber-500/10" />
                                 <span>{entry.xp.toLocaleString()} XP</span>
                             </div>
