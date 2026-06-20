@@ -141,6 +141,7 @@ describe('useGamificationStore Zustand Store', () => {
     });
 
     test('calculates correct XP streak multipliers', () => {
+        setMockTime(12); // noon — avoids Night Owl (0-4) and Early Bird (5-7) multipliers
         // Test with 0 streak (should be 1.0x)
         let boost = useGamificationStore.getState().getXPMultiplier();
         expect(boost.multiplier).toBe(1.0);
@@ -640,6 +641,7 @@ describe('useGamificationStore Zustand Store', () => {
     });
 
     test('shop system: buyItem successfully purchases xp boost and getXPMultiplier applies it', async () => {
+        setMockTime(12); // noon — avoids Night Owl (0-4) and Early Bird (5-7) multipliers
         act(() => {
             useGamificationStore.setState({ coins: 200, xpBoosts: 0, stats: { streak: 0 } });
         });
