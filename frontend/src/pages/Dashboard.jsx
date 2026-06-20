@@ -237,10 +237,11 @@ const Dashboard = () => {
 
                     {/* ── Learning Path (8 cols) ── */}
                     <motion.div
+                        layout
                         initial={{ opacity: 0, y: 16 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.4, delay: 0.2 }}
-                        className={`lg:col-span-8 glass-card rounded-3xl shadow-lg flex flex-col overflow-hidden relative group/roadmap${isRoadmapCollapsed ? ' self-start' : ''}`}
+                        className={`${isRoadmapCollapsed ? 'lg:col-span-12' : 'lg:col-span-8'} glass-card rounded-3xl shadow-lg flex flex-col overflow-hidden relative group/roadmap`}
                     >
                         <div className="absolute inset-0 bg-gradient-to-br from-orange-500/8 to-amber-500/4 pointer-events-none opacity-50 transition-opacity group-hover/roadmap:opacity-100 duration-1000" />
 
@@ -307,10 +308,11 @@ const Dashboard = () => {
 
                     {/* ── Right Column (4 cols) ── */}
                     <motion.div
+                        layout
                         initial={{ opacity: 0, y: 16 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.4, delay: 0.25 }}
-                        className="lg:col-span-4 flex flex-col gap-4"
+                        className={`${isRoadmapCollapsed ? 'lg:col-span-12 grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-5' : 'lg:col-span-4 flex flex-col'} gap-4`}
                     >
                         {/* XP Progress Card */}
                         <div className="glass-card rounded-3xl p-5 shadow-lg relative overflow-hidden">
