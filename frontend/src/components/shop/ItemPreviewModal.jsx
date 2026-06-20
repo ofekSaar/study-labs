@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Loader2 } from 'lucide-react';
 
@@ -171,7 +172,7 @@ const ItemPreviewModal = ({ item, category, coins, isOwned, onBuy, onClose }) =>
         }
     };
 
-    return (
+    return createPortal(
         <AnimatePresence>
             <motion.div
                 initial={{ opacity: 0 }}
@@ -222,7 +223,8 @@ const ItemPreviewModal = ({ item, category, coins, isOwned, onBuy, onClose }) =>
                     />
                 </motion.div>
             </motion.div>
-        </AnimatePresence>
+        </AnimatePresence>,
+        document.body
     );
 };
 
