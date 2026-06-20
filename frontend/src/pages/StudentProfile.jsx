@@ -3,7 +3,8 @@ import StudentLayout from '../components/layout/StudentLayout';
 import useCourseStore from '../store/courseStore';
 import useAuthStore from '../store/authStore';
 import useGamificationStore from '../store/gamificationStore';
-import { AVATARS, TITLES, SHOP_ITEMS, FRAMES, THEMES } from '../constants/gamification';
+import { AVATARS, TITLES, SHOP_ITEMS, FRAMES, THEMES, LEVEL_MILESTONES } from '../constants/gamification';
+import { calculateLevel } from '../utils/gamification';
 import Leaderboard from '../components/gamification/Leaderboard';
 import StreakCalendar from '../components/gamification/StreakCalendar';
 import BadgeDisplay from '../components/gamification/BadgeDisplay';
@@ -36,7 +37,7 @@ const StudentProfile = () => {
     const currentTitle = TITLES.concat(SHOP_ITEMS.titles).find(t => t.id === activeTitle) || { name: 'Beginner' };
 
     const totalXP = user?.totalXP ?? stats.total_xp ?? 0;
-    const level = Math.floor(totalXP / 100) + 1;
+    const level = calculateLevel(totalXP);
     const progressToNextLevel = totalXP % 100;
 
     return (
@@ -317,15 +318,7 @@ const StudentProfile = () => {
 
                     {/* Timeline row */}
                     <div className="relative z-10 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4">
-                        {[
-                            { level: 1, emoji: '🎓', avatar: 'Student', title: 'Beginner', desc: 'Initial Unlock' },
-                            { level: 2, emoji: '📚', avatar: 'Scholar', title: 'Curious Learner', desc: 'Bronze Milestone' },
-                            { level: 3, emoji: '🧠', avatar: 'Brainiac', title: 'Knowledge Seeker', desc: 'Silver Milestone' },
-                            { level: 4, emoji: '⚡', avatar: 'Speed Demon', title: 'Speed Runner', desc: 'Gold Milestone' },
-                            { level: 5, emoji: '🥷', avatar: 'Code Ninja', title: 'Code Ninja', desc: 'Platinum Milestone' },
-                            { level: 6, emoji: '🧙‍♂️', avatar: 'AI Sorcerer', title: 'AI Sorcerer', desc: 'Emerald Milestone' },
-                            { level: 8, emoji: '👑', avatar: 'Grandmaster', title: 'Grandmaster', desc: 'Legendary Milestone' }
-                        ].map((milestone) => {
+                        {LEVEL_MILESTONES.map((milestone) => {
                             const isUnlocked = level >= milestone.level;
                             return (
                                 <div 

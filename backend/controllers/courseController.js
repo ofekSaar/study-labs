@@ -5,8 +5,12 @@ import Enrollment from '../models/Enrollment.js';
 import Progress from '../models/Progress.js';
 import QuizAttempt from '../models/QuizAttempt.js';
 import storage from '../services/storage/index.js';
-import { generateRoadmap, evaluateCourse } from '../services/aiService.js';
-import { getIO } from '../config/socket.js';
+import { generateRoadmapInBackground } from '../services/courseGenerationService.js';
+import { buildCourseAnalytics } from '../services/analyticsService.js';
+import { ensureDemoEnrollments, createInitialProgress } from '../services/enrollmentService.js';
+import { assertOwner } from '../middleware/ownershipGuard.js';
+import { getUserRoles } from '../utils/userRoles.js';
+import { STUCK_GENERATION_THRESHOLD_MS, MAX_GENERATION_ATTEMPTS } from '../constants/config.js';
 
 const safeJSONParse = (str, fieldName) => {
   if (!str) return undefined;
@@ -22,30 +26,18 @@ const safeJSONParse = (str, fieldName) => {
  */
 export const listCourses = async (req, res, next) => {
   try {
-    // Check if user has roles array (multi-role support)
-    const userRoles = req.user?.roles || (req.user?.role ? [req.user.role] : []);
+    const userRoles = getUserRoles(req.user);
     const isInstructor = userRoles.includes('instructor');
     const isStudent = userRoles.includes('student');
 
-    // Determine query based on role and optional filter
-    // For instructors viewing their dashboard: show only their courses
-    // For students (or multi-role users browsing as students): show all published courses
     let query;
-
     if (isInstructor && !isStudent) {
-      // Pure instructor: show only their courses
       query = { instructor: req.user._id };
     } else if (isInstructor && isStudent) {
-      // Multi-role user: check which view they're in via query param
-      const view = req.query.view;
-      if (view === 'instructor') {
-        query = { instructor: req.user._id };
-      } else {
-        // Default to student view (all published courses)
-        query = { isPublished: true };
-      }
+      query = req.query.view === 'instructor'
+        ? { instructor: req.user._id }
+        : { isPublished: true };
     } else {
-      // Pure student: show all published courses
       query = { isPublished: true };
     }
 
@@ -54,7 +46,6 @@ export const listCourses = async (req, res, next) => {
       .select('-materials')
       .sort({ createdAt: -1 });
 
-    // If user has student role, include enrollment status for all courses
     if (isStudent) {
       const enrollments = await Enrollment.find({
         student: req.user._id,
@@ -66,45 +57,7 @@ export const listCourses = async (req, res, next) => {
         enrollmentMap[e.course.toString()] = e.status;
       });
 
-      // Auto-enroll student in the 2 demo courses if they don't have an approved enrollment
-      const demoCourses = await Course.find({
-        title: { $in: ['מבוא למדעי המחשב - פייתון', 'מבוא לחדו״א - חשבון אינפיניטסימלי'] }
-      });
-
-      for (const dc of demoCourses) {
-        const hasApprovedEnrollment = enrollmentMap[dc._id.toString()] === 'approved';
-        if (!hasApprovedEnrollment) {
-          // Find or create enrollment
-          let existingEnrollment = await Enrollment.findOne({ student: req.user._id, course: dc._id });
-          if (!existingEnrollment) {
-            existingEnrollment = await Enrollment.create({
-              student: req.user._id,
-              course: dc._id,
-              status: 'approved',
-              requestedAt: new Date(),
-              respondedAt: new Date()
-            });
-          } else if (existingEnrollment.status !== 'approved') {
-            existingEnrollment.status = 'approved';
-            await existingEnrollment.save();
-          }
-          enrollmentMap[dc._id.toString()] = 'approved';
-
-          // Find or create progress
-          let existingProgress = await Progress.findOne({ student: req.user._id, course: dc._id });
-          if (!existingProgress) {
-            const firstNode = await CourseNode.findOne({ course: dc._id }).sort({ order: 1 });
-            await Progress.create({
-              student: req.user._id,
-              course: dc._id,
-              currentNode: firstNode ? firstNode._id : null,
-              completedNodes: [],
-              totalXP: 0,
-              streak: 0
-            });
-          }
-        }
-      }
+      await ensureDemoEnrollments(req.user._id, enrollmentMap);
 
       const coursesWithStatus = courses.map((course) => ({
         ...course.toObject(),
@@ -118,12 +71,9 @@ export const listCourses = async (req, res, next) => {
       const coursesWithCount = await Promise.all(courses.map(async (course) => {
         const studentCount = await Enrollment.countDocuments({
           course: course._id,
-          status: 'approved'
+          status: 'approved',
         });
-        return {
-          ...course.toObject(),
-          studentCount
-        };
+        return { ...course.toObject(), studentCount };
       }));
       return res.json({ status: 'success', data: { courses: coursesWithCount } });
     }
@@ -148,9 +98,7 @@ export const getCourse = async (req, res, next) => {
 
     res.json({
       status: 'success',
-      data: {
-        course: { ...course.toObject(), nodeCount },
-      },
+      data: { course: { ...course.toObject(), nodeCount } },
     });
   } catch (error) {
     next(error);
@@ -165,11 +113,9 @@ export const createCourse = async (req, res, next) => {
   try {
     const { title, department, description, aiConfig, gamification, analyzeImages } = req.body;
 
-    // Upload materials to storage
     let syllabusData = null;
     const materialsData = [];
 
-    // Process syllabus
     if (req.files && req.files.syllabus && req.files.syllabus.length > 0) {
       const file = req.files.syllabus[0];
       const result = await storage.upload(file, 'materials');
@@ -184,19 +130,14 @@ export const createCourse = async (req, res, next) => {
       throw createError(400, 'Syllabus is required');
     }
 
-    // Process other materials (filter duplicates by name and size)
     if (req.files && req.files.materials && req.files.materials.length > 0) {
       const seenFiles = new Set();
-
       for (const file of req.files.materials) {
         const fileSignature = `${file.originalname}_${file.size}`;
-
-        // Skip duplicate files
         if (seenFiles.has(fileSignature)) {
           console.log(`[Course Upload] Skipping duplicate file: ${file.originalname}`);
           continue;
         }
-
         seenFiles.add(fileSignature);
         const result = await storage.upload(file, 'materials');
         materialsData.push({
@@ -224,7 +165,6 @@ export const createCourse = async (req, res, next) => {
       generationAttempts: 1,
     });
 
-    // Return immediately — don't wait for AI pipeline
     const populatedCourse = await Course.findById(course._id)
       .populate('instructor', 'name email avatar');
 
@@ -233,207 +173,22 @@ export const createCourse = async (req, res, next) => {
       data: { course: populatedCourse },
     });
 
-    // ── Background AI Generation (fire-and-forget) ──────────
     generateRoadmapInBackground(course, syllabusData, materialsData, title, description, analyzeImages === 'true');
-
   } catch (error) {
     next(error);
   }
 };
 
 /**
- * Runs the AI roadmap generation in the background.
- * Updates course status when complete or on failure.
- */
-async function generateRoadmapInBackground(course, syllabusData, materialsData, title, description, analyzeImages = false) {
-  if (process.env.NODE_ENV === 'test') {
-    try {
-      const exists = await Course.exists({ _id: course._id });
-      if (exists) {
-        const nodes = [
-          { course: course._id, title: 'Lesson 1', type: 'lesson', order: 0, estimatedMinutes: 45, xpReward: 150 },
-          { course: course._id, title: 'Quiz 1', type: 'quiz', order: 1, estimatedMinutes: 45, xpReward: 150 }
-        ];
-        await CourseNode.insertMany(nodes);
-        await Course.findByIdAndUpdate(course._id, {
-          isPublished: true,
-          generationStatus: 'ready',
-          generationError: null
-        });
-      }
-    } catch (err) {
-      console.error('[Test Mode] Mock course generation failed:', err.message);
-    }
-    return;
-  }
-
-  try {
-    console.log(`[Background] Starting AI generation for course ${course._id} (attempt ${course.generationAttempts})...`);
-
-    // Persist the timestamp at the actual moment generation begins so that the
-    // recovery window is measured from this point, not from when the HTTP
-    // response was sent.
-    await Course.findByIdAndUpdate(course._id, {
-      generationStartedAt: new Date(),
-      generationAttempts: course.generationAttempts,
-    });
-
-    const roadmapResult = await generateRoadmap({
-      courseId: course._id.toString(),
-      title,
-      description,
-      syllabus: syllabusData.storagePath,
-      materials: materialsData.map((m) => m.storagePath),
-      aiConfig: course.aiConfig,
-      analyzeImages,
-    });
-
-    // Create course nodes from AI-generated roadmap
-    if (roadmapResult.nodes && roadmapResult.nodes.length > 0) {
-      const nodes = roadmapResult.nodes.map((node, index) => ({
-        course: course._id,
-        title: node.title,
-        type: node.type,
-        order: index,
-        estimatedMinutes: node.estimatedMinutes || 45,
-        xpReward: node.xpReward || 150,
-        lessonContent: node.lessonContent || null,
-        quizData: node.quizData || undefined,
-      }));
-
-      // Save lesson markdown content to storage
-      for (const nodeData of nodes) {
-        if (nodeData.lessonContent) {
-          const mdResult = await storage.uploadContent(
-            nodeData.lessonContent,
-            `${nodeData.title.replace(/[^a-zA-Z0-9]/g, '_')}.md`,
-            `lessons/${course._id}`
-          );
-          nodeData.lessonContentPath = mdResult.storagePath;
-        }
-      }
-
-      await CourseNode.insertMany(nodes);
-    } else {
-      throw new Error('AI failed to generate any lessons. The syllabus might be empty or too complex.');
-    }
-
-    // Run evaluation via AI Judge
-    course.aiEvaluation = { status: 'evaluating' };
-    await course.save();
-
-    console.log(`[Background] Starting AI Judge evaluation for course ${course._id}...`);
-    try {
-      const evaluationResult = await evaluateCourse({
-        courseId: course._id.toString(),
-        syllabus: syllabusData.storagePath,
-        courseStructure: roadmapResult.courseStructure,
-      });
-
-      course.aiEvaluation = {
-        status: 'completed',
-        score: evaluationResult.score,
-        feedback: evaluationResult.feedback,
-        criteriaBreakdown: evaluationResult.criteria_breakdown,
-        evaluatedAt: new Date(),
-      };
-      console.log(`[Background] AI Judge evaluation complete. Score: ${evaluationResult.score}`);
-
-      if (evaluationResult.score < 50) {
-        throw new Error(`Course generation failed quality check. AI Judge Score: ${evaluationResult.score}. Feedback: ${evaluationResult.feedback}`);
-      }
-    } catch (evalError) {
-      console.error(`[Background] Evaluation failed:`, evalError.message);
-      course.aiEvaluation.status = 'failed';
-      // If the error was our explicit < 50 error, throw it so the generation fails.
-      if (evalError.message.includes('failed quality check')) {
-        throw evalError;
-      }
-      // Otherwise, the evaluation itself failed, but we still generated the nodes. 
-      // Let's decide to publish it anyway if it's just an API failure, but warn.
-      console.warn(`[Background] Proceeding to publish despite evaluation API failure.`);
-    }
-
-    // Publish the course & mark as ready
-    course.isPublished = true;
-    course.generationStatus = 'ready';
-    course.generationError = null;
-    await course.save();
-
-    console.log(`[Background] ✅ Course ${course._id} generation complete! ${roadmapResult.nodes?.length || 0} nodes created.`);
-    
-    // Broadcast ready event to sockets in room
-    try {
-      const io = getIO();
-      if (io) {
-        io.to(`course_${course._id}`).emit('course_generation_status', {
-          status: 'ready',
-          courseId: course._id.toString()
-        });
-      }
-    } catch (socketErr) {
-      console.error('[Background] Failed to emit course ready socket:', socketErr.message);
-    }
-  } catch (error) {
-    console.error(`[Background] ❌ Course ${course._id} generation failed:`, error.message);
-    // Persist the failure with an atomic field update rather than course.save():
-    // save() re-validates the whole document, and if that throws here (in a
-    // fire-and-forget background task) the rejection is unhandled and crashes
-    // the process. A scoped findByIdAndUpdate can't fail full-doc validation,
-    // and we still guard it so the failure handler itself can never throw.
-    try {
-      await Course.findByIdAndUpdate(course._id, {
-        generationStatus: 'failed',
-        generationError: error.message,
-        isPublished: false, // Do not publish failed courses
-      });
-      
-      // Broadcast failed event to sockets in room
-      try {
-        const io = getIO();
-        if (io) {
-          io.to(`course_${course._id}`).emit('course_generation_status', {
-            status: 'failed',
-            courseId: course._id.toString(),
-            error: error.message
-          });
-        }
-      } catch (socketErr) {
-        console.error('[Background] Failed to emit course failed socket:', socketErr.message);
-      }
-    } catch (persistError) {
-      console.error(`[Background] ❌ Failed to record generation failure for course ${course._id}:`, persistError.message);
-    }
-  }
-}
-
-/** How long a course may sit in 'generating' before it is retriable as stuck. */
-const STUCK_GENERATION_THRESHOLD_MS = 20 * 60 * 1000; // 20 minutes — mirrors aiService.js
-
-/** Max total generation attempts: 1 initial + 1 retry. After this, no further retries are allowed. */
-const MAX_GENERATION_ATTEMPTS = 2;
-
-/**
  * Retry course generation (Instructor owner only).
- *
- * Allowed when generationStatus is:
- *   - 'failed'  — an explicit failure was recorded
- *   - 'generating' AND generationStartedAt is older than STUCK_GENERATION_THRESHOLD_MS
- *     (i.e. stuck after a server restart before recovery ran)
- *
- * Retries are capped at MAX_GENERATION_ATTEMPTS (1 initial + 1 retry). Once a course
- * has been attempted that many times, it can no longer be regenerated.
  */
 export const regenerateCourse = async (req, res, next) => {
   try {
     const course = await Course.findById(req.params.courseId);
     if (!course) throw createError(404, 'Course not found');
 
-    if (course.instructor.toString() !== req.user._id.toString()) {
-      throw createError(403, 'You can only regenerate your own courses');
-    }
+    assertOwner(course, 'instructor', req.user._id, 'You can only regenerate your own courses');
 
-    // Cap retries: 1 initial attempt + 2 retries. Once exhausted, the course stays failed for good.
     if (course.generationAttempts >= MAX_GENERATION_ATTEMPTS) {
       throw createError(
         409,
@@ -457,7 +212,6 @@ export const regenerateCourse = async (req, res, next) => {
       );
     }
 
-    // Reset generation state and increment attempt counter atomically.
     const updatedCourse = await Course.findByIdAndUpdate(
       course._id,
       {
@@ -472,7 +226,6 @@ export const regenerateCourse = async (req, res, next) => {
       { new: true }
     );
 
-    // Respond immediately — generation runs in the background.
     res.json({
       status: 'success',
       message: 'Course regeneration started.',
@@ -482,14 +235,13 @@ export const regenerateCourse = async (req, res, next) => {
       },
     });
 
-    // Re-use the same background pipeline as initial creation.
     generateRoadmapInBackground(
       updatedCourse,
       course.syllabus,
       course.materials,
       course.title,
       course.description,
-      false // analyzeImages — preserve original default; no way to recover this flag safely
+      false
     );
   } catch (error) {
     next(error);
@@ -504,9 +256,7 @@ export const updateCourse = async (req, res, next) => {
     const course = await Course.findById(req.params.id);
     if (!course) throw createError(404, 'Course not found');
 
-    if (course.instructor.toString() !== req.user._id.toString()) {
-      throw createError(403, 'You can only edit your own courses');
-    }
+    assertOwner(course, 'instructor', req.user._id, 'You can only edit your own courses');
 
     const updates = {};
     const allowedFields = ['title', 'department', 'description', 'color', 'level', 'isPublished'];
@@ -521,11 +271,10 @@ export const updateCourse = async (req, res, next) => {
       updates.gamification = safeJSONParse(req.body.gamification, 'gamification');
     }
 
-    const updated = await Course.findByIdAndUpdate(
-      req.params.id,
-      updates,
-      { new: true, runValidators: true }
-    ).populate('instructor', 'name email avatar');
+    const updated = await Course.findByIdAndUpdate(req.params.id, updates, {
+      new: true,
+      runValidators: true,
+    }).populate('instructor', 'name email avatar');
 
     res.json({ status: 'success', data: { course: updated } });
   } catch (error) {
@@ -541,29 +290,18 @@ export const deleteCourse = async (req, res, next) => {
     const course = await Course.findById(req.params.id);
     if (!course) throw createError(404, 'Course not found');
 
-    if (course.instructor.toString() !== req.user._id.toString()) {
-      throw createError(403, 'You can only delete your own courses');
-    }
+    assertOwner(course, 'instructor', req.user._id, 'You can only delete your own courses');
 
-    // Clean up materials from storage (parallel)
-    await Promise.all(
-      course.materials.map(material => storage.delete(material.storagePath))
-    );
+    await Promise.all(course.materials.map((material) => storage.delete(material.storagePath)));
 
-    // Clean up lesson markdown files (parallel)
     const nodes = await CourseNode.find({ course: course._id });
-    const contentPaths = nodes.map(n => n.lessonContentPath).filter(Boolean);
-    
-    await Promise.all(
-      contentPaths.map(path => storage.delete(path))
-    );
+    const contentPaths = nodes.map((n) => n.lessonContentPath).filter(Boolean);
+    await Promise.all(contentPaths.map((p) => storage.delete(p)));
 
-    // Delete related data
     await CourseNode.deleteMany({ course: course._id });
     await Enrollment.deleteMany({ course: course._id });
     await Progress.deleteMany({ course: course._id });
 
-    // Delete quiz attempts for this course's nodes
     const nodeIds = nodes.map((n) => n._id);
     await QuizAttempt.deleteMany({ courseNode: { $in: nodeIds } });
 
@@ -589,8 +327,7 @@ export const getCourseNodes = async (req, res, next) => {
 
     let nodesWithStatus = nodes.map((n) => n.toObject());
 
-    // If user has student role (check roles array for multi-role support), include progress status per node
-    const userRoles = req.user?.roles || (req.user?.role ? [req.user.role] : []);
+    const userRoles = getUserRoles(req.user);
     const isStudent = userRoles.includes('student');
 
     if (isStudent) {
@@ -611,7 +348,6 @@ export const getCourseNodes = async (req, res, next) => {
         } else if (node._id.toString() === currentNodeId) {
           status = 'current';
         } else if (node.order === 0 && completedIds.size === 0 && !currentNodeId) {
-          // First node is always active if no progress
           status = 'current';
         }
         return { ...node, status };
@@ -626,8 +362,6 @@ export const getCourseNodes = async (req, res, next) => {
           title: course.title,
           level: course.level,
           color: course.color,
-          // Expose generation state so CourseMap can render the generating/failed
-          // views (and the instructor retry button) on a direct page load.
           generationStatus: course.generationStatus,
           generationError: course.generationError,
           generationProgress: course.generationProgress,
@@ -653,20 +387,13 @@ export const getNodeContent = async (req, res, next) => {
     if (!node) throw createError(404, 'Node not found');
 
     let content = node.lessonContent;
-
-    // If content is stored in file, read it
     if (!content && node.lessonContentPath) {
       content = await storage.readContent(node.lessonContentPath);
     }
 
     res.json({
       status: 'success',
-      data: {
-        nodeId: node._id,
-        title: node.title,
-        type: node.type,
-        content: content || '',
-      },
+      data: { nodeId: node._id, title: node.title, type: node.type, content: content || '' },
     });
   } catch (error) {
     next(error);
@@ -681,9 +408,7 @@ export const updateNodeContent = async (req, res, next) => {
     const course = await Course.findById(req.params.id);
     if (!course) throw createError(404, 'Course not found');
 
-    if (course.instructor.toString() !== req.user._id.toString()) {
-      throw createError(403, 'You can only edit your own courses');
-    }
+    assertOwner(course, 'instructor', req.user._id, 'You can only edit your own courses');
 
     const node = await CourseNode.findOne({
       _id: req.params.nodeId,
@@ -694,9 +419,7 @@ export const updateNodeContent = async (req, res, next) => {
     const { content } = req.body;
     if (content === undefined) throw createError(400, 'Content is required');
 
-    // Save to storage
     if (node.lessonContentPath) {
-      // Delete old file
       await storage.delete(node.lessonContentPath);
     }
 
@@ -710,10 +433,7 @@ export const updateNodeContent = async (req, res, next) => {
     node.lessonContentPath = mdResult.storagePath;
     await node.save();
 
-    res.json({
-      status: 'success',
-      data: { nodeId: node._id, content },
-    });
+    res.json({ status: 'success', data: { nodeId: node._id, content } });
   } catch (error) {
     next(error);
   }
@@ -727,214 +447,11 @@ export const getCourseAnalytics = async (req, res, next) => {
     const course = await Course.findById(req.params.id);
     if (!course) throw createError(404, 'Course not found');
 
-    if (course.instructor.toString() !== req.user._id.toString()) {
-      throw createError(403, 'Access denied');
-    }
+    assertOwner(course, 'instructor', req.user._id, 'Access denied');
 
-    // Total enrolled students
-    const totalStudents = await Enrollment.countDocuments({
-      course: course._id,
-      status: 'approved',
-    });
+    const data = await buildCourseAnalytics(course._id, course);
 
-    // Get all progress records for this course
-    const progressRecords = await Progress.find({ course: course._id })
-      .populate('student', 'name email avatar');
-
-    const nodes = await CourseNode.find({ course: course._id }).sort({ order: 1 });
-    const totalNodes = nodes.length;
-
-    // Calculate average completion
-    let totalCompletion = 0;
-    progressRecords.forEach((p) => {
-      totalCompletion += totalNodes > 0
-        ? (p.completedNodes.length / totalNodes) * 100
-        : 0;
-    });
-    const avgCompletion = totalStudents > 0
-      ? Math.round(totalCompletion / totalStudents)
-      : 0;
-
-    // Total class XP
-    const totalXP = progressRecords.reduce((sum, p) => sum + p.totalXP, 0);
-
-    // At-risk students (less than 25% completion or inactive for 5+ days)
-    const atRiskStudents = progressRecords
-      .filter((p) => {
-        const completion = totalNodes > 0
-          ? (p.completedNodes.length / totalNodes) * 100
-          : 0;
-        const daysSinceActive = p.lastActivityDate
-          ? Math.floor((Date.now() - p.lastActivityDate) / (1000 * 60 * 60 * 24))
-          : 999;
-        return completion < 25 || daysSinceActive > 5;
-      })
-      .map((p) => ({
-        student: p.student,
-        completion: totalNodes > 0
-          ? Math.round((p.completedNodes.length / totalNodes) * 100)
-          : 0,
-        daysSinceActive: p.lastActivityDate
-          ? Math.floor((Date.now() - p.lastActivityDate) / (1000 * 60 * 60 * 24))
-          : null,
-        issue: !p.lastActivityDate
-          ? 'Never started'
-          : Math.floor((Date.now() - p.lastActivityDate) / (1000 * 60 * 60 * 24)) > 5
-            ? `Inactive for ${Math.floor((Date.now() - p.lastActivityDate) / (1000 * 60 * 60 * 24))} days`
-            : 'Low progress',
-      }));
-
-    // Calculate node completion frequencies once (O(N) instead of N^2)
-    const nodeCompletionCounts = {};
-    progressRecords.forEach((p) => {
-      p.completedNodes.forEach((nodeId) => {
-        const idStr = nodeId.toString();
-        nodeCompletionCounts[idStr] = (nodeCompletionCounts[idStr] || 0) + 1;
-      });
-    });
-
-    // Class progress per node (how many students reached each node)
-    const nodeProgress = nodes.map((node) => {
-      return {
-        name: node.title,
-        students: nodeCompletionCounts[node._id.toString()] || 0,
-      };
-    });
-
-    // SOTA Concept Mastery Heatmap & AI Insights
-    const conceptMastery = nodes.map((node) => {
-      const hash = node.title.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-      const mastery = 60 + (hash % 36);
-      return {
-        topic: node.title,
-        masteryLevel: mastery,
-        status: mastery > 85 ? 'Excellent' : mastery > 72 ? 'Moderate' : 'Needs Focus',
-      };
-    });
-
-    const quizNodes = nodes.filter(n => n.type === 'quiz');
-    const weakQuiz = quizNodes.length > 0 ? quizNodes[0].title : 'Quiz 1';
-
-    // Seed default gamification properties if they are empty
-    let updatedCourse = false;
-    if (!course.gamification.bounties || course.gamification.bounties.length === 0) {
-      course.gamification.bounties = [
-        {
-          title: 'Speed Runner Challenge',
-          description: `Be one of the first 5 students to complete "${weakQuiz}" and score 100%!`,
-          xpReward: 350,
-          targetNode: weakQuiz,
-          maxWinners: 5,
-          expiryDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7), // 7 days from now
-          winners: [],
-        },
-        {
-          title: 'Knowledge Explorer',
-          description: 'Complete 3 course modules within your first week of enrollment.',
-          xpReward: 200,
-          targetNode: '',
-          maxWinners: 999,
-          expiryDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 14),
-          winners: [],
-        },
-      ];
-      updatedCourse = true;
-    }
-
-    if (!course.gamification.customBadges || course.gamification.customBadges.length === 0) {
-      course.gamification.customBadges = [
-        {
-          title: 'Code Warrior',
-          description: 'Achieve a 5-day quiz completion streak.',
-          xpReward: 500,
-          requirementType: 'quiz_streak',
-          requirementValue: 5,
-          iconName: 'Award',
-        },
-        {
-          title: 'Curriculum Conqueror',
-          description: 'Successfully complete all syllabus lessons.',
-          xpReward: 1000,
-          requirementType: 'lessons_completed',
-          requirementValue: totalNodes,
-          iconName: 'Trophy',
-        },
-        {
-          title: 'Superb Scholar',
-          description: 'Earn a perfect score on any 3 class quizzes.',
-          xpReward: 750,
-          requirementType: 'custom',
-          requirementValue: 3,
-          iconName: 'Star',
-        },
-      ];
-      updatedCourse = true;
-    }
-
-    if (!course.gamification.rewardsStore || course.gamification.rewardsStore.length === 0) {
-      course.gamification.rewardsStore = [
-        {
-          title: 'Homework Extension Card',
-          description: 'Grants a 3-day extension on any weekly assignment. (Academic Reward)',
-          xpCost: 3500,
-          type: 'academic',
-          unlockedBy: [],
-        },
-        {
-          title: 'Saber Profile Aura',
-          description: 'Unlocks a glowing violet avatar frame for your public profile. (Cosmetic Reward)',
-          xpCost: 1500,
-          type: 'cosmetic',
-          unlockedBy: [],
-        },
-        {
-          title: 'Midterm Buffer Point',
-          description: 'Grants +1 bonus point to your final exam grade. (Academic Reward)',
-          xpCost: 8000,
-          type: 'academic',
-          unlockedBy: [],
-        },
-      ];
-      updatedCourse = true;
-    }
-
-    if (updatedCourse) {
-      await course.save();
-    }
-
-    const aiInsights = [
-      {
-        type: 'alert',
-        message: `Students are showing lower performance in the quiz for node: "${weakQuiz}". Consider publishing a targeted announcement or supplementary reading.`,
-      },
-      {
-        type: 'success',
-        message: 'Overall class velocity is high. 85% of active students have maintained their daily streaks this week!',
-      },
-    ];
-
-    res.json({
-      status: 'success',
-      data: {
-        metrics: {
-          totalStudents,
-          avgCompletion,
-          activeModules: totalNodes,
-          totalXP,
-        },
-        nodeProgress,
-        atRiskStudents,
-        conceptMastery,
-        aiInsights,
-        gamification: {
-          xpMultiplier: course.gamification.xpMultiplier || 1.0,
-          leaderboardEnabled: course.gamification.leaderboardEnabled !== false,
-          bounties: course.gamification.bounties || [],
-          customBadges: course.gamification.customBadges || [],
-          rewardsStore: course.gamification.rewardsStore || [],
-        },
-      },
-    });
+    res.json({ status: 'success', data });
   } catch (error) {
     next(error);
   }

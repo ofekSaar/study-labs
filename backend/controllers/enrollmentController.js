@@ -1,8 +1,8 @@
 import createError from 'http-errors';
 import Enrollment from '../models/Enrollment.js';
 import Course from '../models/Course.js';
-import Progress from '../models/Progress.js';
-import CourseNode from '../models/CourseNode.js';
+import { assertOwner } from '../middleware/ownershipGuard.js';
+import { createInitialProgress } from '../services/enrollmentService.js';
 
 /**
  * Request enrollment in a course (Student only).
@@ -53,20 +53,8 @@ export const requestEnrollment = async (req, res, next) => {
       respondedAt: isInstructor ? new Date() : null,
     });
 
-    // If auto-approved, create initial progress record
     if (isInstructor) {
-      const firstNode = await CourseNode.findOne({
-        course: courseId,
-      }).sort({ order: 1 });
-
-      await Progress.create({
-        student: req.user._id,
-        course: courseId,
-        currentNode: firstNode?._id || null,
-        completedNodes: [],
-        totalXP: 0,
-        streak: 0,
-      });
+      await createInitialProgress(req.user._id, courseId);
     }
 
     const populated = await Enrollment.findById(enrollment._id)
@@ -110,9 +98,7 @@ export const getCourseEnrollments = async (req, res, next) => {
     const course = await Course.findById(req.params.courseId);
     if (!course) throw createError(404, 'Course not found');
 
-    if (course.instructor.toString() !== req.user._id.toString()) {
-      throw createError(403, 'Access denied');
-    }
+    assertOwner(course, 'instructor', req.user._id, 'Access denied');
 
     const { status } = req.query;
     const query = { course: req.params.courseId };
@@ -138,9 +124,7 @@ export const approveEnrollment = async (req, res, next) => {
 
     if (!enrollment) throw createError(404, 'Enrollment not found');
 
-    if (enrollment.course.instructor.toString() !== req.user._id.toString()) {
-      throw createError(403, 'Access denied');
-    }
+    assertOwner(enrollment.course, 'instructor', req.user._id, 'Access denied');
 
     if (enrollment.status !== 'pending') {
       throw createError(400, `Cannot approve enrollment with status "${enrollment.status}"`);
@@ -150,23 +134,7 @@ export const approveEnrollment = async (req, res, next) => {
     enrollment.respondedAt = new Date();
     await enrollment.save();
 
-    // Create initial progress record for the student
-    const firstNode = await CourseNode.findOne({
-      course: enrollment.course._id,
-    }).sort({ order: 1 });
-
-    await Progress.findOneAndUpdate(
-      { student: enrollment.student, course: enrollment.course._id },
-      {
-        student: enrollment.student,
-        course: enrollment.course._id,
-        currentNode: firstNode?._id || null,
-        completedNodes: [],
-        totalXP: 0,
-        streak: 0,
-      },
-      { upsert: true, new: true }
-    );
+    await createInitialProgress(enrollment.student, enrollment.course._id);
 
     const populated = await Enrollment.findById(enrollment._id)
       .populate('student', 'name email avatar')
@@ -188,9 +156,7 @@ export const denyEnrollment = async (req, res, next) => {
 
     if (!enrollment) throw createError(404, 'Enrollment not found');
 
-    if (enrollment.course.instructor.toString() !== req.user._id.toString()) {
-      throw createError(403, 'Access denied');
-    }
+    assertOwner(enrollment.course, 'instructor', req.user._id, 'Access denied');
 
     if (enrollment.status !== 'pending') {
       throw createError(400, `Cannot deny enrollment with status "${enrollment.status}"`);

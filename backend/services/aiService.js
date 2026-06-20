@@ -6,11 +6,7 @@
 import path from 'path';
 import Course from '../models/Course.js';
 
-/**
- * How long (in milliseconds) a course may sit in 'generating' before it is
- * considered stuck.  Matches the 20-minute HTTP timeout used by generateRoadmap.
- */
-const STUCK_GENERATION_THRESHOLD_MS = 20 * 60 * 1000; // 20 minutes
+import { STUCK_GENERATION_THRESHOLD_MS } from '../constants/config.js';
 
 /**
  * Startup recovery — marks courses that are stuck in 'generating' as 'failed'
