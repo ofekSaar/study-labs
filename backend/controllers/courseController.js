@@ -341,6 +341,22 @@ export const getCourseNodes = async (req, res, next) => {
       );
       const currentNodeId = progress?.currentNode?.toString();
 
+      // Fetch latest quiz attempt per completed node
+      const attempts = await QuizAttempt.find({
+        student: req.user._id,
+        courseNode: { $in: [...completedIds] },
+      }).sort({ completedAt: -1 });
+
+      const attemptMap = {};
+      for (const attempt of attempts) {
+        const key = attempt.courseNode.toString();
+        if (!attemptMap[key]) {
+          const correctCount = attempt.answers.filter((a) => a.isCorrect).length;
+          const totalAnswerable = attempt.answers.length;
+          attemptMap[key] = { correctCount, totalAnswerable };
+        }
+      }
+
       nodesWithStatus = nodesWithStatus.map((node) => {
         let status = 'locked';
         if (completedIds.has(node._id.toString())) {
@@ -350,7 +366,8 @@ export const getCourseNodes = async (req, res, next) => {
         } else if (node.order === 0 && completedIds.size === 0 && !currentNodeId) {
           status = 'current';
         }
-        return { ...node, status };
+        const quizScore = attemptMap[node._id.toString()] || null;
+        return { ...node, status, quizScore };
       });
     }
 

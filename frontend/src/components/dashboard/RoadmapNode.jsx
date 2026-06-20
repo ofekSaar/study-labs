@@ -59,14 +59,28 @@ const RoadmapNode = ({ node, onClick, alignment, isSelected }) => {
                 {isLocked && <Lock className="w-6 h-6" />}
                 {isCurrent && <Play className="w-6 h-6 fill-white ml-0.5" />}
 
-                {/* Star Rating (if completed) */}
-                {isCompleted && (
-                    <div className="absolute -top-3.5 flex gap-0.5 bg-white dark:bg-slate-800 px-1.5 py-0.5 rounded-full shadow-md border border-slate-100 dark:border-white/5 scale-90">
-                        {[1, 2, 3].map(i => (
-                            <Star key={i} size={8} className="fill-amber-400 text-amber-500" />
-                        ))}
-                    </div>
-                )}
+                {/* Score Badge (if completed) */}
+                {isCompleted && (() => {
+                    const qs = node.quizScore;
+                    if (qs && qs.totalAnswerable > 0) {
+                        const pct = Math.round((qs.correctCount / qs.totalAnswerable) * 100);
+                        const color = pct >= 70
+                            ? 'text-emerald-500 border-emerald-200 dark:border-emerald-500/30'
+                            : 'text-red-400 border-red-200 dark:border-red-500/30';
+                        return (
+                            <div className={`absolute -top-3.5 bg-white dark:bg-slate-800 px-2 py-0.5 rounded-full shadow-md border scale-90 font-black text-[9px] ${color}`}>
+                                {qs.correctCount}/{qs.totalAnswerable}
+                            </div>
+                        );
+                    }
+                    return (
+                        <div className="absolute -top-3.5 flex gap-0.5 bg-white dark:bg-slate-800 px-1.5 py-0.5 rounded-full shadow-md border border-slate-100 dark:border-white/5 scale-90">
+                            {[1, 2, 3].map(i => (
+                                <Star key={i} size={8} className="fill-amber-400 text-amber-500" />
+                            ))}
+                        </div>
+                    );
+                })()}
 
                 {/* XP Reward Badge */}
                 {!isCompleted && !isLocked && (

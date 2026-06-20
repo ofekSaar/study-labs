@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, PlayCircle, BookOpen, Clock, Trophy, Zap } from 'lucide-react';
+import { X, PlayCircle, BookOpen, Clock, Trophy, Zap, CheckCircle2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import useCourseStore from '../../store/courseStore';
 import sounds from '../../utils/soundManager';
@@ -112,6 +112,27 @@ const NodeDrawer = () => {
                                             <p className="text-[11px] text-slate-500 dark:text-white/40 mt-0.5">"First Steps" or corresponding rarity award</p>
                                         </div>
                                     </div>
+
+                                    {/* Quiz score row — only for completed nodes with attempt data */}
+                                    {selectedNode.status === 'completed' && selectedNode.quizScore?.totalAnswerable > 0 && (() => {
+                                        const { correctCount, totalAnswerable } = selectedNode.quizScore;
+                                        const pct = Math.round((correctCount / totalAnswerable) * 100);
+                                        const passed = pct >= 70;
+                                        return (
+                                            <div className="flex items-center gap-4 text-slate-700 dark:text-white/80">
+                                                <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${passed ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-500' : 'bg-red-100 dark:bg-red-500/20 text-red-400'}`}>
+                                                    <CheckCircle2 size={16} />
+                                                </div>
+                                                <div>
+                                                    <p className="text-xs font-black">Quiz Score</p>
+                                                    <p className={`text-[11px] mt-0.5 font-bold ${passed ? 'text-emerald-500 dark:text-emerald-400' : 'text-red-400 dark:text-red-400'}`}>
+                                                        {correctCount} / {totalAnswerable} correct ({pct}%)
+                                                        {passed ? ' ✓ Passed' : ' — Keep Practicing'}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        );
+                                    })()}
                                 </div>
                             </div>
                         </div>
