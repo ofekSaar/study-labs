@@ -13,8 +13,8 @@ from llama_index.llms.gemini import Gemini
 from llama_index.llms.openai import OpenAI
 
 logger = logging.getLogger(__name__)
-from engine.db import update_course_progress, save_syllabus_blueprint
-from engine.semantic_filter import filter_chunks_by_syllabus
+from engine.db import update_course_progress, save_syllabus_blueprint, get_syllabus_blueprint
+from engine.semantic_filter import tag_materials_with_embeddings
 
 load_dotenv()
 
@@ -174,109 +174,64 @@ def tag_materials_to_topic(topic: Topic, materials: List[str]) -> List[str]:
 
     return materials[:1] # Fallback: return first material
 
-async def generate_questions_for_topic(topic: Topic) -> List[Question]:
+async def generate_content_for_topic(topic: Topic) -> tuple[List[Question], str]:
     """
-    Generates questions based on the topic and its matched materials.
+    Generates questions and study summaries for the topic in a single LLM call.
     Uses semaphore for rate limiting and retry for 429 errors.
     """
     if os.environ.get("USE_MOCK_AI") == "True":
-        logger.info(f"Using MOCK AI Mode for generate_questions_for_topic: {topic.title}")
-        if topic.questions:
-            return topic.questions
-        return [Question(question_text="Is this real?", options=["Yes", "No"], correct_answer=1)]
+        logger.info(f"Using MOCK AI Mode for generate_content_for_topic: {topic.title}")
+        questions = topic.questions if topic.questions else [Question(question_text="Is this real?", options=["Yes", "No"], correct_answer=1)]
+        summary = topic.summary if topic.summary else f"# Summary for {topic.title}\n\nThis is a mock summary for {topic.title} generated because USE_MOCK_AI is True."
+        return questions, summary
 
-    from pydantic import BaseModel
-    class QuestionList(BaseModel):
-        questions: List[Question]
+    from pydantic import BaseModel, Field
+    class TopicContent(BaseModel):
+        summary: str = Field(..., description="A concise but comprehensive study summary/card in Markdown format, covering key concepts, definitions, and points.")
+        questions: List[Question] = Field(..., description="A list of exactly 3 multiple-choice questions testing key concepts of this topic.")
 
     matched_content = "\n".join(topic.matched_materials)
     
     prompt_template_str = (
-        "Generate 3 multiple-choice questions for the following topic and material.\n"
+        "You are an expert tutor creating a study guide and a quiz for a student.\n"
         "Topic: {topic_title}\n"
+        "Description: {topic_desc}\n"
         "Material content:\n"
-        "{matched_content}\n"
+        "{matched_content}\n\n"
+        "Please generate:\n"
+        "1. A concise but comprehensive study summary in Markdown format.\n"
+        "2. Exactly 3 multiple-choice questions based on the topic and materials.\n\n"
         "IMPORTANT: Always use LaTeX for mathematical formulas, variables, and state transitions. "
         "Use single dollar signs $...$ for inline math (e.g., $E=mc^2$ or $q_0 \\rightarrow q_1$) and double dollar signs $$...$$ for block equations. "
-        "Do NOT use parentheses ( ) or plain text for math symbols. "
-        "IMPORTANT: You must output strictly valid JSON. Properly escape all internal quotes, backslashes, and newlines so the parser does not fail."
+        "Do NOT use parentheses ( ) or plain text for math symbols.\n"
+        "IMPORTANT: You must output strictly valid JSON conforming to the schema. "
+        "Properly escape all internal quotes, backslashes, and newlines so the parser does not fail."
     )
     
     for provider_name, llm_instance in LLMS:
         try:
             program = LLMTextCompletionProgram.from_defaults(
-                output_cls=QuestionList,
+                output_cls=TopicContent,
                 prompt_template_str=prompt_template_str,
                 llm=llm_instance
             )
             async def _call():
                 async with _api_semaphore:
-                    return await program.acall(topic_title=topic.title, matched_content=matched_content)
+                    return await program.acall(
+                        topic_title=topic.title,
+                        topic_desc=topic.description or "",
+                        matched_content=matched_content
+                    )
             
             result = await retry_with_backoff(_call)
-            return result.questions
+            return result.questions, result.summary
         except Exception as e:
-            logger.warning(f"Error in generate_questions_for_topic with {provider_name}: {e}")
+            logger.warning(f"Error in generate_content_for_topic with {provider_name}: {e}")
             continue
             
-    return []
+    return [], f"# Summary for {topic.title}\n\n(Error generating summary)"
 
-def tag_materials(course: Course, materials: List[str]) -> Course:
-    """
-    Iterates through topics and adds relevant materials.
-    Kept Sync for now as LlamaIndex tagging might be fast enough, or todo: make async too.
-    """
-    for lesson in course.lessons:
-        for topic in lesson.topics:
-            topic.matched_materials = tag_materials_to_topic(topic, materials)
-    return course
 
-def generate_questions(course: Course) -> Course:
-    """
-    Generates questions for each topic in the course.
-    DEPRECATED in favor of async pipeline.
-    """
-    pass
-
-async def generate_summary_for_topic(topic: Topic) -> str:
-    """
-    Generates a study summary (Markdown) for the topic based on matched materials.
-    Uses semaphore for rate limiting and retry for 429 errors.
-    """
-    if os.environ.get("USE_MOCK_AI") == "True":
-        logger.info(f"Using MOCK AI Mode for generate_summary_for_topic: {topic.title}")
-        if topic.summary:
-            return topic.summary
-        return f"# Summary for {topic.title}\n\nThis is a mock summary for {topic.title} generated because USE_MOCK_AI is True."
-
-    matched_content = "\n".join(topic.matched_materials)
-    
-    prompt = (
-        "You are an expert tutor creating a study card/summary for a student.\n"
-        f"Topic: {topic.title}\n"
-        f"Description: {topic.description or ''}\n"
-        "Material content:\n"
-        f"{matched_content}\n"
-        "Generate a concise but comprehensive study summary in Markdown format. "
-        "Include key concepts, definitions, and important points. "
-        "IMPORTANT: Always use LaTeX for mathematical formulas, variables, and state transitions. "
-        "Use single dollar signs $...$ for inline math (e.g., $E=mc^2$ or $q_0 \\rightarrow q_1$) and double dollar signs $$...$$ for block equations. "
-        "Do NOT use parentheses ( ) or plain text for math symbols."
-    )
-    
-    for provider_name, llm_instance in LLMS:
-        try:
-            async def _call():
-                async with _api_semaphore:
-                    return await llm_instance.acomplete(prompt)
-            
-            response = await retry_with_backoff(_call)
-            return response.text
-        except Exception as e:
-            logger.warning(f"Error in generate_summary_for_topic with {provider_name}: {e}")
-            continue
-
-    return f"# Summary for {topic.title}\n\n(Error generating summary)"
 
 
 def sanitize_filename(name: str) -> str:
@@ -288,84 +243,101 @@ def sanitize_filename(name: str) -> str:
     s = s.replace(" ", "_")
     return s[:50] # Limit length
 
-
-
-# asyncio already imported at top
-
-async def create_course_pipeline(syllabus_text: str, materials: List[str], syllabus_name: str = "Unknown", materials_names: List[str] = None, course_id: str = None) -> tuple[Course, dict]:
+async def create_course_pipeline(
+    syllabus_text: str,
+    materials: List[str],
+    syllabus_name: str = "Unknown",
+    materials_names: List[str] = None,
+    course_id: str = None,
+    is_update: bool = False,
+    new_materials: List[str] = None
+) -> tuple[Course, list]:
     """
     Orchestrates the course generation pipeline (Async Version).
+    Supports initial parsing & tagging, as well as differential updates.
+    Returns the course object and the list of updated topics.
     """
-    # Step 1: Syllabus -> Structure (Sync LLM call for now, structure is sequence dependent)
-    # We could make parse_syllabus async too, but let's focus on the heavy parallel part
-    logger.info("Pipeline Step 1/3: Parsing Syllabus")
-    # Wrap sync call if needed but parse_syllabus uses sync program() call.
-    # ideally we update parse_syllabus to be async or run in executor.
-    # For now, let's assume parse_syllabus remains sync but fast enough
-    course = parse_syllabus(syllabus_text, syllabus_name=syllabus_name)
-
-    # Persist syllabus blueprint as ground truth anchor
-    if course_id:
-        save_syllabus_blueprint(
-            course_id=course_id,
-            syllabus_name=syllabus_name,
-            blueprint=course.model_dump()
-        )
-        logger.info(f"Syllabus blueprint saved for course {course_id}.")
-
-    # Step 2: Tag Materials (Sync for now)
-    if materials_names:
-        logger.info(f"Pipeline Step 2/3: Tagging {len(materials)} materials: {', '.join(materials_names)}")
-        if course_id:
-            update_course_progress(course_id, f"Indexing {len(materials)} materials for topic matching...")
+    if is_update:
+        logger.info(f"Pipeline Step 1/3 (Update): Loading existing syllabus blueprint for course {course_id}")
+        blueprint_doc = get_syllabus_blueprint(course_id)
+        if not blueprint_doc:
+            raise Exception(f"Syllabus blueprint not found for course {course_id}")
+        course = Course.model_validate(blueprint_doc["blueprint"])
     else:
-        logger.info("Pipeline Step 2/3: Tagging materials...")
+        # Step 1: Syllabus -> Structure
+        logger.info("Pipeline Step 1/3: Parsing Syllabus")
+        course = parse_syllabus(syllabus_text, syllabus_name=syllabus_name)
+
+        # Persist syllabus blueprint as ground truth anchor
+        if course_id:
+            save_syllabus_blueprint(
+                course_id=course_id,
+                syllabus_name=syllabus_name,
+                blueprint=course.model_dump()
+            )
+            logger.info(f"Syllabus blueprint saved for course {course_id}.")
+
+    # Step 2: Tag Materials
+    if is_update:
+        logger.info(f"Pipeline Step 2/3 (Update): Mapping {len(new_materials)} new materials...")
+        if course_id:
+            update_course_progress(course_id, f"Mapping {len(new_materials)} new files to syllabus topics...")
+        
+        # Tag new materials
+        tag_materials_with_embeddings(course, new_materials)
+        
+        # Identify which topics actually matched the new materials
+        updated_topics = []
+        for lesson in course.lessons:
+            for topic in lesson.topics:
+                if topic.matched_materials:  # Matched new files
+                    topic.is_material_grounded = True
+                    updated_topics.append(topic)
+                    
+        total_topics_to_gen = len(updated_topics)
+        logger.info(f"Differential Update: {total_topics_to_gen} topics matched new materials and will be regenerated.")
+    else:
+        logger.info(f"Pipeline Step 2/3: Tagging {len(materials)} materials...")
         if course_id:
             update_course_progress(course_id, "Indexing materials for topic matching...")
-    course = tag_materials(course, materials)
-
-    # Semantic alignment — drop matched material chunks below 0.60 cosine similarity
-    syllabus_topics = [
-        f"{topic.title}: {topic.description or ''}"
-        for lesson in course.lessons
-        for topic in lesson.topics
-    ]
-    for lesson in course.lessons:
-        for topic in lesson.topics:
-            if topic.matched_materials:
-                topic.matched_materials = filter_chunks_by_syllabus(
-                    topic.matched_materials, syllabus_topics
-                )
+            
+        # Tag all materials using SBERT
+        tag_materials_with_embeddings(course, materials)
+        
+        # In a new course, all topics are generated
+        updated_topics = []
+        for lesson in course.lessons:
+            for topic in lesson.topics:
+                updated_topics.append(topic)
+        total_topics_to_gen = len(updated_topics)
 
     # Step 3: Generate Questions & Summaries (PARALLEL)
-    total_topics = sum(len(lesson.topics) for lesson in course.lessons)
-    logger.info(f"Pipeline Step 3/3: Generating content (questions & summaries) for {total_topics} topics in PARALLEL...")
-    
-    tasks = []
-    
-    completed_topics = 0
+    if total_topics_to_gen > 0:
+        logger.info(f"Pipeline Step 3/3: Generating content (questions & summaries) for {total_topics_to_gen} topics in PARALLEL...")
+        
+        tasks = []
+        completed_topics = 0
 
-    async def process_topic(lesson_title, t):
-        nonlocal completed_topics
-        # Run both gen tasks for this topic
-        logger.info(f"  → Generating content for: {lesson_title} / {t.title}")
-        q_task = generate_questions_for_topic(t)
-        s_task = generate_summary_for_topic(t)
-        t.questions, t.summary = await asyncio.gather(q_task, s_task)
-        logger.info(f"  ✓ Finished: {lesson_title} / {t.title} ({len(t.questions)} questions)")
-        completed_topics += 1
-        if course_id:
-            update_course_progress(course_id, f"Generating Content: Topic {completed_topics} of {total_topics} completed...")
+        async def process_topic(lesson_title, t):
+            nonlocal completed_topics
+            logger.info(f"  → Generating content for: {lesson_title} / {t.title}")
+            t.questions, t.summary = await generate_content_for_topic(t)
+            logger.info(f"  ✓ Finished: {lesson_title} / {t.title} ({len(t.questions)} questions)")
+            completed_topics += 1
+            if course_id:
+                update_course_progress(course_id, f"Generating Content: Topic {completed_topics} of {total_topics_to_gen} completed...")
 
-    for lesson in course.lessons:
-        for topic in lesson.topics:
-            tasks.append(process_topic(lesson.title, topic))
-            
-    await asyncio.gather(*tasks)
-    
-    logger.info(f"Pipeline COMPLETE. Generated content for {total_topics} topics across {len(course.lessons)} lessons.")
-    
-    return course, {}
+        for lesson in course.lessons:
+            for topic in lesson.topics:
+                if topic in updated_topics:
+                    tasks.append(process_topic(lesson.title, topic))
+                    
+        await asyncio.gather(*tasks)
+    else:
+        logger.info("Differential Update: No topics matched the new materials. No content generation required.")
+
+    logger.info("Pipeline COMPLETE.")
+    return course, updated_topics
 
 async def evaluate_answer(question: str, answer: str, aiPromptContext: str = None) -> dict:
     """

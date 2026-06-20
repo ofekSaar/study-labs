@@ -42,7 +42,10 @@ def save_course_to_db(course) -> dict:
     for lesson in course.lessons:
         structure[lesson.title] = {}
         for topic in lesson.topics:
-            topic_entry = {"description": topic.description}
+            topic_entry = {
+                "description": topic.description,
+                "is_material_grounded": getattr(topic, "is_material_grounded", True)
+            }
             
             # 1. Insert Quiz
             if topic.questions:
@@ -155,6 +158,14 @@ def save_syllabus_blueprint(course_id: str, syllabus_name: str, blueprint: dict)
     res = db['syllabus_blueprints'].insert_one(doc)
     return str(res.inserted_id)
 
+def get_syllabus_blueprint(course_id: str) -> dict:
+    """
+    Retrieves the syllabus Pydantic blueprint for a given course_id from the 'syllabus_blueprints' collection.
+    """
+    db = get_db_handle()
+    if db is None:
+        return None
+    return db['syllabus_blueprints'].find_one({"course_id": course_id})
 
 def update_course_progress(course_id: str, message: str):
     """
@@ -171,3 +182,83 @@ def update_course_progress(course_id: str, message: str):
         )
     except Exception as e:
         print(f"Failed to update progress for course {course_id}: {e}")
+
+
+def update_course_in_db(course_id: str, course, updated_topics: list) -> dict:
+    """
+    Updates only the affected topics' quizzes and summaries in MongoDB,
+    re-using their existing IDs from the course structure.
+    """
+    db = get_db_handle()
+    if db is None:
+        raise Exception("Database connection failed")
+        
+    quizzes_col = db['quizzes']
+    summaries_col = db['summaries']
+    courses_col = db['courses']
+    
+    from bson.objectid import ObjectId
+    import datetime
+    
+    # 1. Fetch the existing course document to find the quiz/summary IDs
+    try:
+        course_doc = courses_col.find_one({"_id": ObjectId(course_id)})
+    except Exception:
+        course_doc = courses_col.find_one({"_id": course_id})
+        
+    if not course_doc:
+        return save_course_to_db(course)
+        
+    structure = course_doc.get("course_structure", {})
+    
+    # 2. Update each updated topic in the DB
+    for topic in updated_topics:
+        found = False
+        for lesson_title, lesson_topics in structure.items():
+            if topic.title in lesson_topics:
+                topic_entry = lesson_topics[topic.title]
+                quiz_id = topic_entry.get("quiz_id")
+                summary_id = topic_entry.get("summary_id")
+                
+                topic_entry["is_material_grounded"] = topic.is_material_grounded
+                
+                if topic.questions:
+                    quiz_data = {
+                        "topic": topic.title,
+                        "questions": [q.model_dump() for q in topic.questions],
+                        "updated_at": datetime.datetime.now()
+                    }
+                    if quiz_id:
+                        quizzes_col.update_one({"_id": ObjectId(quiz_id)}, {"$set": quiz_data})
+                    else:
+                        quiz_data["created_at"] = datetime.datetime.now()
+                        res = quizzes_col.insert_one(quiz_data)
+                        topic_entry["quiz_id"] = str(res.inserted_id)
+                        
+                if topic.summary:
+                    summary_data = {
+                        "topic": topic.title,
+                        "content": topic.summary,
+                        "updated_at": datetime.datetime.now()
+                    }
+                    if summary_id:
+                        summaries_col.update_one({"_id": ObjectId(summary_id)}, {"$set": summary_data})
+                    else:
+                        summary_data["created_at"] = datetime.datetime.now()
+                        res = summaries_col.insert_one(summary_data)
+                        topic_entry["summary_id"] = str(res.inserted_id)
+                        
+                found = True
+                break
+        if not found:
+            print(f"Topic '{topic.title}' was updated but not found in existing course structure.")
+            
+    # 3. Update the course document with the modified structure
+    courses_col.update_one(
+        {"_id": course_doc["_id"]},
+        {"$set": {"course_structure": structure, "updated_at": datetime.datetime.now()}}
+    )
+    
+    course_doc["course_structure"] = structure
+    course_doc["_id"] = str(course_doc["_id"])
+    return course_doc
