@@ -139,10 +139,10 @@ const StudentProfile = () => {
                                     { Icon: Zap,      label: `${stats.total_xp || 0} XP`,         cls: 'text-indigo-300 bg-indigo-500/20 border-indigo-500/30' },
                                     { Icon: Flame,    label: `${stats.streak || 0}d streak`,       cls: 'text-orange-300 bg-orange-500/20 border-orange-500/30' },
                                     { Icon: BookOpen, label: `${stats.lessons_completed || 0} lessons`, cls: 'text-emerald-300 bg-emerald-500/20 border-emerald-500/30' },
-                                ].map(({ Icon, label, cls }) => (
-                                    <span key={label} className={`inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full border ${cls}`}>
-                                        <Icon size={11} />
-                                        {label}
+                                ].map((chip) => (
+                                    <span key={chip.label} className={`inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full border ${chip.cls}`}>
+                                        <chip.Icon size={11} />
+                                        {chip.label}
                                     </span>
                                 ))}
                             </div>
@@ -174,18 +174,18 @@ const StudentProfile = () => {
 
                 {/* ── STATS ROW ── */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-                    {statCards.map(({ Icon, label, value, iconCls, bg }, i) => (
+                    {statCards.map((card, i) => (
                         <motion.div
-                            key={label}
+                            key={card.label}
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: i * 0.08 }}
                             whileHover={{ y: -4, scale: 1.03 }}
-                            className={`bg-gradient-to-br ${bg} border rounded-2xl p-4 flex flex-col items-center justify-center text-center shadow-sm cursor-default`}
+                            className={`bg-gradient-to-br ${card.bg} border rounded-2xl p-4 flex flex-col items-center justify-center text-center shadow-sm cursor-default`}
                         >
-                            <Icon size={22} className={`${iconCls} mb-2`} />
-                            <span className="text-2xl font-black text-slate-800 dark:text-white leading-none">{value}</span>
-                            <span className="text-[9px] font-bold text-slate-400 dark:text-white/40 uppercase tracking-wider mt-1.5">{label}</span>
+                            <card.Icon size={22} className={`${card.iconCls} mb-2`} />
+                            <span className="text-2xl font-black text-slate-800 dark:text-white leading-none">{card.value}</span>
+                            <span className="text-[9px] font-bold text-slate-400 dark:text-white/40 uppercase tracking-wider mt-1.5">{card.label}</span>
                         </motion.div>
                     ))}
                 </div>
