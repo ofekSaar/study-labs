@@ -46,7 +46,7 @@ const LessonQuiz = () => {
 
     const { courses, fetchCourseNodes } = useCourseStore();
 
-    const handleComplete = async (score, answersData) => {
+    const handleComplete = async (score, answersData, isPerfectScore) => {
         try {
             await api.post('/api/quizzes/submit', {
                 nodeId: id,
@@ -79,7 +79,7 @@ const LessonQuiz = () => {
             logActivity();
 
             // Check for perfect score confetti
-            const isPerfect = score >= 200;
+            const isPerfect = isPerfectScore === true;
             if (isPerfect) {
                 setTriggerConfetti('perfect_score');
             }
