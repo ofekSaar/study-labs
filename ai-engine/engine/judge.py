@@ -17,18 +17,21 @@ async def evaluate_course(course_structure: Dict, syllabus_text: str) -> Dict:
     Evaluates a generated course structure against the original syllabus.
     """
     prompt_template_str = (
-        "You are an expert AI educational judge evaluating a generated course.\n"
+        "You are an expert AI educational judge evaluating a generated course against global educational standards.\n"
         "Please evaluate the generated course structure against the provided syllabus.\n\n"
         "Syllabus Content:\n"
         "{syllabus_text}\n\n"
         "Generated Course Structure:\n"
         "{course_structure_json}\n\n"
-        "Evaluate based on the following criteria:\n"
-        "1. Syllabus Coverage: Does the course cover the main topics mentioned in the syllabus?\n"
-        "2. Content Quality: Are the lessons and summaries detailed, accurate, and educational?\n"
-        "3. Question Quality: Are the quizzes relevant to the content and well-formulated?\n\n"
-        "Provide an overall 'score' from 0 to 100, detailed 'feedback' explaining the rationale, "
-        "and a 'criteria_breakdown' object with your observations for each of the 3 criteria.\n"
+        "Evaluate strictly based on the following three standardized criteria:\n"
+        "1. Syllabus Coverage & Depth (Educational): Does the course map logically to all topics in the syllabus? Verify if the summaries and quiz questions align with Bloom's Taxonomy standards (ranging from Remembering/Understanding to Applying/Analyzing). Quizzes must test not just basic terminology recall, but also real application of concepts.\n"
+        "2. Logical Flow & Sequencing (Logical): Do the lessons progress from introductory concepts to advanced principles in a logical, step-by-step educational flow? Check if dependency topics are taught before complex topics.\n"
+        "3. Material Grounding (Technological): Verify the 'is_material_grounded' flags on all topics. If a topic has 'is_material_grounded': false, it means the content was generated purely using the AI's general knowledge rather than slide sources. You must apply a grounding penalty to your overall score:\n"
+        "   - If Grounded Topics >= 80%: No penalty.\n"
+        "   - If Grounded Topics are between 50% and 79%: Apply a moderate penalty, capping the maximum overall score at 85.\n"
+        "   - If Grounded Topics < 50%: Apply a heavy penalty, capping the maximum overall score at 70.\n\n"
+        "Provide an overall 'score' from 0 to 100 adhering to these limits, detailed 'feedback' explaining your rationale (referencing Bloom's Taxonomy and grounding percentages), "
+        "and a 'criteria_breakdown' object detailing observations for each of the three criteria.\n"
         "IMPORTANT: You must output strictly valid JSON. Properly escape all internal quotes, backslashes, and newlines so the parser does not fail."
     )
     

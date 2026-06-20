@@ -3,10 +3,11 @@ import { useParams, useNavigate } from 'react-router-dom';
 import StudentLayout from '../components/layout/StudentLayout';
 import InstructorLayout from '../components/layout/InstructorLayout';
 import GameMapComponent from '../components/map/GameMap';
-import { ChevronLeft, Loader2, RotateCcw } from 'lucide-react';
+import { ChevronLeft, Loader2, RotateCcw, UploadCloud, X } from 'lucide-react';
 import useAuthStore from '../store/authStore';
 import useCourseStore from '../store/courseStore';
 import { io } from 'socket.io-client';
+import api from '../utils/api';
 
 /** Total generation attempts allowed (1 initial + 1 retry) — mirrors the backend cap. */
 const MAX_GENERATION_ATTEMPTS = 2;
@@ -19,6 +20,34 @@ const CourseMap = () => {
     const [localLoading, setLocalLoading] = useState(true);
     const [retrying, setRetrying] = useState(false);
     const [retryError, setRetryError] = useState(null);
+
+    // Upload materials state
+    const [isUploadOpen, setIsUploadOpen] = useState(false);
+    const [uploadFiles, setUploadFiles] = useState([]);
+    const [uploading, setUploading] = useState(false);
+    const [uploadError, setUploadError] = useState(null);
+
+    const handleUploadSubmit = async () => {
+        if (uploadFiles.length === 0) return;
+        setUploading(true);
+        setUploadError(null);
+        try {
+            const formData = new FormData();
+            uploadFiles.forEach(file => {
+                formData.append('materials', file);
+            });
+            await api.upload(`/api/courses/${courseId}/materials`, formData);
+            
+            // Re-fetch nodes to refresh status
+            await fetchCourseNodes(courseId);
+            setIsUploadOpen(false);
+            setUploadFiles([]);
+        } catch (error) {
+            setUploadError(error.message || 'Failed to upload materials.');
+        } finally {
+            setUploading(false);
+        }
+    };
 
     const Layout = role === 'instructor' ? InstructorLayout : StudentLayout;
 
@@ -173,6 +202,18 @@ const CourseMap = () => {
                         </div>
                     </div>
 
+                    {/* Add Materials for Instructor */}
+                    {role === 'instructor' && course?.generationStatus !== 'generating' && (
+                        <div className="flex justify-center mb-6 -mt-3">
+                            <button
+                                onClick={() => setIsUploadOpen(true)}
+                                className="px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-sm transition shadow-[0_0_15px_rgba(147,51,234,0.2)] flex items-center gap-2 cursor-pointer animate-fade-in"
+                            >
+                                <UploadCloud size={16} /> Add Materials
+                            </button>
+                        </div>
+                    )}
+
                     {/* Map Container - Centered and Contained on Desktop */}
                     <div className="px-4 pb-20 md:pb-0 max-w-xl mx-auto">
                         {nodes.length > 0 ? (
@@ -222,6 +263,76 @@ const CourseMap = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Upload Materials Modal */}
+            {isUploadOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+                    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl p-6 max-w-md w-full shadow-2xl relative">
+                        <button
+                            onClick={() => { setIsUploadOpen(false); setUploadFiles([]); setUploadError(null); }}
+                            className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-white transition"
+                        >
+                            <X size={20} />
+                        </button>
+                        <h3 className="text-lg font-black text-slate-800 dark:text-white mb-2 flex items-center gap-2">
+                            📤 Add Course Materials
+                        </h3>
+                        <p className="text-xs text-slate-500 dark:text-white/40 mb-4 font-medium">
+                            Upload additional learning materials (PDF, PPTX, DOCX, XLSX, MP4). The AI will process them and update the relevant lessons in-place without resetting student progress.
+                        </p>
+
+                        <div className="space-y-4">
+                            {/* File Selector */}
+                            <label className="border-2 border-dashed border-slate-200 dark:border-white/10 rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer hover:border-indigo-500 dark:hover:border-indigo-500 transition-colors">
+                                <UploadCloud size={32} className="text-slate-400 mb-2" />
+                                <span className="text-xs font-bold text-slate-600 dark:text-white/70">
+                                    {uploadFiles.length > 0 ? `${uploadFiles.length} file(s) selected` : 'Click to select files'}
+                                </span>
+                                <input
+                                    type="file"
+                                    multiple
+                                    accept=".pdf,.pptx,.docx,.xlsx,.mp4"
+                                    className="hidden"
+                                    onChange={(e) => {
+                                        if (e.target.files) {
+                                            setUploadFiles(Array.from(e.target.files));
+                                        }
+                                    }}
+                                />
+                            </label>
+
+                            {/* Selected Files List */}
+                            {uploadFiles.length > 0 && (
+                                <div className="max-h-32 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
+                                    {uploadFiles.map((file, i) => (
+                                        <div key={i} className="text-xs bg-slate-50 dark:bg-white/5 border border-slate-200/50 dark:border-white/5 p-2 rounded-xl flex items-center justify-between">
+                                            <span className="truncate text-slate-700 dark:text-white/80 font-medium max-w-[200px]">{file.name}</span>
+                                            <span className="text-[10px] text-slate-400">{(file.size / 1024 / 1024).toFixed(2)} MB</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            {uploadError && (
+                                <p className="text-xs text-red-500 font-semibold">{uploadError}</p>
+                            )}
+
+                            {/* Submit CTA */}
+                            <button
+                                onClick={handleUploadSubmit}
+                                disabled={uploading || uploadFiles.length === 0}
+                                className="w-full py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm transition shadow-[0_0_15px_rgba(99,102,241,0.2)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
+                            >
+                                {uploading ? (
+                                    <><Loader2 size={16} className="animate-spin" /> Processing...</>
+                                ) : (
+                                    'Start Processing Update'
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </Layout>
     );
 };

@@ -77,6 +77,8 @@ export const generateRoadmap = async ({
   materials,
   aiConfig,
   analyzeImages = false,
+  isUpdate = false,
+  newMaterials = [],
 }) => {
   if (!syllabus) {
     throw new Error('Syllabus is required for course generation.');
@@ -87,10 +89,14 @@ export const generateRoadmap = async ({
   const materialsPaths = materials && materials.length > 0 
     ? materials.map(m => path.resolve(uploadDir, m)) 
     : [];
+  const newMaterialsPaths = newMaterials && newMaterials.length > 0
+    ? newMaterials.map(m => path.resolve(uploadDir, m))
+    : [];
 
-  console.log(`[AI Service] Sending course generation request for Course ID: ${courseId}`);
+  console.log(`[AI Service] Sending course generation request for Course ID: ${courseId} (isUpdate: ${isUpdate})`);
   console.log(`[AI Service] Syllabus: ${syllabusPath}`);
   console.log(`[AI Service] Materials: ${materialsPaths.length} files attached.`);
+  console.log(`[AI Service] New Materials: ${newMaterialsPaths.length} files attached.`);
   console.log(`[AI Service] Image Analysis: ${analyzeImages ? 'ENABLED' : 'DISABLED'}`);
 
   // We use the native http module here instead of fetch() to bypass the strict 
@@ -103,7 +109,9 @@ export const generateRoadmap = async ({
     courseId, 
     syllabusPath, 
     materialsPaths,
-    analyzeImages
+    analyzeImages,
+    isUpdate,
+    newMaterialsPaths
   });
 
   const options = {
@@ -204,6 +212,7 @@ export const generateRoadmap = async ({
               xpReward: 200,
               lessonContent: summaryContent || topicData.description || '', 
               quizData: quizData && quizData.length > 0 ? quizData : undefined,
+              isMaterialGrounded: topicData.is_material_grounded !== false,
           });
       }
   }

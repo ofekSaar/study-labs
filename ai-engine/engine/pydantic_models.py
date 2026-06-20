@@ -12,6 +12,7 @@ class Topic(BaseModel):
     summary: Optional[str] = Field(None, description="Detailed study summary/card for the topic")
     matched_materials: List[str] = Field(default_factory=list, description="List of material snippets or IDs matched to this topic")
     questions: List[Question] = Field(default_factory=list, description="List of generated questions for this topic")
+    is_material_grounded: bool = Field(True, description="Flag indicating if the topic content is grounded in uploaded materials")
 
 class Lesson(BaseModel):
     title: str = Field(..., description="Title of the lesson")

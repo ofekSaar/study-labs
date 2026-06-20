@@ -41,9 +41,16 @@ const NodeDrawer = () => {
                         {/* Header */}
                         <div className="p-4 sm:p-6 border-b border-slate-100 dark:border-white/5 flex items-center justify-between bg-slate-50/50 dark:bg-white/1">
                             <div>
-                                <span className="text-[10px] font-black text-indigo-500 dark:text-indigo-400 uppercase tracking-widest">
-                                    {selectedNode.type || 'Lesson'}
-                                </span>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="text-[10px] font-black text-indigo-500 dark:text-indigo-400 uppercase tracking-widest">
+                                        {selectedNode.type || 'Lesson'}
+                                    </span>
+                                    {selectedNode.isMaterialGrounded === false && (
+                                        <span className="text-[9px] font-black bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 uppercase px-1.5 py-0.5 rounded-md flex items-center gap-1 animate-pulse">
+                                            ⚠️ AI-Generated (No slide source)
+                                        </span>
+                                    )}
+                                </div>
                                 <h2 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-white mt-1 leading-tight">
                                     {selectedNode.title}
                                 </h2>
