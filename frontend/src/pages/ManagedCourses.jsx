@@ -166,9 +166,12 @@ const ManagedCourses = () => {
                                         <div className="mt-auto">
                                             <hr className="border-slate-200 dark:border-white/10 mb-4" />
                                             <div className="flex justify-between items-center bg-slate-50/50 dark:bg-black/25 p-3.5 rounded-2xl border border-slate-200/60 dark:border-white/5">
-                                                <div className="flex items-center gap-2 text-xs font-bold text-slate-500 dark:text-white/50 uppercase tracking-wider">
-                                                    <Users size={16} className="text-slate-400 dark:text-white/40" />
-                                                    <span>{course.level || 'Beginner'}</span>
+                                                <div className="flex items-center gap-3">
+                                                    <span className="text-xs font-bold text-slate-500 dark:text-white/50 uppercase tracking-wider">{course.level || 'Beginner'}</span>
+                                                    <span className="flex items-center gap-1 text-xs font-bold text-indigo-600 dark:text-indigo-400">
+                                                        <Users size={13} />
+                                                        {course.studentCount ?? 0}
+                                                    </span>
                                                 </div>
                                                 <div className="flex items-center gap-2">
                                                     <button

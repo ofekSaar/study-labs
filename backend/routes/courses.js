@@ -11,6 +11,7 @@ import {
   getNodeContent,
   updateNodeContent,
   getCourseAnalytics,
+  getCourseStudents,
   regenerateCourse,
 } from '../controllers/courseController.js';
 
@@ -321,6 +322,7 @@ router.put('/:id/nodes/:nodeId/content', authenticate, authorize('instructor'), 
  *         description: Not course owner
  */
 router.get('/:id/analytics', authenticate, authorize('instructor'), getCourseAnalytics);
+router.get('/:id/students', authenticate, authorize('instructor'), getCourseStudents);
 
 /**
  * @swagger
