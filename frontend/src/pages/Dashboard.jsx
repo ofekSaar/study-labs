@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { HOUR_LATE_NIGHT_END, HOUR_MORNING_END, HOUR_AFTERNOON_END, HOUR_EVENING_END } from '../constants/config';
 import StudentLayout from '../components/layout/StudentLayout';
 import RoadmapView from '../components/dashboard/RoadmapView';
@@ -9,7 +9,7 @@ import useCourseStore from '../store/courseStore';
 import useGamificationStore from '../store/gamificationStore';
 import {
     Trophy, Flame, Zap, BookOpen, Target, Star,
-    ArrowRight, CheckCircle, Clock, TrendingUp, Coins
+    ArrowRight, CheckCircle, Clock, TrendingUp, Coins, ChevronDown, ChevronUp
 } from 'lucide-react';
 import DailyChallengeCard from '../components/gamification/DailyChallengeCard';
 import LevelUpModal from '../components/gamification/LevelUpModal';
@@ -107,6 +107,7 @@ const Dashboard = () => {
     const navigate = useNavigate();
     const { courses, fetchCourses, fetchStats, isLoading, user, selectedCourseId, setSelectedCourse } = useCourseStore();
     const { logActivity, generateDailyChallenge, stats, unlockedBadges, coins } = useGamificationStore();
+    const [isRoadmapCollapsed, setIsRoadmapCollapsed] = useState(false);
 
     useEffect(() => {
         fetchStats();
@@ -239,7 +240,7 @@ const Dashboard = () => {
                         initial={{ opacity: 0, y: 16 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.4, delay: 0.2 }}
-                        className="lg:col-span-8 glass-card rounded-3xl shadow-lg flex flex-col overflow-hidden relative group/roadmap min-h-[380px]"
+                        className="lg:col-span-8 glass-card rounded-3xl shadow-lg flex flex-col overflow-hidden relative group/roadmap"
                     >
                         <div className="absolute inset-0 bg-gradient-to-br from-orange-500/8 to-amber-500/4 pointer-events-none opacity-50 transition-opacity group-hover/roadmap:opacity-100 duration-1000" />
 
@@ -261,25 +262,47 @@ const Dashboard = () => {
                                         ))}
                                     </select>
                                 )}
-                                {currentCourse && (
-                                    <div className="flex items-center gap-2 ml-auto">
-                                        <div className="h-1.5 w-24 bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden">
-                                            <div
-                                                className="h-full bg-gradient-to-r from-orange-500 to-amber-400 rounded-full transition-all duration-700"
-                                                style={{ width: `${Math.round(currentCourse.progress ?? 0)}%` }}
-                                            />
+                                <div className="flex items-center gap-2 ml-auto">
+                                    {currentCourse && (
+                                        <div className="flex items-center gap-2">
+                                            <div className="h-1.5 w-24 bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden">
+                                                <div
+                                                    className="h-full bg-gradient-to-r from-orange-500 to-amber-400 rounded-full transition-all duration-700"
+                                                    style={{ width: `${Math.round(currentCourse.progress ?? 0)}%` }}
+                                                />
+                                            </div>
+                                            <span className="text-[11px] font-black text-slate-500 dark:text-white/50">
+                                                {Math.round(currentCourse.progress ?? 0)}%
+                                            </span>
                                         </div>
-                                        <span className="text-[11px] font-black text-slate-500 dark:text-white/50">
-                                            {Math.round(currentCourse.progress ?? 0)}%
-                                        </span>
-                                    </div>
-                                )}
+                                    )}
+                                    <button
+                                        onClick={() => setIsRoadmapCollapsed(v => !v)}
+                                        className="w-7 h-7 rounded-xl bg-slate-200/70 dark:bg-white/10 hover:bg-slate-300/70 dark:hover:bg-white/20 flex items-center justify-center text-slate-500 dark:text-white/50 transition-colors"
+                                        title={isRoadmapCollapsed ? 'Expand' : 'Collapse'}
+                                    >
+                                        {isRoadmapCollapsed ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
-                        <div className="flex-1 overflow-auto custom-scrollbar relative z-0">
-                            <RoadmapView />
-                        </div>
+                        <AnimatePresence initial={false}>
+                            {!isRoadmapCollapsed && (
+                                <motion.div
+                                    key="roadmap-body"
+                                    initial={{ height: 0, opacity: 0 }}
+                                    animate={{ height: 'auto', opacity: 1 }}
+                                    exit={{ height: 0, opacity: 0 }}
+                                    transition={{ duration: 0.3, ease: 'easeInOut' }}
+                                    className="overflow-hidden"
+                                >
+                                    <div className="overflow-auto custom-scrollbar relative z-0 min-h-[380px]">
+                                        <RoadmapView />
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     </motion.div>
 
                     {/* ── Right Column (4 cols) ── */}

@@ -64,59 +64,56 @@ const NodeDrawer = () => {
                         </div>
 
                         {/* Content */}
-                        <div className="flex-1 p-4 sm:p-6 overflow-y-auto space-y-6 custom-scrollbar">
-                            
+                        <div className="flex-1 p-4 sm:p-5 overflow-y-auto space-y-3 custom-scrollbar">
+
                             {/* XP Reward card with gradient glow */}
-                            <div className="relative overflow-hidden bg-gradient-to-br from-indigo-500 to-purple-600 rounded-3xl p-5 shadow-[0_0_20px_rgba(99,102,241,0.25)] text-white group">
+                            <div className="relative overflow-hidden bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl p-4 shadow-[0_0_16px_rgba(99,102,241,0.2)] text-white group">
                                 <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-                                <div className="flex items-start justify-between">
+                                <div className="flex items-center justify-between">
                                     <div>
                                         <p className="text-[9px] font-black text-white/60 uppercase tracking-widest">XP Reward</p>
-                                        <h3 className="text-3xl font-black mt-1 flex items-baseline gap-1">
+                                        <h3 className="text-2xl font-black mt-0.5 flex items-baseline gap-1">
                                             +{selectedNode.xpReward || 150} <span className="text-xs font-bold text-white/80">XP</span>
                                         </h3>
                                     </div>
-                                    <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md shadow-inner">
-                                        <Zap size={22} className="text-amber-300 fill-amber-300" />
+                                    <div className="w-10 h-10 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md shadow-inner">
+                                        <Zap size={18} className="text-amber-300 fill-amber-300" />
                                     </div>
                                 </div>
-                                <p className="text-xs text-indigo-100 mt-4 leading-relaxed font-bold">
-                                    Complete this module to secure your reward, unlock subsequent nodes, and advance your rank on the leaderboard!
-                                </p>
                             </div>
 
                             {/* Metrics section */}
-                            <div className="space-y-4">
+                            <div className="space-y-2">
                                 <h4 className="text-[10px] font-black text-slate-400 dark:text-white/30 uppercase tracking-widest">Module Info</h4>
-                                
-                                <div className="bg-slate-50 dark:bg-white/3 rounded-2xl p-4 border border-slate-100 dark:border-white/5 space-y-4">
-                                    <div className="flex items-center gap-4 text-slate-700 dark:text-white/80">
-                                        <div className="w-9 h-9 bg-slate-200 dark:bg-white/10 rounded-xl flex items-center justify-center text-slate-500 dark:text-white/40">
-                                            <Clock size={16} />
+
+                                <div className="bg-slate-50 dark:bg-white/3 rounded-2xl p-3 border border-slate-100 dark:border-white/5 space-y-3">
+                                    <div className="flex items-center gap-3 text-slate-700 dark:text-white/80">
+                                        <div className="w-8 h-8 bg-slate-200 dark:bg-white/10 rounded-xl flex items-center justify-center text-slate-500 dark:text-white/40 shrink-0">
+                                            <Clock size={14} />
                                         </div>
                                         <div>
                                             <p className="text-xs font-black">Estimated Duration</p>
-                                            <p className="text-[11px] text-slate-500 dark:text-white/40 mt-0.5">{selectedNode.estimatedMinutes || 45} minutes</p>
+                                            <p className="text-[11px] text-slate-500 dark:text-white/40">{selectedNode.estimatedMinutes || 45} minutes</p>
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center gap-4 text-slate-700 dark:text-white/80">
-                                        <div className="w-9 h-9 bg-slate-200 dark:bg-white/10 rounded-xl flex items-center justify-center text-slate-500 dark:text-white/40">
-                                            <BookOpen size={16} />
+                                    <div className="flex items-center gap-3 text-slate-700 dark:text-white/80">
+                                        <div className="w-8 h-8 bg-slate-200 dark:bg-white/10 rounded-xl flex items-center justify-center text-slate-500 dark:text-white/40 shrink-0">
+                                            <BookOpen size={14} />
                                         </div>
                                         <div>
                                             <p className="text-xs font-black">Structure</p>
-                                            <p className="text-[11px] text-slate-500 dark:text-white/40 mt-0.5">Study Guide + Timed Quiz Assessment</p>
+                                            <p className="text-[11px] text-slate-500 dark:text-white/40">Study Guide + Timed Quiz Assessment</p>
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center gap-4 text-slate-700 dark:text-white/80">
-                                        <div className="w-9 h-9 bg-slate-200 dark:bg-white/10 rounded-xl flex items-center justify-center text-slate-500 dark:text-white/40">
-                                            <Trophy size={16} />
+                                    <div className="flex items-center gap-3 text-slate-700 dark:text-white/80">
+                                        <div className="w-8 h-8 bg-slate-200 dark:bg-white/10 rounded-xl flex items-center justify-center text-slate-500 dark:text-white/40 shrink-0">
+                                            <Trophy size={14} />
                                         </div>
                                         <div>
                                             <p className="text-xs font-black">Badge Unlock</p>
-                                            <p className="text-[11px] text-slate-500 dark:text-white/40 mt-0.5">"First Steps" or corresponding rarity award</p>
+                                            <p className="text-[11px] text-slate-500 dark:text-white/40">"First Steps" or corresponding rarity award</p>
                                         </div>
                                     </div>
 
@@ -155,7 +152,7 @@ const NodeDrawer = () => {
                         </div>
 
                         {/* Footer / CTA */}
-                        <div className="p-4 sm:p-6 pb-6 sm:pb-8 border-t border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-black/20">
+                        <div className="p-4 border-t border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-black/20">
                             {selectedNode.status === 'completed' ? (
                                 <button
                                     onClick={handleStart}
