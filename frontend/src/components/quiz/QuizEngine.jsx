@@ -15,7 +15,9 @@ const QuizEngine = ({ questions, onComplete }) => {
     const [isEvaluating, setIsEvaluating] = useState(false);
     const [feedback, setFeedback] = useState(null); // { isCorrect: boolean, message: string }
     const [score, setScore] = useState(0);
-    
+    const [answersLog, setAnswersLog] = useState([]);
+    const [correctCount, setCorrectCount] = useState(0);
+
     // Gamified Timer and Speed Bonus States
     const [timeLeft, setTimeLeft] = useState(QUIZ_TIMER_SECONDS);
     const [speedBonusActive, setSpeedBonusActive] = useState(false);
@@ -79,10 +81,13 @@ const QuizEngine = ({ questions, onComplete }) => {
             message: currentQuestion.explanation || (isCorrect ? 'Correct!' : 'Incorrect.')
         });
 
+        setAnswersLog(prev => [...prev, { questionIndex: currentIndex, selectedOption }]);
+
         if (isCorrect) {
             const { multiplier } = useGamificationStore.getState().getXPMultiplier();
             const gainedXP = Math.round((gotSpeedBonus ? XP_MCQ_BONUS : XP_MCQ_BASE) * multiplier);
             setScore(s => s + gainedXP);
+            setCorrectCount(c => c + 1);
             sounds.correct();
             setSpeedBonusActive(gotSpeedBonus);
             setConsecutiveCorrect(prev => prev + 1);
@@ -117,13 +122,16 @@ const QuizEngine = ({ questions, onComplete }) => {
                     : "That's a bit brief. Try to elaborate on the core principles."
             });
 
+            setAnswersLog(prev => [...prev, { questionIndex: currentIndex, openAnswer }]);
+
             if (isGood) {
                 const { multiplier } = useGamificationStore.getState().getXPMultiplier();
                 const gainedXP = Math.round((gotSpeedBonus ? XP_OPEN_BONUS : XP_OPEN_BASE) * multiplier);
                 setScore(s => s + gainedXP);
+                setCorrectCount(c => c + 1);
                 sounds.correct();
                 setSpeedBonusActive(gotSpeedBonus);
-                
+
                 if (gotSpeedBonus) {
                     incrementStat('fast_answers');
                 }
@@ -149,14 +157,17 @@ const QuizEngine = ({ questions, onComplete }) => {
             // consecutiveCorrect carries across questions — only reset on wrong answer
         } else {
             sounds.quizComplete();
-            
+
+            const totalAnswerable = questions.filter(q => q.type !== 'summary').length;
+            const isPerfect = correctCount === totalAnswerable && totalAnswerable > 0;
+
             // Update stats when finishing
             incrementStat('lessons_completed');
-            if (score >= questions.length * 100) {
+            if (isPerfect) {
                 incrementStat('perfect_quizzes');
             }
-            
-            onComplete(score);
+
+            onComplete(score, answersLog, isPerfect);
         }
     };
 
