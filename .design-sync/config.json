@@ -1,0 +1,19 @@
+{
+  "projectId": "23263c06-617c-4569-bb0b-8f9d2c03d450",
+  "shape": "package",
+  "pkg": "frontend",
+  "globalName": "StudyLabs",
+  "srcDir": "src/components",
+  "cssEntry": "src/design-system.css",
+  "buildCmd": "cd frontend && npm run build && cp dist/assets/$(ls dist/assets/*.css | grep -v LessonQuiz | xargs -n1 basename | head -1) src/design-system.css",
+  "runtimeFontPrefixes": ["Inter", "Nunito", "Press Start 2P"],
+  "libOverrides": {
+    "bundle.mjs": "add .ttf loader — katex CSS imports .ttf font files that esbuild needs a loader for"
+  },
+  "readmeHeader": ".design-sync/conventions.md",
+  "componentSrcMap": {
+    "ProtectedRoute": null,
+    "ErrorBoundary": null,
+    "ContentRenderer": null
+  }
+}

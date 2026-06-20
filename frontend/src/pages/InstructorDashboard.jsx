@@ -22,7 +22,7 @@ const InstructorDashboard = () => {
                 <div className="absolute top-0 right-0 w-96 h-96 rounded-full"
                     style={{ background: 'radial-gradient(circle, rgba(124,58,237,0.12) 0%, transparent 70%)', filter: 'blur(40px)' }} />
                 <div className="absolute bottom-0 left-0 w-96 h-96 rounded-full"
-                    style={{ background: 'radial-gradient(circle, rgba(79,110,247,0.10) 0%, transparent 70%)', filter: 'blur(40px)' }} />
+                    style={{ background: 'radial-gradient(circle, rgba(217,119,87,0.10) 0%, transparent 70%)', filter: 'blur(40px)' }} />
             </div>
 
             <div className="relative z-[1] space-y-8 p-4 sm:p-6 md:p-8 pb-32 max-w-[1200px] mx-auto">
@@ -49,8 +49,8 @@ const InstructorDashboard = () => {
                         <MetricCard
                             label="Total Students"
                             value={totalStudents}
-                            icon={<Users size={24} className="text-indigo-600 dark:text-indigo-400 drop-shadow-sm dark:drop-shadow-md" />}
-                            glowColor="rgba(99,102,241,0.5)"
+                            icon={<Users size={24} className="text-orange-600 dark:text-orange-400 drop-shadow-sm dark:drop-shadow-md" />}
+                            glowColor="rgba(217,119,87,0.5)"
                         />
                         <CreateCourseCard onClick={() => navigate('/instructor/create')} />
                     </div>
@@ -81,7 +81,7 @@ const MetricCard = ({ label, value, icon, glowColor }) => (
 const CreateCourseCard = ({ onClick }) => (
     <button
         onClick={onClick}
-        className="p-5 rounded-3xl flex flex-col justify-between h-36 text-right transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_16px_32px_rgba(124,58,237,0.25)] bg-gradient-to-br from-purple-600 to-indigo-600 border border-purple-500/30 text-white relative overflow-hidden group shadow-md"
+        className="p-5 rounded-3xl flex flex-col justify-between h-36 text-right transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_16px_32px_rgba(124,58,237,0.25)] bg-gradient-to-br from-purple-600 to-purple-800 border border-purple-500/30 text-white relative overflow-hidden group shadow-md"
     >
         <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
         <div className="flex justify-between items-start relative z-10 w-full">

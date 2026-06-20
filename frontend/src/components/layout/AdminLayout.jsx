@@ -39,7 +39,7 @@ const AdminLayout = ({ children, section }) => {
                                 className={({ isActive }) =>
                                     `flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-bold transition-all ${
                                         isActive
-                                            ? 'bg-indigo-600 text-white shadow-md'
+                                            ? 'bg-orange-500 text-white shadow-md'
                                             : 'text-slate-600 dark:text-white/50 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white'
                                     }`
                                 }
@@ -62,7 +62,7 @@ const AdminLayout = ({ children, section }) => {
                             end={navItem.end}
                             className={({ isActive }) =>
                                 `flex-1 flex flex-col items-center gap-0.5 py-2.5 text-[10px] font-bold transition-all ${
-                                    isActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 dark:text-white/30'
+                                    isActive ? 'text-orange-600 dark:text-orange-400' : 'text-slate-400 dark:text-white/30'
                                 }`
                             }
                         >
