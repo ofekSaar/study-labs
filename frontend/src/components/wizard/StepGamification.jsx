@@ -17,7 +17,7 @@ const getEngagementScore = (xpMultiplier, leaderboardEnabled) => {
 };
 
 const StepGamification = () => {
-    const { register, watch, setValue } = useFormContext();
+    const { register, watch } = useFormContext();
     const leaderboardEnabled = watch('leaderboardEnabled');
     const xpMultiplier = parseFloat(watch('xpMultiplier')) || 1.0;
 

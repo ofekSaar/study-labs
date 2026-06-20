@@ -179,7 +179,6 @@ const CourseWizard = () => {
         const nodeCount = methods.getValues('nodeCount') || 10;
         const xpMultiplier = parseFloat(methods.getValues('xpMultiplier')) || 1.0;
         const title = courseSnapshot?.title || 'Your Course';
-        const department = courseSnapshot?.department || '';
 
         return (
             <InstructorLayout title="Create Course">
