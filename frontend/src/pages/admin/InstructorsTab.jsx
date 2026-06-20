@@ -55,9 +55,10 @@ const InstructorsTab = () => {
   return (
     <div className="space-y-5">
       {/* Summary cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <SummaryCard icon={<Users size={16} />} label="Total Instructors" value={total} accent="orange" />
         <SummaryCard icon={<BookOpen size={16} />} label="Total Courses" value={totalCourses} accent="blue" />
+        <SummaryCard icon={<GraduationCap size={16} />} label="Total Students" value={totalStudents} accent="green" />
         <SummaryCard icon={<GraduationCap size={16} />} label="Avg. Courses / Instructor" value={avgCourses} accent="purple" />
       </div>
 
