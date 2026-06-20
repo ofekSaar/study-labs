@@ -167,7 +167,7 @@ const QuizEngine = ({ questions, onComplete }) => {
                 incrementStat('perfect_quizzes');
             }
 
-            onComplete(score, answersLog, isPerfect);
+            onComplete(score, answersLog, isPerfect, correctCount, totalAnswerable);
         }
     };
 
