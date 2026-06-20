@@ -81,13 +81,13 @@ const ManagedCourses = () => {
                 <div className="absolute top-0 right-0 w-96 h-96 rounded-full"
                     style={{ background: 'radial-gradient(circle, rgba(124,58,237,0.12) 0%, transparent 70%)', filter: 'blur(40px)' }} />
                 <div className="absolute bottom-0 left-0 w-96 h-96 rounded-full"
-                    style={{ background: 'radial-gradient(circle, rgba(79,110,247,0.10) 0%, transparent 70%)', filter: 'blur(40px)' }} />
+                    style={{ background: 'radial-gradient(circle, rgba(217,119,87,0.08) 0%, transparent 70%)', filter: 'blur(40px)' }} />
             </div>
 
             <div className="relative z-[1] max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-8 pb-32 animate-fade-in">
                 
                 {/* Header & Search */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 sm:mb-12">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
                     <div>
                         <h1 className="text-2xl sm:text-3xl md:text-4xl font-display font-black text-slate-800 dark:text-white drop-shadow-sm dark:drop-shadow-md tracking-tight">Managed Courses</h1>
                         <p className="text-slate-500 dark:text-white/60 text-lg mt-1 font-medium">View, search, and manage all your created courses.</p>
@@ -95,12 +95,12 @@ const ManagedCourses = () => {
                     <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
                         <div className="relative flex-1 sm:w-80">
                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-white/40" size={18} />
-                            <input 
+                            <input
                                 type="text"
                                 placeholder="Search courses..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full pl-11 pr-4 py-3 rounded-2xl border border-slate-200 dark:border-white/10 bg-white/70 dark:bg-black/30 backdrop-blur-md text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-white/40 focus:border-purple-500 dark:focus:border-purple-400 focus:bg-white dark:focus:bg-slate-900/60 focus:outline-none transition-all shadow-sm focus:shadow-md dark:shadow-inner"
+                                className="w-full pl-11 pr-4 py-3 rounded-2xl border border-slate-200 dark:border-white/10 bg-white/70 dark:bg-black/30 backdrop-blur-md text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-white/40 focus:border-[#D97757] focus:bg-white dark:focus:bg-slate-900/60 focus:outline-none transition-all shadow-sm focus:shadow-md dark:shadow-inner"
                             />
                         </div>
                         <button
@@ -111,6 +111,25 @@ const ManagedCourses = () => {
                         </button>
                     </div>
                 </div>
+
+                {/* Stats bar */}
+                {!isLoading && (
+                    <div className="flex items-center gap-3 mb-8">
+                        <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-600 dark:text-purple-400 text-sm font-bold">
+                            {courses.length} {courses.length === 1 ? 'Course' : 'Courses'} Total
+                        </span>
+                        {courses.filter(c => c.isPublished).length > 0 && (
+                            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-sm font-bold">
+                                {courses.filter(c => c.isPublished).length} Published
+                            </span>
+                        )}
+                        {courses.filter(c => c.generationStatus === 'generating').length > 0 && (
+                            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-500 text-sm font-bold animate-pulse">
+                                {courses.filter(c => c.generationStatus === 'generating').length} Generating
+                            </span>
+                        )}
+                    </div>
+                )}
 
                 {/* Course Grid */}
                 {isLoading ? (
@@ -123,18 +142,21 @@ const ManagedCourses = () => {
                             const deptStyle = getDeptStyle(course.department);
 
                             return (
-                                <div 
-                                    key={course.id} 
-                                    className="bg-white/80 dark:bg-white/5 border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 hover:-translate-y-1.5 hover:shadow-[0_20px_40px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)] transition-all duration-300 group flex flex-col h-full relative overflow-hidden"
+                                <div
+                                    key={course.id}
+                                    className="bg-white/80 dark:bg-white/5 border border-slate-200/80 dark:border-white/10 rounded-3xl hover:-translate-y-1.5 hover:shadow-[0_20px_40px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)] transition-all duration-300 group flex flex-col h-full relative overflow-hidden"
                                     style={{ '--glow-color': deptStyle.glow }}
                                 >
+                                    {/* Top accent stripe */}
+                                    <div className="h-1 w-full bg-gradient-to-r from-[#D97757] to-[#7C3AED] rounded-t-3xl" />
+
                                     {/* Ambient Hover Glow */}
-                                    <div 
-                                        className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-500 pointer-events-none" 
-                                        style={{ background: `radial-gradient(circle at 75% 20%, ${deptStyle.glow} 0%, transparent 60%)` }} 
+                                    <div
+                                        className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-500 pointer-events-none"
+                                        style={{ background: `radial-gradient(circle at 75% 20%, ${deptStyle.glow} 0%, transparent 60%)` }}
                                     />
                                     
-                                    <div className="flex justify-between items-start mb-6 relative z-10">
+                                    <div className="flex justify-between items-start mb-6 relative z-10 px-6 pt-5">
                                         <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-inner border ${deptStyle.iconBg}`}>
                                             <BookOpen size={28} className="drop-shadow-sm" />
                                         </div>
@@ -155,7 +177,7 @@ const ManagedCourses = () => {
                                         </div>
                                     </div>
                                     
-                                    <div className="relative z-10 flex-1 flex flex-col">
+                                    <div className="relative z-10 flex-1 flex flex-col px-6 pb-6">
                                         <h3 className="font-display font-bold text-2xl text-slate-800 dark:text-white mb-2 line-clamp-2 drop-shadow-sm dark:drop-shadow-md group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
                                             {course.title || 'Untitled Course'}
                                         </h3>
