@@ -5,11 +5,11 @@ import useCourseStore from '../../store/courseStore';
 import useGamificationStore from '../../store/gamificationStore';
 
 const LEAGUES = [
-    { name: 'ליגת הארד', color: 'from-amber-600 to-amber-700', shieldColor: '#cd7f32', border: 'border-amber-500/20' },
-    { name: 'ליגת הכסף', color: 'from-slate-300 to-slate-400', shieldColor: '#c0c0c0', border: 'border-slate-350/20' },
-    { name: 'ליגת הזהב', color: 'from-yellow-400 to-amber-500', shieldColor: '#ffd700', border: 'border-amber-400/30' },
-    { name: 'ליגת הפלטינה', color: 'from-indigo-400 to-purple-500', shieldColor: '#a855f7', border: 'border-purple-400/30' },
-    { name: 'ליגת היהלום', color: 'from-cyan-400 via-blue-500 to-indigo-600', shieldColor: '#22d3ee', border: 'border-cyan-400/40' }
+    { name: 'Bronze League', color: 'from-amber-600 to-amber-700', shieldColor: '#cd7f32', border: 'border-amber-500/20' },
+    { name: 'Silver League', color: 'from-slate-300 to-slate-400', shieldColor: '#c0c0c0', border: 'border-slate-350/20' },
+    { name: 'Gold League', color: 'from-yellow-400 to-amber-500', shieldColor: '#ffd700', border: 'border-amber-400/30' },
+    { name: 'Platinum League', color: 'from-indigo-400 to-purple-500', shieldColor: '#a855f7', border: 'border-purple-400/30' },
+    { name: 'Diamond League', color: 'from-cyan-400 via-blue-500 to-indigo-600', shieldColor: '#22d3ee', border: 'border-cyan-400/40' }
 ];
 
 const LeaguesPanel = () => {
@@ -26,28 +26,28 @@ const LeaguesPanel = () => {
     const prevLeagueName = leagueIndex > 0 ? LEAGUES[leagueIndex - 1].name : null;
 
     // Local countdown timer mockup
-    const [timeLeft] = useState('נותרו: 3 ימים, 11 שעות');
+    const [timeLeft] = useState('3 days, 11 hours left');
 
     // Create league competitors where user is dynamically positioned based on their XP
     const baseCompetitors = [
-        { name: 'ליאור כהן', xp: 2150, avatar: '🥷' },
-        { name: 'נועה לוי', xp: 1980, avatar: '🦄' },
-        { name: 'עידו מזרחי', xp: 1720, avatar: '🧠' },
-        { name: 'שירה אלבז', xp: 1250, avatar: '🦊' },
-        { name: 'אמיר אברהם', xp: 950, avatar: '🦁' },
-        { name: 'מיכל יוסף', xp: 810, avatar: '🐼' }
+        { name: 'Lior Cohen', xp: 2150, avatar: '🥷' },
+        { name: 'Noa Levi', xp: 1980, avatar: '🦄' },
+        { name: 'Ido Mizrahi', xp: 1720, avatar: '🧠' },
+        { name: 'Shira Albaz', xp: 1250, avatar: '🦊' },
+        { name: 'Amir Avraham', xp: 950, avatar: '🦁' },
+        { name: 'Michal Yosef', xp: 810, avatar: '🐼' }
     ];
 
     const allParticipants = [
         ...baseCompetitors,
-        { name: 'אתה (משתמש)', xp: xp, avatar: '🎓', isYou: true }
+        { name: 'You', xp: xp, avatar: '🎓', isYou: true }
     ].sort((a, b) => b.xp - a.xp);
 
     // Map ranks after sort
     const rankedList = allParticipants.map((p, idx) => ({ ...p, rank: idx + 1 }));
 
     return (
-        <div className="glass-card rounded-3xl p-5 shadow-lg relative overflow-hidden group flex flex-col h-full font-medium" dir="rtl">
+        <div className="glass-card rounded-3xl p-5 shadow-lg relative overflow-hidden group flex flex-col h-full font-medium">
             <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-purple-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
 
             {/* Header / Active League Shield Banner */}
@@ -55,16 +55,16 @@ const LeaguesPanel = () => {
                 <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${activeLeague.color} flex items-center justify-center text-white shadow-md border-b-2 border-black/10 flex-shrink-0 animate-pulse`}>
                     <Shield size={32} fill="rgba(255,255,255,0.25)" className="stroke-[2]" />
                 </div>
-                <div className="text-center sm:text-right flex-1 min-w-0">
+                <div className="text-center sm:text-left flex-1 min-w-0">
                     <h3 className="text-lg font-black text-slate-800 dark:text-white flex items-center justify-center sm:justify-start gap-2">
-                        <span>הליגה השבועית שלך:</span>
+                        <span>Your Weekly League:</span>
                         <span className={`bg-gradient-to-r ${activeLeague.color} bg-clip-text text-transparent`}>
                             {activeLeague.name}
                         </span>
                     </h3>
                     <p className="text-xs text-slate-400 dark:text-white/40 mt-1 flex items-center justify-center sm:justify-start gap-1">
                         <Clock size={12} />
-                        <span>{timeLeft} • התקדם כדי לעלות לדרגה הבאה</span>
+                        <span>{timeLeft} • Keep going to rank up!</span>
                     </p>
                 </div>
             </div>
@@ -90,10 +90,10 @@ const LeaguesPanel = () => {
                                     #{entry.rank}
                                 </span>
                                 {isPromotionZone && (
-                                    <ArrowUpCircle size={12} className="text-emerald-500 mt-0.5" title="אזור עלייה" />
+                                    <ArrowUpCircle size={12} className="text-emerald-500 mt-0.5" title="Promotion zone" />
                                 )}
                                 {isDemotionZone && prevLeagueName && (
-                                    <ArrowDownCircle size={12} className="text-rose-500 mt-0.5" title="אזור ירידה" />
+                                    <ArrowDownCircle size={12} className="text-rose-500 mt-0.5" title="Demotion zone" />
                                 )}
                             </div>
 
@@ -107,15 +107,15 @@ const LeaguesPanel = () => {
                             </div>
 
                             {/* User Name */}
-                            <span className={`text-xs font-bold flex-1 truncate text-right ${
+                            <span className={`text-xs font-bold flex-1 truncate ${
                                 entry.isYou
                                     ? 'text-indigo-600 dark:text-indigo-400 font-black'
                                     : 'text-slate-800 dark:text-white/95'
                             }`}>
-                                {entry.isYou ? currentUser?.name || 'אתה' : entry.name}
+                                {entry.isYou ? currentUser?.name || 'You' : entry.name}
                                 {entry.isYou && (
-                                    <span className="mr-1.5 text-[8px] font-black text-white bg-indigo-500/80 dark:bg-indigo-500/90 px-1.5 py-0.5 rounded-md uppercase shadow-sm">
-                                        אתה
+                                    <span className="ml-1.5 text-[8px] font-black text-white bg-indigo-500/80 dark:bg-indigo-500/90 px-1.5 py-0.5 rounded-md uppercase shadow-sm">
+                                        You
                                     </span>
                                 )}
                             </span>
@@ -135,16 +135,16 @@ const LeaguesPanel = () => {
                 <div className="flex items-start gap-1.5 text-emerald-600 dark:text-emerald-400">
                     <ArrowUpCircle size={14} className="mt-0.5 shrink-0" />
                     <div>
-                        <p className="font-bold">טופ 3: אזור עלייה</p>
-                        <p className="text-[10px] text-slate-400 dark:text-white/30">עליה ל{nextLeagueName || 'הדרגה העליונה'}</p>
+                        <p className="font-bold">Top 3: Promotion Zone</p>
+                        <p className="text-[10px] text-slate-400 dark:text-white/30">Move up to {nextLeagueName || 'the top league'}</p>
                     </div>
                 </div>
                 {prevLeagueName && (
                     <div className="flex items-start gap-1.5 text-rose-500 dark:text-rose-400">
                         <ArrowDownCircle size={14} className="mt-0.5 shrink-0" />
                         <div>
-                            <p className="font-bold">בוטום 2: אזור סכנה</p>
-                            <p className="text-[10px] text-slate-400 dark:text-white/30">ירידה ל{prevLeagueName}</p>
+                            <p className="font-bold">Bottom 2: Danger Zone</p>
+                            <p className="text-[10px] text-slate-400 dark:text-white/30">Drop to {prevLeagueName}</p>
                         </div>
                     </div>
                 )}

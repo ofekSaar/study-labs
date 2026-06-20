@@ -34,7 +34,7 @@ const DailyChallengeCard = () => {
         <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className={`glass-card rounded-3xl p-3 sm:p-5 relative overflow-hidden group transition-all ${
+            className={`glass-card rounded-3xl p-4 relative overflow-hidden group transition-all ${
                 dailyChallengeCompleted ? 'opacity-75' : ''
             }`}
         >
@@ -47,7 +47,7 @@ const DailyChallengeCard = () => {
 
             <div className="relative z-10">
                 {/* Header */}
-                <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
                         <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-lg ${
                             dailyChallengeCompleted ? 'bg-emerald-500/20' : 'bg-amber-500/20'
@@ -70,7 +70,7 @@ const DailyChallengeCard = () => {
                 </div>
 
                 {/* Challenge text */}
-                <p className={`font-bold text-sm mb-3 ${
+                <p className={`font-bold text-xs leading-snug mb-2 ${
                     dailyChallengeCompleted
                         ? 'text-slate-400 dark:text-white/40 line-through'
                         : 'text-slate-800 dark:text-white'
@@ -95,7 +95,7 @@ const DailyChallengeCard = () => {
 
                 {/* Progress bar for non-completed */}
                 {!dailyChallengeCompleted && (
-                    <div className="mt-3">
+                    <div className="mt-2">
                         <div className="h-1.5 bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden">
                             <motion.div
                                 initial={{ width: 0 }}
