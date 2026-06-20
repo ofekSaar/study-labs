@@ -240,7 +240,7 @@ const Dashboard = () => {
                         initial={{ opacity: 0, y: 16 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.4, delay: 0.2 }}
-                        className="lg:col-span-8 glass-card rounded-3xl shadow-lg flex flex-col overflow-hidden relative group/roadmap"
+                        className={`lg:col-span-8 glass-card rounded-3xl shadow-lg flex flex-col overflow-hidden relative group/roadmap${isRoadmapCollapsed ? ' self-start' : ''}`}
                     >
                         <div className="absolute inset-0 bg-gradient-to-br from-orange-500/8 to-amber-500/4 pointer-events-none opacity-50 transition-opacity group-hover/roadmap:opacity-100 duration-1000" />
 
