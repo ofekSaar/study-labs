@@ -25,6 +25,7 @@ import progressRoutes from './routes/progress.js';
 import quizRoutes from './routes/quizzes.js';
 import aiRoutes from './routes/ai.js';
 import adminRoutes from './routes/admin.js';
+import instructorRoutes from './routes/instructor.js';
 import { authenticate, requireAdmin } from './middleware/auth.js';
 import { seedShopPrices } from './models/SystemConfig.js';
 
@@ -82,6 +83,7 @@ app.use('/api/progress', progressRoutes);
 app.use('/api/quizzes', quizRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/admin', authenticate, requireAdmin, adminRoutes);
+app.use('/api/instructor', instructorRoutes);
 
 // ── 404 Handler ──────────────────────────────
 app.use((req, res) => {

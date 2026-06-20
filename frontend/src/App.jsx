@@ -22,6 +22,7 @@ const CourseWizard = lazy(() => import('./pages/CourseWizard'));
 const EnrollmentRequests = lazy(() => import('./pages/EnrollmentRequests'));
 const ManagedCourses = lazy(() => import('./pages/ManagedCourses'));
 const ClassRoster = lazy(() => import('./pages/ClassRoster'));
+const InstructorStats = lazy(() => import('./pages/InstructorStats'));
 const AdminPage = lazy(() => import('./pages/AdminPage'));
 
 const ThemeWrapper = ({ children }) => {
@@ -192,6 +193,14 @@ function App() {
           element={
             <ProtectedRoute allowedRole="instructor">
               <CourseMap />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/instructor/stats"
+          element={
+            <ProtectedRoute allowedRole="instructor">
+              <InstructorStats />
             </ProtectedRoute>
           }
         />

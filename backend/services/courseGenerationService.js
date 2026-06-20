@@ -147,6 +147,7 @@ export const generateRoadmapInBackground = async (
     course.isPublished = true;
     course.generationStatus = 'ready';
     course.generationError = null;
+    course.generationCompletedAt = new Date();
     await course.save();
 
     console.log(`[Background] ✅ Course ${course._id} generation complete! ${roadmapResult.nodes?.length || 0} nodes created.`);
@@ -158,6 +159,7 @@ export const generateRoadmapInBackground = async (
         generationStatus: 'failed',
         generationError: error.message,
         isPublished: false,
+        generationCompletedAt: new Date(),
       });
       emitGenerationStatus(course._id, 'failed', error.message);
     } catch (persistError) {
