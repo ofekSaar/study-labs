@@ -61,7 +61,7 @@ const LessonQuiz = () => {
                 });
                 progressResult = res?.data || null;
             } catch (progressErr) {
-                console.log('Progress update skipped:', progressErr.message);
+                console.warn('Progress update skipped:', progressErr.message);
             }
 
             await fetchCourseNodes(courseId);

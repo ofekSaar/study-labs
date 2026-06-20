@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { HOUR_LATE_NIGHT_END, HOUR_MORNING_END, HOUR_AFTERNOON_END, HOUR_EVENING_END } from '../constants/config';
 import StudentLayout from '../components/layout/StudentLayout';
 import RoadmapView from '../components/dashboard/RoadmapView';
 import NodeDrawer from '../components/dashboard/NodeDrawer';
@@ -21,10 +22,10 @@ import EmptyState from '../components/common/EmptyState';
 
 const getGreeting = () => {
     const h = new Date().getHours();
-    if (h < 5) return 'Still up?';
-    if (h < 12) return 'Good morning';
-    if (h < 17) return 'Good afternoon';
-    if (h < 21) return 'Good evening';
+    if (h < HOUR_LATE_NIGHT_END) return 'Still up?';
+    if (h < HOUR_MORNING_END) return 'Good morning';
+    if (h < HOUR_AFTERNOON_END) return 'Good afternoon';
+    if (h < HOUR_EVENING_END) return 'Good evening';
     return 'Good night';
 };
 

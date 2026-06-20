@@ -5,6 +5,7 @@ import ContentRenderer from '../common/ContentRenderer';
 import { isRTL } from '../../utils/rtl';
 import sounds from '../../utils/soundManager';
 import useGamificationStore from '../../store/gamificationStore';
+import { QUIZ_TIMER_SECONDS, SPEED_BONUS_THRESHOLD, XP_MCQ_BASE, XP_OPEN_BASE, XP_MCQ_BONUS, XP_OPEN_BONUS } from '../../constants/config';
 
 const QuizEngine = ({ questions, onComplete }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -16,7 +17,7 @@ const QuizEngine = ({ questions, onComplete }) => {
     const [score, setScore] = useState(0);
     
     // Gamified Timer and Speed Bonus States
-    const [timeLeft, setTimeLeft] = useState(30);
+    const [timeLeft, setTimeLeft] = useState(QUIZ_TIMER_SECONDS);
     const [speedBonusActive, setSpeedBonusActive] = useState(false);
     const [isTimeUp, setIsTimeUp] = useState(false);
     const [consecutiveCorrect, setConsecutiveCorrect] = useState(0);
@@ -44,7 +45,7 @@ const QuizEngine = ({ questions, onComplete }) => {
     useEffect(() => {
         if (isSubmitted || isSummaryQuestion || isEvaluating) return;
 
-        setTimeLeft(30);
+        setTimeLeft(QUIZ_TIMER_SECONDS);
         setIsTimeUp(false);
         setSpeedBonusActive(false);
         /* eslint-enable react-hooks/set-state-in-effect */
@@ -56,9 +57,7 @@ const QuizEngine = ({ questions, onComplete }) => {
                     handleTimeUp();
                     return 0;
                 }
-                
-                // Play warning tick sound if 5 seconds or less left
-                if (prev <= 6) {
+                if (prev <= SPEED_BONUS_THRESHOLD) {
                     sounds.timeLow();
                 }
                 return prev - 1;
@@ -72,8 +71,8 @@ const QuizEngine = ({ questions, onComplete }) => {
         if (selectedOption === null || isSubmitted) return;
 
         const isCorrect = selectedOption === currentQuestion.correctAnswerIndex;
-        const timeTaken = 30 - timeLeft;
-        const gotSpeedBonus = isCorrect && timeTaken <= 5;
+        const timeTaken = QUIZ_TIMER_SECONDS - timeLeft;
+        const gotSpeedBonus = isCorrect && timeTaken <= (QUIZ_TIMER_SECONDS - SPEED_BONUS_THRESHOLD);
 
         setFeedback({
             isCorrect,
@@ -82,7 +81,7 @@ const QuizEngine = ({ questions, onComplete }) => {
 
         if (isCorrect) {
             const { multiplier } = useGamificationStore.getState().getXPMultiplier();
-            const gainedXP = Math.round((gotSpeedBonus ? 200 : 100) * multiplier);
+            const gainedXP = Math.round((gotSpeedBonus ? XP_MCQ_BONUS : XP_MCQ_BASE) * multiplier);
             setScore(s => s + gainedXP);
             sounds.correct();
             setSpeedBonusActive(gotSpeedBonus);
@@ -108,7 +107,7 @@ const QuizEngine = ({ questions, onComplete }) => {
         setTimeout(() => {
             setIsEvaluating(false);
             const isGood = openAnswer.length > 20;
-            const timeTaken = 30 - timeLeft;
+            const timeTaken = QUIZ_TIMER_SECONDS - timeLeft;
             const gotSpeedBonus = isGood && timeTaken <= 10; // slightly longer speed window for writing
 
             setFeedback({
@@ -120,7 +119,7 @@ const QuizEngine = ({ questions, onComplete }) => {
 
             if (isGood) {
                 const { multiplier } = useGamificationStore.getState().getXPMultiplier();
-                const gainedXP = Math.round((gotSpeedBonus ? 300 : 150) * multiplier);
+                const gainedXP = Math.round((gotSpeedBonus ? XP_OPEN_BONUS : XP_OPEN_BASE) * multiplier);
                 setScore(s => s + gainedXP);
                 sounds.correct();
                 setSpeedBonusActive(gotSpeedBonus);
@@ -196,11 +195,11 @@ const QuizEngine = ({ questions, onComplete }) => {
                     {/* Timer Circle */}
                     {!isSummaryQuestion && !isSubmitted && (
                         <div className={`flex items-center gap-1.5 px-3 py-1 rounded-xl font-bold text-sm transition-colors ${
-                            timeLeft <= 5 
+                            timeLeft <= SPEED_BONUS_THRESHOLD
                                 ? 'bg-red-500/10 text-red-500 animate-pulse' 
                                 : 'bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-white/60'
                         }`}>
-                            <Clock size={16} className={timeLeft <= 5 ? 'animate-spin' : ''} />
+                            <Clock size={16} className={timeLeft <= SPEED_BONUS_THRESHOLD? 'animate-spin' : ''} />
                             <span>{timeLeft}s</span>
                         </div>
                     )}

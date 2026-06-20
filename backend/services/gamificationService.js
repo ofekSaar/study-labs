@@ -7,6 +7,13 @@ import XpEvent from '../models/XpEvent.js';
 import User from '../models/User.js';
 import { evaluateNewBadges } from './badgeService.js';
 import { levelFromXp } from '../constants/badges.js';
+import {
+  STREAK_HIGH_THRESHOLD, STREAK_HIGH_MULTIPLIER,
+  STREAK_MID_THRESHOLD,  STREAK_MID_MULTIPLIER,
+  NIGHT_OWL_HOUR_START,  NIGHT_OWL_HOUR_END,  NIGHT_OWL_MULTIPLIER,
+  EARLY_BIRD_HOUR_START, EARLY_BIRD_HOUR_END, EARLY_BIRD_MULTIPLIER,
+  XP_BOOST_MULTIPLIER,
+} from '../constants/config.js';
 
 // Coins minted per XP awarded. Coins are the soft currency spent in the shop.
 export const COIN_RATE = 0.1;
@@ -29,31 +36,31 @@ export const computeMultiplier = ({ streak = 0, hour, hasBoost = false }) => {
     const reasons = [];
 
     // 1. Streak multiplier
-    if (streak >= 5) {
-        multiplier = 1.5;
-        reasons.push('5+ Day Streak (1.5x)');
-    } else if (streak >= 3) {
-        multiplier = 1.2;
-        reasons.push('3+ Day Streak (1.2x)');
+    if (streak >= STREAK_HIGH_THRESHOLD) {
+        multiplier = STREAK_HIGH_MULTIPLIER;
+        reasons.push(`${STREAK_HIGH_THRESHOLD}+ Day Streak (${STREAK_HIGH_MULTIPLIER}x)`);
+    } else if (streak >= STREAK_MID_THRESHOLD) {
+        multiplier = STREAK_MID_MULTIPLIER;
+        reasons.push(`${STREAK_MID_THRESHOLD}+ Day Streak (${STREAK_MID_MULTIPLIER}x)`);
     }
 
     // 2. Hour multiplier (Night Owl / Early Bird) — never lowers the streak bonus
-    if (h >= 0 && h < 4) {
-        if (multiplier < 1.5) {
-            multiplier = 1.5;
-            reasons.push('Night Owl Hour (1.5x)');
+    if (h >= NIGHT_OWL_HOUR_START && h < NIGHT_OWL_HOUR_END) {
+        if (multiplier < NIGHT_OWL_MULTIPLIER) {
+            multiplier = NIGHT_OWL_MULTIPLIER;
+            reasons.push(`Night Owl Hour (${NIGHT_OWL_MULTIPLIER}x)`);
         }
-    } else if (h >= 5 && h < 7) {
-        if (multiplier < 1.3) {
-            multiplier = 1.3;
-            reasons.push('Early Bird Hour (1.3x)');
+    } else if (h >= EARLY_BIRD_HOUR_START && h < EARLY_BIRD_HOUR_END) {
+        if (multiplier < EARLY_BIRD_MULTIPLIER) {
+            multiplier = EARLY_BIRD_MULTIPLIER;
+            reasons.push(`Early Bird Hour (${EARLY_BIRD_MULTIPLIER}x)`);
         }
     }
 
     // 3. XP boost powerup token (stacks multiplicatively)
     if (hasBoost) {
-        multiplier *= 2.0;
-        reasons.push('XP Boost Token Active (2.0x)');
+        multiplier *= XP_BOOST_MULTIPLIER;
+        reasons.push(`XP Boost Token Active (${XP_BOOST_MULTIPLIER}x)`);
     }
 
     return { multiplier, reasons };
