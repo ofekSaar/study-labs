@@ -190,29 +190,29 @@ const StudentStatusOverview = () => {
           style={{ background: 'radial-gradient(circle, rgba(79,110,247,0.10) 0%, transparent 70%)', filter: 'blur(40px)' }} />
       </div>
 
-      <div className="relative z-[1] space-y-6 p-4 sm:p-6 md:p-8 pb-32 max-w-[1600px] mx-auto">
+      <div className="relative z-[1] space-y-8 p-4 sm:p-6 md:p-8 pb-32 max-w-[1600px] mx-auto">
 
         {/* ── Header ── */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div>
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-display font-black text-slate-800 dark:text-white drop-shadow-sm dark:drop-shadow-md tracking-tight">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-display font-black text-slate-900 dark:text-white drop-shadow-sm dark:drop-shadow-md tracking-tight">
               Student Status Overview
             </h1>
-            <p className="text-slate-500 dark:text-white/60 text-lg mt-1 font-medium">
-              Track your students' progress, engagement, and mastery levels.
+            <p className="text-slate-600 dark:text-white/70 text-lg mt-2 font-medium leading-relaxed max-w-2xl">
+              Track your students' progress, engagement, and mastery levels at a glance.
             </p>
           </div>
           <div className="relative w-full md:w-auto">
             <select
               value={selectedCourseId}
               onChange={(e) => setSelectedCourseId(e.target.value)}
-              className="w-full md:min-w-[200px] bg-white dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-xl pl-10 pr-4 py-2 text-sm font-bold text-slate-700 dark:text-white shadow-inner focus:outline-none focus:border-purple-500 appearance-none cursor-pointer"
+              className="w-full md:min-w-[280px] bg-gradient-to-r from-white to-slate-50 dark:from-white/8 dark:to-white/3 border border-slate-200/80 dark:border-white/15 rounded-2xl pl-12 pr-4 py-3 text-sm font-bold text-slate-900 dark:text-white shadow-lg dark:shadow-xl focus:outline-none focus:ring-2 focus:ring-purple-500/30 focus:border-purple-500 appearance-none cursor-pointer transition-all"
               style={{
                 WebkitAppearance: 'none',
-                backgroundImage: "url(\"data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238B5CF6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'/%3e%3c/svg%3e\")",
+                backgroundImage: "url(\"data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238B5CF6' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'/%3e%3c/svg%3e\")",
                 backgroundRepeat: 'no-repeat',
                 backgroundPosition: 'left 1rem center',
-                backgroundSize: '1em',
+                backgroundSize: '1.2em',
               }}
             >
               {courses.map(c => (
@@ -225,28 +225,28 @@ const StudentStatusOverview = () => {
         </div>
 
         {/* ── Metric cards ── */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <MetricCard label="Total Students" value={metrics.totalStudents} icon={<Users size={24} className="text-indigo-600 dark:text-indigo-400 drop-shadow-sm dark:drop-shadow-md" />} glowColor="rgba(99,102,241,0.5)" />
-          <MetricCard label="Avg. Completion" value={`${Math.round(metrics.avgCompletion)}%`} icon={<TrendingUp size={24} className="text-emerald-600 dark:text-emerald-400 drop-shadow-sm dark:drop-shadow-md" />} glowColor="rgba(16,185,129,0.5)" />
-          <MetricCard label="Active Modules" value={metrics.activeModules} icon={<BookOpen size={24} className="text-purple-600 dark:text-purple-400 drop-shadow-sm dark:drop-shadow-md" />} glowColor="rgba(124,58,237,0.5)" />
-          <MetricCard label="Class XP" value={(metrics.totalXP || 0).toLocaleString()} icon={<Trophy size={24} className="text-orange-600 dark:text-orange-400 drop-shadow-sm dark:drop-shadow-md" />} glowColor="rgba(245,158,11,0.5)" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+          <MetricCard label="Total Students" value={metrics.totalStudents} icon={<Users size={28} className="text-indigo-600 dark:text-indigo-400 drop-shadow-sm dark:drop-shadow-md" />} glowColor="rgba(99,102,241,0.5)" />
+          <MetricCard label="Avg. Completion" value={`${Math.round(metrics.avgCompletion)}%`} icon={<TrendingUp size={28} className="text-emerald-600 dark:text-emerald-400 drop-shadow-sm dark:drop-shadow-md" />} glowColor="rgba(16,185,129,0.5)" />
+          <MetricCard label="Active Modules" value={metrics.activeModules} icon={<BookOpen size={28} className="text-purple-600 dark:text-purple-400 drop-shadow-sm dark:drop-shadow-md" />} glowColor="rgba(124,58,237,0.5)" />
+          <MetricCard label="Class XP" value={(metrics.totalXP || 0).toLocaleString()} icon={<Trophy size={28} className="text-orange-600 dark:text-orange-400 drop-shadow-sm dark:drop-shadow-md" />} glowColor="rgba(245,158,11,0.5)" />
         </div>
 
         {/* ── Tab switcher ── */}
-        <div className="flex gap-1 bg-slate-100/80 dark:bg-white/5 border border-slate-200/60 dark:border-white/10 p-1 rounded-2xl w-fit">
+        <div className="flex gap-2 bg-gradient-to-r from-slate-50 to-slate-100/80 dark:from-white/5 dark:to-black/20 border border-slate-200/60 dark:border-white/10 p-2 rounded-3xl w-fit backdrop-blur-sm">
           {TABS.map((tab) => {
           const TabIcon = tab.icon;
           return (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 ${
+              className={`flex items-center gap-2 px-6 py-3 rounded-2xl text-sm font-bold transition-all duration-200 ${
                 activeTab === tab.id
-                  ? 'bg-white dark:bg-white/10 text-slate-800 dark:text-white shadow-sm'
-                  : 'text-slate-500 dark:text-white/40 hover:text-slate-700 dark:hover:text-white/70'
+                  ? 'bg-gradient-to-r from-white to-slate-50/80 dark:from-white/15 dark:to-white/5 text-slate-900 dark:text-white shadow-lg dark:shadow-xl border border-slate-200/40 dark:border-white/20'
+                  : 'text-slate-500 dark:text-white/40 hover:text-slate-700 dark:hover:text-white/70 hover:bg-white/30 dark:hover:bg-white/5 transition-colors'
               }`}
             >
-              <TabIcon size={15} />
+              <TabIcon size={18} />
               {tab.label}
             </button>
           );
@@ -258,9 +258,10 @@ const StudentStatusOverview = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
             {/* Class Progress table */}
-            <div className="lg:col-span-2 bg-white dark:bg-white/5 border border-slate-200/80 dark:border-white/10 p-6 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] relative group overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-              <h3 className="font-display font-bold text-xl text-slate-800 dark:text-white mb-6 relative z-10 drop-shadow-sm dark:drop-shadow-md">
+            <div className="lg:col-span-2 bg-gradient-to-br from-white to-slate-50 dark:from-white/8 dark:to-white/3 border border-slate-200/80 dark:border-white/15 p-8 rounded-3xl shadow-[0_12px_40px_rgba(0,0,0,0.06)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.5)] relative group overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-indigo-500/2 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+              <h3 className="font-display font-bold text-2xl text-slate-900 dark:text-white mb-8 relative z-10 drop-shadow-sm dark:drop-shadow-md flex items-center gap-3">
+                <BookOpen size={28} className="text-purple-600 dark:text-purple-400" />
                 Class Progress
               </h3>
               <div className="relative z-10">
@@ -322,11 +323,16 @@ const StudentStatusOverview = () => {
             </div>
 
             {/* At-Risk Panel */}
-            <div className="bg-white dark:bg-white/5 border border-slate-200/80 dark:border-white/10 p-6 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] flex flex-col relative group overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-orange-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-              <h3 className="font-display font-bold text-xl text-slate-800 dark:text-white mb-6 flex items-center justify-between relative z-10 drop-shadow-sm dark:drop-shadow-md">
-                <span>At-Risk Students</span>
-                <span className="bg-red-500/10 text-red-500 border border-red-500/20 dark:bg-red-500/20 dark:text-red-400 dark:border-red-500/30 text-xs px-3 py-1 rounded-full shadow-[0_0_10px_rgba(239,68,68,0.2)]">
+            <div className="bg-gradient-to-br from-white to-slate-50 dark:from-white/8 dark:to-white/3 border border-slate-200/80 dark:border-white/15 p-8 rounded-3xl shadow-[0_12px_40px_rgba(0,0,0,0.06)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.5)] flex flex-col relative group overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-orange-500/3 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+              <h3 className="font-display font-bold text-2xl text-slate-900 dark:text-white mb-8 flex items-center justify-between relative z-10 drop-shadow-sm dark:drop-shadow-md">
+                <span className="flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-red-100 dark:bg-red-500/10">
+                    <Trophy size={24} className="text-red-600 dark:text-red-400" />
+                  </div>
+                  At-Risk Students
+                </span>
+                <span className="bg-red-500/15 text-red-600 dark:bg-red-500/20 dark:text-red-400 border border-red-500/30 dark:border-red-500/40 text-sm font-black px-4 py-2 rounded-full shadow-[0_0_10px_rgba(239,68,68,0.15)]">
                   {atRisk.length}
                 </span>
               </h3>
@@ -379,10 +385,13 @@ const StudentStatusOverview = () => {
 
         {/* ══ STUDENTS TAB ══════════════════════════════════════════════════════ */}
         {activeTab === 'students' && (
-          <div className="bg-white dark:bg-white/5 border border-slate-200/80 dark:border-white/10 p-6 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] relative group overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-            <div className="flex items-center justify-between mb-6 relative z-10">
-              <h3 className="font-display font-bold text-xl text-slate-800 dark:text-white drop-shadow-sm dark:drop-shadow-md">
+          <div className="bg-gradient-to-br from-white to-slate-50 dark:from-white/8 dark:to-white/3 border border-slate-200/80 dark:border-white/15 p-8 rounded-3xl shadow-[0_12px_40px_rgba(0,0,0,0.06)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.5)] relative group overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-purple-500/2 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+            <div className="flex items-center justify-between mb-8 relative z-10">
+              <h3 className="font-display font-bold text-2xl text-slate-900 dark:text-white drop-shadow-sm dark:drop-shadow-md flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-indigo-100 dark:bg-indigo-500/10">
+                  <Users size={26} className="text-indigo-600 dark:text-indigo-400" />
+                </div>
                 All Students
               </h3>
               {students.length > 0 && (
@@ -474,10 +483,12 @@ const StudentStatusOverview = () => {
 
         {/* ══ CONCEPTS TAB ══════════════════════════════════════════════════════ */}
         {activeTab === 'concepts' && (
-          <div className="bg-white dark:bg-white/5 border border-slate-200/80 dark:border-white/10 p-6 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] relative group overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-            <h3 className="font-display font-bold text-xl text-slate-800 dark:text-white mb-6 relative z-10 drop-shadow-sm dark:drop-shadow-md flex items-center gap-2">
-              <Brain size={22} className="text-purple-600 dark:text-purple-400" />
+          <div className="bg-gradient-to-br from-white to-slate-50 dark:from-white/8 dark:to-white/3 border border-slate-200/80 dark:border-white/15 p-8 rounded-3xl shadow-[0_12px_40px_rgba(0,0,0,0.06)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.5)] relative group overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-indigo-500/2 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+            <h3 className="font-display font-bold text-2xl text-slate-900 dark:text-white mb-8 relative z-10 drop-shadow-sm dark:drop-shadow-md flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-purple-100 dark:bg-purple-500/10">
+                <Brain size={26} className="text-purple-600 dark:text-purple-400" />
+              </div>
               Curriculum Concept Mastery
             </h3>
             <div className="relative z-10 space-y-4">
@@ -536,21 +547,21 @@ const StudentStatusOverview = () => {
 
 const MetricCard = ({ label, value, icon, glowColor }) => (
   <div
-    className="p-5 rounded-3xl flex flex-col justify-between h-36 cursor-default transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_16px_32px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_16px_32px_rgba(0,0,0,0.5)] bg-white dark:bg-white/5 border border-slate-200/80 dark:border-white/10 relative overflow-hidden group"
-    style={{ boxShadow: '0 8px 30px rgba(0,0,0,0.02)' }}
+    className="p-8 rounded-3xl flex flex-col justify-between h-48 cursor-default transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_20px_40px_rgba(0,0,0,0.12)] dark:hover:shadow-[0_20px_40px_rgba(0,0,0,0.6)] bg-gradient-to-br from-white to-slate-50 dark:from-white/8 dark:to-white/3 border border-slate-200/80 dark:border-white/15 relative overflow-hidden group"
+    style={{ boxShadow: '0 12px 40px rgba(0,0,0,0.04)' }}
   >
     <div
-      className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-500 pointer-events-none"
+      className="absolute inset-0 opacity-0 group-hover:opacity-25 transition-opacity duration-500 pointer-events-none"
       style={{ background: `radial-gradient(circle at center, ${glowColor} 0%, transparent 70%)` }}
     />
     <div className="flex justify-between items-start relative z-10">
-      <div className="p-3 rounded-2xl bg-slate-100 dark:bg-black/20 border border-slate-200 dark:border-white/5 shadow-inner">
+      <div className="p-4 rounded-2xl bg-gradient-to-br from-slate-100 to-slate-50 dark:from-white/10 dark:to-white/5 border border-slate-200/60 dark:border-white/10 shadow-sm">
         {icon}
       </div>
     </div>
     <div className="relative z-10">
-      <p className="text-slate-400 dark:text-white/40 text-[10px] font-black uppercase tracking-widest mb-1">{label}</p>
-      <p className="text-3xl font-black text-slate-800 dark:text-white drop-shadow-sm dark:drop-shadow-md">{value}</p>
+      <p className="text-slate-400 dark:text-white/50 text-xs font-black uppercase tracking-widest mb-2">{label}</p>
+      <p className="text-5xl font-black text-slate-900 dark:text-white drop-shadow-sm dark:drop-shadow-md">{value}</p>
     </div>
   </div>
 );

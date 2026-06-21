@@ -3,7 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import InstructorLayout from '../components/layout/InstructorLayout';
 import useCourseStore from '../store/courseStore';
 import { getDeptStyle } from '../utils/departmentStyles';
-import { Search, BookOpen, Clock, Users, ArrowRight, Loader2, AlertCircle, Trash2, GraduationCap, Sparkles, Info } from 'lucide-react';
+import { Search, BookOpen, Users, ArrowRight, Loader2, Trash2, Zap, Trophy, Star, Layers } from 'lucide-react';
+
+const LEVEL_CONFIG = {
+  beginner:     { label: 'Beginner',     emoji: '🌱', color: 'text-emerald-500', bg: 'bg-emerald-500/10 border-emerald-500/20' },
+  intermediate: { label: 'Intermediate', emoji: '⚡', color: 'text-amber-500',   bg: 'bg-amber-500/10   border-amber-500/20'   },
+  advanced:     { label: 'Advanced',     emoji: '🔥', color: 'text-red-500',     bg: 'bg-red-500/10     border-red-500/20'     },
+};
 
 const ManagedCourses = () => {
     const navigate = useNavigate();
@@ -118,9 +124,10 @@ const ManagedCourses = () => {
                                         style={{ background: `radial-gradient(circle at 75% 20%, ${deptStyle.glow} 0%, transparent 60%)` }}
                                     />
                                     
-                                    <div className="flex justify-between items-start mb-6 relative z-10 px-6 pt-5">
+                                    {/* Header: icon + badges */}
+                                    <div className="flex justify-between items-start mb-5 relative z-10 px-6 pt-5">
                                         <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-inner border ${deptStyle.iconBg}`}>
-                                            <BookOpen size={28} className="drop-shadow-sm" />
+                                            <BookOpen size={26} className="drop-shadow-sm" />
                                         </div>
                                         <div className="flex flex-col items-end gap-1.5">
                                             <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border ${deptStyle.bg}`}>
@@ -128,116 +135,86 @@ const ManagedCourses = () => {
                                             </span>
                                             <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 border shadow-inner ${
                                                 course.generationStatus === 'generating' ? 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20 animate-pulse' :
-                                                course.generationStatus === 'failed' ? 'bg-red-500/10 text-red-500 border-red-500/20' :
-                                                course.isPublished ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-slate-500/10 text-slate-500 border-slate-500/20'
+                                                course.generationStatus === 'failed'     ? 'bg-red-500/10     text-red-500     border-red-500/20'     :
+                                                course.isPublished                       ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-slate-500/10 text-slate-500 border-slate-500/20'
                                             }`}>
                                                 {course.generationStatus === 'generating' && <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-ping" />}
                                                 {course.generationStatus === 'generating' ? 'Generating' :
-                                                 course.generationStatus === 'failed' ? 'Failed' :
-                                                 course.isPublished ? 'Published' : 'Draft'}
+                                                 course.generationStatus === 'failed'     ? 'Failed'      :
+                                                 course.isPublished                       ? 'Published'   : 'Draft'}
                                             </span>
                                         </div>
                                     </div>
-                                    
+
                                     <div className="relative z-10 flex-1 flex flex-col px-6 pb-6">
-                                        <h3 className="font-display font-bold text-2xl text-slate-800 dark:text-white mb-2 line-clamp-2 drop-shadow-sm dark:drop-shadow-md group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                                        {/* Title + description */}
+                                        <h3 className="font-display font-bold text-xl text-slate-800 dark:text-white mb-1.5 line-clamp-2 drop-shadow-sm dark:drop-shadow-md group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
                                             {course.title || 'Untitled Course'}
                                         </h3>
-                                        <p className="text-slate-500 dark:text-white/60 text-sm mb-4 line-clamp-2 flex-1 font-medium leading-relaxed">
+                                        <p className="text-slate-500 dark:text-white/55 text-sm mb-5 line-clamp-2 font-medium leading-relaxed">
                                             {course.description || 'No description provided.'}
                                         </p>
-                                        
-                                        {course.aiEvaluation?.status === 'completed' && (
-                                            <div className="mb-4 rounded-2xl overflow-hidden border border-slate-200 dark:border-white/8">
-                                                {/* Score header row */}
-                                                <div className={`flex items-center justify-between px-3.5 py-2.5 ${
-                                                    course.aiEvaluation.score >= 80
-                                                        ? 'bg-emerald-50 dark:bg-emerald-500/10'
-                                                        : course.aiEvaluation.score >= 50
-                                                        ? 'bg-amber-50 dark:bg-amber-500/10'
-                                                        : 'bg-red-50 dark:bg-red-500/10'
-                                                }`}>
-                                                    <div className="flex items-center gap-1.5 group/tooltip relative">
-                                                        <Sparkles size={12} className="text-slate-400 dark:text-slate-500" />
-                                                        <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">AI Judge</span>
-                                                        <button className="text-slate-400 hover:text-purple-500 dark:text-slate-500 dark:hover:text-purple-400 transition-colors">
-                                                            <Info size={12} />
-                                                        </button>
 
-                                                        {/* Tooltip — anchored left, bounded to card width */}
-                                                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3.5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-white/10 shadow-2xl opacity-0 scale-95 pointer-events-none group-hover/tooltip:opacity-100 group-hover/tooltip:scale-100 transition-all duration-200 z-50 text-left">
-                                                            <h4 className="font-bold text-[11px] text-slate-700 dark:text-white mb-2.5">How the score is calculated</h4>
-                                                            <div className="space-y-2 text-[10px] leading-relaxed text-slate-600 dark:text-slate-300">
-                                                                <div>
-                                                                    <span className="font-bold text-purple-600 dark:text-purple-400">Educational</span>
-                                                                    <p className="text-slate-500 dark:text-slate-400 mt-0.5">Bloom's Taxonomy alignment (remembering → analyzing).</p>
-                                                                </div>
-                                                                <div>
-                                                                    <span className="font-bold text-purple-600 dark:text-purple-400">Logical Flow</span>
-                                                                    <p className="text-slate-500 dark:text-slate-400 mt-0.5">Step-by-step topic progression and dependencies.</p>
-                                                                </div>
-                                                                <div>
-                                                                    <span className="font-bold text-purple-600 dark:text-purple-400">Material Grounding</span>
-                                                                    <div className="mt-1 space-y-0.5 text-slate-500 dark:text-slate-400">
-                                                                        <div>• <span className="text-emerald-500 font-semibold">≥ 80%</span> — no penalty</div>
-                                                                        <div>• <span className="text-amber-500 font-semibold">50–79%</span> — capped at 85</div>
-                                                                        <div>• <span className="text-red-500 font-semibold">&lt; 50%</span> — capped at 70</div>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
-                                                    <span className={`text-base font-black tabular-nums ${
-                                                        course.aiEvaluation.score >= 80 ? 'text-emerald-500' :
-                                                        course.aiEvaluation.score >= 50 ? 'text-amber-500' : 'text-red-500'
-                                                    }`}>
-                                                        {course.aiEvaluation.score}<span className="text-[10px] font-bold opacity-60">/100</span>
+                                        {/* XP & stats pills */}
+                                        {(() => {
+                                            const levelKey = (course.level || 'beginner').toLowerCase();
+                                            const lvl = LEVEL_CONFIG[levelKey] || LEVEL_CONFIG.beginner;
+                                            const nodeCount = course.nodeCount ?? course.nodes?.length ?? 0;
+                                            return (
+                                                <div className="flex items-center gap-2 mb-5 flex-wrap">
+                                                    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold border ${lvl.bg} ${lvl.color}`}>
+                                                        <span>{lvl.emoji}</span> {lvl.label}
+                                                    </span>
+                                                    {nodeCount > 0 && (
+                                                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-purple-500/10 border border-purple-500/20 text-purple-600 dark:text-purple-400">
+                                                            <Layers size={11} /> {nodeCount} lessons
+                                                        </span>
+                                                    )}
+                                                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-indigo-500/10 border border-indigo-500/20 text-indigo-500 dark:text-indigo-400">
+                                                        <Users size={11} /> {course.studentCount ?? 0}
                                                     </span>
                                                 </div>
+                                            );
+                                        })()}
 
-                                                {/* Feedback row */}
-                                                {course.aiEvaluation.feedback && (
-                                                    <div className="px-3.5 py-2 bg-white/60 dark:bg-black/20">
-                                                        <p className="text-[11px] text-slate-400 dark:text-slate-500 line-clamp-2 leading-relaxed">
-                                                            {course.aiEvaluation.feedback}
-                                                        </p>
-                                                    </div>
-                                                )}
+                                        {/* XP reward bar */}
+                                        <div className="mb-5 bg-gradient-to-r from-purple-500/8 to-indigo-500/8 border border-purple-500/15 rounded-2xl px-4 py-3 flex items-center justify-between">
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center shadow-sm">
+                                                    <Zap size={14} className="text-white" />
+                                                </div>
+                                                <span className="text-xs font-bold text-slate-600 dark:text-white/70">XP per lesson</span>
                                             </div>
-                                        )}
-                                        
+                                            <div className="flex items-center gap-1">
+                                                <Star size={12} className="text-yellow-500 fill-yellow-500" />
+                                                <Star size={12} className="text-yellow-500 fill-yellow-500" />
+                                                <Star size={12} className="text-yellow-500 fill-yellow-500" />
+                                                <span className="ml-1.5 text-xs font-black text-purple-600 dark:text-purple-400">+50 XP</span>
+                                            </div>
+                                        </div>
+
+                                        {/* Footer actions */}
                                         <div className="mt-auto">
-                                            <hr className="border-slate-200 dark:border-white/10 mb-4" />
-                                            <div className="flex justify-between items-center bg-slate-50/50 dark:bg-black/25 p-3.5 rounded-2xl border border-slate-200/60 dark:border-white/5">
-                                                <div className="flex items-center gap-3">
-                                                    <span className="text-xs font-bold text-slate-500 dark:text-white/50 uppercase tracking-wider">{course.level || 'Beginner'}</span>
-                                                    <span className="flex items-center gap-1 text-xs font-bold text-indigo-600 dark:text-indigo-400">
-                                                        <Users size={13} />
-                                                        {course.studentCount ?? 0}
-                                                    </span>
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <button
-                                                        onClick={() => handleDelete(course.id, course.title)}
-                                                        disabled={deletingId === course.id}
-                                                        className="w-10 h-10 bg-red-500/10 hover:bg-red-500/20 text-red-500 dark:text-red-400 border border-red-500/20 rounded-xl flex items-center justify-center transition-colors disabled:opacity-50 shadow-inner"
-                                                        title="Delete course"
-                                                    >
-                                                        {deletingId === course.id ? (
-                                                            <Loader2 size={18} className="animate-spin" />
-                                                        ) : (
-                                                            <Trash2 size={18} />
-                                                        )}
-                                                    </button>
-                                                    <button
-                                                        onClick={() => navigate(`/instructor/course/${course.id}`)}
-                                                        className="w-10 h-10 bg-purple-600 hover:bg-purple-500 text-white border border-purple-500/20 rounded-xl flex items-center justify-center transition-all shadow-[0_0_10px_rgba(124,58,237,0.3)] hover:shadow-[0_0_15px_rgba(124,58,237,0.5)] group-hover:scale-105 active:scale-95"
-                                                        title="View course"
-                                                    >
-                                                        <ArrowRight size={18} />
-                                                    </button>
-                                                </div>
+                                            <div className="flex items-center justify-between gap-2">
+                                                <button
+                                                    onClick={() => handleDelete(course.id, course.title)}
+                                                    disabled={deletingId === course.id}
+                                                    className="w-10 h-10 bg-red-500/10 hover:bg-red-500/20 text-red-500 dark:text-red-400 border border-red-500/20 rounded-xl flex items-center justify-center transition-colors disabled:opacity-50 shadow-inner flex-shrink-0"
+                                                    title="Delete course"
+                                                >
+                                                    {deletingId === course.id ? (
+                                                        <Loader2 size={16} className="animate-spin" />
+                                                    ) : (
+                                                        <Trash2 size={16} />
+                                                    )}
+                                                </button>
+                                                <button
+                                                    onClick={() => navigate(`/instructor/course/${course.id}`)}
+                                                    className="flex-1 h-10 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-[0_4px_14px_rgba(124,58,237,0.35)] hover:shadow-[0_6px_20px_rgba(124,58,237,0.5)] group-hover:scale-[1.02] active:scale-[0.97]"
+                                                    title="View course"
+                                                >
+                                                    Open Course <ArrowRight size={16} />
+                                                </button>
                                             </div>
                                         </div>
                                     </div>
