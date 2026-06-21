@@ -56,8 +56,8 @@ const LeaguesPanel = () => {
                     <Shield size={32} fill="rgba(255,255,255,0.25)" className="stroke-[2]" />
                 </div>
                 <div className="text-center sm:text-left flex-1 min-w-0">
-                    <h3 className="text-lg font-black text-slate-800 dark:text-white flex items-center justify-center sm:justify-start gap-2">
-                        <span>Your Weekly League:</span>
+                    <h3 className="text-base font-black text-slate-800 dark:text-white leading-tight">
+                        <span className="text-slate-500 dark:text-white/50 font-semibold text-xs uppercase tracking-wider block mb-0.5">Your Weekly League</span>
                         <span className={`bg-gradient-to-r ${activeLeague.color} bg-clip-text text-transparent`}>
                             {activeLeague.name}
                         </span>
