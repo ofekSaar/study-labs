@@ -298,18 +298,18 @@ const LessonQuiz = () => {
     return (
         <StudentLayout title="Quiz">
             <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col">
-                <div className="bg-white dark:bg-slate-900 px-6 py-4 flex items-center gap-4 sticky top-0 z-10 border-b border-slate-100 dark:border-white/10">
-                    <button onClick={() => setStep('summary')} className="w-10 h-10 rounded-full hover:bg-slate-100 dark:hover:bg-white/10 flex items-center justify-center transition text-slate-600 dark:text-white">
-                        <ChevronLeft size={24} />
+                <div className="bg-white dark:bg-slate-900 px-4 py-3 flex items-center gap-3 sticky top-0 z-10 border-b border-slate-100 dark:border-white/10">
+                    <button onClick={() => setStep('summary')} className="w-9 h-9 rounded-full hover:bg-slate-100 dark:hover:bg-white/10 flex items-center justify-center transition text-slate-600 dark:text-white flex-shrink-0">
+                        <ChevronLeft size={22} />
                     </button>
-                    <div className="flex-1">
-                        <h1 className="font-bold text-slate-900 dark:text-white">{nodeData?.title} • Quiz</h1>
+                    <div className="flex-1 min-w-0">
+                        <h1 className="font-bold text-slate-900 dark:text-white text-sm sm:text-base truncate" dir="auto">{nodeData?.title} • Quiz</h1>
                         <p className="text-xs text-slate-400 dark:text-white/40">Score at least 70% to pass</p>
                     </div>
                     {/* XP badge */}
-                    <div className="flex items-center gap-1.5 bg-indigo-500/10 dark:bg-indigo-500/20 border border-indigo-500/20 dark:border-indigo-400/30 px-3 py-1.5 rounded-xl">
-                        <Zap size={14} className="text-indigo-500 dark:text-indigo-400 fill-indigo-500/20" />
-                        <span className="text-xs font-bold text-indigo-600 dark:text-indigo-300">Up to 200 XP</span>
+                    <div className="flex items-center gap-1 bg-indigo-500/10 dark:bg-indigo-500/20 border border-indigo-500/20 dark:border-indigo-400/30 px-2.5 py-1.5 rounded-xl flex-shrink-0">
+                        <Zap size={13} className="text-indigo-500 dark:text-indigo-400 fill-indigo-500/20" />
+                        <span className="text-xs font-bold text-indigo-600 dark:text-indigo-300 whitespace-nowrap">Up to 200 XP</span>
                     </div>
                 </div>
 

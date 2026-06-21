@@ -50,11 +50,11 @@ const Toast = ({ toast }) => {
     return (
         <motion.div
             layout
-            initial={{ opacity: 0, x: 80, scale: 0.9 }}
-            animate={{ opacity: 1, x: 0, scale: 1 }}
-            exit={{ opacity: 0, x: 80, scale: 0.9 }}
+            initial={{ opacity: 0, y: -20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.95 }}
             transition={{ type: 'spring', damping: 20, stiffness: 300 }}
-            className={`relative w-80 rounded-2xl shadow-2xl overflow-hidden border ${style.border}`}
+            className={`relative w-full sm:w-80 rounded-2xl shadow-2xl overflow-hidden border ${style.border}`}
         >
             {/* Background */}
             <div className={`${style.bg} p-4 flex items-start gap-3`}>
@@ -93,13 +93,16 @@ const Toast = ({ toast }) => {
     );
 };
 
+const MAX_VISIBLE_TOASTS = 3;
+
 const ToastManager = () => {
     const { toasts } = useToastStore();
+    const visible = toasts.slice(0, MAX_VISIBLE_TOASTS);
 
     return (
-        <div className="fixed bottom-6 right-6 z-[9999] flex flex-col gap-3 pointer-events-none">
+        <div className="fixed top-4 left-3 right-3 sm:top-auto sm:bottom-6 sm:left-auto sm:right-6 sm:w-80 z-[9999] flex flex-col gap-2 pointer-events-none">
             <AnimatePresence mode="popLayout">
-                {toasts.map(toast => (
+                {visible.map(toast => (
                     <div key={toast.id} className="pointer-events-auto">
                         <Toast toast={toast} />
                     </div>
