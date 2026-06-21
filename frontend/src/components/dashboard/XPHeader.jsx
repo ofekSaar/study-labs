@@ -8,7 +8,7 @@ const AnimatedNumber = ({ value }) => {
     const display = useTransform(mv, v => Math.round(v).toLocaleString());
 
     useEffect(() => {
-        const controls = animate(mv, value, { duration: 0.7, ease: 'easeOut' });
+        const controls = animate(mv, value, { duration: 0.8, ease: [0.16, 1, 0.3, 1] });
         return controls.stop;
     }, [value]); // eslint-disable-line
 
@@ -17,55 +17,89 @@ const AnimatedNumber = ({ value }) => {
 
 const XPHeader = () => {
     const { user } = useCourseStore();
+    const level = user?.totalXP ? Math.floor(user.totalXP / 100) + 1 : 1;
 
     return (
         <motion.div
-            initial={{ y: -30, opacity: 0 }}
+            initial={{ y: -40, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
             className="absolute top-0 w-full z-20 px-3 sm:px-6 py-3 sm:py-4 flex items-center justify-end pointer-events-none"
         >
-            <div className="flex items-center gap-1 sm:gap-2 pointer-events-auto rounded-2xl px-2 sm:px-3 py-1.5 sm:py-2 border border-white/10"
+            <div
+                className="flex items-center gap-1 sm:gap-1.5 pointer-events-auto rounded-2xl px-2 sm:px-2.5 py-2"
                 style={{
-                    background: 'rgba(15, 23, 42, 0.75)',
-                    backdropFilter: 'blur(20px)',
-                    WebkitBackdropFilter: 'blur(20px)',
-                    boxShadow: '0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.06)',
-                }}>
-
+                    background: 'rgba(10, 8, 6, 0.82)',
+                    backdropFilter: 'blur(24px)',
+                    WebkitBackdropFilter: 'blur(24px)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06)',
+                }}
+            >
                 {/* Streak */}
-                <div className="flex items-center gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl"
-                    style={{ background: 'rgba(245,158,11,0.15)' }}>
-                    <Flame size={18} className="text-orange-400 fill-orange-400" style={{ filter: 'drop-shadow(0 0 6px rgba(245,158,11,0.8))' }} />
+                <div
+                    className="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl"
+                    style={{
+                        background: 'rgba(249,115,22,0.18)',
+                        boxShadow: '0 0 16px rgba(249,115,22,0.15), inset 0 1px 0 rgba(249,115,22,0.2)',
+                    }}
+                >
+                    <Flame
+                        size={20}
+                        className="text-orange-400 fill-orange-400 fire-flicker"
+                        style={{ filter: 'drop-shadow(0 0 8px rgba(249,115,22,0.9))' }}
+                    />
                     <div className="flex flex-col leading-none">
-                        <span className="font-black text-base text-white"><AnimatedNumber value={user?.streak ?? 0} /></span>
-                        <span className="text-[9px] uppercase font-bold text-orange-400 tracking-widest">Streak</span>
+                        <span className="font-black text-lg text-white tabular-nums">
+                            <AnimatedNumber value={user?.streak ?? 0} />
+                        </span>
+                        <span className="text-[8px] uppercase font-black text-orange-400 tracking-widest mt-0.5">Streak</span>
                     </div>
                 </div>
 
-                <div className="w-px h-6 bg-white/10" />
+                <div className="w-px h-8 bg-white/8" />
 
                 {/* XP */}
-                <div className="flex items-center gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl"
-                    style={{ background: 'rgba(79,110,247,0.15)' }}>
-                    <Zap size={18} className="text-indigo-400 fill-indigo-400" style={{ filter: 'drop-shadow(0 0 6px rgba(79,110,247,0.8))' }} />
+                <div
+                    className="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl"
+                    style={{
+                        background: 'rgba(245,158,11,0.15)',
+                        boxShadow: '0 0 16px rgba(245,158,11,0.12), inset 0 1px 0 rgba(245,158,11,0.2)',
+                    }}
+                >
+                    <Zap
+                        size={20}
+                        className="text-amber-400 fill-amber-400"
+                        style={{ filter: 'drop-shadow(0 0 8px rgba(245,158,11,0.9))' }}
+                    />
                     <div className="flex flex-col leading-none">
-                        <span className="font-black text-base text-white"><AnimatedNumber value={user?.totalXP ?? 0} /></span>
-                        <span className="text-[9px] uppercase font-bold text-indigo-400 tracking-widest">Total XP</span>
+                        <span className="font-black text-lg text-white tabular-nums">
+                            <AnimatedNumber value={user?.totalXP ?? 0} />
+                        </span>
+                        <span className="text-[8px] uppercase font-black text-amber-400 tracking-widest mt-0.5">Total XP</span>
                     </div>
                 </div>
 
-                <div className="w-px h-6 bg-white/10" />
+                <div className="w-px h-8 bg-white/8" />
 
-                {/* Trophy level */}
-                <div className="flex items-center gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl"
-                    style={{ background: 'rgba(16,185,129,0.15)' }}>
-                    <Trophy size={18} className="text-emerald-400" style={{ filter: 'drop-shadow(0 0 6px rgba(16,185,129,0.7))' }} />
+                {/* Level */}
+                <div
+                    className="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl"
+                    style={{
+                        background: 'rgba(16,185,129,0.15)',
+                        boxShadow: '0 0 16px rgba(16,185,129,0.12), inset 0 1px 0 rgba(16,185,129,0.2)',
+                    }}
+                >
+                    <Trophy
+                        size={20}
+                        className="text-emerald-400"
+                        style={{ filter: 'drop-shadow(0 0 8px rgba(16,185,129,0.9))' }}
+                    />
                     <div className="flex flex-col leading-none">
-                        <span className="font-black text-base text-white">
-                            <AnimatedNumber value={user?.totalXP ? Math.floor(user.totalXP / 100) + 1 : 1} />
+                        <span className="font-black text-lg text-white tabular-nums">
+                            <AnimatedNumber value={level} />
                         </span>
-                        <span className="text-[9px] uppercase font-bold text-emerald-400 tracking-widest">Level</span>
+                        <span className="text-[8px] uppercase font-black text-emerald-400 tracking-widest mt-0.5">Level</span>
                     </div>
                 </div>
             </div>

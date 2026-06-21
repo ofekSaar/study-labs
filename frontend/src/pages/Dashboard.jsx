@@ -193,9 +193,23 @@ const Dashboard = () => {
                     className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3"
                 >
                     <div>
-                        <h1 className="text-2xl sm:text-3xl font-display font-black text-slate-900 dark:text-white drop-shadow-sm">
-                            {getGreeting()}, {user?.name?.split(' ')[0] || 'Student'} 👋
-                        </h1>
+                        <div className="flex items-center gap-3 flex-wrap">
+                            <h1 className="text-2xl sm:text-3xl font-display font-black text-slate-900 dark:text-white drop-shadow-sm">
+                                {getGreeting()}, {user?.name?.split(' ')[0] || 'Student'} 👋
+                            </h1>
+                            {user?.levelName && (
+                                <span
+                                    className="text-xs font-black px-3 py-1 rounded-full shrink-0"
+                                    style={{
+                                        background: 'linear-gradient(135deg, rgba(217,119,87,0.12), rgba(124,58,237,0.08))',
+                                        border: '1px solid rgba(217,119,87,0.3)',
+                                        color: '#D97757',
+                                    }}
+                                >
+                                    ⚡ {user.levelName}
+                                </span>
+                            )}
+                        </div>
                         <p className="text-slate-500 dark:text-orange-200/70 mt-0.5 font-medium text-sm">
                             {inProgressCourses.length > 0
                                 ? `You have ${inProgressCourses.length} course${inProgressCourses.length > 1 ? 's' : ''} in progress — keep it up!`
