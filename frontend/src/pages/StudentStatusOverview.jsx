@@ -190,29 +190,29 @@ const StudentStatusOverview = () => {
           style={{ background: 'radial-gradient(circle, rgba(79,110,247,0.10) 0%, transparent 70%)', filter: 'blur(40px)' }} />
       </div>
 
-      <div className="relative z-[1] space-y-6 p-4 sm:p-6 md:p-8 pb-32 max-w-[1600px] mx-auto">
+      <div className="relative z-[1] space-y-8 p-4 sm:p-6 md:p-8 pb-32 max-w-[1600px] mx-auto">
 
         {/* ── Header ── */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div>
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-display font-black text-slate-800 dark:text-white drop-shadow-sm dark:drop-shadow-md tracking-tight">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-display font-black text-slate-900 dark:text-white drop-shadow-sm dark:drop-shadow-md tracking-tight">
               Student Status Overview
             </h1>
-            <p className="text-slate-500 dark:text-white/60 text-lg mt-1 font-medium">
-              Track your students' progress, engagement, and mastery levels.
+            <p className="text-slate-600 dark:text-white/70 text-lg mt-2 font-medium leading-relaxed max-w-2xl">
+              Track your students' progress, engagement, and mastery levels at a glance.
             </p>
           </div>
           <div className="relative w-full md:w-auto">
             <select
               value={selectedCourseId}
               onChange={(e) => setSelectedCourseId(e.target.value)}
-              className="w-full md:min-w-[200px] bg-white dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-xl pl-10 pr-4 py-2 text-sm font-bold text-slate-700 dark:text-white shadow-inner focus:outline-none focus:border-purple-500 appearance-none cursor-pointer"
+              className="w-full md:min-w-[280px] bg-gradient-to-r from-white to-slate-50 dark:from-white/8 dark:to-white/3 border border-slate-200/80 dark:border-white/15 rounded-2xl pl-12 pr-4 py-3 text-sm font-bold text-slate-900 dark:text-white shadow-lg dark:shadow-xl focus:outline-none focus:ring-2 focus:ring-purple-500/30 focus:border-purple-500 appearance-none cursor-pointer transition-all"
               style={{
                 WebkitAppearance: 'none',
-                backgroundImage: "url(\"data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238B5CF6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'/%3e%3c/svg%3e\")",
+                backgroundImage: "url(\"data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238B5CF6' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'/%3e%3c/svg%3e\")",
                 backgroundRepeat: 'no-repeat',
                 backgroundPosition: 'left 1rem center',
-                backgroundSize: '1em',
+                backgroundSize: '1.2em',
               }}
             >
               {courses.map(c => (
@@ -483,10 +483,12 @@ const StudentStatusOverview = () => {
 
         {/* ══ CONCEPTS TAB ══════════════════════════════════════════════════════ */}
         {activeTab === 'concepts' && (
-          <div className="bg-white dark:bg-white/5 border border-slate-200/80 dark:border-white/10 p-6 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] relative group overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-            <h3 className="font-display font-bold text-xl text-slate-800 dark:text-white mb-6 relative z-10 drop-shadow-sm dark:drop-shadow-md flex items-center gap-2">
-              <Brain size={22} className="text-purple-600 dark:text-purple-400" />
+          <div className="bg-gradient-to-br from-white to-slate-50 dark:from-white/8 dark:to-white/3 border border-slate-200/80 dark:border-white/15 p-8 rounded-3xl shadow-[0_12px_40px_rgba(0,0,0,0.06)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.5)] relative group overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-indigo-500/2 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+            <h3 className="font-display font-bold text-2xl text-slate-900 dark:text-white mb-8 relative z-10 drop-shadow-sm dark:drop-shadow-md flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-purple-100 dark:bg-purple-500/10">
+                <Brain size={26} className="text-purple-600 dark:text-purple-400" />
+              </div>
               Curriculum Concept Mastery
             </h3>
             <div className="relative z-10 space-y-4">
