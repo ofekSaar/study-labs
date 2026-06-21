@@ -59,7 +59,7 @@ const GameNavItem = ({ icon, label, active, onClick }) => (
     </button>
 );
 
-const SidebarContent = ({ location, navigate, user, courseUser, setIsSidebarOpen, setIsSettingsOpen, handleLogout }) => {
+const SidebarContent = ({ location, navigate, user, courseUser, _setIsSidebarOpen, setIsSettingsOpen, handleLogout }) => {
     const { activeAvatar } = useGamificationStore();
     const currentAvatar = INSTRUCTOR_AVATARS.find(a => a.id === activeAvatar) || INSTRUCTOR_AVATARS[0];
 

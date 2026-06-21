@@ -280,20 +280,23 @@ const ManagedCourses = () => {
                     {[
                         { key: 'courses',     label: 'Courses',     icon: BookOpen },
                         { key: 'enrollments', label: 'Enrollments', icon: UserCheck },
-                    ].map(({ key, label, icon: Icon }) => (
-                        <button
-                            key={key}
-                            onClick={() => setTab(key)}
-                            className={`flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-bold transition-all ${
-                                activeTab === key
-                                    ? 'bg-white dark:bg-white/10 text-slate-900 dark:text-white shadow-sm'
-                                    : 'text-slate-500 dark:text-white/50 hover:text-slate-700 dark:hover:text-white/80'
-                            }`}
-                        >
-                            <Icon size={15} />
-                            {label}
-                        </button>
-                    ))}
+                    ].map(({ key, label, icon }) => {
+                        const Icon = icon;
+                        return (
+                            <button
+                                key={key}
+                                onClick={() => setTab(key)}
+                                className={`flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-bold transition-all ${
+                                    activeTab === key
+                                        ? 'bg-white dark:bg-white/10 text-slate-900 dark:text-white shadow-sm'
+                                        : 'text-slate-500 dark:text-white/50 hover:text-slate-700 dark:hover:text-white/80'
+                                }`}
+                            >
+                                <Icon size={15} />
+                                {label}
+                            </button>
+                        );
+                    })}
                 </div>
 
                 {/* ── Courses Tab ── */}
