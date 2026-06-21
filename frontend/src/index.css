@@ -372,6 +372,40 @@ body {
     background-size: 40px 40px !important;
     color: #f0f0f5 !important;
 }
+/* ── Game Sidebar Utilities ──────────────────────────── */
+
+/* XP bar fill — orange-amber shimmer (reuses xpShimmer keyframe) */
+.xp-bar-fill {
+    background: linear-gradient(90deg, #D97757, #F59E0B, #C4613D, #F59E0B, #D97757);
+    background-size: 400% 100%;
+    animation: xpShimmer 2s linear infinite;
+}
+
+/* Player card gradient border wrapper */
+.player-card-gradient {
+    background: linear-gradient(135deg, rgba(217,119,87,0.6), rgba(124,58,237,0.45), rgba(217,119,87,0.3));
+    padding: 1px;
+    border-radius: 18px;
+}
+
+/* Coin shine pulse */
+@keyframes coinShine {
+    0%, 100% { filter: brightness(1); }
+    50% { filter: brightness(1.25) drop-shadow(0 0 5px rgba(245,158,11,0.5)); }
+}
+.coin-shine {
+    animation: coinShine 2.5s ease-in-out infinite;
+}
+
+/* Avatar ring pulse */
+@keyframes avatarRingPulse {
+    0%, 100% { opacity: 0.75; }
+    50% { opacity: 1; }
+}
+.avatar-ring-pulse {
+    animation: avatarRingPulse 2s ease-in-out infinite;
+}
+
 /* ── Reduced-Motion Accessibility ───────────────────────── */
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
@@ -383,6 +417,9 @@ body {
     .shimmer,
     .dark .shimmer,
     .xp-bar-animated,
+    .xp-bar-fill,
+    .coin-shine,
+    .avatar-ring-pulse,
     .map-path-animated,
     .badge-glow-gold,
     .fire-flicker,
