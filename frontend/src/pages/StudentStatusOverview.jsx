@@ -292,7 +292,9 @@ const StudentStatusOverview = () => {
                           const diff = difficultyFromPct(percentage);
                           return (
                             <tr key={idx} className="hover:bg-slate-100/30 dark:hover:bg-white/3 transition-colors">
-                              <td className="px-5 py-4 font-bold text-slate-800 dark:text-white drop-shadow-sm">{item.name}</td>
+                              <td className="px-5 py-4 font-bold text-slate-800 dark:text-white drop-shadow-sm max-w-[220px]">
+                                <p className="truncate" title={item.name}>{item.name}</p>
+                              </td>
                               <td className="px-5 py-4 whitespace-nowrap">
                                 <div className="flex items-center gap-3 justify-end">
                                   <div className="w-24 bg-slate-200 dark:bg-white/10 h-1.5 rounded-full overflow-hidden shadow-inner">
