@@ -325,11 +325,11 @@ const EnrollmentTab = ({ courses, preselectedCourseId }) => {
 const ManagedCourses = () => {
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
-    const { courses, fetchAllCourses, deleteCourse, isLoading } = useCourseStore();
+    const { courses, fetchAllCourses, deleteCourse, updateCourse, isLoading } = useCourseStore();
     const [searchTerm, setSearchTerm] = useState('');
     const [deletingId, setDeletingId] = useState(null);
     const [enrollmentCourseId, setEnrollmentCourseId] = useState(null);
-    const [editingCourse, setEditingCourse] = useState(null);
+    const [_editingCourse, _setEditingCourse] = useState(null);
 
     const activeTab = searchParams.get('tab') || 'courses';
 
@@ -545,14 +545,23 @@ const ManagedCourses = () => {
                                                     </button>
 
                                                     <div className="flex items-center justify-between gap-2">
-                                                        <button
-                                                            onClick={() => handleDelete(course.id, course.title)}
-                                                            disabled={deletingId === course.id}
-                                                            className="w-10 h-10 bg-red-500/10 hover:bg-red-500/20 text-red-500 dark:text-red-400 border border-red-500/20 rounded-xl flex items-center justify-center transition-colors disabled:opacity-50 shadow-inner flex-shrink-0"
-                                                            title="Delete course"
-                                                        >
-                                                            {deletingId === course.id ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
-                                                        </button>
+                                                        <div className="flex items-center gap-2">
+                                                            <button
+                                                                onClick={() => handleDelete(course.id, course.title)}
+                                                                disabled={deletingId === course.id}
+                                                                className="w-10 h-10 bg-red-500/10 hover:bg-red-500/20 text-red-500 dark:text-red-400 border border-red-500/20 rounded-xl flex items-center justify-center transition-colors disabled:opacity-50 shadow-inner flex-shrink-0"
+                                                                title="Delete course"
+                                                            >
+                                                                {deletingId === course.id ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
+                                                            </button>
+                                                            <button
+                                                                onClick={() => setEditingCourse(course)}
+                                                                className="w-10 h-10 bg-purple-500/10 hover:bg-purple-500/20 text-purple-500 border border-purple-500/20 rounded-xl flex items-center justify-center transition-colors shadow-inner flex-shrink-0"
+                                                                title="Edit course"
+                                                            >
+                                                                <Pencil size={16} />
+                                                            </button>
+                                                        </div>
                                                         <button
                                                             onClick={() => navigate(`/instructor/course/${course.id}`)}
                                                             className="flex-1 h-10 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-[0_4px_14px_rgba(124,58,237,0.35)] hover:shadow-[0_6px_20px_rgba(124,58,237,0.5)] group-hover:scale-[1.02] active:scale-[0.97]"
@@ -593,6 +602,15 @@ const ManagedCourses = () => {
                     <EnrollmentTab courses={courses} preselectedCourseId={enrollmentCourseId} />
                 )}
             </div>
+
+            {/* Edit Modal */}
+            {editingCourse && (
+                <EditCourseModal
+                    course={editingCourse}
+                    onClose={() => setEditingCourse(null)}
+                    onSave={() => setEditingCourse(null)}
+                />
+            )}
         </InstructorLayout>
     );
 };
