@@ -4,6 +4,7 @@ import api from '../utils/api.js';
 const useEnrollmentStore = create((set) => ({
     myEnrollments: [],
     courseEnrollments: [],
+    pendingEnrollments: [],
     isLoading: false,
     error: null,
 
@@ -58,7 +59,50 @@ const useEnrollmentStore = create((set) => ({
             courseEnrollments: state.courseEnrollments.map((e) =>
                 e._id === enrollmentId ? { ...e, status: 'denied', respondedAt: new Date() } : e
             ),
+            pendingEnrollments: state.pendingEnrollments.filter(e => e._id !== enrollmentId),
         }));
+        return data.enrollment;
+    },
+
+    // ── Instructor: Fetch all pending enrollments across courses ───
+    fetchPendingEnrollments: async () => {
+        try {
+            const { data } = await api.get('/api/enrollments/pending-all');
+            set({ pendingEnrollments: data.enrollments || [] });
+            return data.enrollments || [];
+        } catch (error) {
+            console.error('Failed to fetch pending enrollments', error);
+            return [];
+        }
+    },
+
+    // ── Instructor: Approve from pending list ──────
+    approvePendingEnrollment: async (enrollmentId) => {
+        const { data } = await api.put(`/api/enrollments/${enrollmentId}/approve`);
+        set((state) => ({
+            pendingEnrollments: state.pendingEnrollments.filter(e => e._id !== enrollmentId),
+            courseEnrollments: state.courseEnrollments.map((e) =>
+                e._id === enrollmentId ? { ...e, status: 'approved', respondedAt: new Date() } : e
+            ),
+        }));
+        return data.enrollment;
+    },
+
+    // ── Instructor: Deny from pending list ─────────
+    denyPendingEnrollment: async (enrollmentId) => {
+        const { data } = await api.put(`/api/enrollments/${enrollmentId}/deny`);
+        set((state) => ({
+            pendingEnrollments: state.pendingEnrollments.filter(e => e._id !== enrollmentId),
+            courseEnrollments: state.courseEnrollments.map((e) =>
+                e._id === enrollmentId ? { ...e, status: 'denied', respondedAt: new Date() } : e
+            ),
+        }));
+        return data.enrollment;
+    },
+
+    // ── Instructor: Add student directly ──────────
+    addStudentToCourse: async (courseId, studentEmail) => {
+        const { data } = await api.post('/api/enrollments/add-student', { courseId, studentEmail });
         return data.enrollment;
     },
 }));

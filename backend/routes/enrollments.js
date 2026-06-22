@@ -8,6 +8,8 @@ import {
   getCourseEnrollments,
   approveEnrollment,
   denyEnrollment,
+  getPendingEnrollments,
+  addStudentToCourse,
 } from '../controllers/enrollmentController.js';
 
 const router = Router();
@@ -154,5 +156,19 @@ router.put('/:id/approve', authenticate, authorize('instructor'), approveEnrollm
  *         description: Not course owner
  */
 router.put('/:id/deny', authenticate, authorize('instructor'), denyEnrollment);
+
+router.get('/pending-all', authenticate, authorize('instructor'), getPendingEnrollments);
+
+router.post(
+  '/add-student',
+  authenticate,
+  authorize('instructor'),
+  [
+    body('courseId').notEmpty().withMessage('Course ID is required'),
+    body('studentEmail').isEmail().withMessage('Valid student email is required'),
+  ],
+  validate,
+  addStudentToCourse
+);
 
 export default router;

@@ -1,6 +1,7 @@
 import createError from 'http-errors';
 import Enrollment from '../models/Enrollment.js';
 import Course from '../models/Course.js';
+import User from '../models/User.js';
 import { assertOwner } from '../middleware/ownershipGuard.js';
 import { createInitialProgress } from '../services/enrollmentService.js';
 
@@ -171,6 +172,75 @@ export const denyEnrollment = async (req, res, next) => {
       .populate('course', 'title');
 
     res.json({ status: 'success', data: { enrollment: populated } });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Get all pending enrollments across all instructor's courses (Instructor only).
+ */
+export const getPendingEnrollments = async (req, res, next) => {
+  try {
+    const courses = await Course.find({ instructor: req.user._id }, '_id');
+    const courseIds = courses.map(c => c._id);
+
+    const enrollments = await Enrollment.find({ course: { $in: courseIds }, status: 'pending' })
+      .populate('student', 'name email avatar')
+      .populate('course', 'title color')
+      .sort({ requestedAt: -1 });
+
+    res.json({ status: 'success', data: { enrollments } });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Instructor directly adds a student to a course by email (Instructor only).
+ */
+export const addStudentToCourse = async (req, res, next) => {
+  try {
+    const { courseId, studentEmail } = req.body;
+
+    const course = await Course.findById(courseId);
+    if (!course) throw createError(404, 'Course not found');
+    assertOwner(course, 'instructor', req.user._id, 'Access denied');
+
+    const student = await User.findOne({ email: studentEmail.toLowerCase().trim() });
+    if (!student) throw createError(404, 'No user found with that email address');
+    if (!student.roles.includes('student') && student.role !== 'student') {
+      throw createError(400, 'This user is not registered as a student');
+    }
+
+    const existing = await Enrollment.findOne({ student: student._id, course: courseId });
+    if (existing?.status === 'approved') {
+      throw createError(400, 'Student is already enrolled in this course');
+    }
+
+    let enrollment;
+    if (existing) {
+      existing.status = 'approved';
+      existing.respondedAt = new Date();
+      await existing.save();
+      enrollment = existing;
+    } else {
+      enrollment = await Enrollment.create({
+        student: student._id,
+        course: courseId,
+        status: 'approved',
+        requestedAt: new Date(),
+        respondedAt: new Date(),
+      });
+    }
+
+    await createInitialProgress(student._id, courseId);
+
+    const populated = await Enrollment.findById(enrollment._id)
+      .populate('student', 'name email avatar')
+      .populate('course', 'title');
+
+    res.status(201).json({ status: 'success', data: { enrollment: populated } });
   } catch (error) {
     next(error);
   }

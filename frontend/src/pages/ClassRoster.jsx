@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import InstructorLayout from '../components/layout/InstructorLayout';
-import { Users, Zap, Flame, CheckSquare, Square, Mail, SlidersHorizontal, TrendingUp, AlertTriangle, Clock } from 'lucide-react';
+import { Users, Zap, Flame, CheckSquare, Square, Mail, SlidersHorizontal, TrendingUp, AlertTriangle, Clock, UserPlus, X } from 'lucide-react';
 import useCourseStore from '../store/courseStore';
+import useEnrollmentStore from '../store/enrollmentStore';
 import api from '../utils/api';
 
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
@@ -9,12 +10,18 @@ const daysSince = (date) => date ? Math.floor((Date.now() - new Date(date)) / MS
 
 const ClassRoster = () => {
     const { courses, fetchAllCourses } = useCourseStore();
+    const { addStudentToCourse } = useEnrollmentStore();
     const [selectedCourseId, setSelectedCourseId] = useState('');
     const [students, setStudents] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [threshold, setThreshold] = useState(70);
     const [thresholdInput, setThresholdInput] = useState('70');
     const [selected, setSelected] = useState(new Set());
+    const [showAddModal, setShowAddModal] = useState(false);
+    const [addEmail, setAddEmail] = useState('');
+    const [addError, setAddError] = useState('');
+    const [addSuccess, setAddSuccess] = useState('');
+    const [isAdding, setIsAdding] = useState(false);
 
     useEffect(() => {
         fetchAllCourses();
@@ -68,6 +75,26 @@ const ClassRoster = () => {
         if (!isNaN(num) && num >= 0 && num <= 100) setThreshold(num);
     };
 
+    const handleAddStudent = async (e) => {
+        e.preventDefault();
+        if (!selectedCourseId || !addEmail.trim()) return;
+        setIsAdding(true);
+        setAddError('');
+        setAddSuccess('');
+        try {
+            const enrollment = await addStudentToCourse(selectedCourseId, addEmail.trim());
+            setAddSuccess(`${enrollment.student?.name || addEmail} was added successfully.`);
+            setAddEmail('');
+            // Refresh student list
+            const { data } = await api.get(`/api/courses/${selectedCourseId}/students`);
+            setStudents(data.students || []);
+        } catch (err) {
+            setAddError(err.message || 'Failed to add student');
+        } finally {
+            setIsAdding(false);
+        }
+    };
+
     return (
         <InstructorLayout title="Class Roster">
             <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
@@ -87,17 +114,30 @@ const ClassRoster = () => {
                         <p className="text-slate-500 dark:text-white/60 text-lg mt-1 font-medium">View all enrolled students and set a progress threshold.</p>
                     </div>
 
-                    {/* Course selector */}
-                    <select
-                        value={selectedCourseId}
-                        onChange={(e) => setSelectedCourseId(e.target.value)}
-                        className="w-full md:min-w-[220px] bg-white dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-xl pl-4 pr-8 py-2.5 text-sm font-bold text-slate-700 dark:text-white shadow-inner focus:outline-none focus:border-purple-500 appearance-none cursor-pointer"
-                        style={{ backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%238B5CF6\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6 9 12 15 18 9\'/%3e%3c/svg%3e")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.75rem center', backgroundSize: '1em' }}
-                    >
-                        {courses.map(c => (
-                            <option key={c.id} value={c.id} className="bg-white dark:bg-slate-900">{c.title}</option>
-                        ))}
-                    </select>
+                    <div className="flex items-center gap-3 w-full md:w-auto">
+                        {/* Course selector */}
+                        <select
+                            value={selectedCourseId}
+                            onChange={(e) => setSelectedCourseId(e.target.value)}
+                            className="flex-1 md:min-w-[220px] bg-white dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-xl pl-4 pr-8 py-2.5 text-sm font-bold text-slate-700 dark:text-white shadow-inner focus:outline-none focus:border-purple-500 appearance-none cursor-pointer"
+                            style={{ backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%238B5CF6\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6 9 12 15 18 9\'/%3e%3c/svg%3e")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.75rem center', backgroundSize: '1em' }}
+                        >
+                            {courses.map(c => (
+                                <option key={c.id} value={c.id} className="bg-white dark:bg-slate-900">{c.title}</option>
+                            ))}
+                        </select>
+
+                        {/* Add Student button */}
+                        <button
+                            onClick={() => { setShowAddModal(true); setAddError(''); setAddSuccess(''); setAddEmail(''); }}
+                            disabled={!selectedCourseId}
+                            className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-black text-sm text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
+                            style={{ background: 'linear-gradient(135deg, #7C3AED, #D97757)', boxShadow: '0 4px 15px rgba(124,58,237,0.35)' }}
+                        >
+                            <UserPlus size={16} />
+                            <span className="hidden sm:inline">Add Student</span>
+                        </button>
+                    </div>
                 </div>
 
                 {/* Threshold Control */}
@@ -311,6 +351,78 @@ const ClassRoster = () => {
                     </>
                 )}
             </div>
+
+            {/* Add Student Modal */}
+            {showAddModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowAddModal(false)} />
+                    <div className="relative bg-white dark:bg-[#1a1625] rounded-3xl shadow-2xl border border-slate-200 dark:border-white/10 w-full max-w-md p-6 z-10">
+                        <div className="flex items-center justify-between mb-5">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-2xl flex items-center justify-center"
+                                    style={{ background: 'linear-gradient(135deg, rgba(124,58,237,0.15), rgba(217,119,87,0.1))' }}>
+                                    <UserPlus size={18} className="text-purple-600 dark:text-purple-400" />
+                                </div>
+                                <div>
+                                    <h2 className="text-lg font-black text-slate-800 dark:text-white leading-tight">Add Student</h2>
+                                    <p className="text-[11px] text-slate-400 dark:text-white/40 font-medium">
+                                        {courses.find(c => c.id === selectedCourseId)?.title}
+                                    </p>
+                                </div>
+                            </div>
+                            <button onClick={() => setShowAddModal(false)}
+                                className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400 dark:text-white/40 transition-colors">
+                                <X size={18} />
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleAddStudent} className="space-y-4">
+                            <div>
+                                <label className="block text-xs font-black text-slate-500 dark:text-white/50 uppercase tracking-wider mb-2">Student Email</label>
+                                <input
+                                    type="email"
+                                    value={addEmail}
+                                    onChange={e => { setAddEmail(e.target.value); setAddError(''); setAddSuccess(''); }}
+                                    placeholder="student@example.com"
+                                    required
+                                    className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-black/30 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-white/25 text-sm font-medium focus:outline-none focus:border-purple-500 dark:focus:border-purple-400 transition-colors"
+                                />
+                            </div>
+
+                            {addError && (
+                                <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-600 dark:text-red-400 text-sm font-medium">
+                                    <X size={14} className="flex-shrink-0" />
+                                    {addError}
+                                </div>
+                            )}
+                            {addSuccess && (
+                                <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-sm font-medium">
+                                    <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                    {addSuccess}
+                                </div>
+                            )}
+
+                            <div className="flex gap-3 pt-1">
+                                <button type="button" onClick={() => setShowAddModal(false)}
+                                    className="flex-1 py-2.5 rounded-xl font-black text-sm text-slate-600 dark:text-white/60 bg-slate-100 dark:bg-white/8 hover:bg-slate-200 dark:hover:bg-white/12 transition-colors border border-slate-200 dark:border-white/10">
+                                    Cancel
+                                </button>
+                                <button type="submit" disabled={isAdding || !addEmail.trim()}
+                                    className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-black text-sm text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                    style={{ background: 'linear-gradient(135deg, #7C3AED, #D97757)', boxShadow: '0 4px 15px rgba(124,58,237,0.35)' }}>
+                                    {isAdding ? (
+                                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                    ) : (
+                                        <><UserPlus size={15} /> Add Student</>
+                                    )}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </InstructorLayout>
     );
 };
