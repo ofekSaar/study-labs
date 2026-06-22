@@ -7,13 +7,137 @@ import { getDeptStyle } from '../utils/departmentStyles';
 import {
     Search, BookOpen, Users, ArrowRight, Loader2, Trash2,
     Zap, Star, Layers, Check, X, Clock, AlertCircle,
-    UserCheck, ChevronDown
+    UserCheck, ChevronDown, Pencil, Save
 } from 'lucide-react';
+
+const COURSE_AVATARS = [
+    '📚', '💻', '🔬', '🧮', '⚛️', '🧬', '🎨', '🌍',
+    '🏛️', '✍️', '🎵', '🏃', '💼', '🔭', '🧪', '📊',
+    '🌐', '🤖', '🏗️', '📐', '🧠', '🎯', '🌿', '🎭',
+];
 
 const LEVEL_CONFIG = {
     beginner:     { label: 'Beginner',     emoji: '🌱', color: 'text-emerald-500', bg: 'bg-emerald-500/10 border-emerald-500/20' },
     intermediate: { label: 'Intermediate', emoji: '⚡', color: 'text-amber-500',   bg: 'bg-amber-500/10   border-amber-500/20'   },
     advanced:     { label: 'Advanced',     emoji: '🔥', color: 'text-red-500',     bg: 'bg-red-500/10     border-red-500/20'     },
+};
+
+// ─── Edit Course Modal ─────────────────────────────────────────────────────────
+
+const EditCourseModal = ({ course, onClose, onSave }) => {
+    const { updateCourse } = useCourseStore();
+    const [title, setTitle] = useState(course.title || '');
+    const [description, setDescription] = useState(course.description || '');
+    const [avatar, setAvatar] = useState(course.courseAvatar || '📚');
+    const [saving, setSaving] = useState(false);
+    const [error, setError] = useState('');
+
+    const handleSave = async () => {
+        if (!title.trim()) { setError('Title is required'); return; }
+        if (description.trim().length < 10) { setError('Description must be at least 10 characters'); return; }
+        setSaving(true);
+        setError('');
+        try {
+            await updateCourse(course.id || course._id, { title: title.trim(), description: description.trim(), courseAvatar: avatar });
+            onSave();
+        } catch (err) {
+            setError(err.message || 'Failed to save changes');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+            <div
+                className="relative z-10 w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl shadow-2xl overflow-hidden"
+                onClick={(e) => e.stopPropagation()}
+            >
+                {/* Header */}
+                <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 dark:border-white/10">
+                    <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center">
+                            <Pencil size={16} className="text-purple-500" />
+                        </div>
+                        <h2 className="text-lg font-black text-slate-800 dark:text-white">Edit Course</h2>
+                    </div>
+                    <button onClick={onClose} className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-white/10 flex items-center justify-center text-slate-500 dark:text-white/50 hover:text-slate-800 dark:hover:text-white transition-colors">
+                        <X size={16} />
+                    </button>
+                </div>
+
+                <div className="px-6 py-5 space-y-5 max-h-[70vh] overflow-y-auto">
+                    {/* Avatar picker */}
+                    <div>
+                        <label className="block text-xs font-bold text-slate-500 dark:text-white/50 uppercase tracking-wider mb-3">Course Avatar</label>
+                        <div className="grid grid-cols-8 gap-2">
+                            {COURSE_AVATARS.map((em) => (
+                                <button
+                                    key={em}
+                                    onClick={() => setAvatar(em)}
+                                    className={`w-10 h-10 rounded-xl text-xl flex items-center justify-center transition-all border-2 ${
+                                        avatar === em
+                                            ? 'border-purple-500 bg-purple-500/10 scale-110 shadow-md'
+                                            : 'border-transparent bg-slate-100 dark:bg-white/5 hover:border-purple-500/40 hover:scale-105'
+                                    }`}
+                                    title={em}
+                                >
+                                    {em}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Title */}
+                    <div>
+                        <label className="block text-xs font-bold text-slate-500 dark:text-white/50 uppercase tracking-wider mb-2">Course Title</label>
+                        <input
+                            value={title}
+                            onChange={(e) => setTitle(e.target.value)}
+                            maxLength={200}
+                            className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 text-slate-800 dark:text-white font-semibold focus:border-purple-500 focus:outline-none focus:bg-white dark:focus:bg-white/10 transition-all text-sm"
+                            placeholder="Course title…"
+                        />
+                        <p className="text-right text-xs text-slate-400 dark:text-white/30 mt-1">{title.length}/200</p>
+                    </div>
+
+                    {/* Description */}
+                    <div>
+                        <label className="block text-xs font-bold text-slate-500 dark:text-white/50 uppercase tracking-wider mb-2">Description</label>
+                        <textarea
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
+                            maxLength={2000}
+                            rows={4}
+                            className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 text-slate-800 dark:text-white text-sm font-medium focus:border-purple-500 focus:outline-none focus:bg-white dark:focus:bg-white/10 transition-all resize-none leading-relaxed"
+                            placeholder="Course description…"
+                        />
+                        <p className="text-right text-xs text-slate-400 dark:text-white/30 mt-1">{description.length}/2000</p>
+                    </div>
+
+                    {error && (
+                        <p className="text-sm text-red-500 font-semibold px-1">{error}</p>
+                    )}
+                </div>
+
+                {/* Footer */}
+                <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-100 dark:border-white/10">
+                    <button onClick={onClose} className="px-5 py-2.5 rounded-xl text-sm font-bold text-slate-600 dark:text-white/60 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">
+                        Cancel
+                    </button>
+                    <button
+                        onClick={handleSave}
+                        disabled={saving}
+                        className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-sm font-bold shadow-[0_4px_14px_rgba(124,58,237,0.35)] hover:shadow-[0_6px_20px_rgba(124,58,237,0.5)] hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100"
+                    >
+                        {saving ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />}
+                        {saving ? 'Saving…' : 'Save Changes'}
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
 };
 
 // ─── Enrollment Tab ────────────────────────────────────────────────────────────
@@ -205,6 +329,7 @@ const ManagedCourses = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [deletingId, setDeletingId] = useState(null);
     const [enrollmentCourseId, setEnrollmentCourseId] = useState(null);
+    const [editingCourse, setEditingCourse] = useState(null);
 
     const activeTab = searchParams.get('tab') || 'courses';
 
@@ -343,8 +468,8 @@ const ManagedCourses = () => {
 
                                             {/* Header */}
                                             <div className="flex justify-between items-start mb-5 relative z-10 px-6 pt-5">
-                                                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-inner border ${deptStyle.iconBg}`}>
-                                                    <BookOpen size={26} className="drop-shadow-sm" />
+                                                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-inner border text-3xl ${deptStyle.iconBg}`}>
+                                                    {course.courseAvatar || '📚'}
                                                 </div>
                                                 <div className="flex flex-col items-end gap-1.5">
                                                     <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border ${deptStyle.bg}`}>
@@ -420,14 +545,23 @@ const ManagedCourses = () => {
                                                     </button>
 
                                                     <div className="flex items-center justify-between gap-2">
-                                                        <button
-                                                            onClick={() => handleDelete(course.id, course.title)}
-                                                            disabled={deletingId === course.id}
-                                                            className="w-10 h-10 bg-red-500/10 hover:bg-red-500/20 text-red-500 dark:text-red-400 border border-red-500/20 rounded-xl flex items-center justify-center transition-colors disabled:opacity-50 shadow-inner flex-shrink-0"
-                                                            title="Delete course"
-                                                        >
-                                                            {deletingId === course.id ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
-                                                        </button>
+                                                        <div className="flex items-center gap-2">
+                                                            <button
+                                                                onClick={() => handleDelete(course.id, course.title)}
+                                                                disabled={deletingId === course.id}
+                                                                className="w-10 h-10 bg-red-500/10 hover:bg-red-500/20 text-red-500 dark:text-red-400 border border-red-500/20 rounded-xl flex items-center justify-center transition-colors disabled:opacity-50 shadow-inner flex-shrink-0"
+                                                                title="Delete course"
+                                                            >
+                                                                {deletingId === course.id ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
+                                                            </button>
+                                                            <button
+                                                                onClick={() => setEditingCourse(course)}
+                                                                className="w-10 h-10 bg-purple-500/10 hover:bg-purple-500/20 text-purple-500 border border-purple-500/20 rounded-xl flex items-center justify-center transition-colors shadow-inner flex-shrink-0"
+                                                                title="Edit course"
+                                                            >
+                                                                <Pencil size={16} />
+                                                            </button>
+                                                        </div>
                                                         <button
                                                             onClick={() => navigate(`/instructor/course/${course.id}`)}
                                                             className="flex-1 h-10 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-[0_4px_14px_rgba(124,58,237,0.35)] hover:shadow-[0_6px_20px_rgba(124,58,237,0.5)] group-hover:scale-[1.02] active:scale-[0.97]"
@@ -468,6 +602,15 @@ const ManagedCourses = () => {
                     <EnrollmentTab courses={courses} preselectedCourseId={enrollmentCourseId} />
                 )}
             </div>
+
+            {/* Edit Modal */}
+            {editingCourse && (
+                <EditCourseModal
+                    course={editingCourse}
+                    onClose={() => setEditingCourse(null)}
+                    onSave={() => setEditingCourse(null)}
+                />
+            )}
         </InstructorLayout>
     );
 };
