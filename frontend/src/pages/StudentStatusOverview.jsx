@@ -3,6 +3,7 @@ import InstructorLayout from '../components/layout/InstructorLayout';
 import {
   Users, BookOpen, Trophy, TrendingUp, Brain,
   ChevronUp, ChevronDown, ChevronsUpDown,
+  AlertTriangle, Medal, Zap, Star, Activity,
 } from 'lucide-react';
 import useCourseStore from '../store/courseStore';
 import api from '../utils/api';
@@ -54,6 +55,33 @@ function studentBadge(s) {
   };
 }
 
+function levelFromXP(xp) {
+  return Math.floor((xp || 0) / 100) + 1;
+}
+
+function completionBarGradient(pct) {
+  if (pct >= 70) return 'from-emerald-500 to-teal-400';
+  if (pct >= 30) return 'from-amber-500 to-orange-400';
+  return 'from-red-500 to-rose-400';
+}
+
+function issueConfig(issue) {
+  if (!issue || issue === 'Never started') return {
+    label: 'Never started',
+    cls: 'bg-red-500/10 text-red-500 border-red-500/20 dark:bg-red-500/20 dark:text-red-400 dark:border-red-500/30',
+  };
+  if (issue.startsWith('Inactive')) return {
+    label: issue,
+    cls: 'bg-orange-500/10 text-orange-600 border-orange-500/20 dark:bg-orange-500/20 dark:text-orange-400 dark:border-orange-500/30',
+  };
+  return {
+    label: 'Low progress',
+    cls: 'bg-amber-500/10 text-amber-600 border-amber-500/20 dark:bg-amber-500/20 dark:text-amber-400 dark:border-amber-500/30',
+  };
+}
+
+const RANK_MEDAL = ['🥇', '🥈', '🥉'];
+
 // ── skeleton loaders ───────────────────────────────────────────────────────────
 
 const TableSkeleton = ({ cols = 4, rows = 5 }) => (
@@ -91,6 +119,181 @@ const CardSkeleton = ({ rows = 3 }) => (
   </div>
 );
 
+// ── mini SVG progress ring ─────────────────────────────────────────────────────
+
+const MiniRing = ({ pct, size = 52, stroke = 6, color = '#8B5CF6' }) => {
+  const r = (size - stroke) / 2;
+  const circ = 2 * Math.PI * r;
+  const filled = Math.min(pct / 100, 1) * circ;
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="flex-shrink-0">
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="currentColor" strokeWidth={stroke} className="text-slate-200 dark:text-white/10" />
+      <circle
+        cx={size / 2} cy={size / 2} r={r}
+        fill="none"
+        stroke={color}
+        strokeWidth={stroke}
+        strokeDasharray={`${filled} ${circ}`}
+        strokeLinecap="round"
+        transform={`rotate(-90 ${size / 2} ${size / 2})`}
+        style={{ filter: `drop-shadow(0 0 4px ${color}80)` }}
+      />
+    </svg>
+  );
+};
+
+// ── class health score widget ──────────────────────────────────────────────────
+
+const ClassHealthScore = ({ score, avgCompletion, retentionHealth, atRiskCount, totalStudents, isLoading }) => {
+  const r = 56;
+  const circ = 2 * Math.PI * r;
+  const filled = (Math.min(score, 100) / 100) * circ;
+  const ringColor = score >= 70 ? '#10b981' : score >= 40 ? '#f59e0b' : '#ef4444';
+  const label = score >= 70 ? 'Healthy' : score >= 40 ? 'Needs Attention' : 'At Risk';
+  const labelColor = score >= 70 ? 'text-emerald-500' : score >= 40 ? 'text-amber-500' : 'text-red-500';
+
+  return (
+    <div className="bg-gradient-to-br from-white to-slate-50 dark:from-white/8 dark:to-white/3 border border-slate-200/80 dark:border-white/15 rounded-3xl shadow-[0_12px_40px_rgba(0,0,0,0.06)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.5)] p-8 relative overflow-hidden group">
+      <div className="absolute inset-0 bg-gradient-to-br from-violet-500/5 to-indigo-500/3 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+      <div className="flex flex-col md:flex-row items-center gap-8 relative z-10">
+        {/* Ring */}
+        <div className="relative flex-shrink-0">
+          {isLoading ? (
+            <div className="w-[140px] h-[140px] rounded-full bg-slate-200 dark:bg-white/10 animate-pulse" />
+          ) : (
+            <>
+              <svg width="140" height="140" viewBox="0 0 140 140">
+                <circle cx="70" cy="70" r={r} fill="none" stroke="currentColor" strokeWidth="14" className="text-slate-100 dark:text-white/8" />
+                <circle
+                  cx="70" cy="70" r={r}
+                  fill="none"
+                  stroke={ringColor}
+                  strokeWidth="14"
+                  strokeDasharray={`${filled} ${circ}`}
+                  strokeLinecap="round"
+                  transform="rotate(-90 70 70)"
+                  style={{ transition: 'stroke-dasharray 1.2s cubic-bezier(.4,0,.2,1)', filter: `drop-shadow(0 0 10px ${ringColor}60)` }}
+                />
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center select-none">
+                <span className="text-4xl font-black text-slate-900 dark:text-white leading-none">{score}</span>
+                <span className={`text-[10px] font-black uppercase tracking-widest mt-1 ${labelColor}`}>{label}</span>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Label + indicators */}
+        <div className="flex-1">
+          <h3 className="text-2xl font-display font-black text-slate-900 dark:text-white mb-1">Class Health Score</h3>
+          <p className="text-sm text-slate-500 dark:text-white/50 mb-6">Overall snapshot of engagement, completion &amp; retention</p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <HealthIndicator label="Avg Completion" value={`${Math.round(avgCompletion)}%`} color="text-indigo-500" icon={<TrendingUp size={14} />} />
+            <HealthIndicator label="Retention Rate" value={`${Math.round(retentionHealth)}%`} color="text-emerald-500" icon={<Activity size={14} />} />
+            <HealthIndicator label="At-Risk Students" value={atRiskCount} color="text-red-500" icon={<AlertTriangle size={14} />} />
+            <HealthIndicator label="Total Students" value={totalStudents} color="text-purple-500" icon={<Users size={14} />} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const HealthIndicator = ({ label, value, color, icon }) => (
+  <div className="flex flex-col gap-1 p-3 rounded-2xl bg-slate-50 dark:bg-black/20 border border-slate-200/60 dark:border-white/5">
+    <span className={`flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider ${color}`}>
+      {icon}{label}
+    </span>
+    <span className="text-2xl font-black text-slate-900 dark:text-white">{value}</span>
+  </div>
+);
+
+// ── top performers widget ──────────────────────────────────────────────────────
+
+const TopPerformers = ({ leaderboard, loading }) => {
+  const top3 = leaderboard.slice(0, 3);
+  return (
+    <div className="bg-gradient-to-br from-white to-slate-50 dark:from-white/8 dark:to-white/3 border border-slate-200/80 dark:border-white/15 p-6 rounded-3xl shadow-[0_12px_40px_rgba(0,0,0,0.06)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.5)] relative overflow-hidden group">
+      <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-orange-500/3 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+      <h3 className="font-display font-bold text-lg text-slate-900 dark:text-white mb-4 flex items-center gap-2 relative z-10">
+        <div className="p-1.5 rounded-xl bg-amber-100 dark:bg-amber-500/10">
+          <Medal size={18} className="text-amber-600 dark:text-amber-400" />
+        </div>
+        Top Performers
+      </h3>
+      <div className="space-y-2 relative z-10">
+        {loading ? (
+          <CardSkeleton rows={3} />
+        ) : top3.length === 0 ? (
+          <EmptyState icon={<Medal size={18} />} title="No data yet" compact />
+        ) : (
+          top3.map((s, i) => (
+            <div key={s.userId || i} className={`flex items-center gap-3 p-3 rounded-2xl border transition-colors ${
+              i === 0 ? 'bg-amber-50/60 border-amber-200/60 dark:bg-amber-500/8 dark:border-amber-500/20' :
+              i === 1 ? 'bg-slate-100/60 border-slate-200/60 dark:bg-white/5 dark:border-white/10' :
+              'bg-orange-50/40 border-orange-200/40 dark:bg-orange-500/5 dark:border-orange-500/15'
+            }`}>
+              <span className="text-2xl w-8 text-center flex-shrink-0 select-none">{RANK_MEDAL[i]}</span>
+              <AvatarDisplay avatar={s.avatar} size="w-9 h-9" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-slate-800 dark:text-white truncate leading-tight">{s.name || 'Student'}</p>
+                <p className="text-[11px] text-slate-400 dark:text-white/40 font-medium">Lv.{s.level || levelFromXP(s.xp)} · {(s.xp || 0).toLocaleString()} XP</p>
+              </div>
+              <span className="text-amber-500 dark:text-amber-400 flex-shrink-0">
+                <Zap size={14} />
+              </span>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+};
+
+// ── avatar helper ──────────────────────────────────────────────────────────────
+
+const AvatarDisplay = ({ avatar, size = 'w-10 h-10' }) => {
+  if (avatar && (avatar.startsWith('http') || avatar.startsWith('/'))) {
+    return <img src={avatar} alt="" className={`${size} rounded-full border border-slate-200 dark:border-white/10 flex-shrink-0 object-cover`} />;
+  }
+  return (
+    <div className={`${size} rounded-full bg-slate-100 dark:bg-white/10 border border-slate-200 dark:border-white/5 flex items-center justify-center text-base flex-shrink-0 select-none`}>
+      {avatar || '🎓'}
+    </div>
+  );
+};
+
+// ── concept card ──────────────────────────────────────────────────────────────
+
+const ConceptCard = ({ item }) => {
+  const ringColor = item.masteryLevel > 85 ? '#10b981' : item.masteryLevel > 72 ? '#f59e0b' : '#ef4444';
+  const bgCls = item.masteryLevel > 85
+    ? 'bg-emerald-50/60 dark:bg-emerald-500/5 border-emerald-200/50 dark:border-emerald-500/15'
+    : item.masteryLevel > 72
+    ? 'bg-amber-50/60 dark:bg-amber-500/5 border-amber-200/50 dark:border-amber-500/15'
+    : 'bg-red-50/60 dark:bg-red-500/5 border-red-200/50 dark:border-red-500/15';
+  const chipCls = item.status === 'Excellent'
+    ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20 dark:bg-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30'
+    : item.status === 'Moderate'
+    ? 'bg-amber-500/10 text-amber-600 border-amber-500/20 dark:bg-amber-500/20 dark:text-amber-400 dark:border-amber-500/30'
+    : 'bg-red-500/10 text-red-500 border-red-500/20 dark:bg-red-500/20 dark:text-red-400 dark:border-red-500/30';
+
+  return (
+    <div className={`flex flex-col items-center gap-3 p-5 rounded-2xl border transition-all hover:scale-[1.02] ${bgCls}`}>
+      <MiniRing pct={item.masteryLevel} size={72} stroke={7} color={ringColor} />
+      <div className="text-center">
+        <p className="text-sm font-bold text-slate-800 dark:text-white leading-tight line-clamp-2 mb-2">{item.topic}</p>
+        <div className="flex items-center justify-center gap-2">
+          <span className="text-2xl font-black text-slate-900 dark:text-white">{item.masteryLevel}%</span>
+          <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border ${chipCls}`}>
+            {item.status}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ── main component ─────────────────────────────────────────────────────────────
 
 const StudentStatusOverview = () => {
@@ -106,6 +309,11 @@ const StudentStatusOverview = () => {
   const [sortField, setSortField] = useState('completion');
   const [sortDir, setSortDir] = useState('desc');
 
+  // Leaderboard
+  const [leaderboard, setLeaderboard] = useState([]);
+  const [leaderboardLoading, setLeaderboardLoading] = useState(false);
+  const [leaderboardPeriod, setLeaderboardPeriod] = useState('allTime');
+
   useEffect(() => { fetchAllCourses(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
@@ -113,8 +321,9 @@ const StudentStatusOverview = () => {
   }, [courses, selectedCourseId]);
 
   useEffect(() => {
-    const fetchAnalytics = async () => {
-      if (!selectedCourseId) { setIsLoading(false); return; }
+    if (!selectedCourseId) return;
+
+    async function fetchAnalytics() {
       setIsLoading(true);
       try {
         const res = await api.get(`/api/courses/${selectedCourseId}/analytics`);
@@ -124,14 +333,48 @@ const StudentStatusOverview = () => {
       } finally {
         setIsLoading(false);
       }
-    };
+    }
+
+    async function fetchLeaderboard() {
+      setLeaderboardLoading(true);
+      try {
+        const res = await api.get(`/api/progress/course/${selectedCourseId}/leaderboard?period=allTime`);
+        setLeaderboard(res.data || []);
+      } catch (e) {
+        console.error('Failed to fetch leaderboard', e);
+      } finally {
+        setLeaderboardLoading(false);
+      }
+    }
+
     fetchAnalytics();
+    fetchLeaderboard();
   }, [selectedCourseId]);
 
+  // Refetch leaderboard when period changes (only re-fetch if not allTime which is already loaded)
   useEffect(() => {
-    setStudents([]);
+    if (!selectedCourseId || leaderboardPeriod === 'allTime') return;
+
+    async function fetchLeaderboardByPeriod() {
+      setLeaderboardLoading(true);
+      try {
+        const res = await api.get(`/api/progress/course/${selectedCourseId}/leaderboard?period=${leaderboardPeriod}`);
+        setLeaderboard(res.data || []);
+      } catch (e) {
+        console.error('Failed to fetch leaderboard', e);
+      } finally {
+        setLeaderboardLoading(false);
+      }
+    }
+
+    fetchLeaderboardByPeriod();
+  }, [leaderboardPeriod, selectedCourseId]);
+
+  useEffect(() => {
     if (activeTab !== 'students' || !selectedCourseId) return;
-    const fetchStudents = async () => {
+
+    async function fetchStudents() {
+      setStudents([]);
       setStudentsLoading(true);
       try {
         const res = await api.get(`/api/courses/${selectedCourseId}/students`);
@@ -141,7 +384,8 @@ const StudentStatusOverview = () => {
       } finally {
         setStudentsLoading(false);
       }
-    };
+    }
+
     fetchStudents();
   }, [activeTab, selectedCourseId]);
 
@@ -169,15 +413,31 @@ const StudentStatusOverview = () => {
     });
   }, [students, sortField, sortDir]);
 
-  const metrics = analytics?.metrics || { totalStudents: 0, avgCompletion: 0, activeModules: 0, totalXP: 0 };
-  const atRisk = analytics?.atRiskStudents || [];
-  const conceptMastery = analytics?.conceptMastery || [];
+  const metrics = useMemo(
+    () => analytics?.metrics || { totalStudents: 0, avgCompletion: 0, activeModules: 0, totalXP: 0 },
+    [analytics]
+  );
+  const atRisk = useMemo(() => analytics?.atRiskStudents || [], [analytics]);
+  const conceptMastery = useMemo(() => analytics?.conceptMastery || [], [analytics]);
+
+  const retentionHealth = useMemo(
+    () => metrics.totalStudents > 0 ? (1 - atRisk.length / metrics.totalStudents) * 100 : 100,
+    [metrics, atRisk]
+  );
+
+  const healthScore = useMemo(() => {
+    if (!analytics) return 0;
+    return Math.round(metrics.avgCompletion * 0.6 + retentionHealth * 0.4);
+  }, [analytics, metrics, retentionHealth]);
 
   const TABS = [
     { id: 'overview', label: 'Overview', icon: TrendingUp },
     { id: 'students', label: 'Students', icon: Users },
     { id: 'concepts', label: 'Concepts', icon: Brain },
+    { id: 'leaderboard', label: 'Leaderboard', icon: Trophy },
   ];
+
+  const topXP = leaderboard.length > 0 ? (leaderboard[0].xp || 1) : 1;
 
   return (
     <InstructorLayout title="Student Status Overview">
@@ -226,160 +486,206 @@ const StudentStatusOverview = () => {
 
         {/* ── Metric cards ── */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
-          <MetricCard label="Total Students" value={metrics.totalStudents} icon={<Users size={28} className="text-indigo-600 dark:text-indigo-400 drop-shadow-sm dark:drop-shadow-md" />} glowColor="rgba(99,102,241,0.5)" />
-          <MetricCard label="Avg. Completion" value={`${Math.round(metrics.avgCompletion)}%`} icon={<TrendingUp size={28} className="text-emerald-600 dark:text-emerald-400 drop-shadow-sm dark:drop-shadow-md" />} glowColor="rgba(16,185,129,0.5)" />
-          <MetricCard label="Active Modules" value={metrics.activeModules} icon={<BookOpen size={28} className="text-purple-600 dark:text-purple-400 drop-shadow-sm dark:drop-shadow-md" />} glowColor="rgba(124,58,237,0.5)" />
-          <MetricCard label="Class XP" value={(metrics.totalXP || 0).toLocaleString()} icon={<Trophy size={28} className="text-orange-600 dark:text-orange-400 drop-shadow-sm dark:drop-shadow-md" />} glowColor="rgba(245,158,11,0.5)" />
+          <MetricCard
+            label="Total Students"
+            value={metrics.totalStudents}
+            subtitle={`${atRisk.length} at risk`}
+            icon={<Users size={26} className="text-indigo-600 dark:text-indigo-400" />}
+            glowColor="rgba(99,102,241,0.5)"
+            trend={metrics.totalStudents > 0 ? 'up' : 'neutral'}
+          />
+          <MetricCard
+            label="Avg. Completion"
+            value={`${Math.round(metrics.avgCompletion)}%`}
+            subtitle={metrics.avgCompletion >= 60 ? 'On track' : 'Needs focus'}
+            icon={<TrendingUp size={26} className="text-emerald-600 dark:text-emerald-400" />}
+            glowColor="rgba(16,185,129,0.5)"
+            trend={metrics.avgCompletion >= 50 ? 'up' : 'down'}
+          />
+          <MetricCard
+            label="Active Modules"
+            value={metrics.activeModules}
+            subtitle="Course nodes"
+            icon={<BookOpen size={26} className="text-purple-600 dark:text-purple-400" />}
+            glowColor="rgba(124,58,237,0.5)"
+            trend="neutral"
+          />
+          <MetricCard
+            label="Class XP"
+            value={(metrics.totalXP || 0).toLocaleString()}
+            subtitle={`Avg Lv.${levelFromXP(metrics.totalStudents > 0 ? Math.round(metrics.totalXP / metrics.totalStudents) : 0)}`}
+            icon={<Zap size={26} className="text-amber-500 dark:text-amber-400" />}
+            glowColor="rgba(245,158,11,0.5)"
+            trend={metrics.totalXP > 0 ? 'up' : 'neutral'}
+            badge="⚡ XP"
+          />
         </div>
 
         {/* ── Tab switcher ── */}
-        <div className="flex gap-2 bg-gradient-to-r from-slate-50 to-slate-100/80 dark:from-white/5 dark:to-black/20 border border-slate-200/60 dark:border-white/10 p-2 rounded-3xl w-fit backdrop-blur-sm">
+        <div className="flex gap-2 bg-gradient-to-r from-slate-50 to-slate-100/80 dark:from-white/5 dark:to-black/20 border border-slate-200/60 dark:border-white/10 p-2 rounded-3xl w-fit backdrop-blur-sm flex-wrap">
           {TABS.map((tab) => {
-          const TabIcon = tab.icon;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-6 py-3 rounded-2xl text-sm font-bold transition-all duration-200 ${
-                activeTab === tab.id
-                  ? 'bg-gradient-to-r from-white to-slate-50/80 dark:from-white/15 dark:to-white/5 text-slate-900 dark:text-white shadow-lg dark:shadow-xl border border-slate-200/40 dark:border-white/20'
-                  : 'text-slate-500 dark:text-white/40 hover:text-slate-700 dark:hover:text-white/70 hover:bg-white/30 dark:hover:bg-white/5 transition-colors'
-              }`}
-            >
-              <TabIcon size={18} />
-              {tab.label}
-            </button>
-          );
-        })}
+            const TabIcon = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-2 px-6 py-3 rounded-2xl text-sm font-bold transition-all duration-200 ${
+                  activeTab === tab.id
+                    ? 'bg-gradient-to-r from-white to-slate-50/80 dark:from-white/15 dark:to-white/5 text-slate-900 dark:text-white shadow-lg dark:shadow-xl border border-slate-200/40 dark:border-white/20'
+                    : 'text-slate-500 dark:text-white/40 hover:text-slate-700 dark:hover:text-white/70 hover:bg-white/30 dark:hover:bg-white/5 transition-colors'
+                }`}
+              >
+                <TabIcon size={18} />
+                {tab.label}
+              </button>
+            );
+          })}
         </div>
 
         {/* ══ OVERVIEW TAB ══════════════════════════════════════════════════════ */}
         {activeTab === 'overview' && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="space-y-8">
 
-            {/* Class Progress table */}
-            <div className="lg:col-span-2 bg-gradient-to-br from-white to-slate-50 dark:from-white/8 dark:to-white/3 border border-slate-200/80 dark:border-white/15 p-8 rounded-3xl shadow-[0_12px_40px_rgba(0,0,0,0.06)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.5)] relative group overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-indigo-500/2 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-              <h3 className="font-display font-bold text-2xl text-slate-900 dark:text-white mb-8 relative z-10 drop-shadow-sm dark:drop-shadow-md flex items-center gap-3">
-                <BookOpen size={28} className="text-purple-600 dark:text-purple-400" />
-                Class Progress
-              </h3>
-              <div className="relative z-10">
-                {isLoading ? (
-                  <TableSkeleton cols={4} rows={5} />
-                ) : !analytics?.nodeProgress?.length ? (
-                  <EmptyState
-                    icon={<BookOpen size={24} />}
-                    title="No modules yet"
-                    subtitle="Create course modules to see progress here."
-                  />
-                ) : (
-                  <div className="overflow-x-auto overflow-y-auto rounded-2xl border border-slate-200/60 dark:border-white/5 bg-slate-50/50 dark:bg-black/20 w-full max-h-[380px]">
-                    <table className="w-full text-right text-sm border-collapse">
-                      <thead className="sticky top-0 bg-slate-100 dark:bg-slate-900 border-b border-slate-200 dark:border-white/10 text-slate-500 dark:text-white/40 font-bold text-[11px] uppercase tracking-wider">
-                        <tr>
-                          <th className="px-5 py-3 text-right">Module / Lesson</th>
-                          <th className="px-5 py-3 text-right whitespace-nowrap">Class Progress</th>
-                          <th className="px-5 py-3 text-right whitespace-nowrap">Completed</th>
-                          <th className="px-5 py-3 text-right whitespace-nowrap">Difficulty</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-200/50 dark:divide-white/5">
-                        {analytics.nodeProgress.map((item, idx) => {
-                          const total = metrics.totalStudents || 0;
-                          const completed = item.students || 0;
-                          const percentage = total > 0 ? Math.min(Math.round((completed / total) * 100), 100) : 0;
-                          const diff = difficultyFromPct(percentage);
-                          return (
-                            <tr key={idx} className="hover:bg-slate-100/30 dark:hover:bg-white/3 transition-colors">
-                              <td className="px-5 py-4 font-bold text-slate-800 dark:text-white drop-shadow-sm max-w-[220px]">
-                                <p className="truncate" title={item.name}>{item.name}</p>
-                              </td>
-                              <td className="px-5 py-4 whitespace-nowrap">
-                                <div className="flex items-center gap-3 justify-end">
-                                  <div className="w-24 bg-slate-200 dark:bg-white/10 h-1.5 rounded-full overflow-hidden shadow-inner">
-                                    <div className="bg-gradient-to-r from-purple-500 to-indigo-500 h-full rounded-full" style={{ width: `${percentage}%` }} />
+            {/* Class Health Score */}
+            <ClassHealthScore
+              score={isLoading ? 0 : healthScore}
+              avgCompletion={metrics.avgCompletion}
+              retentionHealth={retentionHealth}
+              atRiskCount={atRisk.length}
+              totalStudents={metrics.totalStudents}
+              isLoading={isLoading}
+            />
+
+            {/* Class Progress + right column */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+              {/* Class Progress table */}
+              <div className="lg:col-span-2 bg-gradient-to-br from-white to-slate-50 dark:from-white/8 dark:to-white/3 border border-slate-200/80 dark:border-white/15 p-8 rounded-3xl shadow-[0_12px_40px_rgba(0,0,0,0.06)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.5)] relative group overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-indigo-500/2 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                <h3 className="font-display font-bold text-2xl text-slate-900 dark:text-white mb-8 relative z-10 drop-shadow-sm dark:drop-shadow-md flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-purple-100 dark:bg-purple-500/10">
+                    <BookOpen size={24} className="text-purple-600 dark:text-purple-400" />
+                  </div>
+                  Class Progress
+                </h3>
+                <div className="relative z-10">
+                  {isLoading ? (
+                    <TableSkeleton cols={4} rows={5} />
+                  ) : !analytics?.nodeProgress?.length ? (
+                    <EmptyState icon={<BookOpen size={24} />} title="No modules yet" subtitle="Create course modules to see progress here." />
+                  ) : (
+                    <div className="overflow-x-auto overflow-y-auto rounded-2xl border border-slate-200/60 dark:border-white/5 bg-slate-50/50 dark:bg-black/20 w-full max-h-[380px]">
+                      <table className="w-full text-right text-sm border-collapse">
+                        <thead className="sticky top-0 bg-slate-100 dark:bg-slate-900 border-b border-slate-200 dark:border-white/10 text-slate-500 dark:text-white/40 font-bold text-[11px] uppercase tracking-wider">
+                          <tr>
+                            <th className="px-5 py-3 text-right">Module / Lesson</th>
+                            <th className="px-5 py-3 text-right whitespace-nowrap">Class Progress</th>
+                            <th className="px-5 py-3 text-right whitespace-nowrap">Completed</th>
+                            <th className="px-5 py-3 text-right whitespace-nowrap">Difficulty</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-200/50 dark:divide-white/5">
+                          {analytics.nodeProgress.map((item, idx) => {
+                            const total = metrics.totalStudents || 0;
+                            const completed = item.students || 0;
+                            const percentage = total > 0 ? Math.min(Math.round((completed / total) * 100), 100) : 0;
+                            const diff = difficultyFromPct(percentage);
+                            const barGrad = completionBarGradient(percentage);
+                            return (
+                              <tr key={idx} className="hover:bg-slate-100/30 dark:hover:bg-white/3 transition-colors">
+                                <td className="px-5 py-4 font-bold text-slate-800 dark:text-white drop-shadow-sm max-w-[220px]">
+                                  <p className="truncate" title={item.name}>{item.name}</p>
+                                </td>
+                                <td className="px-5 py-4 whitespace-nowrap">
+                                  <div className="flex items-center gap-3 justify-end">
+                                    <div className="w-24 bg-slate-200 dark:bg-white/10 h-2 rounded-full overflow-hidden shadow-inner">
+                                      <div className={`bg-gradient-to-r ${barGrad} h-full rounded-full`} style={{ width: `${percentage}%` }} />
+                                    </div>
+                                    <span className="text-xs font-black text-slate-700 dark:text-white/80 w-8 text-right">{percentage}%</span>
                                   </div>
-                                  <span className="text-xs font-black text-slate-700 dark:text-white/80 w-8 text-right">{percentage}%</span>
-                                </div>
-                              </td>
-                              <td className="px-5 py-4 font-medium text-slate-600 dark:text-white/70 whitespace-nowrap">
-                                {completed} of {total}
-                              </td>
-                              <td className="px-5 py-4 whitespace-nowrap">
-                                <span className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg border ${diff.color}`}>
-                                  {diff.label}
-                                </span>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
-              <p className="mt-6 text-center text-xs text-slate-400 dark:text-white/40 font-bold relative z-10 uppercase tracking-wider">
-                Difficulty reflects actual class completion rate
-              </p>
-            </div>
-
-            {/* At-Risk Panel */}
-            <div className="bg-gradient-to-br from-white to-slate-50 dark:from-white/8 dark:to-white/3 border border-slate-200/80 dark:border-white/15 p-8 rounded-3xl shadow-[0_12px_40px_rgba(0,0,0,0.06)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.5)] flex flex-col relative group overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-orange-500/3 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-              <h3 className="font-display font-bold text-2xl text-slate-900 dark:text-white mb-8 flex items-center justify-between relative z-10 drop-shadow-sm dark:drop-shadow-md">
-                <span className="flex items-center gap-3">
-                  <div className="p-2 rounded-xl bg-red-100 dark:bg-red-500/10">
-                    <Trophy size={24} className="text-red-600 dark:text-red-400" />
-                  </div>
-                  At-Risk Students
-                </span>
-                <span className="bg-red-500/15 text-red-600 dark:bg-red-500/20 dark:text-red-400 border border-red-500/30 dark:border-red-500/40 text-sm font-black px-4 py-2 rounded-full shadow-[0_0_10px_rgba(239,68,68,0.15)]">
-                  {atRisk.length}
-                </span>
-              </h3>
-              <div className="flex-1 space-y-3 relative z-10 overflow-y-auto max-h-[340px] pr-1 custom-scrollbar">
-                {isLoading ? (
-                  <CardSkeleton rows={3} />
-                ) : atRisk.length === 0 ? (
-                  <EmptyState
-                    icon={<Trophy size={20} className="text-emerald-500/60" />}
-                    title="All clear!"
-                    subtitle="No students at risk currently."
-                    compact
-                  />
-                ) : (
-                  atRisk.map((item, i) => (
-                    <div key={i} className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 dark:bg-black/20 border border-slate-200/60 dark:border-white/5 hover:bg-slate-100/50 dark:hover:bg-white/5 transition-colors">
-                      {item.student?.avatar && (item.student.avatar.startsWith('http') || item.student.avatar.startsWith('/')) ? (
-                        <img src={item.student.avatar} alt="Avatar" className="w-10 h-10 rounded-full bg-white/10 border border-white/10 flex-shrink-0" />
-                      ) : (
-                        <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-white/10 border border-slate-200 dark:border-white/5 flex items-center justify-center text-lg flex-shrink-0 select-none">
-                          {item.student?.avatar || '🎓'}
-                        </div>
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold text-slate-800 dark:text-white truncate drop-shadow-sm leading-tight">
-                          {item.student?.name || 'Student'}
-                        </p>
-                        <p className="text-[11px] text-red-500 dark:text-red-400 font-medium mt-0.5 truncate leading-tight">
-                          {item.issue === 'Never started' ? 'Has not started yet' :
-                           item.issue?.startsWith('Inactive for') ? `Inactive for ${item.issue.split(' ')[2]} days` :
-                           item.issue === 'Low progress' ? 'Low progress rate' :
-                           item.issue}
-                        </p>
-                      </div>
-                      <button
-                        onClick={() => item.student?.email && window.open(`mailto:${item.student.email}`)}
-                        disabled={!item.student?.email}
-                        title={item.student?.email ? `Email ${item.student.name}` : 'No email available'}
-                        className="text-xs font-bold text-slate-700 dark:text-white bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/20 border border-slate-200/50 dark:border-white/5 px-3 py-2 rounded-xl transition-colors shadow-inner flex-shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
-                      >
-                        Message
-                      </button>
+                                </td>
+                                <td className="px-5 py-4 font-medium text-slate-600 dark:text-white/70 whitespace-nowrap">
+                                  {completed} of {total}
+                                </td>
+                                <td className="px-5 py-4 whitespace-nowrap">
+                                  <span className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg border ${diff.color}`}>
+                                    {diff.label}
+                                  </span>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
                     </div>
-                  ))
-                )}
+                  )}
+                </div>
+                <p className="mt-6 text-center text-xs text-slate-400 dark:text-white/40 font-bold relative z-10 uppercase tracking-wider">
+                  Difficulty reflects actual class completion rate
+                </p>
+              </div>
+
+              {/* Right column: Top Performers + At-Risk */}
+              <div className="space-y-6">
+                <TopPerformers leaderboard={leaderboard} loading={leaderboardLoading} />
+
+                {/* At-Risk Panel */}
+                <div className="bg-gradient-to-br from-white to-slate-50 dark:from-white/8 dark:to-white/3 border border-slate-200/80 dark:border-white/15 p-6 rounded-3xl shadow-[0_12px_40px_rgba(0,0,0,0.06)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.5)] flex flex-col relative group overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-orange-500/3 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                  <h3 className="font-display font-bold text-lg text-slate-900 dark:text-white mb-4 flex items-center justify-between relative z-10">
+                    <span className="flex items-center gap-2">
+                      <div className="p-1.5 rounded-xl bg-red-100 dark:bg-red-500/10">
+                        <AlertTriangle size={18} className="text-red-600 dark:text-red-400" />
+                      </div>
+                      At-Risk Students
+                    </span>
+                    <span className="bg-red-500/15 text-red-600 dark:bg-red-500/20 dark:text-red-400 border border-red-500/30 text-xs font-black px-3 py-1 rounded-full">
+                      {atRisk.length}
+                    </span>
+                  </h3>
+                  <div className="flex-1 space-y-2 relative z-10 overflow-y-auto max-h-[300px] pr-1 custom-scrollbar">
+                    {isLoading ? (
+                      <CardSkeleton rows={3} />
+                    ) : atRisk.length === 0 ? (
+                      <EmptyState
+                        icon={<Star size={18} className="text-emerald-500/60" />}
+                        title="All clear!"
+                        subtitle="No students at risk."
+                        compact
+                      />
+                    ) : (
+                      atRisk.map((item, i) => {
+                        const iss = issueConfig(item.issue);
+                        return (
+                          <div key={i} className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 dark:bg-black/20 border border-slate-200/60 dark:border-white/5 hover:bg-slate-100/50 dark:hover:bg-white/5 transition-colors">
+                            <AvatarDisplay avatar={item.student?.avatar} size="w-9 h-9" />
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <p className="text-sm font-bold text-slate-800 dark:text-white truncate leading-tight">
+                                  {item.student?.name || 'Student'}
+                                </p>
+                                <span className={`text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded border ${iss.cls}`}>
+                                  {iss.label}
+                                </span>
+                              </div>
+                              <p className="text-[11px] text-slate-400 dark:text-white/40 mt-0.5">
+                                {item.completion}% complete
+                              </p>
+                            </div>
+                            <button
+                              onClick={() => item.student?.email && window.open(`mailto:${item.student.email}`)}
+                              disabled={!item.student?.email}
+                              title={item.student?.email || 'No email'}
+                              className="text-xs font-bold text-slate-700 dark:text-white bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/20 border border-slate-200/50 dark:border-white/5 px-2.5 py-1.5 rounded-xl transition-colors flex-shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+                            >
+                              Message
+                            </button>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -390,9 +696,9 @@ const StudentStatusOverview = () => {
           <div className="bg-gradient-to-br from-white to-slate-50 dark:from-white/8 dark:to-white/3 border border-slate-200/80 dark:border-white/15 p-8 rounded-3xl shadow-[0_12px_40px_rgba(0,0,0,0.06)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.5)] relative group overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-purple-500/2 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
             <div className="flex items-center justify-between mb-8 relative z-10">
-              <h3 className="font-display font-bold text-2xl text-slate-900 dark:text-white drop-shadow-sm dark:drop-shadow-md flex items-center gap-3">
+              <h3 className="font-display font-bold text-2xl text-slate-900 dark:text-white drop-shadow-sm flex items-center gap-3">
                 <div className="p-2 rounded-xl bg-indigo-100 dark:bg-indigo-500/10">
-                  <Users size={26} className="text-indigo-600 dark:text-indigo-400" />
+                  <Users size={24} className="text-indigo-600 dark:text-indigo-400" />
                 </div>
                 All Students
               </h3>
@@ -404,70 +710,85 @@ const StudentStatusOverview = () => {
             </div>
             <div className="relative z-10">
               {studentsLoading ? (
-                <TableSkeleton cols={6} rows={6} />
+                <TableSkeleton cols={7} rows={6} />
               ) : students.length === 0 ? (
-                <EmptyState
-                  icon={<Users size={24} />}
-                  title="No students enrolled"
-                  subtitle="Students will appear here once they join the course."
-                />
+                <EmptyState icon={<Users size={24} />} title="No students enrolled" subtitle="Students will appear here once they join." />
               ) : (
                 <div className="overflow-x-auto rounded-2xl border border-slate-200/60 dark:border-white/5 bg-slate-50/50 dark:bg-black/20">
                   <table className="w-full text-sm border-collapse">
                     <thead className="sticky top-0 bg-slate-100 dark:bg-slate-900 border-b border-slate-200 dark:border-white/10 text-slate-500 dark:text-white/40 font-bold text-[11px] uppercase tracking-wider">
                       <tr>
+                        <th className="px-4 py-3 text-right whitespace-nowrap w-12">#</th>
                         <SortableHeader field="name" label="Student" current={sortField} dir={sortDir} onSort={toggleSort} align="left" />
+                        <th className="px-4 py-3 text-right whitespace-nowrap">Level</th>
                         <SortableHeader field="completion" label="Completion" current={sortField} dir={sortDir} onSort={toggleSort} />
                         <SortableHeader field="totalXP" label="XP" current={sortField} dir={sortDir} onSort={toggleSort} />
                         <SortableHeader field="completedNodes" label="Lessons" current={sortField} dir={sortDir} onSort={toggleSort} />
                         <SortableHeader field="lastActivityDate" label="Last Active" current={sortField} dir={sortDir} onSort={toggleSort} />
-                        <th className="px-5 py-3 text-right whitespace-nowrap">Status</th>
+                        <th className="px-4 py-3 text-right whitespace-nowrap">Status</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-200/50 dark:divide-white/5">
                       {sortedStudents.map((s, i) => {
                         const badge = studentBadge(s);
+                        const rank = i + 1;
+                        const isTop3 = rank <= 3;
+                        const isAtRisk = badge.label === 'At Risk';
+                        const level = levelFromXP(s.totalXP);
+                        const barGrad = completionBarGradient(s.completion);
+                        const rowCls = isTop3
+                          ? 'bg-amber-50/30 dark:bg-amber-500/5'
+                          : isAtRisk
+                          ? 'bg-red-50/20 dark:bg-red-500/4'
+                          : '';
                         return (
-                          <tr key={i} className="hover:bg-slate-100/30 dark:hover:bg-white/3 transition-colors">
+                          <tr key={i} className={`hover:bg-slate-100/30 dark:hover:bg-white/3 transition-colors ${rowCls}`}>
+                            {/* Rank */}
+                            <td className="px-4 py-4 text-right">
+                              {rank <= 3
+                                ? <span className="text-lg select-none">{RANK_MEDAL[rank - 1]}</span>
+                                : <span className="text-xs font-bold text-slate-400 dark:text-white/30">#{rank}</span>
+                              }
+                            </td>
                             {/* Name + avatar */}
-                            <td className="px-5 py-4">
+                            <td className="px-4 py-4">
                               <div className="flex items-center gap-3">
-                                {s.student?.avatar && (s.student.avatar.startsWith('http') || s.student.avatar.startsWith('/')) ? (
-                                  <img src={s.student.avatar} alt="" className="w-8 h-8 rounded-full border border-slate-200 dark:border-white/10 flex-shrink-0" />
-                                ) : (
-                                  <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-white/10 border border-slate-200 dark:border-white/5 flex items-center justify-center text-base flex-shrink-0 select-none">
-                                    {s.student?.avatar || '🎓'}
-                                  </div>
-                                )}
+                                <AvatarDisplay avatar={s.student?.avatar} size="w-8 h-8" />
                                 <div>
                                   <p className="font-bold text-slate-800 dark:text-white leading-tight">{s.student?.name || 'Unknown'}</p>
                                   <p className="text-[11px] text-slate-400 dark:text-white/40 leading-tight">{s.student?.email || '—'}</p>
                                 </div>
                               </div>
                             </td>
+                            {/* Level */}
+                            <td className="px-4 py-4 text-right whitespace-nowrap">
+                              <span className="text-xs font-black text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-500/15 border border-purple-200 dark:border-purple-500/25 px-2 py-0.5 rounded-lg">
+                                Lv.{level}
+                              </span>
+                            </td>
                             {/* Completion */}
-                            <td className="px-5 py-4 whitespace-nowrap">
+                            <td className="px-4 py-4 whitespace-nowrap">
                               <div className="flex items-center gap-3 justify-end">
-                                <div className="w-20 bg-slate-200 dark:bg-white/10 h-1.5 rounded-full overflow-hidden shadow-inner">
-                                  <div className="bg-gradient-to-r from-purple-500 to-indigo-500 h-full rounded-full" style={{ width: `${s.completion}%` }} />
+                                <div className="w-20 bg-slate-200 dark:bg-white/10 h-2 rounded-full overflow-hidden shadow-inner">
+                                  <div className={`bg-gradient-to-r ${barGrad} h-full rounded-full`} style={{ width: `${s.completion}%` }} />
                                 </div>
                                 <span className="text-xs font-black text-slate-700 dark:text-white/80 w-9 text-right">{s.completion}%</span>
                               </div>
                             </td>
                             {/* XP */}
-                            <td className="px-5 py-4 text-right font-bold text-slate-800 dark:text-white whitespace-nowrap">
-                              {(s.totalXP || 0).toLocaleString()} <span className="text-slate-400 dark:text-white/40 font-medium">XP</span>
+                            <td className="px-4 py-4 text-right font-bold text-slate-800 dark:text-white whitespace-nowrap">
+                              <span className="text-amber-600 dark:text-amber-400">⚡</span> {(s.totalXP || 0).toLocaleString()}
                             </td>
                             {/* Lessons */}
-                            <td className="px-5 py-4 text-right text-slate-600 dark:text-white/70 whitespace-nowrap font-medium">
+                            <td className="px-4 py-4 text-right text-slate-600 dark:text-white/70 whitespace-nowrap font-medium">
                               {s.completedNodes} / {s.totalNodes}
                             </td>
                             {/* Last active */}
-                            <td className="px-5 py-4 text-right text-slate-500 dark:text-white/50 whitespace-nowrap text-xs font-medium">
+                            <td className="px-4 py-4 text-right text-slate-500 dark:text-white/50 whitespace-nowrap text-xs font-medium">
                               {relativeTime(s.lastActivityDate)}
                             </td>
                             {/* Status badge */}
-                            <td className="px-5 py-4 text-right whitespace-nowrap">
+                            <td className="px-4 py-4 text-right whitespace-nowrap">
                               <span className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg border ${badge.color}`}>
                                 {badge.label}
                               </span>
@@ -487,54 +808,135 @@ const StudentStatusOverview = () => {
         {activeTab === 'concepts' && (
           <div className="bg-gradient-to-br from-white to-slate-50 dark:from-white/8 dark:to-white/3 border border-slate-200/80 dark:border-white/15 p-8 rounded-3xl shadow-[0_12px_40px_rgba(0,0,0,0.06)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.5)] relative group overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-indigo-500/2 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-            <h3 className="font-display font-bold text-2xl text-slate-900 dark:text-white mb-8 relative z-10 drop-shadow-sm dark:drop-shadow-md flex items-center gap-3">
+            <h3 className="font-display font-bold text-2xl text-slate-900 dark:text-white mb-8 relative z-10 flex items-center gap-3">
               <div className="p-2 rounded-xl bg-purple-100 dark:bg-purple-500/10">
-                <Brain size={26} className="text-purple-600 dark:text-purple-400" />
+                <Brain size={24} className="text-purple-600 dark:text-purple-400" />
               </div>
               Curriculum Concept Mastery
             </h3>
-            <div className="relative z-10 space-y-4">
+            <div className="relative z-10">
               {isLoading ? (
-                Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="p-4 rounded-2xl bg-slate-50 dark:bg-black/20 border border-slate-200/60 dark:border-white/5">
-                    <div className="h-4 rounded-full bg-slate-200 dark:bg-white/10 animate-pulse w-1/3 mb-3" />
-                    <div className="h-2 rounded-full bg-slate-200 dark:bg-white/10 animate-pulse" />
-                  </div>
-                ))
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <div key={i} className="p-5 rounded-2xl bg-slate-50 dark:bg-black/20 border border-slate-200/60 dark:border-white/5 flex flex-col items-center gap-3">
+                      <div className="w-16 h-16 rounded-full bg-slate-200 dark:bg-white/10 animate-pulse" />
+                      <div className="h-3 rounded-full bg-slate-200 dark:bg-white/10 animate-pulse w-3/4" />
+                      <div className="h-4 rounded-full bg-slate-200 dark:bg-white/10 animate-pulse w-1/2" />
+                    </div>
+                  ))}
+                </div>
               ) : conceptMastery.length === 0 ? (
-                <EmptyState
-                  icon={<Brain size={24} />}
-                  title="No concept data yet"
-                  subtitle="Generate a course curriculum to see mastery breakdown."
-                />
+                <EmptyState icon={<Brain size={24} />} title="No concept data yet" subtitle="Generate a course curriculum to see mastery breakdown." />
               ) : (
-                conceptMastery.map((item, idx) => (
-                  <div key={idx} className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-black/20 border border-slate-200/60 dark:border-white/5 hover:bg-slate-100/50 dark:hover:bg-white/5 transition-colors">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-slate-800 dark:text-white truncate drop-shadow-sm">{item.topic}</p>
-                      <div className="w-full bg-slate-200 dark:bg-white/10 h-2 rounded-full mt-2 overflow-hidden shadow-inner">
-                        <div
-                          className={`h-full rounded-full transition-all duration-500 ${
-                            item.masteryLevel > 85 ? 'bg-gradient-to-r from-emerald-500 to-teal-400 shadow-[0_0_10px_rgba(16,185,129,0.3)]' :
-                            item.masteryLevel > 72 ? 'bg-gradient-to-r from-amber-500 to-orange-400 shadow-[0_0_10px_rgba(245,158,11,0.3)]' :
-                            'bg-gradient-to-r from-red-500 to-rose-400 shadow-[0_0_10px_rgba(239,68,68,0.3)]'
-                          }`}
-                          style={{ width: `${item.masteryLevel}%` }}
-                        />
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {conceptMastery.map((item, idx) => (
+                    <ConceptCard key={idx} item={item} />
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ══ LEADERBOARD TAB ═══════════════════════════════════════════════════ */}
+        {activeTab === 'leaderboard' && (
+          <div className="bg-gradient-to-br from-white to-slate-50 dark:from-white/8 dark:to-white/3 border border-slate-200/80 dark:border-white/15 p-8 rounded-3xl shadow-[0_12px_40px_rgba(0,0,0,0.06)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.5)] relative group overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-orange-500/3 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 relative z-10">
+              <h3 className="font-display font-bold text-2xl text-slate-900 dark:text-white flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-amber-100 dark:bg-amber-500/10">
+                  <Trophy size={24} className="text-amber-600 dark:text-amber-400" />
+                </div>
+                Course Leaderboard
+              </h3>
+              {/* Period selector */}
+              <div className="flex gap-2 bg-slate-100 dark:bg-white/5 border border-slate-200/60 dark:border-white/10 p-1.5 rounded-2xl w-fit">
+                {[
+                  { id: 'weekly', label: 'Weekly' },
+                  { id: 'monthly', label: 'Monthly' },
+                  { id: 'allTime', label: 'All Time' },
+                ].map(p => (
+                  <button
+                    key={p.id}
+                    onClick={() => setLeaderboardPeriod(p.id)}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                      leaderboardPeriod === p.id
+                        ? 'bg-white dark:bg-white/15 text-slate-900 dark:text-white shadow-md border border-slate-200/60 dark:border-white/20'
+                        : 'text-slate-500 dark:text-white/40 hover:text-slate-700 dark:hover:text-white/70'
+                    }`}
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="relative z-10">
+              {leaderboardLoading ? (
+                <TableSkeleton cols={5} rows={8} />
+              ) : leaderboard.length === 0 ? (
+                <EmptyState icon={<Trophy size={24} />} title="No leaderboard data" subtitle="Students need to earn XP for this period." />
+              ) : (
+                <div className="space-y-2">
+                  {leaderboard.map((s, i) => {
+                    const rank = s.rank || i + 1;
+                    const isTop3 = rank <= 3;
+                    const level = s.level || levelFromXP(s.xp);
+                    const xpBarWidth = Math.round(((s.xp || 0) / topXP) * 100);
+                    const borderCls = rank === 1
+                      ? 'border-amber-300/60 dark:border-amber-500/30 bg-amber-50/50 dark:bg-amber-500/8'
+                      : rank === 2
+                      ? 'border-slate-300/60 dark:border-slate-400/25 bg-slate-50/80 dark:bg-white/5'
+                      : rank === 3
+                      ? 'border-orange-300/50 dark:border-orange-500/20 bg-orange-50/30 dark:bg-orange-500/5'
+                      : 'border-slate-200/50 dark:border-white/5 bg-white/40 dark:bg-black/10';
+                    return (
+                      <div key={s.userId || i} className={`flex items-center gap-4 p-4 rounded-2xl border transition-all hover:scale-[1.005] ${borderCls}`}>
+                        {/* Rank */}
+                        <div className="w-10 text-center flex-shrink-0">
+                          {isTop3
+                            ? <span className="text-2xl select-none">{RANK_MEDAL[rank - 1]}</span>
+                            : <span className="text-sm font-black text-slate-400 dark:text-white/30">#{rank}</span>
+                          }
+                        </div>
+                        {/* Avatar */}
+                        <AvatarDisplay avatar={s.avatar} size="w-10 h-10" />
+                        {/* Name + XP bar */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1.5">
+                            <p className="font-bold text-slate-800 dark:text-white truncate leading-tight">{s.name || 'Student'}</p>
+                            <span className="text-[10px] font-black text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-500/15 border border-purple-200 dark:border-purple-500/25 px-1.5 py-0.5 rounded flex-shrink-0">
+                              Lv.{level}
+                            </span>
+                            {s.isYou && (
+                              <span className="text-[10px] font-black text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-500/15 border border-amber-200 dark:border-amber-500/25 px-1.5 py-0.5 rounded flex-shrink-0">
+                                You
+                              </span>
+                            )}
+                          </div>
+                          <div className="w-full bg-slate-200 dark:bg-white/10 h-1.5 rounded-full overflow-hidden">
+                            <div
+                              className={`h-full rounded-full bg-gradient-to-r ${
+                                rank === 1 ? 'from-amber-400 to-yellow-300' :
+                                rank === 2 ? 'from-slate-400 to-slate-300' :
+                                rank === 3 ? 'from-orange-500 to-amber-400' :
+                                'from-purple-500 to-indigo-400'
+                              }`}
+                              style={{ width: `${xpBarWidth}%`, boxShadow: isTop3 ? '0 0 8px rgba(251,191,36,0.4)' : 'none' }}
+                            />
+                          </div>
+                        </div>
+                        {/* XP */}
+                        <div className="text-right flex-shrink-0">
+                          <p className="font-black text-slate-900 dark:text-white text-sm">
+                            <span className="text-amber-500 dark:text-amber-400">⚡</span> {(s.xp || 0).toLocaleString()}
+                          </p>
+                          <p className="text-[10px] text-slate-400 dark:text-white/40 font-medium">XP</p>
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <span className="text-sm font-black text-slate-800 dark:text-white">{item.masteryLevel}%</span>
-                      <span className={`text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full border ${
-                        item.status === 'Excellent' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20 dark:bg-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30' :
-                        item.status === 'Moderate' ? 'bg-amber-500/10 text-amber-600 border-amber-500/20 dark:bg-amber-500/20 dark:text-amber-400 dark:border-amber-500/30' :
-                        'bg-red-500/10 text-red-500 border-red-500/20 dark:bg-red-500/20 dark:text-red-400 dark:border-red-500/30'
-                      }`}>
-                        {item.status}
-                      </span>
-                    </div>
-                  </div>
-                ))
+                    );
+                  })}
+                </div>
               )}
             </div>
           </div>
@@ -547,9 +949,9 @@ const StudentStatusOverview = () => {
 
 // ── sub-components ─────────────────────────────────────────────────────────────
 
-const MetricCard = ({ label, value, icon, glowColor }) => (
+const MetricCard = ({ label, value, icon, glowColor, subtitle, trend, badge }) => (
   <div
-    className="p-8 rounded-3xl flex flex-col justify-between h-48 cursor-default transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_20px_40px_rgba(0,0,0,0.12)] dark:hover:shadow-[0_20px_40px_rgba(0,0,0,0.6)] bg-gradient-to-br from-white to-slate-50 dark:from-white/8 dark:to-white/3 border border-slate-200/80 dark:border-white/15 relative overflow-hidden group"
+    className="p-7 rounded-3xl flex flex-col justify-between cursor-default transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_20px_40px_rgba(0,0,0,0.12)] dark:hover:shadow-[0_20px_40px_rgba(0,0,0,0.6)] bg-gradient-to-br from-white to-slate-50 dark:from-white/8 dark:to-white/3 border border-slate-200/80 dark:border-white/15 relative overflow-hidden group"
     style={{ boxShadow: '0 12px 40px rgba(0,0,0,0.04)' }}
   >
     <div
@@ -557,13 +959,29 @@ const MetricCard = ({ label, value, icon, glowColor }) => (
       style={{ background: `radial-gradient(circle at center, ${glowColor} 0%, transparent 70%)` }}
     />
     <div className="flex justify-between items-start relative z-10">
-      <div className="p-4 rounded-2xl bg-gradient-to-br from-slate-100 to-slate-50 dark:from-white/10 dark:to-white/5 border border-slate-200/60 dark:border-white/10 shadow-sm">
+      <div className="p-3.5 rounded-2xl bg-gradient-to-br from-slate-100 to-slate-50 dark:from-white/10 dark:to-white/5 border border-slate-200/60 dark:border-white/10 shadow-sm">
         {icon}
       </div>
+      {trend && trend !== 'neutral' && (
+        <div className={`p-1.5 rounded-xl ${trend === 'up' ? 'bg-emerald-100 dark:bg-emerald-500/10' : 'bg-red-100 dark:bg-red-500/10'}`}>
+          {trend === 'up'
+            ? <TrendingUp size={14} className="text-emerald-600 dark:text-emerald-400" />
+            : <ChevronDown size={14} className="text-red-600 dark:text-red-400" />
+          }
+        </div>
+      )}
     </div>
-    <div className="relative z-10">
-      <p className="text-slate-400 dark:text-white/50 text-xs font-black uppercase tracking-widest mb-2">{label}</p>
-      <p className="text-5xl font-black text-slate-900 dark:text-white drop-shadow-sm dark:drop-shadow-md">{value}</p>
+    <div className="relative z-10 mt-4">
+      <p className="text-slate-400 dark:text-white/50 text-[10px] font-black uppercase tracking-widest mb-1">{label}</p>
+      <div className="flex items-end gap-2">
+        <p className="text-4xl font-black text-slate-900 dark:text-white drop-shadow-sm dark:drop-shadow-md leading-none">{value}</p>
+        {badge && (
+          <span className="text-[10px] font-black text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-500/15 border border-amber-200 dark:border-amber-500/25 px-2 py-0.5 rounded-lg mb-0.5">
+            {badge}
+          </span>
+        )}
+      </div>
+      {subtitle && <p className="text-xs text-slate-400 dark:text-white/40 font-medium mt-1">{subtitle}</p>}
     </div>
   </div>
 );
@@ -573,7 +991,7 @@ const SortableHeader = ({ field, label, current, dir, onSort, align = 'right' })
   const Icon = active ? (dir === 'asc' ? ChevronUp : ChevronDown) : ChevronsUpDown;
   return (
     <th
-      className={`px-5 py-3 whitespace-nowrap text-${align} cursor-pointer select-none hover:text-slate-700 dark:hover:text-white/70 transition-colors`}
+      className={`px-4 py-3 whitespace-nowrap text-${align} cursor-pointer select-none hover:text-slate-700 dark:hover:text-white/70 transition-colors`}
       onClick={() => onSort(field)}
     >
       <span className="inline-flex items-center gap-1">
