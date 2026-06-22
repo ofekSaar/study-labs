@@ -325,11 +325,11 @@ const EnrollmentTab = ({ courses, preselectedCourseId }) => {
 const ManagedCourses = () => {
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
-    const { courses, fetchAllCourses, deleteCourse, updateCourse, isLoading } = useCourseStore();
+    const { courses, fetchAllCourses, deleteCourse, isLoading } = useCourseStore();
     const [searchTerm, setSearchTerm] = useState('');
     const [deletingId, setDeletingId] = useState(null);
     const [enrollmentCourseId, setEnrollmentCourseId] = useState(null);
-    const [_editingCourse, _setEditingCourse] = useState(null);
+    const [editingCourse, setEditingCourse] = useState(null);
 
     const activeTab = searchParams.get('tab') || 'courses';
 
