@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Home, Settings, LogOut, Menu, PlusCircle, BookOpen, ChevronRight, X, Users, TrendingUp, GraduationCap, BarChart2, BookMarked } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import useAuthStore from '../../store/authStore';
