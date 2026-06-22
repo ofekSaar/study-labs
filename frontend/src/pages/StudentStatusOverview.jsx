@@ -274,7 +274,7 @@ const StudentStatusOverview = () => {
                     subtitle="Create course modules to see progress here."
                   />
                 ) : (
-                  <div className="overflow-x-auto rounded-2xl border border-slate-200/60 dark:border-white/5 bg-slate-50/50 dark:bg-black/20 w-full">
+                  <div className="overflow-x-auto overflow-y-auto rounded-2xl border border-slate-200/60 dark:border-white/5 bg-slate-50/50 dark:bg-black/20 w-full max-h-[380px]">
                     <table className="w-full text-right text-sm border-collapse">
                       <thead className="sticky top-0 bg-slate-100 dark:bg-slate-900 border-b border-slate-200 dark:border-white/10 text-slate-500 dark:text-white/40 font-bold text-[11px] uppercase tracking-wider">
                         <tr>
@@ -356,7 +356,7 @@ const StudentStatusOverview = () => {
                           {item.student?.avatar || '🎓'}
                         </div>
                       )}
-                      <div className="flex-1 min-w-0 text-right">
+                      <div className="flex-1 min-w-0">
                         <p className="text-sm font-bold text-slate-800 dark:text-white truncate drop-shadow-sm leading-tight">
                           {item.student?.name || 'Student'}
                         </p>
