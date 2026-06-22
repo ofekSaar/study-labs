@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Home, Settings, LogOut, Menu, PlusCircle, BookOpen, ChevronRight, X, Users, TrendingUp, GraduationCap, BarChart2, BookMarked } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import useAuthStore from '../../store/authStore';
@@ -59,9 +59,15 @@ const GameNavItem = ({ icon, label, active, onClick }) => (
     </button>
 );
 
-const SidebarContent = ({ location, navigate, user, courseUser, _setIsSidebarOpen, setIsSettingsOpen, handleLogout }) => {
+const SidebarContent = ({ location, navigate, user, instructorStats, _setIsSidebarOpen, setIsSettingsOpen, handleLogout }) => {
     const { activeAvatar } = useGamificationStore();
     const currentAvatar = INSTRUCTOR_AVATARS.find(a => a.id === activeAvatar) || INSTRUCTOR_AVATARS[0];
+
+    const activeCourses = instructorStats?.generation?.readyCourses ?? '—';
+    const totalStudents = instructorStats?.enrollments?.totalStudents ?? '—';
+    const completionRate = instructorStats?.engagement?.avgCompletionRate != null
+        ? `${instructorStats.engagement.avgCompletionRate}%`
+        : '—';
 
     return (
         <div className="flex flex-col h-full">
@@ -147,18 +153,18 @@ const SidebarContent = ({ location, navigate, user, courseUser, _setIsSidebarOpe
                                     </p>
                                     <div className="flex items-center gap-1.5 mt-1.5">
                                         <div className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-500/20">
-                                            <Trophy size={9} className="text-emerald-500" />
+                                            <BookMarked size={9} className="text-emerald-500" />
                                             <span className="text-[8px] font-black text-emerald-600 dark:text-emerald-400">
-                                                Lvl {courseUser?.totalXP ? Math.floor(courseUser.totalXP / 100) + 1 : 1}
+                                                {activeCourses} courses
                                             </span>
                                         </div>
                                         <div className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-purple-500/10 dark:bg-purple-500/15 border border-purple-500/20">
-                                            <Zap size={9} className="text-purple-500" />
-                                            <span className="text-[8px] font-black text-purple-600 dark:text-purple-400">{courseUser?.totalXP || 0} XP</span>
+                                            <Users size={9} className="text-purple-500" />
+                                            <span className="text-[8px] font-black text-purple-600 dark:text-purple-400">{totalStudents} students</span>
                                         </div>
                                         <div className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-orange-500/10 dark:bg-orange-500/15 border border-orange-500/20">
-                                            <Flame size={9} className="text-orange-500 fill-orange-500" />
-                                            <span className="text-[8px] font-black text-orange-600 dark:text-orange-400">{courseUser?.streak || 0}d</span>
+                                            <TrendingUp size={9} className="text-orange-500" />
+                                            <span className="text-[8px] font-black text-orange-600 dark:text-orange-400">{completionRate}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -207,13 +213,15 @@ const InstructorLayout = ({ children }) => {
     const navigate = useNavigate();
     const location = useLocation();
     const { logout, user } = useAuthStore();
-    const { user: courseUser } = useCourseStore();
+    const { instructorStats, fetchInstructorStats } = useCourseStore();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
+    useEffect(() => { fetchInstructorStats(); }, [fetchInstructorStats]);
+
     const handleLogout = () => { logout(); navigate('/login'); };
 
-    const sidebarProps = { location, navigate, user, courseUser, setIsSidebarOpen, setIsSettingsOpen, handleLogout };
+    const sidebarProps = { location, navigate, user, instructorStats, setIsSidebarOpen, setIsSettingsOpen, handleLogout };
 
     return (
         <div className="min-h-screen flex font-sans bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300">
