@@ -174,7 +174,7 @@ const SectionCard = ({ title, icon, action, children }) => (
 /* ── Main Component ── */
 const InstructorDashboard = () => {
     const navigate = useNavigate();
-    const { courses, instructorStats, fetchAllCourses, isLoading } = useCourseStore();
+    const { instructorStats, fetchAllCourses, isLoading } = useCourseStore();
     const { pendingEnrollments, approvePendingEnrollment, denyPendingEnrollment } = useEnrollmentStore();
     const { user } = useAuthStore();
     const [actionLoading, setActionLoading] = useState(null);
