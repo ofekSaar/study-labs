@@ -19,7 +19,6 @@ const StudyShop = lazy(() => import('./pages/StudyShop'));
 const InstructorDashboard = lazy(() => import('./pages/InstructorDashboard'));
 const StudentStatusOverview = lazy(() => import('./pages/StudentStatusOverview'));
 const CourseWizard = lazy(() => import('./pages/CourseWizard'));
-const EnrollmentRequests = lazy(() => import('./pages/EnrollmentRequests'));
 const ManagedCourses = lazy(() => import('./pages/ManagedCourses'));
 const ClassRoster = lazy(() => import('./pages/ClassRoster'));
 const InstructorStats = lazy(() => import('./pages/InstructorStats'));
@@ -164,16 +163,8 @@ function App() {
             </ProtectedRoute>
           } 
         />
-        <Route 
-          path="/instructor/enrollments" 
-          element={
-            <ProtectedRoute allowedRole="instructor">
-              <EnrollmentRequests />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/instructor/managed" 
+        <Route
+          path="/instructor/managed"
           element={
             <ProtectedRoute allowedRole="instructor">
               <ManagedCourses />

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Home, Settings, LogOut, Menu, PlusCircle, BookOpen, ChevronRight, X, Users, Flame, Zap, Trophy, TrendingUp, GraduationCap, BarChart2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Home, Settings, LogOut, Menu, PlusCircle, BookOpen, ChevronRight, X, Users, TrendingUp, GraduationCap, BarChart2, BookMarked } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import useAuthStore from '../../store/authStore';
 import useCourseStore from '../../store/courseStore';
@@ -101,10 +101,6 @@ const SidebarContent = ({ location, navigate, user, courseUser, _setIsSidebarOpe
                 <GameNavItem icon={<PlusCircle size={18} />} label="Create Course"
                     active={location.pathname === '/instructor/create'}
                     onClick={() => navigate('/instructor/create')} />
-
-                <GameNavItem icon={<Users size={18} />} label="Enrollment Requests"
-                    active={location.pathname === '/instructor/enrollments'}
-                    onClick={() => navigate('/instructor/enrollments')} />
 
                 <GameNavItem icon={<BookOpen size={18} />} label="Managed Courses"
                     active={location.pathname.includes('/instructor/managed')}
