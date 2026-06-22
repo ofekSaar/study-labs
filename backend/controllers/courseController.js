@@ -259,7 +259,7 @@ export const updateCourse = async (req, res, next) => {
     assertOwner(course, 'instructor', req.user._id, 'You can only edit your own courses');
 
     const updates = {};
-    const allowedFields = ['title', 'department', 'description', 'color', 'level', 'isPublished'];
+    const allowedFields = ['title', 'department', 'description', 'color', 'level', 'isPublished', 'courseAvatar'];
     allowedFields.forEach((field) => {
       if (req.body[field] !== undefined) updates[field] = req.body[field];
     });

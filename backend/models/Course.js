@@ -37,6 +37,10 @@ const courseSchema = new mongoose.Schema(
       type: String,
       default: 'bg-studylabs-blue',
     },
+    courseAvatar: {
+      type: String,
+      default: '📚',
+    },
     level: {
       type: String,
       default: 'Beginner',

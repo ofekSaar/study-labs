@@ -198,6 +198,19 @@ const useCourseStore = create((set) => ({
         }
     },
 
+    updateCourse: async (courseId, updates) => {
+        const { data } = await api.put(`/api/courses/${courseId}`, updates);
+        const updated = data.course;
+        set((state) => ({
+            courses: state.courses.map((c) =>
+                (c.id === courseId || c._id === courseId)
+                    ? { ...c, ...updated, id: c.id || c._id }
+                    : c
+            ),
+        }));
+        return updated;
+    },
+
     deleteCourse: async (courseId) => {
         try {
             await api.delete(`/api/courses/${courseId}`);
