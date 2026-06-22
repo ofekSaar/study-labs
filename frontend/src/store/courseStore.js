@@ -9,6 +9,7 @@ const useCourseStore = create((set) => ({
         levelName: 'Beginner',
         avatar: null,
     },
+    instructorStats: null,
     courses: [],
     selectedCourseId: null,
     selectedNode: null,
@@ -77,6 +78,16 @@ const useCourseStore = create((set) => ({
             });
         } catch (error) {
             set({ error: error.message, isLoading: false });
+        }
+    },
+
+    // ── Fetch instructor-specific stats ───────────
+    fetchInstructorStats: async () => {
+        try {
+            const { data } = await api.get('/api/instructor/stats');
+            set({ instructorStats: data });
+        } catch (error) {
+            console.error('Failed to fetch instructor stats:', error);
         }
     },
 
