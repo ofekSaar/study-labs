@@ -738,7 +738,7 @@ const StudentStatusOverview = () => {
                             <AvatarDisplay avatar={item.student?.avatar} size="w-9 h-9" />
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 flex-wrap">
-                                <p className="text-sm font-bold text-slate-800 dark:text-white truncate leading-tight">
+                                <p className="text-sm font-bold text-slate-800 dark:text-white break-words leading-tight" title={item.student?.name || 'Student'}>
                                   {item.student?.name || 'Student'}
                                 </p>
                                 <span className={`text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded border ${iss.cls}`}>
