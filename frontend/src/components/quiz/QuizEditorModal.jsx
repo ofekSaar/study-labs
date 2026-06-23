@@ -24,7 +24,7 @@ const QuestionCard = ({ question, index, nodeId, onDelete }) => {
     };
 
     const handleSave = async () => {
-        if (!form.question.trim()) { setErrorMsg('השאלה לא יכולה להיות ריקה'); return; }
+        if (!form.question.trim()) { setErrorMsg('Question cannot be empty'); return; }
         setStatus(QUESTION_STATUSES.saving);
         setErrorMsg('');
         try {
@@ -39,7 +39,7 @@ const QuestionCard = ({ question, index, nodeId, onDelete }) => {
             setStatus(QUESTION_STATUSES.saved);
             setTimeout(() => setStatus(QUESTION_STATUSES.idle), 2500);
         } catch (err) {
-            setErrorMsg(err.message || 'שגיאה בשמירה');
+            setErrorMsg(err.message || 'Failed to save');
             setStatus(QUESTION_STATUSES.error);
         }
     };
@@ -50,7 +50,7 @@ const QuestionCard = ({ question, index, nodeId, onDelete }) => {
             await api.delete(`/api/quizzes/node/${nodeId}/question/${index}`);
             onDelete(index);
         } catch (err) {
-            setErrorMsg(err.message || 'שגיאה במחיקה');
+            setErrorMsg(err.message || 'Failed to delete');
             setConfirmDelete(false);
         }
     };
@@ -67,11 +67,11 @@ const QuestionCard = ({ question, index, nodeId, onDelete }) => {
                         {index + 1}
                     </span>
                     <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 truncate">
-                        {form.question || 'שאלה ריקה'}
+                        {form.question || 'Empty question'}
                     </span>
                     {form.alignmentWarning && (
                         <span className="shrink-0 flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400">
-                            <AlertTriangle size={10} /> לא מחובר לסיכום
+                            <AlertTriangle size={10} /> Not aligned with summary
                         </span>
                     )}
                 </div>
@@ -84,14 +84,14 @@ const QuestionCard = ({ question, index, nodeId, onDelete }) => {
                     {form.alignmentWarning && (
                         <div className="flex items-start gap-2 px-3 py-2 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/30 text-amber-700 dark:text-amber-400 text-xs font-medium">
                             <AlertTriangle size={14} className="mt-0.5 shrink-0" />
-                            השאלה הזו לא נמצאה בחפיפה ישירה עם הסיכום. מומלץ לעדכן את הניסוח.
+                            This question was not found to directly align with the summary. Consider rewording it.
                         </div>
                     )}
 
                     {/* Question text */}
                     <div>
                         <label className="block text-xs font-bold text-slate-500 dark:text-white/50 uppercase tracking-wider mb-1.5">
-                            טקסט השאלה
+                            Question Text
                         </label>
                         <textarea
                             value={form.question}
@@ -105,7 +105,7 @@ const QuestionCard = ({ question, index, nodeId, onDelete }) => {
                     {/* Options */}
                     <div>
                         <label className="block text-xs font-bold text-slate-500 dark:text-white/50 uppercase tracking-wider mb-1.5">
-                            תשובות (סמן את הנכונה)
+                            Answers (select the correct one)
                         </label>
                         <div className="space-y-2">
                             {form.options.map((opt, i) => (
@@ -121,7 +121,7 @@ const QuestionCard = ({ question, index, nodeId, onDelete }) => {
                                         value={opt}
                                         onChange={e => setOption(i, e.target.value)}
                                         className="flex-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 text-slate-800 dark:text-white text-sm focus:border-indigo-400 focus:outline-none transition-colors"
-                                        placeholder={`אפשרות ${i + 1}`}
+                                        placeholder={`Option ${i + 1}`}
                                         dir="auto"
                                     />
                                 </div>
@@ -132,7 +132,7 @@ const QuestionCard = ({ question, index, nodeId, onDelete }) => {
                     {/* Explanation */}
                     <div>
                         <label className="block text-xs font-bold text-slate-500 dark:text-white/50 uppercase tracking-wider mb-1.5">
-                            הסבר (אחרי תשובה)
+                            Explanation (shown after answer)
                         </label>
                         <textarea
                             value={form.explanation}
@@ -140,7 +140,7 @@ const QuestionCard = ({ question, index, nodeId, onDelete }) => {
                             rows={2}
                             className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 text-slate-800 dark:text-white text-sm focus:border-indigo-400 focus:outline-none transition-colors resize-none"
                             dir="auto"
-                            placeholder="הסבר אופציונלי..."
+                            placeholder="Optional explanation..."
                         />
                     </div>
 
@@ -159,7 +159,7 @@ const QuestionCard = ({ question, index, nodeId, onDelete }) => {
                             }`}
                         >
                             <Trash2 size={13} />
-                            {confirmDelete ? 'לחץ שוב לאישור' : 'מחק שאלה'}
+                            {confirmDelete ? 'Click again to confirm' : 'Delete question'}
                         </button>
 
                         <button
@@ -174,7 +174,7 @@ const QuestionCard = ({ question, index, nodeId, onDelete }) => {
                             ) : (
                                 <Save size={13} />
                             )}
-                            {status === QUESTION_STATUSES.saving ? 'שומר...' : status === QUESTION_STATUSES.saved ? 'נשמר!' : 'שמור'}
+                            {status === QUESTION_STATUSES.saving ? 'Saving...' : status === QUESTION_STATUSES.saved ? 'Saved!' : 'Save'}
                         </button>
                     </div>
                 </div>
@@ -194,7 +194,7 @@ const QuizEditorModal = ({ nodeId, nodeTitle, onClose }) => {
                 const { data } = await api.get(`/api/quizzes/node/${nodeId}`);
                 setQuestions(data.questions || []);
             } catch (err) {
-                setError(err.message || 'שגיאה בטעינת השאלות');
+                setError(err.message || 'Failed to load questions');
             } finally {
                 setLoading(false);
             }
@@ -219,7 +219,7 @@ const QuizEditorModal = ({ nodeId, nodeTitle, onClose }) => {
                 {/* Header */}
                 <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 dark:border-white/10 shrink-0">
                     <div>
-                        <h2 className="text-lg font-black text-slate-800 dark:text-white">עריכת בוחן</h2>
+                        <h2 className="text-lg font-black text-slate-800 dark:text-white">Edit Quiz</h2>
                         <p className="text-xs text-slate-500 dark:text-white/40 mt-0.5 truncate max-w-xs">{nodeTitle}</p>
                     </div>
                     <button
@@ -239,7 +239,7 @@ const QuizEditorModal = ({ nodeId, nodeTitle, onClose }) => {
                     ) : error ? (
                         <div className="text-center py-12 text-red-500 font-semibold text-sm">{error}</div>
                     ) : questions.length === 0 ? (
-                        <div className="text-center py-12 text-slate-400 text-sm">אין שאלות בבוחן הזה</div>
+                        <div className="text-center py-12 text-slate-400 text-sm">No questions in this quiz</div>
                     ) : (
                         questions.map((q, i) => (
                             <QuestionCard
@@ -256,13 +256,13 @@ const QuizEditorModal = ({ nodeId, nodeTitle, onClose }) => {
                 {/* Footer */}
                 <div className="shrink-0 px-6 py-4 border-t border-slate-100 dark:border-white/10 flex justify-between items-center">
                     <span className="text-xs text-slate-400 dark:text-white/30">
-                        {questions.length} שאלות
+                        {questions.length} {questions.length === 1 ? 'question' : 'questions'}
                     </span>
                     <button
                         onClick={onClose}
                         className="px-5 py-2.5 rounded-xl text-sm font-bold text-slate-600 dark:text-white/60 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
                     >
-                        סגור
+                        Close
                     </button>
                 </div>
             </div>
