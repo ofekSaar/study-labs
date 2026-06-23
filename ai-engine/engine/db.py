@@ -1,6 +1,7 @@
 from pymongo import MongoClient
 import os
 import datetime
+from engine.config import MONGO_CONNECTION_TIMEOUT_MS, TTL_STAGING_SECONDS
 
 def get_db_handle():
     """
@@ -9,7 +10,7 @@ def get_db_handle():
     try:
         mongo_uri = os.environ.get("MONGO_URI", "mongodb://localhost:27017/")
         db_name = os.environ.get("MONGO_DB_NAME", "studylabs_db")
-        client = MongoClient(mongo_uri, serverSelectionTimeoutMS=5000)
+        client = MongoClient(mongo_uri, serverSelectionTimeoutMS=MONGO_CONNECTION_TIMEOUT_MS)
         # Trigger a connection check
         client.server_info()
         db = client[db_name]
@@ -92,7 +93,7 @@ def ensure_ttl_index():
     collection = db['staging_materials']
     # Check if index exists, if not create it
     # 'created_at' field must be present in the document
-    collection.create_index("created_at", expireAfterSeconds=86400)
+    collection.create_index("created_at", expireAfterSeconds=TTL_STAGING_SECONDS)
     print("TTL Index ensured for staging_materials (24h).")
 
 def save_to_staging(filename: str, content: str) -> str:

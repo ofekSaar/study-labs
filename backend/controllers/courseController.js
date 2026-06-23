@@ -5,6 +5,7 @@ import Enrollment from '../models/Enrollment.js';
 import Progress from '../models/Progress.js';
 import QuizAttempt from '../models/QuizAttempt.js';
 import storage from '../services/storage/index.js';
+import { deduplicateAndUpload } from '../services/fileUploadService.js';
 import { generateRoadmapInBackground } from '../services/courseGenerationService.js';
 import { buildCourseAnalytics } from '../services/analyticsService.js';
 import { ensureDemoEnrollments, createInitialProgress } from '../services/enrollmentService.js';
@@ -131,23 +132,7 @@ export const createCourse = async (req, res, next) => {
     }
 
     if (req.files && req.files.materials && req.files.materials.length > 0) {
-      const seenFiles = new Set();
-      for (const file of req.files.materials) {
-        const fileSignature = `${file.originalname}_${file.size}`;
-        if (seenFiles.has(fileSignature)) {
-          console.log(`[Course Upload] Skipping duplicate file: ${file.originalname}`);
-          continue;
-        }
-        seenFiles.add(fileSignature);
-        const result = await storage.upload(file, 'materials');
-        materialsData.push({
-          filename: result.filename,
-          originalName: file.originalname,
-          mimetype: file.mimetype,
-          storagePath: result.storagePath,
-          size: file.size,
-        });
-      }
+      materialsData.push(...await deduplicateAndUpload(req.files.materials));
     }
 
     const course = await Course.create({
@@ -538,25 +523,7 @@ export const addCourseMaterials = async (req, res, next) => {
       throw createError(400, 'No materials files uploaded');
     }
 
-    const newMaterialsData = [];
-    const seenFiles = new Set(course.materials.map(m => `${m.originalName}_${m.size}`));
-
-    for (const file of req.files.materials) {
-      const fileSignature = `${file.originalname}_${file.size}`;
-      if (seenFiles.has(fileSignature)) {
-        console.log(`[Course Upload Update] Skipping duplicate file: ${file.originalname}`);
-        continue;
-      }
-      seenFiles.add(fileSignature);
-      const result = await storage.upload(file, 'materials');
-      newMaterialsData.push({
-        filename: result.filename,
-        originalName: file.originalname,
-        mimetype: file.mimetype,
-        storagePath: result.storagePath,
-        size: file.size,
-      });
-    }
+    const newMaterialsData = await deduplicateAndUpload(req.files.materials, course.materials);
 
     if (newMaterialsData.length === 0) {
       return res.json({

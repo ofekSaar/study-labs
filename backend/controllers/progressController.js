@@ -8,7 +8,7 @@ import * as gamificationService from '../services/gamificationService.js';
 import { getIO } from '../config/socket.js';
 import XpEvent from '../models/XpEvent.js';
 import { QUEST_BY_ID } from '../constants/quests.js';
-import { TOP_LEADERBOARD_N } from '../constants/config.js';
+import { buildLeaderboardRows } from '../services/leaderboardService.js';
 
 /**
  * Map a leaderboard period to a {createdAt: {$gte}} match, or null for all-time.
@@ -113,35 +113,9 @@ const shapeLeaderboardEntries = (rows, userId) =>
  */
 export const getGlobalLeaderboard = async (req, res, next) => {
   try {
-    const TOP_N = TOP_LEADERBOARD_N;
     const since = periodToSince(req.query.period);
-
-    let rows;
-    if (since) {
-      // Windowed ranking: sum XpEvents within the period.
-      rows = await XpEvent.aggregate([
-        { $match: { createdAt: { $gte: since } } },
-        { $group: { _id: '$student', totalXP: { $sum: '$xpAwarded' } } },
-        { $sort: { totalXP: -1 } },
-        { $limit: TOP_N },
-        { $lookup: { from: 'users', localField: '_id', foreignField: '_id', as: 'userDoc' } },
-        { $unwind: '$userDoc' },
-        { $project: { _id: 1, totalXP: 1, name: '$userDoc.name', avatar: '$userDoc.avatar' } },
-      ]);
-    } else {
-      // All-time: cumulative Progress totals (fast, denormalized).
-      rows = await Progress.aggregate([
-        { $group: { _id: '$student', totalXP: { $sum: '$totalXP' } } },
-        { $sort: { totalXP: -1 } },
-        { $limit: TOP_N },
-        { $lookup: { from: 'users', localField: '_id', foreignField: '_id', as: 'userDoc' } },
-        { $unwind: '$userDoc' },
-        { $project: { _id: 1, totalXP: 1, name: '$userDoc.name', avatar: '$userDoc.avatar' } },
-      ]);
-    }
-
+    const rows = await buildLeaderboardRows({ since });
     const leaderboard = shapeLeaderboardEntries(rows, req.user._id);
-
     res.json({ leaderboard });
   } catch (error) {
     next(error);
@@ -157,15 +131,8 @@ export const getGlobalLeaderboard = async (req, res, next) => {
 export const getCourseLeaderboard = async (req, res, next) => {
   try {
     const { courseId } = req.params;
-    const TOP_N = TOP_LEADERBOARD_N;
 
-    // Fetch IDs of all approved enrollments for this course so we only rank
-    // students who legitimately belong to it.
-    const enrollments = await Enrollment.find({
-      course: courseId,
-      status: 'approved',
-    }).select('student');
-
+    const enrollments = await Enrollment.find({ course: courseId, status: 'approved' }).select('student');
     if (!enrollments.length) {
       return res.json({ leaderboard: [] });
     }
@@ -174,49 +141,13 @@ export const getCourseLeaderboard = async (req, res, next) => {
     const courseObjectId = new mongoose.Types.ObjectId(courseId);
     const since = periodToSince(req.query.period);
 
-    let rows;
-    if (since) {
-      // Windowed ranking: sum this course's XpEvents within the period.
-      rows = await XpEvent.aggregate([
-        {
-          $match: {
-            course: courseObjectId,
-            student: { $in: enrolledStudentIds },
-            createdAt: { $gte: since },
-          },
-        },
-        { $group: { _id: '$student', totalXP: { $sum: '$xpAwarded' } } },
-        { $sort: { totalXP: -1 } },
-        { $limit: TOP_N },
-        { $lookup: { from: 'users', localField: '_id', foreignField: '_id', as: 'userDoc' } },
-        { $unwind: '$userDoc' },
-        { $project: { _id: 1, totalXP: 1, name: '$userDoc.name', avatar: '$userDoc.avatar' } },
-      ]);
-    } else {
-      rows = await Progress.aggregate([
-        {
-          $match: {
-            course: { $eq: courseObjectId },
-            student: { $in: enrolledStudentIds },
-          },
-        },
-        { $sort: { totalXP: -1 } },
-        { $limit: TOP_N },
-        { $lookup: { from: 'users', localField: 'student', foreignField: '_id', as: 'userDoc' } },
-        { $unwind: '$userDoc' },
-        {
-          $project: {
-            _id: '$student',
-            totalXP: 1,
-            name: '$userDoc.name',
-            avatar: '$userDoc.avatar',
-          },
-        },
-      ]);
-    }
+    const rows = await buildLeaderboardRows({
+      since,
+      courseFilter: courseObjectId,
+      studentFilter: enrolledStudentIds,
+    });
 
     const leaderboard = shapeLeaderboardEntries(rows, req.user._id);
-
     res.json({ leaderboard });
   } catch (error) {
     next(error);

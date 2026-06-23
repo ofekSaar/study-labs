@@ -8,9 +8,29 @@ import { AVATARS, INSTRUCTOR_AVATARS, TITLES, QUEST_DEFINITIONS, SHOP_ITEMS, FRA
 
 export { AVATARS, INSTRUCTOR_AVATARS, TITLES, QUEST_DEFINITIONS, SHOP_ITEMS, FRAMES, THEMES };
 
+const notifyNewBadges = (badgeIds) => {
+    if (!badgeIds?.length) return;
+    setTimeout(() => {
+        badgeIds.forEach(badgeId => {
+            const b = BADGES.find(x => x.id === badgeId);
+            if (b) useToastStore.getState().badge(b.name, b.icon);
+        });
+        sounds.badge();
+    }, 500);
+};
+
 const useGamificationStore = create(
     persist(
-        (set, get) => ({
+        (set, get) => {
+        const makeSelectAction = (stateKey, payloadKey) => async (id) => {
+            set({ [stateKey]: id });
+            try {
+                await api.put('/api/progress/gamification/active', { [payloadKey]: id });
+            } catch (err) {
+                console.error(`[Gamification Store] Failed to save active ${payloadKey}:`, err);
+            }
+        };
+        return ({
             // Shop & Economy state
             coins: 100,
             streakShields: 0,
@@ -143,38 +163,10 @@ const useGamificationStore = create(
                 }
             },
 
-            selectAvatar: async (avatarId) => {
-                set({ activeAvatar: avatarId });
-                try {
-                    await api.put('/api/progress/gamification/active', { activeAvatar: avatarId });
-                } catch (err) {
-                    console.error('[Gamification Store] Failed to save active avatar:', err);
-                }
-            },
-            selectTitle: async (titleId) => {
-                set({ activeTitle: titleId });
-                try {
-                    await api.put('/api/progress/gamification/active', { activeTitle: titleId });
-                } catch (err) {
-                    console.error('[Gamification Store] Failed to save active title:', err);
-                }
-            },
-            selectTheme: async (themeId) => {
-                set({ activeTheme: themeId });
-                try {
-                    await api.put('/api/progress/gamification/active', { activeTheme: themeId });
-                } catch (err) {
-                    console.error('[Gamification Store] Failed to save active theme:', err);
-                }
-            },
-            selectFrame: async (frameId) => {
-                set({ activeFrame: frameId });
-                try {
-                    await api.put('/api/progress/gamification/active', { activeFrame: frameId });
-                } catch (err) {
-                    console.error('[Gamification Store] Failed to save active frame:', err);
-                }
-            },
+            selectAvatar: makeSelectAction('activeAvatar', 'activeAvatar'),
+            selectTitle: makeSelectAction('activeTitle', 'activeTitle'),
+            selectTheme: makeSelectAction('activeTheme', 'activeTheme'),
+            selectFrame: makeSelectAction('activeFrame', 'activeFrame'),
 
             triggerLevelUp: (newLevel) => {
                 set({ showLevelUp: true, newLevel });
@@ -307,16 +299,8 @@ const useGamificationStore = create(
                 }
 
                 // Badge toasts for server-granted badges
-                if (result.newBadges?.length) {
-                    setTimeout(() => {
-                        result.newBadges.forEach(badgeId => {
-                            const b = BADGES.find(x => x.id === badgeId);
-                            if (b) useToastStore.getState().badge(b.name, b.icon);
-                        });
-                        sounds.badge();
-                        get().setTriggerConfetti('badge_unlock');
-                    }, 500);
-                }
+                notifyNewBadges(result.newBadges);
+                if (result.newBadges?.length) setTimeout(() => get().setTriggerConfetti('badge_unlock'), 500);
 
                 // Level-up celebration
                 if (result.leveledUp || newLevel > prevLevel) {
@@ -397,16 +381,8 @@ const useGamificationStore = create(
                     const newlyEarned = checkBadges(updatedStats, state.unlockedBadges);
                     
                     if (newlyEarned.length > 0) {
-                        setTimeout(() => {
-                            newlyEarned.forEach(badgeId => {
-                                const b = BADGES.find(x => x.id === badgeId);
-                                if (b) {
-                                    useToastStore.getState().badge(b.name, b.icon);
-                                }
-                            });
-                            sounds.badge();
-                            get().setTriggerConfetti('badge_unlock');
-                        }, 500);
+                        notifyNewBadges(newlyEarned);
+                        setTimeout(() => get().setTriggerConfetti('badge_unlock'), 500);
 
                         return {
                             stats: updatedStats,
@@ -613,7 +589,8 @@ const useGamificationStore = create(
                 }
                 return false;
             }
-        }),
+        });
+        },
         {
             name: 'studylabs-gamification',
             partialize: (state) => ({

@@ -15,13 +15,13 @@ from llama_index.llms.openai import OpenAI
 logger = logging.getLogger(__name__)
 from engine.db import update_course_progress, save_syllabus_blueprint, get_syllabus_blueprint
 from engine.semantic_filter import tag_materials_with_embeddings
+from engine.llm_utils import run_with_fallback, run_with_fallback_sync
+from engine.config import MAX_CONCURRENT_AI_CALLS
 
 load_dotenv()
 
 # ── Rate Limiting ────────────────────────────────────────
-# Max concurrent API calls to avoid 429 errors
-MAX_CONCURRENT_CALLS = int(os.environ.get("MAX_CONCURRENT_AI_CALLS", "15"))
-_api_semaphore = asyncio.Semaphore(MAX_CONCURRENT_CALLS)
+_api_semaphore = asyncio.Semaphore(MAX_CONCURRENT_AI_CALLS)
 
 async def retry_with_backoff(coro_fn, max_retries=3, base_delay=2.0):
     """
@@ -131,8 +131,8 @@ def parse_syllabus(syllabus_text: str, syllabus_name: str = "Unknown") -> Course
             logger.info(f"Successfully parsed syllabus with {len(result.lessons)} lessons.")
             return result
         except Exception as e:
-            logger.warning(f"Error with {provider_name}: {e}")
-            continue # Try next provider
+            logger.warning(f"[parse_syllabus] {provider_name} failed: {e}")
+            continue
 
     logger.warning("All LLM providers failed for parse_syllabus.")
     return Course(title="Error Parsing Syllabus", lessons=[])
