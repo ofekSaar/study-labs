@@ -3,7 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import StudentLayout from '../components/layout/StudentLayout';
 import InstructorLayout from '../components/layout/InstructorLayout';
 import GameMapComponent from '../components/map/GameMap';
-import { ChevronLeft, Loader2, RotateCcw, UploadCloud, X } from 'lucide-react';
+import QuizEditorModal from '../components/quiz/QuizEditorModal';
+import { ChevronLeft, Loader2, RotateCcw, UploadCloud, X, Pencil } from 'lucide-react';
 import useAuthStore from '../store/authStore';
 import useCourseStore from '../store/courseStore';
 import { io } from 'socket.io-client';
@@ -26,6 +27,9 @@ const CourseMap = () => {
     const [uploadFiles, setUploadFiles] = useState([]);
     const [uploading, setUploading] = useState(false);
     const [uploadError, setUploadError] = useState(null);
+
+    // Quiz editor state (instructor only)
+    const [editingQuizNode, setEditingQuizNode] = useState(null);
 
     const handleUploadSubmit = async () => {
         if (uploadFiles.length === 0) return;
@@ -217,7 +221,35 @@ const CourseMap = () => {
                     {/* Map Container - Centered and Contained on Desktop */}
                     <div className="px-4 pb-20 md:pb-0 max-w-xl mx-auto">
                         {nodes.length > 0 ? (
+                            <>
                             <GameMapComponent nodes={nodes} />
+                            {/* Quiz management panel — instructor only */}
+                            {role === 'instructor' && nodes.filter(n => n.type === 'quiz').length > 0 && (
+                                <div className="mt-8 border-t border-slate-200 dark:border-white/10 pt-6">
+                                    <h3 className="text-xs font-black text-slate-500 dark:text-white/40 uppercase tracking-widest mb-3">
+                                        ניהול בוחנים
+                                    </h3>
+                                    <div className="space-y-2">
+                                        {nodes.filter(n => n.type === 'quiz').map(n => (
+                                            <div
+                                                key={n._id}
+                                                className="flex items-center justify-between px-4 py-3 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10"
+                                            >
+                                                <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 truncate mr-3">
+                                                    {n.label}
+                                                </span>
+                                                <button
+                                                    onClick={() => setEditingQuizNode(n)}
+                                                    className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 text-xs font-bold transition-colors"
+                                                >
+                                                    <Pencil size={13} /> ערוך שאלות
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                            </>
                         ) : course?.generationStatus === 'failed' ? (
                             <div className="text-center py-12 sm:py-16 px-4 bg-red-50 dark:bg-red-950/10 rounded-2xl border-2 border-dashed border-red-200 dark:border-red-900/20">
                                 <p className="text-red-500 dark:text-red-400 font-bold text-lg">Generation Failed</p>
@@ -332,6 +364,15 @@ const CourseMap = () => {
                         </div>
                     </div>
                 </div>
+            )}
+
+            {/* Quiz Editor Modal */}
+            {editingQuizNode && (
+                <QuizEditorModal
+                    nodeId={editingQuizNode._id}
+                    nodeTitle={editingQuizNode.label || editingQuizNode.title}
+                    onClose={() => setEditingQuizNode(null)}
+                />
             )}
         </Layout>
     );

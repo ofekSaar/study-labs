@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import {
   BarChart2, CheckCircle, Clock, Users, BookOpen, Zap,
   TrendingUp, RefreshCw, AlertCircle, Trophy, Star, Target,
-  Flame, Award, Shield, GraduationCap,
+  Flame, Award, Shield, GraduationCap, Pencil,
 } from 'lucide-react';
 import InstructorLayout from '../components/layout/InstructorLayout';
 import api from '../utils/api';
@@ -278,6 +278,13 @@ const InstructorStats = () => {
                   label="Nodes / Course"
                   value={content.avgNodesPerCourse || '—'}
                   accent="green"
+                />
+                <StatCard
+                  icon={<Pencil size={18} />}
+                  label="Question Edits"
+                  value={content.totalQuestionEdits ?? 0}
+                  sub="manual quiz edits"
+                  accent="purple"
                 />
               </div>
 

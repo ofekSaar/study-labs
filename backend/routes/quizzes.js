@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { body } from 'express-validator';
 import { authenticate, authorize } from '../middleware/auth.js';
 import validate from '../middleware/validate.js';
-import { getQuizQuestions, submitQuiz } from '../controllers/quizController.js';
+import { getQuizQuestions, submitQuiz, updateQuestion, deleteQuestion } from '../controllers/quizController.js';
 
 const router = Router();
 
@@ -92,6 +92,19 @@ router.get('/node/:nodeId', authenticate, authorize('student', 'instructor'), ge
  *                       items:
  *                         type: object
  */
+/**
+ * @swagger
+ * /api/quizzes/node/{nodeId}/question/{questionIndex}:
+ *   put:
+ *     summary: Update a quiz question (instructor only)
+ *     tags: [Quizzes]
+ *   delete:
+ *     summary: Delete a quiz question (instructor only)
+ *     tags: [Quizzes]
+ */
+router.put('/node/:nodeId/question/:questionIndex', authenticate, authorize('instructor'), updateQuestion);
+router.delete('/node/:nodeId/question/:questionIndex', authenticate, authorize('instructor'), deleteQuestion);
+
 router.post(
   '/submit',
   authenticate,

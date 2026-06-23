@@ -1,5 +1,6 @@
 import createError from 'http-errors';
 import CourseNode from '../models/CourseNode.js';
+import Course from '../models/Course.js';
 import QuizAttempt from '../models/QuizAttempt.js';
 import Enrollment from '../models/Enrollment.js';
 import { evaluateAnswer } from '../services/aiService.js';
@@ -58,6 +59,87 @@ export const getQuizQuestions = async (req, res, next) => {
         questions,
       },
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Verify the requesting instructor owns the course that contains this node.
+ */
+const verifyInstructorOwnership = async (nodeId, userId) => {
+  const node = await CourseNode.findById(nodeId);
+  if (!node) throw createError(404, 'Node not found');
+  if (!node.quizData || node.quizData.length === 0) {
+    throw createError(400, 'This node does not have quiz data');
+  }
+  const course = await Course.findById(node.course);
+  if (!course) throw createError(404, 'Course not found');
+  if (String(course.instructor) !== String(userId)) {
+    throw createError(403, 'You do not own this course');
+  }
+  return node;
+};
+
+/**
+ * Update a single quiz question (instructor only).
+ * PUT /api/quizzes/node/:nodeId/question/:questionIndex
+ */
+export const updateQuestion = async (req, res, next) => {
+  try {
+    const { nodeId, questionIndex } = req.params;
+    const idx = parseInt(questionIndex, 10);
+    const node = await verifyInstructorOwnership(nodeId, req.user._id);
+
+    if (isNaN(idx) || idx < 0 || idx >= node.quizData.length) {
+      throw createError(400, 'Invalid question index');
+    }
+
+    const { question, options, correctAnswerIndex, explanation, type, content, minLength, alignmentWarning } = req.body;
+
+    const existing = node.quizData[idx].toObject();
+    node.quizData[idx] = {
+      ...existing,
+      ...(question !== undefined && { question }),
+      ...(options !== undefined && { options }),
+      ...(correctAnswerIndex !== undefined && { correctAnswerIndex }),
+      ...(explanation !== undefined && { explanation }),
+      ...(type !== undefined && { type }),
+      ...(content !== undefined && { content }),
+      ...(minLength !== undefined && { minLength }),
+      ...(alignmentWarning !== undefined && { alignmentWarning }),
+      editCount: (existing.editCount || 0) + 1,
+    };
+
+    await node.save();
+
+    res.json({
+      status: 'success',
+      data: { question: node.quizData[idx] },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Delete a single quiz question (instructor only).
+ * DELETE /api/quizzes/node/:nodeId/question/:questionIndex
+ */
+export const deleteQuestion = async (req, res, next) => {
+  try {
+    const { nodeId, questionIndex } = req.params;
+    const idx = parseInt(questionIndex, 10);
+    const node = await verifyInstructorOwnership(nodeId, req.user._id);
+
+    if (isNaN(idx) || idx < 0 || idx >= node.quizData.length) {
+      throw createError(400, 'Invalid question index');
+    }
+
+    node.quizData.splice(idx, 1);
+    await node.save();
+
+    res.json({ status: 'success', data: { deletedIndex: idx, remaining: node.quizData.length } });
   } catch (error) {
     next(error);
   }

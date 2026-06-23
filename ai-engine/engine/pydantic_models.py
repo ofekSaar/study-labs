@@ -5,6 +5,7 @@ class Question(BaseModel):
     question_text: str = Field(..., description="The content of the question")
     options: List[str] = Field(..., description="List of possible answers")
     correct_answer: int = Field(..., description="Index of the correct answer in the options list")
+    alignment_warning: bool = Field(False, description="True if the question may not be directly answerable from the summary")
 
 class Topic(BaseModel):
     title: str = Field(..., description="Title of the topic")

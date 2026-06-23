@@ -181,6 +181,7 @@ export const generateRoadmap = async ({
                           options: q.options || [],
                           correctAnswerIndex: typeof q.correct_answer === 'number' ? q.correct_answer : 0,
                           explanation: q.explanation || null,
+                          alignmentWarning: q.alignment_warning === true,
                       }));
                   }
               } catch (err) {

@@ -82,6 +82,14 @@ router.get('/stats', async (req, res, next) => {
     const totalQuizzes = nodeMap['quiz'] ?? 0;
     const avgNodesPerCourse = totalCourses > 0 ? Math.round(totalNodes / totalCourses) : 0;
 
+    // Total question edits across all quiz nodes
+    const editCountResult = await CourseNode.aggregate([
+      { $match: { course: { $in: courseIds }, type: 'quiz' } },
+      { $unwind: { path: '$quizData', preserveNullAndEmpty: false } },
+      { $group: { _id: null, total: { $sum: { $ifNull: ['$quizData.editCount', 0] } } } },
+    ]);
+    const totalQuestionEdits = editCountResult[0]?.total ?? 0;
+
     // Avg completion across all courses
     let avgCompletionRate = null;
     if (courseIds.length > 0) {
@@ -177,6 +185,7 @@ router.get('/stats', async (req, res, next) => {
           totalLessons,
           totalQuizzes,
           avgNodesPerCourse,
+          totalQuestionEdits,
         },
         engagement: {
           avgCompletionRate,
