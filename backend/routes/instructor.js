@@ -85,7 +85,7 @@ router.get('/stats', async (req, res, next) => {
     // Total question edits across all quiz nodes
     const editCountResult = await CourseNode.aggregate([
       { $match: { course: { $in: courseIds }, type: 'quiz' } },
-      { $unwind: { path: '$quizData', preserveNullAndEmpty: false } },
+      { $unwind: '$quizData' },
       { $group: { _id: null, total: { $sum: { $ifNull: ['$quizData.editCount', 0] } } } },
     ]);
     const totalQuestionEdits = editCountResult[0]?.total ?? 0;
