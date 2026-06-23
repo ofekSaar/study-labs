@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import StudentLayout from '../components/layout/StudentLayout';
+import InstructorLayout from '../components/layout/InstructorLayout';
 import QuizEngine from '../components/quiz/QuizEngine';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ChevronLeft, BookOpen, GraduationCap, ArrowRight, Trophy, Zap, Clock, Star, RefreshCw } from 'lucide-react';
@@ -8,12 +9,17 @@ import ContentRenderer from '../components/common/ContentRenderer';
 import api from '../utils/api';
 import useCourseStore from '../store/courseStore';
 import useGamificationStore from '../store/gamificationStore';
+import useAuthStore from '../store/authStore';
 import ConfettiEffect from '../components/gamification/ConfettiEffect';
 import LevelUpModal from '../components/gamification/LevelUpModal';
 
 const LessonQuiz = () => {
     const { courseId, id } = useParams();
     const navigate = useNavigate();
+    const { role } = useAuthStore();
+    const isInstructor = role === 'instructor';
+    const Layout = isInstructor ? InstructorLayout : StudentLayout;
+    const courseMapPath = isInstructor ? `/instructor/course/${courseId}` : `/course/${courseId}`;
     const [quizData, setQuizData] = useState([]);
     const [nodeData, setNodeData] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -115,12 +121,12 @@ const LessonQuiz = () => {
 
     if (isLoading) {
         return (
-            <StudentLayout title="Loading Lesson...">
+            <Layout title="Loading Lesson...">
                 <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center gap-4 p-4 sm:p-8 md:p-12">
                     <div className="animate-spin w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full"></div>
                     <p className="text-slate-500 dark:text-white/40 font-medium">Preparing your lesson materials...</p>
                 </div>
-            </StudentLayout>
+            </Layout>
         );
     }
 
@@ -132,7 +138,7 @@ const LessonQuiz = () => {
         const passed = pct >= 70;
 
         return (
-            <StudentLayout title="Quiz Complete">
+            <Layout title="Quiz Complete">
                 <ConfettiEffect />
                 <LevelUpModal />
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-md">
@@ -209,11 +215,11 @@ const LessonQuiz = () => {
                             transition={{ delay: 0.5 }}
                             onClick={() => {
                                 if (showReward.nextNodeId) {
-                                    navigate(`/course/${courseId}/lesson/${showReward.nextNodeId}`);
+                                    navigate(`${courseMapPath}/lesson/${showReward.nextNodeId}`);
                                     setStep('summary');
                                     setShowReward(null);
                                 } else {
-                                    navigate(`/course/${courseId}`);
+                                    navigate(courseMapPath);
                                 }
                             }}
                             className="w-full py-4 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-400 hover:to-purple-400 text-white rounded-2xl font-bold text-lg transition-all shadow-[0_0_20px_rgba(99,102,241,0.3)] flex items-center justify-center gap-2 relative z-10"
@@ -226,14 +232,14 @@ const LessonQuiz = () => {
                         </motion.button>
                     </motion.div>
                 </div>
-            </StudentLayout>
+            </Layout>
         );
     }
 
     // ── Summary Step ──
     if (step === 'summary') {
         return (
-            <StudentLayout title={nodeData?.title || 'Lesson'}>
+            <Layout title={nodeData?.title || 'Lesson'}>
                 <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col">
                     <div className="bg-white dark:bg-slate-900 px-6 py-4 flex items-center gap-4 sticky top-0 z-10 border-b border-slate-200 dark:border-white/10">
                         <button onClick={() => navigate(-1)} className="w-10 h-10 rounded-full hover:bg-slate-100 dark:hover:bg-white/10 flex items-center justify-center transition text-slate-600 dark:text-white">
@@ -290,13 +296,13 @@ const LessonQuiz = () => {
                         </div>
                     </div>
                 </div>
-            </StudentLayout>
+            </Layout>
         );
     }
 
     // ── Quiz Step ──
     return (
-        <StudentLayout title="Quiz">
+        <Layout title="Quiz">
             <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col">
                 <div className="bg-white dark:bg-slate-900 px-4 py-3 flex items-center gap-3 sticky top-0 z-10 border-b border-slate-100 dark:border-white/10">
                     <button onClick={() => setStep('summary')} className="w-9 h-9 rounded-full hover:bg-slate-100 dark:hover:bg-white/10 flex items-center justify-center transition text-slate-600 dark:text-white flex-shrink-0">
@@ -323,7 +329,7 @@ const LessonQuiz = () => {
                     )}
                 </div>
             </div>
-        </StudentLayout>
+        </Layout>
     );
 };
 

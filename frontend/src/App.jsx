@@ -188,6 +188,14 @@ function App() {
           }
         />
         <Route
+          path="/instructor/course/:courseId/lesson/:id"
+          element={
+            <ProtectedRoute allowedRole="instructor">
+              <LessonQuiz />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/instructor/stats"
           element={
             <ProtectedRoute allowedRole="instructor">

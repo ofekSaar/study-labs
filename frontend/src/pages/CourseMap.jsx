@@ -143,8 +143,16 @@ const CourseMap = () => {
             label,
             status: role === 'instructor' ? 'completed' : (node.status === 'current' ? 'active' : (node.status || 'locked')),
             onClick: () => {
-                if (node.type === 'quiz' || node.type === 'lesson') {
-                    navigate(`/course/${courseId}/lesson/${node._id}`);
+                if (role === 'instructor') {
+                    if (node.type === 'quiz') {
+                        setEditingQuizNode(node);
+                    } else if (node.type === 'lesson') {
+                        navigate(`/instructor/course/${courseId}/lesson/${node._id}`);
+                    }
+                } else {
+                    if (node.type === 'quiz' || node.type === 'lesson') {
+                        navigate(`/course/${courseId}/lesson/${node._id}`);
+                    }
                 }
             }
         };
