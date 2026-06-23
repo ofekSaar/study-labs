@@ -4,6 +4,7 @@ import {
   Users, BookOpen, Trophy, TrendingUp, Brain,
   ChevronUp, ChevronDown, ChevronsUpDown,
   AlertTriangle, Medal, Zap, Star, Activity,
+  CheckCircle, Search, Flame,
 } from 'lucide-react';
 import useCourseStore from '../store/courseStore';
 import api from '../utils/api';
@@ -303,11 +304,13 @@ const StudentStatusOverview = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
 
-  // Students tab
+  // Students
   const [students, setStudents] = useState([]);
   const [studentsLoading, setStudentsLoading] = useState(false);
   const [sortField, setSortField] = useState('completion');
   const [sortDir, setSortDir] = useState('desc');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
 
   // Leaderboard
   const [leaderboard, setLeaderboard] = useState([]);
@@ -320,8 +323,11 @@ const StudentStatusOverview = () => {
     if (courses.length > 0 && !selectedCourseId) setSelectedCourseId(courses[0].id);
   }, [courses, selectedCourseId]);
 
+  // Fetch analytics + students eagerly when course changes
   useEffect(() => {
     if (!selectedCourseId) return;
+    setSearchQuery('');
+    setStatusFilter('all');
 
     async function fetchAnalytics() {
       setIsLoading(true);
@@ -334,44 +340,6 @@ const StudentStatusOverview = () => {
         setIsLoading(false);
       }
     }
-
-    async function fetchLeaderboard() {
-      setLeaderboardLoading(true);
-      try {
-        const res = await api.get(`/api/progress/course/${selectedCourseId}/leaderboard?period=allTime`);
-        setLeaderboard(res.data || []);
-      } catch (e) {
-        console.error('Failed to fetch leaderboard', e);
-      } finally {
-        setLeaderboardLoading(false);
-      }
-    }
-
-    fetchAnalytics();
-    fetchLeaderboard();
-  }, [selectedCourseId]);
-
-  // Refetch leaderboard when period changes (only re-fetch if not allTime which is already loaded)
-  useEffect(() => {
-    if (!selectedCourseId || leaderboardPeriod === 'allTime') return;
-
-    async function fetchLeaderboardByPeriod() {
-      setLeaderboardLoading(true);
-      try {
-        const res = await api.get(`/api/progress/course/${selectedCourseId}/leaderboard?period=${leaderboardPeriod}`);
-        setLeaderboard(res.data || []);
-      } catch (e) {
-        console.error('Failed to fetch leaderboard', e);
-      } finally {
-        setLeaderboardLoading(false);
-      }
-    }
-
-    fetchLeaderboardByPeriod();
-  }, [leaderboardPeriod, selectedCourseId]);
-
-  useEffect(() => {
-    if (activeTab !== 'students' || !selectedCourseId) return;
 
     async function fetchStudents() {
       setStudents([]);
@@ -386,8 +354,28 @@ const StudentStatusOverview = () => {
       }
     }
 
+    fetchAnalytics();
     fetchStudents();
-  }, [activeTab, selectedCourseId]);
+  }, [selectedCourseId]);
+
+  // Re-fetch leaderboard whenever course or period changes
+  useEffect(() => {
+    if (!selectedCourseId) return;
+
+    async function fetchLeaderboard() {
+      setLeaderboardLoading(true);
+      try {
+        const res = await api.get(`/api/progress/course/${selectedCourseId}/leaderboard?period=${leaderboardPeriod}`);
+        setLeaderboard(res.data || []);
+      } catch (e) {
+        console.error('Failed to fetch leaderboard', e);
+      } finally {
+        setLeaderboardLoading(false);
+      }
+    }
+
+    fetchLeaderboard();
+  }, [selectedCourseId, leaderboardPeriod]);
 
   const toggleSort = (field) => {
     if (sortField === field) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
@@ -413,12 +401,43 @@ const StudentStatusOverview = () => {
     });
   }, [students, sortField, sortDir]);
 
+  const filteredStudents = useMemo(() => {
+    return sortedStudents.filter(s => {
+      const q = searchQuery.toLowerCase();
+      const matchesSearch = !q ||
+        s.student?.name?.toLowerCase().includes(q) ||
+        s.student?.email?.toLowerCase().includes(q);
+      const badge = studentBadge(s);
+      const matchesFilter = statusFilter === 'all' || badge.label === statusFilter;
+      return matchesSearch && matchesFilter;
+    });
+  }, [sortedStudents, searchQuery, statusFilter]);
+
   const metrics = useMemo(
     () => analytics?.metrics || { totalStudents: 0, avgCompletion: 0, activeModules: 0, totalXP: 0 },
     [analytics]
   );
   const atRisk = useMemo(() => analytics?.atRiskStudents || [], [analytics]);
   const conceptMastery = useMemo(() => analytics?.conceptMastery || [], [analytics]);
+
+  const sortedConcepts = useMemo(
+    () => [...conceptMastery].sort((a, b) => a.masteryLevel - b.masteryLevel),
+    [conceptMastery]
+  );
+
+  const conceptStats = useMemo(() => {
+    if (!conceptMastery.length) return null;
+    const avg = Math.round(conceptMastery.reduce((s, c) => s + c.masteryLevel, 0) / conceptMastery.length);
+    const excellent = conceptMastery.filter(c => c.masteryLevel > 85).length;
+    const moderate = conceptMastery.filter(c => c.masteryLevel > 72 && c.masteryLevel <= 85).length;
+    const poor = conceptMastery.filter(c => c.masteryLevel <= 72).length;
+    return { avg, excellent, moderate, poor };
+  }, [conceptMastery]);
+
+  const avgStreak = useMemo(() => {
+    if (!students.length) return 0;
+    return Math.round(students.reduce((sum, s) => sum + (s.streak || 0), 0) / students.length);
+  }, [students]);
 
   const retentionHealth = useMemo(
     () => metrics.totalStudents > 0 ? (1 - atRisk.length / metrics.totalStudents) * 100 : 100,
@@ -430,10 +449,25 @@ const StudentStatusOverview = () => {
     return Math.round(metrics.avgCompletion * 0.6 + retentionHealth * 0.4);
   }, [analytics, metrics, retentionHealth]);
 
+  const aiInsights = useMemo(() => analytics?.aiInsights || { alerts: [], successes: [] }, [analytics]);
+  const hasInsights = (aiInsights.alerts?.length ?? 0) > 0 || (aiInsights.successes?.length ?? 0) > 0;
+
   const TABS = [
-    { id: 'overview', label: 'Overview', icon: TrendingUp },
-    { id: 'students', label: 'Students', icon: Users },
-    { id: 'concepts', label: 'Concepts', icon: Brain },
+    {
+      id: 'overview', label: 'Overview', icon: TrendingUp,
+      badge: atRisk.length > 0 ? atRisk.length : null,
+      badgeCls: 'bg-red-500 text-white',
+    },
+    {
+      id: 'students', label: 'Students', icon: Users,
+      badge: metrics.totalStudents || null,
+      badgeCls: 'bg-indigo-500 text-white',
+    },
+    {
+      id: 'concepts', label: 'Concepts', icon: Brain,
+      badge: conceptMastery.length || null,
+      badgeCls: 'bg-purple-500 text-white',
+    },
     { id: 'leaderboard', label: 'Leaderboard', icon: Trophy },
   ];
 
@@ -503,12 +537,12 @@ const StudentStatusOverview = () => {
             trend={metrics.avgCompletion >= 50 ? 'up' : 'down'}
           />
           <MetricCard
-            label="Active Modules"
-            value={metrics.activeModules}
-            subtitle="Course nodes"
-            icon={<BookOpen size={26} className="text-purple-600 dark:text-purple-400" />}
-            glowColor="rgba(124,58,237,0.5)"
-            trend="neutral"
+            label="Avg. Streak"
+            value={`${avgStreak}d`}
+            subtitle="days active in a row"
+            icon={<Flame size={26} className="text-orange-500 dark:text-orange-400" />}
+            glowColor="rgba(249,115,22,0.5)"
+            trend={avgStreak >= 3 ? 'up' : avgStreak > 0 ? 'neutral' : 'down'}
           />
           <MetricCard
             label="Class XP"
@@ -522,24 +556,31 @@ const StudentStatusOverview = () => {
         </div>
 
         {/* ── Tab switcher ── */}
-        <div className="flex gap-2 bg-gradient-to-r from-slate-50 to-slate-100/80 dark:from-white/5 dark:to-black/20 border border-slate-200/60 dark:border-white/10 p-2 rounded-3xl w-fit backdrop-blur-sm flex-wrap">
-          {TABS.map((tab) => {
-            const TabIcon = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-6 py-3 rounded-2xl text-sm font-bold transition-all duration-200 ${
-                  activeTab === tab.id
-                    ? 'bg-gradient-to-r from-white to-slate-50/80 dark:from-white/15 dark:to-white/5 text-slate-900 dark:text-white shadow-lg dark:shadow-xl border border-slate-200/40 dark:border-white/20'
-                    : 'text-slate-500 dark:text-white/40 hover:text-slate-700 dark:hover:text-white/70 hover:bg-white/30 dark:hover:bg-white/5 transition-colors'
-                }`}
-              >
-                <TabIcon size={18} />
-                {tab.label}
-              </button>
-            );
-          })}
+        <div className="overflow-x-auto pb-1">
+          <div className="flex gap-2 bg-gradient-to-r from-slate-50 to-slate-100/80 dark:from-white/5 dark:to-black/20 border border-slate-200/60 dark:border-white/10 p-2 rounded-3xl w-fit min-w-max backdrop-blur-sm">
+            {TABS.map((tab) => {
+              const TabIcon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-2 px-6 py-3 rounded-2xl text-sm font-bold transition-all duration-200 whitespace-nowrap ${
+                    activeTab === tab.id
+                      ? 'bg-gradient-to-r from-white to-slate-50/80 dark:from-white/15 dark:to-white/5 text-slate-900 dark:text-white shadow-lg dark:shadow-xl border border-slate-200/40 dark:border-white/20'
+                      : 'text-slate-500 dark:text-white/40 hover:text-slate-700 dark:hover:text-white/70 hover:bg-white/30 dark:hover:bg-white/5 transition-colors'
+                  }`}
+                >
+                  <TabIcon size={18} />
+                  {tab.label}
+                  {tab.badge != null && (
+                    <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-full leading-none ${tab.badgeCls}`}>
+                      {tab.badge}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* ══ OVERVIEW TAB ══════════════════════════════════════════════════════ */}
@@ -555,6 +596,42 @@ const StudentStatusOverview = () => {
               totalStudents={metrics.totalStudents}
               isLoading={isLoading}
             />
+
+            {/* AI Insights */}
+            {(isLoading || hasInsights) && (
+              <div className="bg-gradient-to-br from-white to-slate-50 dark:from-white/8 dark:to-white/3 border border-slate-200/80 dark:border-white/15 p-6 rounded-3xl shadow-[0_12px_40px_rgba(0,0,0,0.06)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.5)] relative overflow-hidden group">
+                <div className="absolute inset-0 bg-gradient-to-br from-violet-500/5 to-indigo-500/3 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                <h3 className="font-display font-bold text-lg text-slate-900 dark:text-white mb-4 flex items-center gap-2 relative z-10">
+                  <div className="p-1.5 rounded-xl bg-violet-100 dark:bg-violet-500/10">
+                    <Star size={18} className="text-violet-600 dark:text-violet-400" />
+                  </div>
+                  AI Insights
+                </h3>
+                <div className="space-y-2 relative z-10">
+                  {isLoading ? (
+                    <>
+                      <div className="h-10 rounded-xl bg-slate-200 dark:bg-white/10 animate-pulse" />
+                      <div className="h-10 rounded-xl bg-slate-200 dark:bg-white/10 animate-pulse w-4/5" />
+                    </>
+                  ) : (
+                    <>
+                      {aiInsights.alerts?.map((msg, i) => (
+                        <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-amber-50/60 dark:bg-amber-500/8 border border-amber-200/60 dark:border-amber-500/20">
+                          <AlertTriangle size={15} className="text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+                          <p className="text-sm text-amber-800 dark:text-amber-200 font-medium">{msg}</p>
+                        </div>
+                      ))}
+                      {aiInsights.successes?.map((msg, i) => (
+                        <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-emerald-50/60 dark:bg-emerald-500/8 border border-emerald-200/60 dark:border-emerald-500/20">
+                          <CheckCircle size={15} className="text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
+                          <p className="text-sm text-emerald-800 dark:text-emerald-200 font-medium">{msg}</p>
+                        </div>
+                      ))}
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Class Progress + right column */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -695,7 +772,7 @@ const StudentStatusOverview = () => {
         {activeTab === 'students' && (
           <div className="bg-gradient-to-br from-white to-slate-50 dark:from-white/8 dark:to-white/3 border border-slate-200/80 dark:border-white/15 p-8 rounded-3xl shadow-[0_12px_40px_rgba(0,0,0,0.06)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.5)] relative group overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-purple-500/2 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-            <div className="flex items-center justify-between mb-8 relative z-10">
+            <div className="flex items-center justify-between mb-6 relative z-10">
               <h3 className="font-display font-bold text-2xl text-slate-900 dark:text-white drop-shadow-sm flex items-center gap-3">
                 <div className="p-2 rounded-xl bg-indigo-100 dark:bg-indigo-500/10">
                   <Users size={24} className="text-indigo-600 dark:text-indigo-400" />
@@ -708,11 +785,51 @@ const StudentStatusOverview = () => {
                 </span>
               )}
             </div>
+
+            {/* Search + filter toolbar */}
+            {students.length > 0 && (
+              <div className="flex flex-col sm:flex-row gap-3 mb-6 relative z-10">
+                <div className="relative flex-1">
+                  <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-white/30 pointer-events-none" />
+                  <input
+                    type="text"
+                    placeholder="Search by name or email…"
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-black/20 border border-slate-200/60 dark:border-white/10 text-sm text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-purple-500/30 focus:border-purple-500 transition-all"
+                  />
+                </div>
+                <div className="flex gap-1.5 flex-wrap">
+                  {['all', 'On Track', 'At Risk', 'Not Started'].map(f => (
+                    <button
+                      key={f}
+                      onClick={() => setStatusFilter(f)}
+                      className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+                        statusFilter === f
+                          ? f === 'At Risk'
+                            ? 'bg-red-500 text-white shadow-sm'
+                            : f === 'On Track'
+                            ? 'bg-emerald-500 text-white shadow-sm'
+                            : f === 'Not Started'
+                            ? 'bg-slate-500 text-white shadow-sm'
+                            : 'bg-slate-800 dark:bg-white text-white dark:text-slate-900 shadow-sm'
+                          : 'bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-white/50 hover:bg-slate-200 dark:hover:bg-white/10 border border-slate-200/60 dark:border-white/10'
+                      }`}
+                    >
+                      {f === 'all' ? 'All' : f}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="relative z-10">
               {studentsLoading ? (
-                <TableSkeleton cols={7} rows={6} />
+                <TableSkeleton cols={9} rows={6} />
               ) : students.length === 0 ? (
                 <EmptyState icon={<Users size={24} />} title="No students enrolled" subtitle="Students will appear here once they join." />
+              ) : filteredStudents.length === 0 ? (
+                <EmptyState icon={<Search size={24} />} title="No results" subtitle="Try a different search or filter." />
               ) : (
                 <div className="overflow-x-auto rounded-2xl border border-slate-200/60 dark:border-white/5 bg-slate-50/50 dark:bg-black/20">
                   <table className="w-full text-sm border-collapse">
@@ -724,14 +841,15 @@ const StudentStatusOverview = () => {
                         <SortableHeader field="completion" label="Completion" current={sortField} dir={sortDir} onSort={toggleSort} />
                         <SortableHeader field="totalXP" label="XP" current={sortField} dir={sortDir} onSort={toggleSort} />
                         <SortableHeader field="completedNodes" label="Lessons" current={sortField} dir={sortDir} onSort={toggleSort} />
+                        <SortableHeader field="streak" label="Streak" current={sortField} dir={sortDir} onSort={toggleSort} />
                         <SortableHeader field="lastActivityDate" label="Last Active" current={sortField} dir={sortDir} onSort={toggleSort} />
                         <th className="px-4 py-3 text-right whitespace-nowrap">Status</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-200/50 dark:divide-white/5">
-                      {sortedStudents.map((s, i) => {
+                      {filteredStudents.map((s, i) => {
                         const badge = studentBadge(s);
-                        const rank = i + 1;
+                        const rank = sortedStudents.indexOf(s) + 1;
                         const isTop3 = rank <= 3;
                         const isAtRisk = badge.label === 'At Risk';
                         const level = levelFromXP(s.totalXP);
@@ -783,6 +901,12 @@ const StudentStatusOverview = () => {
                             <td className="px-4 py-4 text-right text-slate-600 dark:text-white/70 whitespace-nowrap font-medium">
                               {s.completedNodes} / {s.totalNodes}
                             </td>
+                            {/* Streak */}
+                            <td className="px-4 py-4 text-right whitespace-nowrap">
+                              <span className={`text-xs font-bold ${(s.streak || 0) > 0 ? 'text-orange-500 dark:text-orange-400' : 'text-slate-400 dark:text-white/30'}`}>
+                                {(s.streak || 0) > 0 ? `🔥 ${s.streak}d` : '—'}
+                              </span>
+                            </td>
                             {/* Last active */}
                             <td className="px-4 py-4 text-right text-slate-500 dark:text-white/50 whitespace-nowrap text-xs font-medium">
                               {relativeTime(s.lastActivityDate)}
@@ -808,12 +932,38 @@ const StudentStatusOverview = () => {
         {activeTab === 'concepts' && (
           <div className="bg-gradient-to-br from-white to-slate-50 dark:from-white/8 dark:to-white/3 border border-slate-200/80 dark:border-white/15 p-8 rounded-3xl shadow-[0_12px_40px_rgba(0,0,0,0.06)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.5)] relative group overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-indigo-500/2 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-            <h3 className="font-display font-bold text-2xl text-slate-900 dark:text-white mb-8 relative z-10 flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-purple-100 dark:bg-purple-500/10">
-                <Brain size={24} className="text-purple-600 dark:text-purple-400" />
-              </div>
-              Curriculum Concept Mastery
-            </h3>
+
+            {/* Header + aggregate stats */}
+            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-2 relative z-10">
+              <h3 className="font-display font-bold text-2xl text-slate-900 dark:text-white flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-purple-100 dark:bg-purple-500/10">
+                  <Brain size={24} className="text-purple-600 dark:text-purple-400" />
+                </div>
+                Curriculum Concept Mastery
+              </h3>
+              {conceptStats && (
+                <div className="flex items-center gap-2 text-xs font-bold flex-wrap">
+                  <span className="text-slate-500 dark:text-white/50 mr-1">
+                    Avg: <span className="text-slate-900 dark:text-white">{conceptStats.avg}%</span>
+                  </span>
+                  <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                    ✓ {conceptStats.excellent} excellent
+                  </span>
+                  <span className="px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                    ~ {conceptStats.moderate} moderate
+                  </span>
+                  <span className="px-2.5 py-1 rounded-full bg-red-500/10 text-red-500 dark:text-red-400 border border-red-500/20">
+                    ✗ {conceptStats.poor} poor
+                  </span>
+                </div>
+              )}
+            </div>
+            {conceptStats && (
+              <p className="text-xs text-slate-400 dark:text-white/40 font-medium mb-6 relative z-10 pl-1">
+                Sorted by mastery — weakest concepts first
+              </p>
+            )}
+
             <div className="relative z-10">
               {isLoading ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -825,11 +975,11 @@ const StudentStatusOverview = () => {
                     </div>
                   ))}
                 </div>
-              ) : conceptMastery.length === 0 ? (
+              ) : sortedConcepts.length === 0 ? (
                 <EmptyState icon={<Brain size={24} />} title="No concept data yet" subtitle="Generate a course curriculum to see mastery breakdown." />
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {conceptMastery.map((item, idx) => (
+                  {sortedConcepts.map((item, idx) => (
                     <ConceptCard key={idx} item={item} />
                   ))}
                 </div>
