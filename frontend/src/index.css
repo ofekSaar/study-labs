@@ -137,7 +137,7 @@ body {
 
 /* ── Page Transition ─────────────────────────────────── */
 .page-enter {
-    animation: pageEnter 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation: pageEnter 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes pageEnter {

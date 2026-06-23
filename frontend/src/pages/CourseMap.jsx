@@ -235,7 +235,7 @@ const CourseMap = () => {
                             {role === 'instructor' && nodes.filter(n => n.type === 'quiz').length > 0 && (
                                 <div className="mt-8 border-t border-slate-200 dark:border-white/10 pt-6">
                                     <h3 className="text-xs font-black text-slate-500 dark:text-white/40 uppercase tracking-widest mb-3">
-                                        ניהול בוחנים
+                                        Quiz Management
                                     </h3>
                                     <div className="space-y-2">
                                         {nodes.filter(n => n.type === 'quiz').map(n => (
@@ -250,7 +250,7 @@ const CourseMap = () => {
                                                     onClick={() => setEditingQuizNode(n)}
                                                     className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 text-xs font-bold transition-colors"
                                                 >
-                                                    <Pencil size={13} /> ערוך שאלות
+                                                    <Pencil size={13} /> Edit Questions
                                                 </button>
                                             </div>
                                         ))}
