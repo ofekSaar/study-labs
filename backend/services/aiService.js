@@ -7,6 +7,7 @@ import path from 'path';
 import Course from '../models/Course.js';
 
 import { STUCK_GENERATION_THRESHOLD_MS } from '../constants/config.js';
+import { getAiConfig } from '../config/aiConfig.js';
 
 /**
  * Startup recovery — marks courses that are stuck in 'generating' as 'failed'
@@ -54,8 +55,6 @@ export const recoverStuckGenerations = async () => {
   }
 };
 
-const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://ai-engine:8000';
-const AI_SERVICE_API_KEY = process.env.AI_SERVICE_API_KEY || '';
 
 /**
  * Generates a course roadmap (nodes) from uploaded materials.
@@ -84,10 +83,11 @@ export const generateRoadmap = async ({
     throw new Error('Syllabus is required for course generation.');
   }
 
+  const { url: AI_SERVICE_URL, apiKey: AI_SERVICE_API_KEY } = getAiConfig();
   const uploadDir = process.env.UPLOAD_DIR || './uploads';
   const syllabusPath = path.resolve(uploadDir, syllabus);
-  const materialsPaths = materials && materials.length > 0 
-    ? materials.map(m => path.resolve(uploadDir, m)) 
+  const materialsPaths = materials && materials.length > 0
+    ? materials.map(m => path.resolve(uploadDir, m))
     : [];
   const newMaterialsPaths = newMaterials && newMaterials.length > 0
     ? newMaterials.map(m => path.resolve(uploadDir, m))
@@ -232,6 +232,7 @@ export const generateRoadmap = async ({
  * @returns {Promise<object>} - Evaluation result { isCorrect, score, feedback }
  */
 export const evaluateAnswer = async ({ question, answer, aiPromptContext }) => {
+  const { url: AI_SERVICE_URL, apiKey: AI_SERVICE_API_KEY } = getAiConfig();
   const response = await fetch(`${AI_SERVICE_URL}/api/evaluate-answer/`, {
     method: 'POST',
     headers: {
@@ -259,6 +260,7 @@ export const evaluateAnswer = async ({ question, answer, aiPromptContext }) => {
  * @returns {Promise<object>} - Evaluation result { score, feedback, criteria_breakdown }
  */
 export const evaluateCourse = async ({ courseId, syllabus, courseStructure }) => {
+  const { url: AI_SERVICE_URL, apiKey: AI_SERVICE_API_KEY } = getAiConfig();
   const uploadDir = process.env.UPLOAD_DIR || './uploads';
   const syllabusPath = path.resolve(uploadDir, syllabus);
 

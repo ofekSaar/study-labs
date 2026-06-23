@@ -28,3 +28,24 @@ export const EARLY_BIRD_HOUR_END = 7;
 export const EARLY_BIRD_MULTIPLIER = 1.3;
 
 export const XP_BOOST_MULTIPLIER = 2.0;
+
+// ── Quiz XP Awards (per question type) ────────────────────────────────────────
+export const XP_PER_MCQ = 100;
+export const XP_PER_OPEN = 150;
+export const XP_BY_QUESTION_TYPE = {
+  mcq: XP_PER_MCQ,
+  open: XP_PER_OPEN,
+};
+
+// ── Generation Status Enum ─────────────────────────────────────────────────────
+export const GENERATION_STATUS = Object.freeze({
+  GENERATING: 'generating',
+  READY: 'ready',
+  FAILED: 'failed',
+});
+
+// ── Demo Courses ───────────────────────────────────────────────────────────────
+export const DEMO_COURSE_TITLES = [
+  'מבוא למדעי המחשב - פייתון',
+  'מבוא לחדו״א - חשבון אינפיניטסימלי',
+];

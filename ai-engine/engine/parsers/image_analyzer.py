@@ -13,15 +13,10 @@ import asyncio
 from typing import List, Optional
 
 from dotenv import load_dotenv
+from engine.config import MIN_IMAGE_SIZE
 
 load_dotenv()
 logger = logging.getLogger(__name__)
-
-# Maximum number of images to analyze per document (cost control)
-
-
-# Minimum image size in bytes to bother analyzing (skip tiny icons/bullets)
-MIN_IMAGE_SIZE = 5000  # ~5KB
 
 
 async def analyze_image(image_bytes: bytes, context: str = "") -> Optional[str]:

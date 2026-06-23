@@ -5,7 +5,9 @@ import ContentRenderer from '../common/ContentRenderer';
 import { isRTL } from '../../utils/rtl';
 import sounds from '../../utils/soundManager';
 import useGamificationStore from '../../store/gamificationStore';
-import { QUIZ_TIMER_SECONDS, SPEED_BONUS_THRESHOLD, XP_MCQ_BASE, XP_OPEN_BASE, XP_MCQ_BONUS, XP_OPEN_BONUS } from '../../constants/config';
+import { QUIZ_TIMER_SECONDS, SPEED_BONUS_THRESHOLD } from '../../constants/config';
+import { useQuizTimer } from '../../hooks/useQuizTimer';
+import { calcMCQScore, calcOpenScore } from '../../utils/quizScoring';
 
 const QuizEngine = ({ questions, onComplete }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -17,11 +19,6 @@ const QuizEngine = ({ questions, onComplete }) => {
     const [score, setScore] = useState(0);
     const [answersLog, setAnswersLog] = useState([]);
     const [correctCount, setCorrectCount] = useState(0);
-
-    // Gamified Timer and Speed Bonus States
-    const [timeLeft, setTimeLeft] = useState(QUIZ_TIMER_SECONDS);
-    const [speedBonusActive, setSpeedBonusActive] = useState(false);
-    const [isTimeUp, setIsTimeUp] = useState(false);
     const [consecutiveCorrect, setConsecutiveCorrect] = useState(0);
 
     const submitBtnRef = useRef(null);
@@ -31,50 +28,26 @@ const QuizEngine = ({ questions, onComplete }) => {
     const isOpenQuestion = currentQuestion.type === 'open';
     const isSummaryQuestion = currentQuestion.type === 'summary';
 
-    const handleTimeUp = useCallback(() => {
-        setIsTimeUp(true);
-        sounds.timeUp();
-        setFeedback({
-            isCorrect: false,
-            message: '⌛ Time expired! Try to answer faster on the next question.'
-        });
-        setIsSubmitted(true);
-        incrementStat('no_mistake_streak', 0); // reset streak
-    }, [incrementStat, setIsTimeUp, setFeedback, setIsSubmitted]);
-
-    // Timer effect
-    /* eslint-disable react-hooks/set-state-in-effect */
-    useEffect(() => {
-        if (isSubmitted || isSummaryQuestion || isEvaluating) return;
-
-        setTimeLeft(QUIZ_TIMER_SECONDS);
-        setIsTimeUp(false);
-        setSpeedBonusActive(false);
-        /* eslint-enable react-hooks/set-state-in-effect */
-
-        const interval = setInterval(() => {
-            setTimeLeft(prev => {
-                if (prev <= 1) {
-                    clearInterval(interval);
-                    handleTimeUp();
-                    return 0;
-                }
-                if (prev <= SPEED_BONUS_THRESHOLD) {
-                    sounds.timeLow();
-                }
-                return prev - 1;
+    const { timeLeft, isTimeUp, speedBonusActive, setSpeedBonusActive } = useQuizTimer({
+        questionKey: currentIndex,
+        isSubmitted,
+        isSummaryQuestion,
+        isEvaluating,
+        onTimeUp: useCallback(() => {
+            setFeedback({
+                isCorrect: false,
+                message: '⌛ Time expired! Try to answer faster on the next question.'
             });
-        }, 1000);
-
-        return () => clearInterval(interval);
-    }, [currentIndex, isSubmitted, isSummaryQuestion, isEvaluating, handleTimeUp]);
+            setIsSubmitted(true);
+            incrementStat('no_mistake_streak', 0);
+        }, [incrementStat]),
+    });
 
     const handleMCQSubmit = () => {
         if (selectedOption === null || isSubmitted) return;
 
         const isCorrect = selectedOption === currentQuestion.correctAnswerIndex;
         const timeTaken = QUIZ_TIMER_SECONDS - timeLeft;
-        const gotSpeedBonus = isCorrect && timeTaken <= (QUIZ_TIMER_SECONDS - SPEED_BONUS_THRESHOLD);
 
         setFeedback({
             isCorrect,
@@ -85,7 +58,7 @@ const QuizEngine = ({ questions, onComplete }) => {
 
         if (isCorrect) {
             const { multiplier } = useGamificationStore.getState().getXPMultiplier();
-            const gainedXP = Math.round((gotSpeedBonus ? XP_MCQ_BONUS : XP_MCQ_BASE) * multiplier);
+            const { xp: gainedXP, gotSpeedBonus } = calcMCQScore(timeTaken, multiplier);
             setScore(s => s + gainedXP);
             setCorrectCount(c => c + 1);
             sounds.correct();
@@ -113,7 +86,6 @@ const QuizEngine = ({ questions, onComplete }) => {
             setIsEvaluating(false);
             const isGood = openAnswer.length > 20;
             const timeTaken = QUIZ_TIMER_SECONDS - timeLeft;
-            const gotSpeedBonus = isGood && timeTaken <= 10; // slightly longer speed window for writing
 
             setFeedback({
                 isCorrect: isGood,
@@ -126,15 +98,13 @@ const QuizEngine = ({ questions, onComplete }) => {
 
             if (isGood) {
                 const { multiplier } = useGamificationStore.getState().getXPMultiplier();
-                const gainedXP = Math.round((gotSpeedBonus ? XP_OPEN_BONUS : XP_OPEN_BASE) * multiplier);
+                const { xp: gainedXP, gotSpeedBonus } = calcOpenScore(timeTaken, multiplier);
                 setScore(s => s + gainedXP);
                 setCorrectCount(c => c + 1);
                 sounds.correct();
                 setSpeedBonusActive(gotSpeedBonus);
 
-                if (gotSpeedBonus) {
-                    incrementStat('fast_answers');
-                }
+                if (gotSpeedBonus) incrementStat('fast_answers');
                 incrementStat('no_mistake_streak', prev => prev + 1);
             } else {
                 sounds.wrong();
@@ -152,8 +122,6 @@ const QuizEngine = ({ questions, onComplete }) => {
             setOpenAnswer('');
             setIsSubmitted(false);
             setFeedback(null);
-            setIsTimeUp(false);
-            setSpeedBonusActive(false);
             // consecutiveCorrect carries across questions — only reset on wrong answer
         } else {
             sounds.quizComplete();
@@ -161,11 +129,8 @@ const QuizEngine = ({ questions, onComplete }) => {
             const totalAnswerable = questions.filter(q => q.type !== 'summary').length;
             const isPerfect = correctCount === totalAnswerable && totalAnswerable > 0;
 
-            // Update stats when finishing
             incrementStat('lessons_completed');
-            if (isPerfect) {
-                incrementStat('perfect_quizzes');
-            }
+            if (isPerfect) incrementStat('perfect_quizzes');
 
             onComplete(score, answersLog, isPerfect, correctCount, totalAnswerable);
         }
@@ -207,7 +172,7 @@ const QuizEngine = ({ questions, onComplete }) => {
                     {!isSummaryQuestion && !isSubmitted && (
                         <div className={`flex items-center gap-1.5 px-3 py-1 rounded-xl font-bold text-sm transition-colors ${
                             timeLeft <= SPEED_BONUS_THRESHOLD
-                                ? 'bg-red-500/10 text-red-500 animate-pulse' 
+                                ? 'bg-red-500/10 text-red-500 animate-pulse'
                                 : 'bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-white/60'
                         }`}>
                             <Clock size={16} className={timeLeft <= SPEED_BONUS_THRESHOLD? 'animate-spin' : ''} />
@@ -230,7 +195,7 @@ const QuizEngine = ({ questions, onComplete }) => {
                 <div className="flex-1 z-10">
                     {isSummaryQuestion ? (
                         // SUMMARY CARD RENDER
-                        <motion.div 
+                        <motion.div
                             initial={{ opacity: 0, y: 15 }}
                             animate={{ opacity: 1, y: 0 }}
                             className="bg-indigo-500/5 dark:bg-indigo-500/10 p-6 rounded-3xl border border-indigo-500/10 dark:border-indigo-500/20"
@@ -325,9 +290,9 @@ const QuizEngine = ({ questions, onComplete }) => {
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             className={`mt-6 p-4 rounded-2xl border flex flex-col gap-1 ${
-                                feedback.isCorrect 
-                                    ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-800 dark:text-emerald-300' 
-                                    : isTimeUp 
+                                feedback.isCorrect
+                                    ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-800 dark:text-emerald-300'
+                                    : isTimeUp
                                         ? 'bg-red-500/10 border-red-500/20 text-red-800 dark:text-red-300'
                                         : 'bg-red-500/10 border-red-500/20 text-red-800 dark:text-red-300'
                             }`}
@@ -366,6 +331,7 @@ const QuizEngine = ({ questions, onComplete }) => {
                         </button>
                     ) : !isSubmitted ? (
                         <button
+                            ref={submitBtnRef}
                             onClick={isOpenQuestion ? handleOpenSubmit : handleMCQSubmit}
                             disabled={(isOpenQuestion && !openAnswer) || (!isOpenQuestion && selectedOption === null) || isEvaluating || isTimeUp}
                             className="bg-indigo-500 hover:bg-indigo-600 text-white px-8 py-3.5 rounded-2xl font-bold transition-all shadow-[0_0_15px_rgba(99,102,241,0.3)] disabled:opacity-30 disabled:cursor-not-allowed disabled:shadow-none flex items-center gap-2"
@@ -388,4 +354,3 @@ const QuizEngine = ({ questions, onComplete }) => {
 };
 
 export default QuizEngine;
-

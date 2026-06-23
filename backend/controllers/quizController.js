@@ -4,6 +4,7 @@ import Course from '../models/Course.js';
 import QuizAttempt from '../models/QuizAttempt.js';
 import Enrollment from '../models/Enrollment.js';
 import { evaluateAnswer } from '../services/aiService.js';
+import { XP_BY_QUESTION_TYPE } from '../constants/config.js';
 
 /**
  * Get quiz questions for a specific node.
@@ -171,15 +172,15 @@ export const submitQuiz = async (req, res, next) => {
     // Score each answer
     const scoredAnswers = [];
     let totalScore = 0;
-    const XP_PER_MCQ = 100;
-    const XP_PER_OPEN = 150;
 
     for (const answer of answers) {
       const question = node.quizData[answer.questionIndex];
       if (!question) continue;
 
-      // Skip summary questions
+      // Skip summary questions and unknown types
       if (question.type === 'summary') continue;
+      const xpForType = XP_BY_QUESTION_TYPE[question.type];
+      if (xpForType === undefined) continue;
 
       if (question.type === 'mcq') {
         const isCorrect = answer.selectedOption === question.correctAnswerIndex;
@@ -188,7 +189,7 @@ export const submitQuiz = async (req, res, next) => {
           selectedOption: answer.selectedOption,
           isCorrect,
         });
-        if (isCorrect) totalScore += XP_PER_MCQ;
+        if (isCorrect) totalScore += xpForType;
       }
 
       if (question.type === 'open') {
@@ -203,7 +204,7 @@ export const submitQuiz = async (req, res, next) => {
           openAnswer: answer.openAnswer,
           isCorrect: evaluation.isCorrect,
         });
-        if (evaluation.isCorrect) totalScore += XP_PER_OPEN;
+        if (evaluation.isCorrect) totalScore += xpForType;
       }
     }
 

@@ -2,6 +2,7 @@ import Course from '../models/Course.js';
 import CourseNode from '../models/CourseNode.js';
 import Enrollment from '../models/Enrollment.js';
 import Progress from '../models/Progress.js';
+import { DEMO_COURSE_TITLES } from '../constants/config.js';
 
 /**
  * Creates a Progress record for a student entering a course.
@@ -34,11 +35,6 @@ export const createInitialProgress = async (studentId, courseId) => {
  * @param {object} enrollmentMap - mutable map of courseId → enrollment status
  */
 export const ensureDemoEnrollments = async (studentId, enrollmentMap) => {
-  const DEMO_COURSE_TITLES = [
-    'מבוא למדעי המחשב - פייתון',
-    'מבוא לחדו״א - חשבון אינפיניטסימלי',
-  ];
-
   const demoCourses = await Course.find({ title: { $in: DEMO_COURSE_TITLES } });
 
   for (const dc of demoCourses) {
