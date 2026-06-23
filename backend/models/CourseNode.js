@@ -34,6 +34,14 @@ const quizQuestionSchema = new mongoose.Schema({
     type: String,
     default: null, // Open only
   },
+  alignmentWarning: {
+    type: Boolean,
+    default: false,
+  },
+  editCount: {
+    type: Number,
+    default: 0,
+  },
 }, { _id: false });
 
 const courseNodeSchema = new mongoose.Schema(

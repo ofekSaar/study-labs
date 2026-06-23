@@ -232,6 +232,50 @@ async def generate_content_for_topic(topic: Topic) -> tuple[List[Question], str]
     return [], f"# Summary for {topic.title}\n\n(Error generating summary)"
 
 
+async def validate_question_alignment(summary: str, question: Question) -> bool:
+    """
+    Checks whether a quiz question is directly answerable from the given summary.
+    Returns True if there is an alignment warning (i.e. question is NOT grounded in summary).
+    """
+    if os.environ.get("USE_MOCK_AI") == "True":
+        return False
+
+    from pydantic import BaseModel, Field as PField
+
+    class AlignmentResult(BaseModel):
+        aligned: bool = PField(..., description="True if the question is directly answerable from the summary")
+        confidence: float = PField(..., description="Confidence score between 0 and 1")
+
+    prompt_template_str = (
+        "You are an educational content quality checker.\n"
+        "Study Summary:\n{summary}\n\n"
+        "Quiz Question: {question_text}\n\n"
+        "Is this question directly answerable from the study summary above?\n"
+        "Return 'aligned: true' only if the answer can be found in the summary. "
+        "'confidence' should reflect how certain you are (0.0 to 1.0)."
+    )
+
+    for provider_name, llm_instance in LLMS:
+        try:
+            program = LLMTextCompletionProgram.from_defaults(
+                output_cls=AlignmentResult,
+                prompt_template_str=prompt_template_str,
+                llm=llm_instance
+            )
+            async def _call():
+                async with _api_semaphore:
+                    return await program.acall(
+                        summary=summary[:3000],
+                        question_text=question.question_text
+                    )
+            result = await retry_with_backoff(_call)
+            # Warning when not aligned or low confidence
+            return not result.aligned or result.confidence < 0.6
+        except Exception as e:
+            logger.warning(f"validate_question_alignment failed with {provider_name}: {e}")
+            continue
+
+    return False  # Default: no warning on error
 
 
 def sanitize_filename(name: str) -> str:
@@ -322,6 +366,12 @@ async def create_course_pipeline(
             nonlocal completed_topics
             logger.info(f"  → Generating content for: {lesson_title} / {t.title}")
             t.questions, t.summary = await generate_content_for_topic(t)
+            # Validate alignment of each question against the generated summary
+            if t.summary and t.questions:
+                alignment_tasks = [validate_question_alignment(t.summary, q) for q in t.questions]
+                warnings = await asyncio.gather(*alignment_tasks, return_exceptions=True)
+                for q, warning in zip(t.questions, warnings):
+                    q.alignment_warning = bool(warning) if not isinstance(warning, Exception) else False
             logger.info(f"  ✓ Finished: {lesson_title} / {t.title} ({len(t.questions)} questions)")
             completed_topics += 1
             if course_id:
