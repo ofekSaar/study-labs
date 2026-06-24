@@ -108,8 +108,10 @@ const CourseMap = () => {
         if (!courseId) return;
 
         const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5005';
+        const token = localStorage.getItem('studylabs_token');
         const socket = io(API_BASE_URL, {
-            withCredentials: true
+            withCredentials: true,
+            auth: { token },
         });
 
         socket.on('connect', () => {

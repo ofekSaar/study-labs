@@ -103,6 +103,10 @@ export const getCourseEnrollments = async (req, res, next) => {
     assertOwner(course, 'instructor', req.user._id, 'Access denied');
 
     const { status } = req.query;
+    const validStatuses = ['pending', 'approved', 'denied'];
+    if (status && !validStatuses.includes(status)) {
+      throw createError(400, 'Invalid status filter');
+    }
     const query = { course: req.params.courseId };
     if (status) query.status = status;
 

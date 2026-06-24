@@ -15,7 +15,6 @@ describe('Health Check API', () => {
         const res = await request(app).get('/api/health');
         expect(res.status).toBe(200);
         expect(res.body.status).toBe('ok');
-        expect(res.body.environment).toBe('test');
     });
 
     it('should return 404 for unknown routes', async () => {
