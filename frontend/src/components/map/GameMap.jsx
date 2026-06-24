@@ -101,7 +101,7 @@ const MapNode = ({ status, x, y, label, onClick, index, type, xpReward = 150, is
     );
 };
 
-const GameMap = ({ nodes, nodeStats }) => {
+const GameMap = ({ nodes }) => {
     const containerRef = useRef(null);
     const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
 
