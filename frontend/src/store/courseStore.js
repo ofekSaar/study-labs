@@ -1,5 +1,20 @@
 import { create } from 'zustand';
 import api from '../utils/api.js';
+import useNotificationStore from './notificationStore.js';
+import useToastStore from './toastStore.js';
+
+const SEEN_ANNOUNCEMENTS_KEY = 'studylabs_seen_announcements';
+
+function getSeenIds() {
+    try { return new Set(JSON.parse(localStorage.getItem(SEEN_ANNOUNCEMENTS_KEY)) || []); }
+    catch { return new Set(); }
+}
+
+function markSeen(ids) {
+    const seen = getSeenIds();
+    ids.forEach((id) => seen.add(id));
+    localStorage.setItem(SEEN_ANNOUNCEMENTS_KEY, JSON.stringify([...seen]));
+}
 
 const useCourseStore = create((set) => ({
     user: {
@@ -226,10 +241,35 @@ const useCourseStore = create((set) => ({
     },
 
     // ── Announcements ──────────────────────────────
-    fetchAnnouncements: async (courseId) => {
+    fetchAnnouncements: async (courseId, courseTitle) => {
         try {
             const { data } = await api.get(`/api/courses/${courseId}/announcements`);
-            set({ announcements: data.announcements || [] });
+            const announcements = data.announcements || [];
+            set({ announcements });
+
+            const seen = getSeenIds();
+            const newOnes = announcements.filter((a) => !seen.has(a._id));
+            if (newOnes.length > 0) {
+                const { addNotification } = useNotificationStore.getState();
+                const { addToast } = useToastStore.getState();
+                newOnes.forEach((ann) => {
+                    addNotification({
+                        type: 'announcement',
+                        courseId,
+                        courseTitle: courseTitle || ann.courseName || '',
+                        message: ann.title,
+                        createdAt: ann.createdAt || new Date().toISOString(),
+                    });
+                    addToast({
+                        type: 'info',
+                        title: courseTitle || ann.courseName || 'New Announcement',
+                        message: ann.title,
+                        icon: '📢',
+                        duration: 5000,
+                    });
+                });
+                markSeen(newOnes.map((a) => a._id));
+            }
         } catch (error) {
             console.error('Failed to fetch announcements:', error);
         }

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import StudentLayout from '../components/layout/StudentLayout';
 import useEnrollmentStore from '../store/enrollmentStore';
 import api from '../utils/api';
-import { Search, BookOpen } from 'lucide-react';
+import { Search } from 'lucide-react';
 
 const DEPARTMENTS = ['All', 'Computer Science', 'Mathematics', 'Science', 'Business'];
 
@@ -150,8 +150,8 @@ const MyEnrollments = () => {
                                                 {course.department?.toUpperCase() || 'GENERAL'}
                                             </span>
                                         </div>
-                                        <div className="absolute top-4 right-4 w-9 h-9 rounded-xl bg-white/15 backdrop-blur-sm border border-white/25 flex items-center justify-center">
-                                            <BookOpen size={16} className="text-white" />
+                                        <div className="absolute top-4 right-4 w-9 h-9 rounded-xl bg-white/15 backdrop-blur-sm border border-white/25 flex items-center justify-center text-xl">
+                                            {course.courseAvatar || '📚'}
                                         </div>
                                     </div>
 
