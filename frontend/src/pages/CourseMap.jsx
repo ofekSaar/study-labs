@@ -76,7 +76,7 @@ const CourseMap = () => {
 
     useEffect(() => {
         if (courseId) fetchAnnouncements(courseId, course?.title);
-    }, [courseId, fetchAnnouncements]);
+    }, [courseId, fetchAnnouncements, course?.title]);
 
     // Refresh nodes when window regains focus (user comes back from lesson)
     useEffect(() => {

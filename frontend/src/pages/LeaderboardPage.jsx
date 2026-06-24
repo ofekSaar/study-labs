@@ -90,8 +90,8 @@ const LeaderboardPage = () => {
     const [courseEntries, setCourseEntries] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [refreshKey, setRefreshKey] = useState(0);
-    const { user: currentUser, courses } = useCourseStore();
-    const { activeAvatar, stats } = useGamificationStore();
+    const { courses } = useCourseStore();
+    const { activeAvatar } = useGamificationStore();
 
     const currentUserEmoji = AVATARS.find(a => a.id === activeAvatar)?.emoji || '🎓';
     const enrolledCourses = (courses || []).filter(c => c.generationStatus === 'ready' || c.nodes?.length > 0);
