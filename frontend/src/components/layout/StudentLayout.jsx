@@ -5,6 +5,7 @@ import { io } from 'socket.io-client';
 import useCourseStore from '../../store/courseStore';
 import useAuthStore from '../../store/authStore';
 import useNotificationStore from '../../store/notificationStore';
+import useToastStore from '../../store/toastStore';
 import SettingsModal from './SettingsModal';
 import ToastManager from '../common/ToastManager';
 import useGamificationStore, { AVATARS, TITLES } from '../../store/gamificationStore';
@@ -350,6 +351,7 @@ const StudentLayout = ({ children }) => {
     const { logout, user } = useAuthStore();
     const { stats } = useGamificationStore();
     const { addNotification } = useNotificationStore();
+    const { addToast } = useToastStore();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
@@ -366,10 +368,17 @@ const StudentLayout = ({ children }) => {
 
         socket.on('student_notification', (payload) => {
             addNotification(payload);
+            addToast({
+                type: 'info',
+                title: payload.courseTitle || 'New Announcement',
+                message: payload.message,
+                icon: '📢',
+                duration: 5000,
+            });
         });
 
         return () => socket.disconnect();
-    }, [user?._id, addNotification]);
+    }, [user?._id, addNotification, addToast]);
 
     const handleLogout = () => {
         logout();

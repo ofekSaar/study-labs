@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import api from '../utils/api.js';
 import useNotificationStore from './notificationStore.js';
+import useToastStore from './toastStore.js';
 
 const SEEN_ANNOUNCEMENTS_KEY = 'studylabs_seen_announcements';
 
@@ -250,6 +251,7 @@ const useCourseStore = create((set) => ({
             const newOnes = announcements.filter((a) => !seen.has(a._id));
             if (newOnes.length > 0) {
                 const { addNotification } = useNotificationStore.getState();
+                const { addToast } = useToastStore.getState();
                 newOnes.forEach((ann) => {
                     addNotification({
                         type: 'announcement',
@@ -257,6 +259,13 @@ const useCourseStore = create((set) => ({
                         courseTitle: courseTitle || ann.courseName || '',
                         message: ann.title,
                         createdAt: ann.createdAt || new Date().toISOString(),
+                    });
+                    addToast({
+                        type: 'info',
+                        title: courseTitle || ann.courseName || 'New Announcement',
+                        message: ann.title,
+                        icon: '📢',
+                        duration: 5000,
                     });
                 });
                 markSeen(newOnes.map((a) => a._id));
