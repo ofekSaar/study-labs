@@ -4,7 +4,9 @@ import StudentLayout from '../components/layout/StudentLayout';
 import InstructorLayout from '../components/layout/InstructorLayout';
 import GameMapComponent from '../components/map/GameMap';
 import QuizEditorModal from '../components/quiz/QuizEditorModal';
-import { ChevronLeft, Loader2, RotateCcw, UploadCloud, X, Pencil } from 'lucide-react';
+import AnnouncementModal from '../components/course/AnnouncementModal';
+import AnnouncementsPanel from '../components/course/AnnouncementsPanel';
+import { ChevronLeft, Loader2, RotateCcw, UploadCloud, X, Pencil, Megaphone } from 'lucide-react';
 import useAuthStore from '../store/authStore';
 import useCourseStore from '../store/courseStore';
 import { io } from 'socket.io-client';
@@ -17,7 +19,7 @@ const CourseMap = () => {
     const { id: courseId } = useParams();
     const navigate = useNavigate();
     const { role } = useAuthStore();
-    const { fetchCourseNodes, regenerateCourse, courses, isLoading: storeLoading } = useCourseStore();
+    const { fetchCourseNodes, regenerateCourse, fetchAnnouncements, courses, isLoading: storeLoading } = useCourseStore();
     const [localLoading, setLocalLoading] = useState(true);
     const [retrying, setRetrying] = useState(false);
     const [retryError, setRetryError] = useState(null);
@@ -30,6 +32,9 @@ const CourseMap = () => {
 
     // Quiz editor state (instructor only)
     const [editingQuizNode, setEditingQuizNode] = useState(null);
+
+    // Announcement modal state (instructor only)
+    const [isAnnouncementOpen, setIsAnnouncementOpen] = useState(false);
 
     const handleUploadSubmit = async () => {
         if (uploadFiles.length === 0) return;
@@ -64,6 +69,10 @@ const CourseMap = () => {
         };
         loadNodes();
     }, [courseId, fetchCourseNodes]);
+
+    useEffect(() => {
+        if (courseId) fetchAnnouncements(courseId);
+    }, [courseId, fetchAnnouncements]);
 
     // Refresh nodes when window regains focus (user comes back from lesson)
     useEffect(() => {
@@ -214,15 +223,30 @@ const CourseMap = () => {
                         </div>
                     </div>
 
-                    {/* Add Materials for Instructor */}
-                    {role === 'instructor' && course?.generationStatus !== 'generating' && (
-                        <div className="flex justify-center mb-6 -mt-3">
+                    {/* Instructor action bar */}
+                    {role === 'instructor' && (
+                        <div className="flex justify-center gap-3 mb-6 -mt-3 flex-wrap">
+                            {course?.generationStatus !== 'generating' && (
+                                <button
+                                    onClick={() => setIsUploadOpen(true)}
+                                    className="px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-sm transition shadow-[0_0_15px_rgba(147,51,234,0.2)] flex items-center gap-2 cursor-pointer animate-fade-in"
+                                >
+                                    <UploadCloud size={16} /> Add Materials
+                                </button>
+                            )}
                             <button
-                                onClick={() => setIsUploadOpen(true)}
-                                className="px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-sm transition shadow-[0_0_15px_rgba(147,51,234,0.2)] flex items-center gap-2 cursor-pointer animate-fade-in"
+                                onClick={() => setIsAnnouncementOpen(true)}
+                                className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm transition shadow-[0_0_15px_rgba(99,102,241,0.2)] flex items-center gap-2 cursor-pointer animate-fade-in"
                             >
-                                <UploadCloud size={16} /> Add Materials
+                                <Megaphone size={16} /> Announcements
                             </button>
+                        </div>
+                    )}
+
+                    {/* Student announcements panel */}
+                    {role === 'student' && (
+                        <div className="max-w-xl mx-auto">
+                            <AnnouncementsPanel />
                         </div>
                     )}
 
@@ -372,6 +396,14 @@ const CourseMap = () => {
                         </div>
                     </div>
                 </div>
+            )}
+
+            {/* Announcement Modal (instructor) */}
+            {isAnnouncementOpen && (
+                <AnnouncementModal
+                    courseId={courseId}
+                    onClose={() => setIsAnnouncementOpen(false)}
+                />
             )}
 
             {/* Quiz Editor Modal */}

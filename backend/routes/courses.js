@@ -14,6 +14,9 @@ import {
   getCourseStudents,
   regenerateCourse,
   addCourseMaterials,
+  getAnnouncements,
+  createAnnouncement,
+  deleteAnnouncement,
 } from '../controllers/courseController.js';
 
 const router = Router();
@@ -404,5 +407,10 @@ router.post(
   },
   addCourseMaterials
 );
+
+// ── Announcements ──────────────────────────────────────────────────────────────
+router.get('/:id/announcements', authenticate, getAnnouncements);
+router.post('/:id/announcements', authenticate, authorize('instructor'), createAnnouncement);
+router.delete('/:id/announcements/:announcementId', authenticate, authorize('instructor'), deleteAnnouncement);
 
 export default router;

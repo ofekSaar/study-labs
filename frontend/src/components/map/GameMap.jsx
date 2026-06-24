@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { BookOpen, HelpCircle, Trophy, Lock, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const MapNode = ({ status, x, y, label, onClick, index, type, xpReward = 150, isCurrent = false }) => {
+const MapNode = ({ status, x, y, label, onClick, index, type, xpReward = 150, isCurrent = false, completionCount, totalEnrolled }) => {
     const [isHovered, setIsHovered] = useState(false);
 
     const getStyles = () => {
@@ -77,7 +77,7 @@ const MapNode = ({ status, x, y, label, onClick, index, type, xpReward = 150, is
                 className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 relative ${getStyles()}`}
             >
                 {getIcon()}
-                
+
                 {/* Micro level indicator circle */}
                 <div className={`absolute -top-1.5 -right-1.5 w-6 h-6 rounded-lg text-[10px] font-black flex items-center justify-center shadow border ${
                     status === 'completed' ? 'bg-emerald-600 border-emerald-500 text-white' :
@@ -85,6 +85,13 @@ const MapNode = ({ status, x, y, label, onClick, index, type, xpReward = 150, is
                 }`}>
                     {index + 1}
                 </div>
+
+                {/* Instructor-only completion count badge */}
+                {totalEnrolled !== undefined && (
+                    <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-slate-700 dark:bg-slate-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full border border-slate-600 dark:border-slate-500 whitespace-nowrap shadow">
+                        {completionCount}/{totalEnrolled}
+                    </div>
+                )}
             </button>
 
             <span className={`text-[10px] font-black mt-2 px-2.5 py-1 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 text-slate-700 dark:text-slate-200 max-w-[120px] text-center shadow-sm truncate ${status === 'locked' ? 'opacity-40' : 'opacity-100'}`}>
@@ -201,6 +208,8 @@ const GameMap = ({ nodes }) => {
                             y={node.py}
                             index={index}
                             isCurrent={node.status === 'active'}
+                            completionCount={node.completionCount}
+                            totalEnrolled={node.totalEnrolled}
                         />
                     ))}
                 </div>
