@@ -20,6 +20,12 @@ export const initSocket = (httpServer) => {
       console.log(`[Socket] Socket ${socket.id} joined course room: course_${courseId}`);
     });
 
+    // Each user joins their own personal room for targeted notifications
+    socket.on('join_user', (userId) => {
+      socket.join(`user_${userId}`);
+      console.log(`[Socket] Socket ${socket.id} joined user room: user_${userId}`);
+    });
+
     socket.on('disconnect', () => {
       console.log(`[Socket] User disconnected: ${socket.id}`);
     });

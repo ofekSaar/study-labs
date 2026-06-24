@@ -13,6 +13,7 @@ import { ensureDemoEnrollments, createInitialProgress } from '../services/enroll
 import { assertOwner } from '../middleware/ownershipGuard.js';
 import { getUserRoles } from '../utils/userRoles.js';
 import { STUCK_GENERATION_THRESHOLD_MS, MAX_GENERATION_ATTEMPTS } from '../constants/config.js';
+import { getIO } from '../config/socket.js';
 
 const safeJSONParse = (str, fieldName) => {
   if (!str) return undefined;
@@ -636,6 +637,22 @@ export const createAnnouncement = async (req, res, next) => {
       content: content.trim(),
       isPinned: !!isPinned,
     });
+
+    // Notify all enrolled students in real-time
+    const enrollments = await Enrollment.find({ course: req.params.id, status: 'approved' }).select('student');
+    const io = getIO();
+    if (io) {
+      const payload = {
+        type: 'announcement',
+        message: title.trim(),
+        courseTitle: course.title,
+        courseId: req.params.id,
+        createdAt: announcement.createdAt,
+      };
+      for (const { student } of enrollments) {
+        io.to(`user_${student}`).emit('student_notification', payload);
+      }
+    }
 
     res.status(201).json({ status: 'success', data: { announcement } });
   } catch (error) {
