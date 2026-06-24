@@ -16,12 +16,37 @@ logger = logging.getLogger(__name__)
 from engine.db import update_course_progress, save_syllabus_blueprint, get_syllabus_blueprint
 from engine.semantic_filter import tag_materials_with_embeddings
 from engine.llm_utils import run_with_fallback, run_with_fallback_sync
-from engine.config import MAX_CONCURRENT_AI_CALLS
+from engine.config import (
+    MAX_CONCURRENT_AI_CALLS,
+    USE_MOCK_AI,
+    VALIDATE_QUESTION_ALIGNMENT,
+    OPENAI_MODEL,
+    OPENROUTER_MODEL,
+    GEMINI_MODEL,
+    COLLEGE_MODEL,
+)
 
 load_dotenv()
 
 # ── Rate Limiting ────────────────────────────────────────
 _api_semaphore = asyncio.Semaphore(MAX_CONCURRENT_AI_CALLS)
+
+
+def _is_rate_limit_error(e: Exception) -> bool:
+    """
+    Detects 429 / rate-limit errors robustly, by HTTP status code and exception
+    type first, falling back to specific marker phrases (not the bare substring
+    'rate', which also matches 'generate'/'accurate').
+    """
+    status = getattr(e, "status_code", None) or getattr(e, "code", None)
+    if status == 429:
+        return True
+    if type(e).__name__ in ("RateLimitError", "ResourceExhausted"):
+        return True
+    error_str = str(e).lower()
+    markers = ("429", "rate limit", "too many requests", "quota", "resource_exhausted")
+    return any(m in error_str for m in markers)
+
 
 async def retry_with_backoff(coro_fn, max_retries=3, base_delay=2.0):
     """
@@ -32,12 +57,9 @@ async def retry_with_backoff(coro_fn, max_retries=3, base_delay=2.0):
         try:
             return await coro_fn()
         except Exception as e:
-            error_str = str(e).lower()
-            is_rate_limit = '429' in error_str or 'rate' in error_str or 'too many' in error_str
-            
-            if attempt == max_retries or not is_rate_limit:
+            if attempt == max_retries or not _is_rate_limit_error(e):
                 raise  # Out of retries or not a rate limit error
-            
+
             delay = base_delay * (2 ** attempt) + random.uniform(0, 1)
             logger.warning(f"Rate limited (attempt {attempt + 1}/{max_retries + 1}). Retrying in {delay:.1f}s...")
             await asyncio.sleep(delay)
@@ -46,13 +68,13 @@ async def retry_with_backoff(coro_fn, max_retries=3, base_delay=2.0):
 LLMS = []
 
 if os.environ.get("OPENAI_API_KEY"):
-    LLMS.append(("OpenAI", OpenAI(model="gpt-4o-mini", request_timeout=180.0, max_retries=3)))
+    LLMS.append(("OpenAI", OpenAI(model=OPENAI_MODEL, request_timeout=180.0, max_retries=3)))
 
 if os.environ.get("COLLEGE_API_BASE"):
     try:
         import httpx
         _college_llm = OpenAI(
-            model=os.environ.get("COLLEGE_MODEL", "gpt-oss-120b"),
+            model=COLLEGE_MODEL,
             api_key=os.environ.get("COLLEGE_API_KEY", "college"),
             api_base=os.environ.get("COLLEGE_API_BASE"),
             request_timeout=180.0,
@@ -66,14 +88,14 @@ if os.environ.get("COLLEGE_API_BASE"):
 
 if os.environ.get("OPEN_ROUTE_API_KEY"):
     LLMS.append(("OpenRouter", OpenAI(
-        model="gpt-4o",
+        model=OPENROUTER_MODEL,
         api_key=os.environ.get("OPEN_ROUTE_API_KEY"),
         api_base="https://openrouter.ai/api/v1"
     )))
 
 if os.environ.get("GEMINI_API_KEY"):
-    LLMS.append(("Gemini", Gemini(model="models/gemini-flash-latest", api_key=os.environ.get("GEMINI_API_KEY"))))
-    
+    LLMS.append(("Gemini", Gemini(model=GEMINI_MODEL, api_key=os.environ.get("GEMINI_API_KEY"))))
+
 if not LLMS:
     logger.warning("No API Keys found. AI features will fail unless Mock Mode is active.")
 
@@ -82,7 +104,7 @@ def parse_syllabus(syllabus_text: str, syllabus_name: str = "Unknown") -> Course
     Parses raw syllabus text into a structured Course object.
     """
     # Check for MOCK mode to allow testing without valid API keys
-    if os.environ.get("USE_MOCK_AI") == "True":
+    if USE_MOCK_AI:
         logger.info(f"Using MOCK AI Mode for parsing syllabus: {syllabus_name}")
         return Course(
             title="Mock Course (Demo)", 
@@ -101,12 +123,7 @@ def parse_syllabus(syllabus_text: str, syllabus_name: str = "Unknown") -> Course
             ]
         )
 
-    for provider_name, llm_instance in LLMS:
-        try:
-            logger.info(f"Attempting parse_syllabus for '{syllabus_name}' with {provider_name}...")
-            program = LLMTextCompletionProgram.from_defaults(
-                output_cls=Course,
-                prompt_template_str="""
+    prompt_template_str = """
                 Extract a highly detailed course structure from the following syllabus.
                 Ensure you include all major lessons, topics under each lesson, and the description of what will be taught.
 
@@ -122,64 +139,33 @@ def parse_syllabus(syllabus_text: str, syllabus_name: str = "Unknown") -> Course
 
                 Syllabus:
                 {syllabus}
-                """,
-                llm=llm_instance,
-                verbose=True
-            )
-            logger.info("Calling LLM to extract syllabus structure...")
-            result = program(syllabus=syllabus_text)
-            logger.info(f"Successfully parsed syllabus with {len(result.lessons)} lessons.")
-            return result
-        except Exception as e:
-            logger.warning(f"[parse_syllabus] {provider_name} failed: {e}")
-            continue
+                """
 
-    logger.warning("All LLM providers failed for parse_syllabus.")
-    return Course(title="Error Parsing Syllabus", lessons=[])
+    def _try(provider_name, llm_instance):
+        logger.info(f"Attempting parse_syllabus for '{syllabus_name}' with {provider_name}...")
+        program = LLMTextCompletionProgram.from_defaults(
+            output_cls=Course,
+            prompt_template_str=prompt_template_str,
+            llm=llm_instance,
+            verbose=True
+        )
+        logger.info("Calling LLM to extract syllabus structure...")
+        result = program(syllabus=syllabus_text)
+        logger.info(f"Successfully parsed syllabus with {len(result.lessons)} lessons.")
+        return result
 
-def tag_materials_to_topic(topic: Topic, materials: List[str]) -> List[str]:
-    """
-    Uses LLM to filter relevant materials for a given topic.
-    """
-    if not materials:
-        return []
-
-    # Simplified extraction for tagging
-    from pydantic import BaseModel
-    class MaterialMatches(BaseModel):
-        relevant_indices: List[int]
-
-    prompt_template_str = (
-        "You are an assistant helping to map learning materials to course topics.\n"
-        "Topic: {topic_title} - {topic_desc}\n"
-        "Materials:\n"
-        "{materials_list}\n"
-        "Return the indices (0-based) of the materials that are relevant to this topic."
-    )
-    
-    materials_text = "\n".join([f"[{i}] {m[:100]}..." for i, m in enumerate(materials)])
-    
-    for provider_name, llm_instance in LLMS:
-        try:
-            program = LLMTextCompletionProgram.from_defaults(
-                output_cls=MaterialMatches,
-                prompt_template_str=prompt_template_str,
-                llm=llm_instance
-            )
-            result = program(topic_title=topic.title, topic_desc=topic.description or "", materials_list=materials_text)
-            return [materials[i] for i in result.relevant_indices if i < len(materials)]
-        except Exception as e:
-            logger.warning(f"Error in tag_materials_to_topic with {provider_name}: {e}")
-            continue
-
-    return materials[:1] # Fallback: return first material
+    try:
+        return run_with_fallback_sync(_try, op_name="parse_syllabus")
+    except RuntimeError:
+        logger.warning("All LLM providers failed for parse_syllabus.")
+        return Course(title="Error Parsing Syllabus", lessons=[])
 
 async def generate_content_for_topic(topic: Topic) -> tuple[List[Question], str]:
     """
     Generates questions and study summaries for the topic in a single LLM call.
     Uses semaphore for rate limiting and retry for 429 errors.
     """
-    if os.environ.get("USE_MOCK_AI") == "True":
+    if USE_MOCK_AI:
         logger.info(f"Using MOCK AI Mode for generate_content_for_topic: {topic.title}")
         questions = topic.questions if topic.questions else [Question(question_text="Is this real?", options=["Yes", "No"], correct_answer=1)]
         summary = topic.summary if topic.summary else f"# Summary for {topic.title}\n\nThis is a mock summary for {topic.title} generated because USE_MOCK_AI is True."
@@ -208,28 +194,26 @@ async def generate_content_for_topic(topic: Topic) -> tuple[List[Question], str]
         "Properly escape all internal quotes, backslashes, and newlines so the parser does not fail."
     )
     
-    for provider_name, llm_instance in LLMS:
-        try:
-            program = LLMTextCompletionProgram.from_defaults(
-                output_cls=TopicContent,
-                prompt_template_str=prompt_template_str,
-                llm=llm_instance
-            )
-            async def _call():
-                async with _api_semaphore:
-                    return await program.acall(
-                        topic_title=topic.title,
-                        topic_desc=topic.description or "",
-                        matched_content=matched_content
-                    )
-            
-            result = await retry_with_backoff(_call)
-            return result.questions, result.summary
-        except Exception as e:
-            logger.warning(f"Error in generate_content_for_topic with {provider_name}: {e}")
-            continue
-            
-    return [], f"# Summary for {topic.title}\n\n(Error generating summary)"
+    async def _try(provider_name, llm_instance):
+        program = LLMTextCompletionProgram.from_defaults(
+            output_cls=TopicContent,
+            prompt_template_str=prompt_template_str,
+            llm=llm_instance
+        )
+        async def _call():
+            async with _api_semaphore:
+                return await program.acall(
+                    topic_title=topic.title,
+                    topic_desc=topic.description or "",
+                    matched_content=matched_content
+                )
+        return await retry_with_backoff(_call)
+
+    try:
+        result = await run_with_fallback(_try, op_name="generate_content_for_topic")
+        return result.questions, result.summary
+    except RuntimeError:
+        return [], f"# Summary for {topic.title}\n\n(Error generating summary)"
 
 
 async def validate_question_alignment(summary: str, question: Question) -> bool:
@@ -237,7 +221,7 @@ async def validate_question_alignment(summary: str, question: Question) -> bool:
     Checks whether a quiz question is directly answerable from the given summary.
     Returns True if there is an alignment warning (i.e. question is NOT grounded in summary).
     """
-    if os.environ.get("USE_MOCK_AI") == "True":
+    if USE_MOCK_AI:
         return False
 
     from pydantic import BaseModel, Field as PField
@@ -255,27 +239,26 @@ async def validate_question_alignment(summary: str, question: Question) -> bool:
         "'confidence' should reflect how certain you are (0.0 to 1.0)."
     )
 
-    for provider_name, llm_instance in LLMS:
-        try:
-            program = LLMTextCompletionProgram.from_defaults(
-                output_cls=AlignmentResult,
-                prompt_template_str=prompt_template_str,
-                llm=llm_instance
-            )
-            async def _call():
-                async with _api_semaphore:
-                    return await program.acall(
-                        summary=summary[:3000],
-                        question_text=question.question_text
-                    )
-            result = await retry_with_backoff(_call)
-            # Warning when not aligned or low confidence
-            return not result.aligned or result.confidence < 0.6
-        except Exception as e:
-            logger.warning(f"validate_question_alignment failed with {provider_name}: {e}")
-            continue
+    async def _try(provider_name, llm_instance):
+        program = LLMTextCompletionProgram.from_defaults(
+            output_cls=AlignmentResult,
+            prompt_template_str=prompt_template_str,
+            llm=llm_instance
+        )
+        async def _call():
+            async with _api_semaphore:
+                return await program.acall(
+                    summary=summary[:3000],
+                    question_text=question.question_text
+                )
+        return await retry_with_backoff(_call)
 
-    return False  # Default: no warning on error
+    try:
+        result = await run_with_fallback(_try, op_name="validate_question_alignment")
+        # Warning when not aligned or low confidence
+        return not result.aligned or result.confidence < 0.6
+    except RuntimeError:
+        return False  # Default: no warning on error
 
 
 def sanitize_filename(name: str) -> str:
@@ -327,9 +310,9 @@ async def create_course_pipeline(
         if course_id:
             update_course_progress(course_id, f"Mapping {len(new_materials)} new files to syllabus topics...")
         
-        # Tag new materials
-        tag_materials_with_embeddings(course, new_materials)
-        
+        # Tag new materials (SBERT embedding is CPU-heavy — run off the event loop)
+        await asyncio.to_thread(tag_materials_with_embeddings, course, new_materials)
+
         # Identify which topics actually matched the new materials
         updated_topics = []
         for lesson in course.lessons:
@@ -345,9 +328,9 @@ async def create_course_pipeline(
         if course_id:
             update_course_progress(course_id, "Indexing materials for topic matching...")
             
-        # Tag all materials using SBERT
-        tag_materials_with_embeddings(course, materials)
-        
+        # Tag all materials using SBERT (CPU-heavy — run off the event loop)
+        await asyncio.to_thread(tag_materials_with_embeddings, course, materials)
+
         # In a new course, all topics are generated
         updated_topics = []
         for lesson in course.lessons:
@@ -366,8 +349,9 @@ async def create_course_pipeline(
             nonlocal completed_topics
             logger.info(f"  → Generating content for: {lesson_title} / {t.title}")
             t.questions, t.summary = await generate_content_for_topic(t)
-            # Validate alignment of each question against the generated summary
-            if t.summary and t.questions:
+            # Validate alignment of each question against the generated summary.
+            # Costs one extra LLM call per question — gated behind a config flag.
+            if VALIDATE_QUESTION_ALIGNMENT and t.summary and t.questions:
                 alignment_tasks = [validate_question_alignment(t.summary, q) for q in t.questions]
                 warnings = await asyncio.gather(*alignment_tasks, return_exceptions=True)
                 for q, warning in zip(t.questions, warnings):
@@ -393,6 +377,14 @@ async def evaluate_answer(question: str, answer: str, aiPromptContext: str = Non
     """
     Evaluates an open-ended answer using LLMs.
     """
+    if USE_MOCK_AI:
+        passed = len(answer) > 20
+        return {
+            "isCorrect": passed,
+            "score": 80 if passed else 20,
+            "feedback": "Mock evaluation (USE_MOCK_AI is True)."
+        }
+
     from pydantic import BaseModel
     class EvaluationResult(BaseModel):
         isCorrect: bool
@@ -406,32 +398,34 @@ async def evaluate_answer(question: str, answer: str, aiPromptContext: str = Non
     )
     if aiPromptContext:
         prompt_template_str += f"Context/Expected Concepts: {aiPromptContext}\n"
-        
+
     prompt_template_str += (
         "Evaluate the answer. Provide a boolean 'isCorrect' indicating if it passes the minimum bar. "
         "Provide a 'score' from 0 to 100. "
         "Provide detailed constructive 'feedback'. Use Markdown for formatting and LaTeX for all math ($...$)."
     )
-    
-    for provider_name, llm_instance in LLMS:
-        try:
-            program = LLMTextCompletionProgram.from_defaults(
-                output_cls=EvaluationResult,
-                prompt_template_str=prompt_template_str,
-                llm=llm_instance
-            )
-            result = await program.acall(question=question, answer=answer)
-            return {
-                "isCorrect": result.isCorrect,
-                "score": result.score,
-                "feedback": result.feedback
-            }
-        except Exception as e:
-            print(f"Error in evaluate_answer with {provider_name}: {e}")
-            continue
 
-    return {
-        "isCorrect": len(answer) > 20,
-        "score": 50 if len(answer) > 20 else 0,
-        "feedback": "Evaluation failed due to LLM error. Automatic score based on length."
-    }
+    async def _try(provider_name, llm_instance):
+        program = LLMTextCompletionProgram.from_defaults(
+            output_cls=EvaluationResult,
+            prompt_template_str=prompt_template_str,
+            llm=llm_instance
+        )
+        # Intentionally NOT gated by _api_semaphore: this is an interactive,
+        # single-call endpoint (a student submitting an answer). Sharing the
+        # bulk course-generation semaphore would queue it behind large jobs.
+        return await retry_with_backoff(lambda: program.acall(question=question, answer=answer))
+
+    try:
+        result = await run_with_fallback(_try, op_name="evaluate_answer")
+        return {
+            "isCorrect": result.isCorrect,
+            "score": result.score,
+            "feedback": result.feedback
+        }
+    except RuntimeError:
+        return {
+            "isCorrect": len(answer) > 20,
+            "score": 50 if len(answer) > 20 else 0,
+            "feedback": "Evaluation failed due to LLM error. Automatic score based on length."
+        }

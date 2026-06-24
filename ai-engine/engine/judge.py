@@ -3,7 +3,8 @@ import logging
 from typing import Dict, Any
 from pydantic import BaseModel, Field
 from llama_index.core.program import LLMTextCompletionProgram
-from engine.generator import LLMS, retry_with_backoff, _api_semaphore
+from engine.generator import retry_with_backoff, _api_semaphore
+from engine.llm_utils import run_with_fallback
 
 logger = logging.getLogger(__name__)
 
@@ -40,31 +41,29 @@ async def evaluate_course(course_structure: Dict, syllabus_text: str) -> Dict:
     if len(course_json) > 50000:
         course_json = course_json[:50000] + "\n...[TRUNCATED FOR EVALUATION]..."
         
-    for provider_name, llm_instance in LLMS:
-        try:
-            program = LLMTextCompletionProgram.from_defaults(
-                output_cls=CourseEvaluation,
-                prompt_template_str=prompt_template_str,
-                llm=llm_instance
-            )
-            async def _call():
-                async with _api_semaphore:
-                    return await program.acall(syllabus_text=syllabus_text, course_structure_json=course_json)
-            
-            logger.info(f"Evaluating course with {provider_name}...")
-            result = await retry_with_backoff(_call)
-            
-            return {
-                "score": result.score,
-                "feedback": result.feedback,
-                "criteria_breakdown": result.criteria_breakdown
-            }
-        except Exception as e:
-            logger.warning(f"Error in evaluate_course with {provider_name}: {e}")
-            continue
-            
-    return {
-        "score": 0,
-        "feedback": "Evaluation failed due to LLM errors.",
-        "criteria_breakdown": {}
-    }
+    async def _try(provider_name, llm_instance):
+        program = LLMTextCompletionProgram.from_defaults(
+            output_cls=CourseEvaluation,
+            prompt_template_str=prompt_template_str,
+            llm=llm_instance
+        )
+        async def _call():
+            async with _api_semaphore:
+                return await program.acall(syllabus_text=syllabus_text, course_structure_json=course_json)
+
+        logger.info(f"Evaluating course with {provider_name}...")
+        return await retry_with_backoff(_call)
+
+    try:
+        result = await run_with_fallback(_try, op_name="evaluate_course")
+        return {
+            "score": result.score,
+            "feedback": result.feedback,
+            "criteria_breakdown": result.criteria_breakdown
+        }
+    except RuntimeError:
+        return {
+            "score": 0,
+            "feedback": "Evaluation failed due to LLM errors.",
+            "criteria_breakdown": {}
+        }
