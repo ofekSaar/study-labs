@@ -11,6 +11,7 @@ const useCourseStore = create((set) => ({
     },
     instructorStats: null,
     courses: [],
+    announcements: [],
     selectedCourseId: null,
     selectedNode: null,
     isLoading: false,
@@ -222,6 +223,33 @@ const useCourseStore = create((set) => ({
             console.error('Failed to delete course:', error);
             throw error;
         }
+    },
+
+    // ── Announcements ──────────────────────────────
+    fetchAnnouncements: async (courseId) => {
+        try {
+            const { data } = await api.get(`/api/courses/${courseId}/announcements`);
+            set({ announcements: data.announcements || [] });
+        } catch (error) {
+            console.error('Failed to fetch announcements:', error);
+        }
+    },
+
+    createAnnouncement: async (courseId, payload) => {
+        const { data } = await api.post(`/api/courses/${courseId}/announcements`, payload);
+        set((state) => ({
+            announcements: [data.announcement, ...state.announcements].sort(
+                (a, b) => (b.isPinned ? 1 : 0) - (a.isPinned ? 1 : 0) || new Date(b.createdAt) - new Date(a.createdAt)
+            ),
+        }));
+        return data.announcement;
+    },
+
+    deleteAnnouncement: async (courseId, announcementId) => {
+        await api.delete(`/api/courses/${courseId}/announcements/${announcementId}`);
+        set((state) => ({
+            announcements: state.announcements.filter((a) => a._id !== announcementId),
+        }));
     },
 
     // ── Retry a failed/stuck course generation ─────

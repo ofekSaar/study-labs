@@ -4,6 +4,7 @@ import CourseNode from '../models/CourseNode.js';
 import Enrollment from '../models/Enrollment.js';
 import Progress from '../models/Progress.js';
 import QuizAttempt from '../models/QuizAttempt.js';
+import Announcement from '../models/Announcement.js';
 import storage from '../services/storage/index.js';
 import { deduplicateAndUpload } from '../services/fileUploadService.js';
 import { generateRoadmapInBackground } from '../services/courseGenerationService.js';
@@ -314,6 +315,27 @@ export const getCourseNodes = async (req, res, next) => {
 
     const userRoles = getUserRoles(req.user);
     const isStudent = userRoles.includes('student');
+    const isOwner = course.instructor.toString() === req.user._id.toString();
+
+    // For instructor-owner: attach per-node completion counts
+    if (isOwner && !isStudent) {
+      const progresses = await Progress.find({ course: req.params.id }).select('completedNodes');
+      const totalEnrolled = progresses.length;
+
+      const countMap = {};
+      for (const p of progresses) {
+        for (const nodeId of p.completedNodes) {
+          const key = nodeId.toString();
+          countMap[key] = (countMap[key] || 0) + 1;
+        }
+      }
+
+      nodesWithStatus = nodesWithStatus.map((node) => ({
+        ...node,
+        completionCount: countMap[node._id.toString()] || 0,
+        totalEnrolled,
+      }));
+    }
 
     if (isStudent) {
       const progress = await Progress.findOne({
@@ -556,6 +578,88 @@ export const addCourseMaterials = async (req, res, next) => {
       true,  // isUpdate = true
       newMaterialsData
     );
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ── Announcements ─────────────────────────────────────────────────────────────
+
+/**
+ * GET /api/courses/:id/announcements
+ * Returns all announcements for the course, pinned first.
+ * Accessible to: enrolled students (approved) + course instructor.
+ */
+export const getAnnouncements = async (req, res, next) => {
+  try {
+    const course = await Course.findById(req.params.id);
+    if (!course) throw createError(404, 'Course not found');
+
+    const isOwner = course.instructor.toString() === req.user._id.toString();
+    if (!isOwner) {
+      const enrollment = await Enrollment.findOne({
+        course: req.params.id,
+        student: req.user._id,
+        status: 'approved',
+      });
+      if (!enrollment) throw createError(403, 'Not enrolled in this course');
+    }
+
+    const announcements = await Announcement.find({ course: req.params.id })
+      .sort({ isPinned: -1, createdAt: -1 });
+
+    res.json({ status: 'success', data: { announcements } });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * POST /api/courses/:id/announcements
+ * Creates a new announcement. Instructor-owner only.
+ */
+export const createAnnouncement = async (req, res, next) => {
+  try {
+    const course = await Course.findById(req.params.id);
+    if (!course) throw createError(404, 'Course not found');
+
+    assertOwner(course, 'instructor', req.user._id, 'Only the course instructor can post announcements');
+
+    const { title, content, isPinned } = req.body;
+    if (!title?.trim() || !content?.trim()) throw createError(400, 'Title and content are required');
+
+    const announcement = await Announcement.create({
+      course: req.params.id,
+      instructor: req.user._id,
+      title: title.trim(),
+      content: content.trim(),
+      isPinned: !!isPinned,
+    });
+
+    res.status(201).json({ status: 'success', data: { announcement } });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * DELETE /api/courses/:id/announcements/:announcementId
+ * Deletes an announcement. Instructor-owner only.
+ */
+export const deleteAnnouncement = async (req, res, next) => {
+  try {
+    const course = await Course.findById(req.params.id);
+    if (!course) throw createError(404, 'Course not found');
+
+    assertOwner(course, 'instructor', req.user._id, 'Only the course instructor can delete announcements');
+
+    const result = await Announcement.findOneAndDelete({
+      _id: req.params.announcementId,
+      course: req.params.id,
+    });
+    if (!result) throw createError(404, 'Announcement not found');
+
+    res.json({ status: 'success', message: 'Announcement deleted' });
   } catch (error) {
     next(error);
   }
