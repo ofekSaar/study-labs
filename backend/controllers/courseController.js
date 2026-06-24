@@ -606,6 +606,7 @@ export const getAnnouncements = async (req, res, next) => {
     }
 
     const announcements = await Announcement.find({ course: req.params.id })
+      .populate('instructor', 'name')
       .sort({ isPinned: -1, createdAt: -1 });
 
     res.json({ status: 'success', data: { announcements } });

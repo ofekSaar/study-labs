@@ -39,6 +39,7 @@ const AnnouncementsPanel = () => {
                                 <p className="text-sm font-bold text-slate-800 dark:text-white">{ann.title}</p>
                                 <p className="text-xs text-slate-600 dark:text-white/60 mt-0.5 whitespace-pre-line">{ann.content}</p>
                                 <p className="text-[10px] text-slate-400 mt-1.5">
+                                    {ann.instructor?.name && <span className="font-semibold">{ann.instructor.name} · </span>}
                                     {new Date(ann.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
                                 </p>
                             </div>

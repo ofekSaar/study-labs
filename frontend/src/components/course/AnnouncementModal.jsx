@@ -112,7 +112,10 @@ const AnnouncementModal = ({ courseId, onClose }) => {
                                         <span className="text-sm font-bold text-slate-800 dark:text-white truncate">{ann.title}</span>
                                     </div>
                                     <p className="text-xs text-slate-500 dark:text-white/50 line-clamp-2">{ann.content}</p>
-                                    <p className="text-[10px] text-slate-400 mt-1">{new Date(ann.createdAt).toLocaleDateString()}</p>
+                                    <p className="text-[10px] text-slate-400 mt-1">
+                                        {ann.instructor?.name && <span className="font-semibold">{ann.instructor.name} · </span>}
+                                        {new Date(ann.createdAt).toLocaleDateString()}
+                                    </p>
                                 </div>
                                 <button
                                     onClick={() => handleDelete(ann._id)}
