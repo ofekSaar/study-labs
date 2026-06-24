@@ -307,7 +307,7 @@ const SidebarContent = ({ location, navigate, courses, selectedCourseId, setSele
                 {/* Icon-only action row */}
                 <div className="flex items-center gap-1">
                     <div className="flex-1 flex flex-col items-center gap-0.5 py-2">
-                        <StudentNotificationBell />
+                        <StudentNotificationBell dropUp />
                     </div>
                     {user?.roles?.includes('instructor') && (
                         <button

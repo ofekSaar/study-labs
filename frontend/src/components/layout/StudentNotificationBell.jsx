@@ -8,7 +8,7 @@ const typeIcon = (type) => {
     return <BookOpen size={14} className="text-emerald-500 shrink-0 mt-0.5" />;
 };
 
-const StudentNotificationBell = () => {
+const StudentNotificationBell = ({ dropUp = false }) => {
     const { notifications, markAllRead, clearAll } = useNotificationStore();
     const [open, setOpen] = useState(false);
     const ref = useRef(null);
@@ -51,7 +51,7 @@ const StudentNotificationBell = () => {
             </button>
 
             {open && (
-                <div className="absolute right-0 top-10 w-80 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden">
+                <div className={`absolute right-0 ${dropUp ? 'bottom-full mb-2' : 'top-10'} w-80 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden`}>
                     {/* Header */}
                     <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-white/10">
                         <span className="text-xs font-black text-slate-700 dark:text-white uppercase tracking-widest">Notifications</span>
