@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import StudentLayout from '../components/layout/StudentLayout';
 import useCourseStore from '../store/courseStore';
-import { Search, BookOpen, Play, GraduationCap, BookMarked } from 'lucide-react';
+import { Search, Play, GraduationCap, BookMarked } from 'lucide-react';
 
 const MyCourses = () => {
     const navigate = useNavigate();
@@ -79,8 +79,8 @@ const MyCourses = () => {
 
                                 <div className="p-6 flex flex-col flex-1 relative z-10">
                                     <div className="flex justify-between items-start mb-6">
-                                        <div className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-inner border bg-[#D97757]/15 text-[#D97757] border-[#D97757]/20">
-                                            <BookOpen size={28} className="drop-shadow-sm" />
+                                        <div className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-inner border bg-[#D97757]/15 border-[#D97757]/20 text-3xl">
+                                            {course.courseAvatar || '📚'}
                                         </div>
                                         <div className="flex flex-col items-end">
                                             <span className="text-[10px] font-black text-slate-400 dark:text-white/40 uppercase tracking-widest mb-1.5">Progress</span>
