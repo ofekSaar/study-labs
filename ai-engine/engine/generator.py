@@ -411,10 +411,10 @@ async def evaluate_answer(question: str, answer: str, aiPromptContext: str = Non
             prompt_template_str=prompt_template_str,
             llm=llm_instance
         )
-        async def _call():
-            async with _api_semaphore:
-                return await program.acall(question=question, answer=answer)
-        return await retry_with_backoff(_call)
+        # Intentionally NOT gated by _api_semaphore: this is an interactive,
+        # single-call endpoint (a student submitting an answer). Sharing the
+        # bulk course-generation semaphore would queue it behind large jobs.
+        return await retry_with_backoff(lambda: program.acall(question=question, answer=answer))
 
     try:
         result = await run_with_fallback(_try, op_name="evaluate_answer")

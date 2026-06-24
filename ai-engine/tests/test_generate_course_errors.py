@@ -20,11 +20,13 @@ import pytest
 @pytest.fixture()
 def client(tmp_path, monkeypatch):
     # --- Stub heavy engine submodules so `import main` succeeds cheaply --------
+    # monkeypatch.setitem auto-restores the original sys.modules entry (or
+    # removes it) on teardown, so these stubs don't leak into other tests.
     def _mod(name, **attrs):
         m = types.ModuleType(name)
         for k, v in attrs.items():
             setattr(m, k, v)
-        sys.modules[name] = m
+        monkeypatch.setitem(sys.modules, name, m)
         return m
 
     # Track which hashes are "already seen" so the dedup check can be driven.
@@ -63,7 +65,7 @@ def client(tmp_path, monkeypatch):
         extract_in_chunks=_extract_in_chunks,
     )
 
-    parsers_pkg = _mod("engine.parsers")
+    _mod("engine.parsers")
     _mod("engine.parsers.image_analyzer", analyze_images=lambda *a, **k: [])
 
     async def _create_course_pipeline(*a, **k):
@@ -92,7 +94,9 @@ def client(tmp_path, monkeypatch):
 
     _mod("bson", ObjectId=_ObjectId)
 
-    sys.modules.pop("main", None)
+    # Force a fresh import of `main` against the stubs; monkeypatch.delitem
+    # restores the original (absence) on teardown so the stubbed `main` is removed.
+    monkeypatch.delitem(sys.modules, "main", raising=False)
     main = importlib.import_module("main")
 
     from fastapi.testclient import TestClient
