@@ -4,6 +4,7 @@ import Course from '../models/Course.js';
 import User from '../models/User.js';
 import { assertOwner } from '../middleware/ownershipGuard.js';
 import { createInitialProgress } from '../services/enrollmentService.js';
+import { getIO } from '../config/socket.js';
 
 /**
  * Request enrollment in a course (Student only).
@@ -140,6 +141,18 @@ export const approveEnrollment = async (req, res, next) => {
     const populated = await Enrollment.findById(enrollment._id)
       .populate('student', 'name email avatar')
       .populate('course', 'title');
+
+    // Notify the student in real-time
+    const io = getIO();
+    if (io) {
+      io.to(`user_${enrollment.student}`).emit('student_notification', {
+        type: 'enrollment_approved',
+        message: `You were approved to join "${populated.course.title}"`,
+        courseTitle: populated.course.title,
+        courseId: enrollment.course._id.toString(),
+        createdAt: new Date(),
+      });
+    }
 
     res.json({ status: 'success', data: { enrollment: populated } });
   } catch (error) {

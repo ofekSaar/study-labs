@@ -1,11 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Settings, LogOut, Menu, Map, BookOpen, ChevronRight, ChevronDown, X, Flame, Zap, User, ShoppingBag } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { io } from 'socket.io-client';
 import useCourseStore from '../../store/courseStore';
 import useAuthStore from '../../store/authStore';
+import useNotificationStore from '../../store/notificationStore';
 import SettingsModal from './SettingsModal';
 import ToastManager from '../common/ToastManager';
 import useGamificationStore, { AVATARS, TITLES } from '../../store/gamificationStore';
+import StudentNotificationBell from './StudentNotificationBell';
 
 /* ── Logo SVG ── */
 const Logo = ({ size = 32 }) => (
@@ -303,6 +306,9 @@ const SidebarContent = ({ location, navigate, courses, selectedCourseId, setSele
 
                 {/* Icon-only action row */}
                 <div className="flex items-center gap-1">
+                    <div className="flex-1 flex flex-col items-center gap-0.5 py-2">
+                        <StudentNotificationBell />
+                    </div>
                     {user?.roles?.includes('instructor') && (
                         <button
                             onClick={() => navigate('/instructor')}
@@ -343,8 +349,26 @@ const StudentLayout = ({ children }) => {
     const { courses, selectedCourseId, setSelectedCourse, courseUser } = useCourseStore();
     const { logout, user } = useAuthStore();
     const { stats } = useGamificationStore();
+    const { addNotification } = useNotificationStore();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
+    // Connect socket and listen for personal notifications
+    useEffect(() => {
+        if (!user?._id) return;
+        const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5005';
+        const socket = io(API_BASE_URL, { withCredentials: true });
+
+        socket.on('connect', () => {
+            socket.emit('join_user', user._id);
+        });
+
+        socket.on('student_notification', (payload) => {
+            addNotification(payload);
+        });
+
+        return () => socket.disconnect();
+    }, [user?._id, addNotification]);
 
     const handleLogout = () => {
         logout();
@@ -402,6 +426,7 @@ const StudentLayout = ({ children }) => {
                             <Zap size={12} className="text-amber-500" />
                             <span className="text-[10px] font-black text-amber-600 dark:text-amber-400">{(stats.total_xp || 0).toLocaleString()}</span>
                         </div>
+                        <StudentNotificationBell />
                         <button
                             onClick={() => setIsSidebarOpen(true)}
                             className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 text-slate-600 dark:text-white/80 transition-colors"
