@@ -34,8 +34,8 @@ const StudentProfile = () => {
     const currentAvatar = AVATARS.concat(SHOP_ITEMS.avatars).find(a => a.id === activeAvatar) || { emoji: '🎓', name: 'Student' };
     const currentTitle  = TITLES.concat(SHOP_ITEMS.titles).find(t => t.id === activeTitle)   || { name: 'Beginner' };
 
-    const totalXP           = user?.totalXP ?? stats.total_xp ?? 0;
-    const level             = calculateLevel(totalXP);
+    const totalXP           = stats.total_xp ?? user?.totalXP ?? 0;
+    const level             = stats.level || calculateLevel(totalXP);
     const progressToNext    = totalXP % 100;
 
     const displayQuests = [
