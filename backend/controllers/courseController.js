@@ -5,6 +5,7 @@ import Enrollment from '../models/Enrollment.js';
 import Progress from '../models/Progress.js';
 import QuizAttempt from '../models/QuizAttempt.js';
 import Announcement from '../models/Announcement.js';
+import Review from '../models/Review.js';
 import storage from '../services/storage/index.js';
 import { deduplicateAndUpload } from '../services/fileUploadService.js';
 import { generateRoadmapInBackground } from '../services/courseGenerationService.js';
@@ -679,6 +680,89 @@ export const deleteAnnouncement = async (req, res, next) => {
 
     res.json({ status: 'success', message: 'Announcement deleted' });
   } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * GET /api/courses/search?q=...
+ * Full-text search over published courses by title, description, and department.
+ */
+export const searchCourses = async (req, res, next) => {
+  try {
+    const q = (req.query.q || '').trim();
+    if (!q) return res.json({ status: 'success', data: { courses: [] } });
+
+    const regex = new RegExp(q, 'i');
+    const courses = await Course.find({
+      isPublished: true,
+      $or: [{ title: regex }, { description: regex }, { department: regex }],
+    })
+      .select('title department description color level instructor')
+      .populate('instructor', 'name avatar')
+      .limit(10)
+      .lean();
+
+    res.json({ status: 'success', data: { courses } });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * GET /api/courses/:id/reviews
+ * Returns all reviews for a course with average rating.
+ */
+export const getCourseReviews = async (req, res, next) => {
+  try {
+    const reviews = await Review.find({ course: req.params.id })
+      .populate('student', 'name avatar')
+      .sort({ createdAt: -1 });
+
+    const avg = reviews.length > 0
+      ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length
+      : null;
+
+    res.json({
+      status: 'success',
+      data: { reviews, avgRating: avg ? Math.round(avg * 10) / 10 : null, count: reviews.length },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * POST /api/courses/:id/reviews
+ * Creates or updates the authenticated student's review.
+ * Student must be enrolled (approved) to review.
+ */
+export const createReview = async (req, res, next) => {
+  try {
+    const { rating, comment } = req.body;
+    if (!rating || rating < 1 || rating > 5) throw createError(400, 'Rating must be between 1 and 5');
+
+    const course = await Course.findById(req.params.id);
+    if (!course) throw createError(404, 'Course not found');
+
+    const enrollment = await Enrollment.findOne({
+      student: req.user._id,
+      course: req.params.id,
+      status: 'approved',
+    });
+    if (!enrollment) throw createError(403, 'You must be enrolled to review this course');
+
+    const review = await Review.findOneAndUpdate(
+      { student: req.user._id, course: req.params.id },
+      { rating, comment: comment?.trim() || '' },
+      { upsert: true, new: true }
+    );
+
+    const populated = await Review.findById(review._id).populate('student', 'name avatar');
+
+    res.status(201).json({ status: 'success', data: { review: populated } });
+  } catch (error) {
+    if (error.code === 11000) return next(createError(400, 'Review already exists'));
     next(error);
   }
 };

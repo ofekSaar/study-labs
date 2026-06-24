@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import useCourseStore from '../store/courseStore';
 import useEnrollmentStore from '../store/enrollmentStore';
 import useAuthStore from '../store/authStore';
+import AtRiskStudentsWidget from '../components/analytics/AtRiskStudentsWidget';
 
 /* ── Helpers ── */
 function getGreeting() {
@@ -320,7 +321,7 @@ const InstructorDashboard = () => {
                         )}
                     </div>
 
-                    {/* ── Right: Recent Courses + Pending Enrollments ── */}
+                    {/* ── Right: Recent Courses + Pending Enrollments + At-Risk ── */}
                     <div className="lg:col-span-2 space-y-4">
 
                         {/* Recent Courses */}
@@ -395,6 +396,10 @@ const InstructorDashboard = () => {
                                 </div>
                             )}
                         </SectionCard>
+                        {/* At-Risk Students */}
+                        {(instructorStats?.recentCourses || []).length > 0 && (
+                            <AtRiskStudentsWidget courses={instructorStats.recentCourses} />
+                        )}
                     </div>
                 </div>
             </div>

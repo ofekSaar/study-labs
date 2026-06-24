@@ -16,6 +16,7 @@ const CourseMap = lazy(() => import('./pages/CourseMap'));
 const LessonQuiz = lazy(() => import('./pages/LessonQuiz'));
 const StudentProfile = lazy(() => import('./pages/StudentProfile'));
 const StudyShop = lazy(() => import('./pages/StudyShop'));
+const LeaderboardPage = lazy(() => import('./pages/LeaderboardPage'));
 const InstructorDashboard = lazy(() => import('./pages/InstructorDashboard'));
 const StudentStatusOverview = lazy(() => import('./pages/StudentStatusOverview'));
 const CourseWizard = lazy(() => import('./pages/CourseWizard'));
@@ -129,13 +130,21 @@ function App() {
             </ProtectedRoute>
           } 
         />
-        <Route 
-          path="/shop" 
+        <Route
+          path="/shop"
           element={
             <ProtectedRoute allowedRole="student">
               <StudyShop />
             </ProtectedRoute>
-          } 
+          }
+        />
+        <Route
+          path="/leaderboard"
+          element={
+            <ProtectedRoute allowedRole="student">
+              <LeaderboardPage />
+            </ProtectedRoute>
+          }
         />
 
         {/* Instructor Routes */}

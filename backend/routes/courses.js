@@ -17,6 +17,9 @@ import {
   getAnnouncements,
   createAnnouncement,
   deleteAnnouncement,
+  createReview,
+  getCourseReviews,
+  searchCourses,
 } from '../controllers/courseController.js';
 
 const router = Router();
@@ -72,6 +75,7 @@ const upload = multer({
  *                         $ref: '#/components/schemas/Course'
  */
 router.get('/', authenticate, listCourses);
+router.get('/search', authenticate, searchCourses);
 
 /**
  * @swagger
@@ -412,5 +416,9 @@ router.post(
 router.get('/:id/announcements', authenticate, getAnnouncements);
 router.post('/:id/announcements', authenticate, authorize('instructor'), createAnnouncement);
 router.delete('/:id/announcements/:announcementId', authenticate, authorize('instructor'), deleteAnnouncement);
+
+// ── Reviews ────────────────────────────────────────────────────────────────────
+router.get('/:id/reviews', authenticate, getCourseReviews);
+router.post('/:id/reviews', authenticate, authorize('student'), createReview);
 
 export default router;

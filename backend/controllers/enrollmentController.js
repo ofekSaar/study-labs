@@ -188,6 +188,18 @@ export const denyEnrollment = async (req, res, next) => {
       .populate('student', 'name email avatar')
       .populate('course', 'title');
 
+    // Notify the student in real-time
+    const io = getIO();
+    if (io) {
+      io.to(`user_${enrollment.student}`).emit('student_notification', {
+        type: 'enrollment_denied',
+        message: `Your request to join "${populated.course.title}" was not approved.`,
+        courseTitle: populated.course.title,
+        courseId: enrollment.course._id.toString(),
+        createdAt: new Date(),
+      });
+    }
+
     res.json({ status: 'success', data: { enrollment: populated } });
   } catch (error) {
     next(error);
