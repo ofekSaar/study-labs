@@ -19,5 +19,23 @@ TTL_STAGING_SECONDS = 86400            # 24 hours — auto-delete staging docume
 # ── LLM concurrency ──────────────────────────────────────────────────────────
 MAX_CONCURRENT_AI_CALLS = int(os.environ.get("MAX_CONCURRENT_AI_CALLS", "15"))
 
+# ── Question/summary alignment check ──────────────────────────────────────────
+# Each enabled topic fires one extra LLM call per question to flag questions not
+# answerable from the summary. Disable to cut LLM cost/latency roughly in half.
+VALIDATE_QUESTION_ALIGNMENT = os.environ.get(
+    "VALIDATE_QUESTION_ALIGNMENT", "true"
+).strip().lower() in ("true", "1", "yes")
+
+# ── Mock mode ─────────────────────────────────────────────────────────────────
+# Single source of truth for "is the AI mocked?" — accepts True/true/1/yes.
+USE_MOCK_AI = os.environ.get("USE_MOCK_AI", "").strip().lower() in ("true", "1", "yes")
+
+# ── Model names (override via env) ────────────────────────────────────────────
+OPENAI_MODEL = os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
+OPENROUTER_MODEL = os.environ.get("OPENROUTER_MODEL", "gpt-4o")
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "models/gemini-flash-latest")
+COLLEGE_MODEL = os.environ.get("COLLEGE_MODEL", "gpt-oss-120b")
+VISION_MODEL = os.environ.get("VISION_MODEL", "gpt-4o-mini")
+
 # ── Image analysis ───────────────────────────────────────────────────────────
 MIN_IMAGE_SIZE = 5000                  # ~5 KB; images smaller than this are skipped

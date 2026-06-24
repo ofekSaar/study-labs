@@ -13,84 +13,108 @@ import asyncio
 from typing import List, Optional
 
 from dotenv import load_dotenv
-from engine.config import MIN_IMAGE_SIZE
+from engine.config import MIN_IMAGE_SIZE, VISION_MODEL, OPENROUTER_MODEL, GEMINI_MODEL
 
 load_dotenv()
 logger = logging.getLogger(__name__)
+
+# Vision providers, in priority order. Every provider speaks the OpenAI
+# chat-completions protocol — OpenRouter and Gemini both expose an
+# OpenAI-compatible endpoint — so a single code path covers all of them and
+# image analysis no longer silently requires an OpenAI key specifically.
+_GEMINI_OPENAI_BASE = "https://generativelanguage.googleapis.com/v1beta/openai/"
+
+
+def _build_vision_providers():
+    providers = []
+    if os.environ.get("OPENAI_API_KEY"):
+        providers.append(("OpenAI", os.environ["OPENAI_API_KEY"], None, VISION_MODEL))
+    if os.environ.get("OPEN_ROUTE_API_KEY"):
+        providers.append(("OpenRouter", os.environ["OPEN_ROUTE_API_KEY"],
+                           "https://openrouter.ai/api/v1", OPENROUTER_MODEL))
+    if os.environ.get("GEMINI_API_KEY"):
+        # Gemini's OpenAI-compatible endpoint expects a bare model id (no "models/" prefix)
+        gemini_model = GEMINI_MODEL.split("/")[-1]
+        providers.append(("Gemini", os.environ["GEMINI_API_KEY"],
+                           _GEMINI_OPENAI_BASE, gemini_model))
+    return providers
+
+
+_VISION_PROVIDERS = _build_vision_providers()
+
+_SYSTEM_PROMPT = (
+    "You are an image analysis assistant for an educational platform. "
+    "Describe the image in detail so that a student who cannot see the image "
+    "can fully understand its content. Focus on: data, labels, trends, "
+    "relationships, and any key takeaways. "
+    "If it's a chart/graph, describe the axes, values, and trends. "
+    "If it's a diagram, describe the structure and connections. "
+    "Keep the description concise but comprehensive (2-4 sentences). "
+    "Use Markdown for formatting and LaTeX for any math symbols or formulas ($...$)."
+)
+
+
+def _media_type(image_bytes: bytes) -> str:
+    if image_bytes[:8] == b'\x89PNG\r\n\x1a\n':
+        return "image/png"
+    if image_bytes[:2] == b'\xff\xd8':
+        return "image/jpeg"
+    return "image/png"  # Default fallback
 
 
 async def analyze_image(image_bytes: bytes, context: str = "") -> Optional[str]:
     """
     Sends a single image to a Vision LLM and returns a text description.
-    
+
+    Tries each configured provider (OpenAI → OpenRouter → Gemini) in order,
+    falling through on failure.
+
     Args:
         image_bytes: Raw image bytes (PNG, JPEG, etc.)
         context:     Optional context about the document for better descriptions.
-        
+
     Returns:
-        A text description of the image, or None if analysis failed.
+        A text description of the image, or None if all providers failed.
     """
-    try:
-        from openai import AsyncOpenAI
-        
-        api_key = os.environ.get("OPENAI_API_KEY")
-        if not api_key:
-            logger.warning("No OPENAI_API_KEY found — skipping image analysis")
-            return None
-
-        client = AsyncOpenAI(api_key=api_key)
-        
-        # Encode image to base64
-        b64_image = base64.b64encode(image_bytes).decode("utf-8")
-        
-        # Detect image format from magic bytes
-        if image_bytes[:8] == b'\x89PNG\r\n\x1a\n':
-            media_type = "image/png"
-        elif image_bytes[:2] == b'\xff\xd8':
-            media_type = "image/jpeg"
-        else:
-            media_type = "image/png"  # Default fallback
-
-        system_prompt = (
-            "You are an image analysis assistant for an educational platform. "
-            "Describe the image in detail so that a student who cannot see the image "
-            "can fully understand its content. Focus on: data, labels, trends, "
-            "relationships, and any key takeaways. "
-            "If it's a chart/graph, describe the axes, values, and trends. "
-            "If it's a diagram, describe the structure and connections. "
-            "Keep the description concise but comprehensive (2-4 sentences). "
-            "Use Markdown for formatting and LaTeX for any math symbols or formulas ($...$)."
-        )
-
-        context_note = f"\nDocument context: {context}" if context else ""
-
-        response = await client.chat.completions.create(
-            model="gpt-4o-mini",  # Cost-effective vision model
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {
-                    "role": "user",
-                    "content": [
-                        {"type": "text", "text": f"Describe this image from a course document.{context_note}"},
-                        {
-                            "type": "image_url",
-                            "image_url": {
-                                "url": f"data:{media_type};base64,{b64_image}",
-                                "detail": "low"  # Cost-efficient — "low" costs 85 tokens
-                            }
-                        }
-                    ]
-                }
-            ],
-            max_tokens=300
-        )
-
-        description = response.choices[0].message.content.strip()
-        return description
-
-    except Exception as e:
-        logger.warning(f"Image analysis failed: {e}")
+    if not _VISION_PROVIDERS:
+        logger.warning("No vision-capable API key found — skipping image analysis")
         return None
+
+    from openai import AsyncOpenAI
+
+    b64_image = base64.b64encode(image_bytes).decode("utf-8")
+    media_type = _media_type(image_bytes)
+    context_note = f"\nDocument context: {context}" if context else ""
+
+    for name, api_key, base_url, model in _VISION_PROVIDERS:
+        try:
+            client = AsyncOpenAI(api_key=api_key, base_url=base_url)
+            response = await client.chat.completions.create(
+                model=model,
+                messages=[
+                    {"role": "system", "content": _SYSTEM_PROMPT},
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": f"Describe this image from a course document.{context_note}"},
+                            {
+                                "type": "image_url",
+                                "image_url": {
+                                    "url": f"data:{media_type};base64,{b64_image}",
+                                    "detail": "low"  # Cost-efficient — "low" costs 85 tokens
+                                }
+                            }
+                        ]
+                    }
+                ],
+                max_tokens=300
+            )
+            return response.choices[0].message.content.strip()
+        except Exception as e:
+            logger.warning(f"Image analysis failed with {name}: {e}")
+            continue
+
+    return None
 
 
 async def analyze_images(images: List[bytes], context: str = "") -> List[str]:

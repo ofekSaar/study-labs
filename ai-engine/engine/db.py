@@ -1,22 +1,35 @@
 from pymongo import MongoClient
 import os
 import datetime
+import logging
 from engine.config import MONGO_CONNECTION_TIMEOUT_MS, TTL_STAGING_SECONDS
+
+logger = logging.getLogger(__name__)
+
+# Module-level singleton. pymongo's MongoClient is thread-safe and manages its
+# own connection pool, so a single instance is reused across all calls instead
+# of opening (and ping-checking) a fresh connection on every DB operation.
+_client = None
+
+
+def _utcnow():
+    return datetime.datetime.now(datetime.timezone.utc)
+
 
 def get_db_handle():
     """
-    Returns a handle to the configured MongoDB database.
+    Returns a handle to the configured MongoDB database, reusing a single
+    pooled client across calls.
     """
+    global _client
     try:
-        mongo_uri = os.environ.get("MONGO_URI", "mongodb://localhost:27017/")
+        if _client is None:
+            mongo_uri = os.environ.get("MONGO_URI", "mongodb://localhost:27017/")
+            _client = MongoClient(mongo_uri, serverSelectionTimeoutMS=MONGO_CONNECTION_TIMEOUT_MS)
         db_name = os.environ.get("MONGO_DB_NAME", "studylabs_db")
-        client = MongoClient(mongo_uri, serverSelectionTimeoutMS=MONGO_CONNECTION_TIMEOUT_MS)
-        # Trigger a connection check
-        client.server_info()
-        db = client[db_name]
-        return db
+        return _client[db_name]
     except Exception as e:
-        print(f"Error connecting to MongoDB: {e}")
+        logger.error(f"Error connecting to MongoDB: {e}")
         return None
 
 def save_course_to_db(course) -> dict:
@@ -53,7 +66,7 @@ def save_course_to_db(course) -> dict:
                 quiz_doc = {
                     "topic": topic.title,
                     "questions": [q.model_dump() for q in topic.questions],
-                    "created_at": datetime.datetime.now()
+                    "created_at": _utcnow()
                 }
                 res = quizzes_col.insert_one(quiz_doc)
                 topic_entry["quiz_id"] = str(res.inserted_id)
@@ -63,7 +76,7 @@ def save_course_to_db(course) -> dict:
                 summary_doc = {
                     "topic": topic.title,
                     "content": topic.summary,
-                    "created_at": datetime.datetime.now()
+                    "created_at": _utcnow()
                 }
                 res = summaries_col.insert_one(summary_doc)
                 topic_entry["summary_id"] = str(res.inserted_id)
@@ -73,7 +86,7 @@ def save_course_to_db(course) -> dict:
     # 3. Insert Course
     course_doc = {
         "title": course.title,
-        "created_at": datetime.datetime.now(),
+        "created_at": _utcnow(),
         "course_structure": structure
     }
     
@@ -94,7 +107,7 @@ def ensure_ttl_index():
     # Check if index exists, if not create it
     # 'created_at' field must be present in the document
     collection.create_index("created_at", expireAfterSeconds=TTL_STAGING_SECONDS)
-    print("TTL Index ensured for staging_materials (24h).")
+    logger.info("TTL Index ensured for staging_materials (24h).")
 
 def save_to_staging(filename: str, content: str) -> str:
     """
@@ -108,36 +121,44 @@ def save_to_staging(filename: str, content: str) -> str:
     doc = {
         "filename": filename,
         "content": content,
-        "created_at": datetime.datetime.utcnow(), 
+        "created_at": _utcnow(), 
         "hash": None # Start with None, implement robust hashing later if needed
     }
     
     res = db['staging_materials'].insert_one(doc)
     return str(res.inserted_id)
 
-def check_file_hash(hash_val: str) -> bool:
+def check_file_hash(hash_val: str, course_id: str = None) -> bool:
     """
-    Checks if a given SHA256 hash already exists in the global 'files' collection.
+    Checks if a given SHA256 hash already exists for this course.
+
+    Dedup is scoped per-course: the same file uploaded to two different courses
+    (e.g. a shared textbook) is allowed. When course_id is None the check falls
+    back to global behaviour for backward compatibility.
     """
     db = get_db_handle()
     if db is None:
         return False
-    
-    doc = db['files'].find_one({"hash": hash_val})
+
+    query = {"hash": hash_val}
+    if course_id is not None:
+        query["course_id"] = course_id
+    doc = db['files'].find_one(query)
     return doc is not None
 
-def save_file_hash(filename: str, hash_val: str):
+def save_file_hash(filename: str, hash_val: str, course_id: str = None):
     """
-    Saves a file hash to the global 'files' collection.
+    Saves a file hash to the 'files' collection, scoped to a course.
     """
     db = get_db_handle()
     if db is None:
         return
-        
+
     doc = {
         "filename": filename,
         "hash": hash_val,
-        "created_at": datetime.datetime.utcnow()
+        "course_id": course_id,
+        "created_at": _utcnow()
     }
     db['files'].insert_one(doc)
 
@@ -154,7 +175,7 @@ def save_syllabus_blueprint(course_id: str, syllabus_name: str, blueprint: dict)
         "course_id": course_id,
         "syllabus_name": syllabus_name,
         "blueprint": blueprint,
-        "created_at": datetime.datetime.utcnow()
+        "created_at": _utcnow()
     }
     res = db['syllabus_blueprints'].insert_one(doc)
     return str(res.inserted_id)
@@ -182,7 +203,7 @@ def update_course_progress(course_id: str, message: str):
             {"$set": {"generationProgress": message}}
         )
     except Exception as e:
-        print(f"Failed to update progress for course {course_id}: {e}")
+        logger.warning(f"Failed to update progress for course {course_id}: {e}")
 
 
 def update_course_in_db(course_id: str, course, updated_topics: list) -> dict:
@@ -199,8 +220,7 @@ def update_course_in_db(course_id: str, course, updated_topics: list) -> dict:
     courses_col = db['courses']
     
     from bson.objectid import ObjectId
-    import datetime
-    
+
     # 1. Fetch the existing course document to find the quiz/summary IDs
     try:
         course_doc = courses_col.find_one({"_id": ObjectId(course_id)})
@@ -227,12 +247,12 @@ def update_course_in_db(course_id: str, course, updated_topics: list) -> dict:
                     quiz_data = {
                         "topic": topic.title,
                         "questions": [q.model_dump() for q in topic.questions],
-                        "updated_at": datetime.datetime.now()
+                        "updated_at": _utcnow()
                     }
                     if quiz_id:
                         quizzes_col.update_one({"_id": ObjectId(quiz_id)}, {"$set": quiz_data})
                     else:
-                        quiz_data["created_at"] = datetime.datetime.now()
+                        quiz_data["created_at"] = _utcnow()
                         res = quizzes_col.insert_one(quiz_data)
                         topic_entry["quiz_id"] = str(res.inserted_id)
                         
@@ -240,24 +260,24 @@ def update_course_in_db(course_id: str, course, updated_topics: list) -> dict:
                     summary_data = {
                         "topic": topic.title,
                         "content": topic.summary,
-                        "updated_at": datetime.datetime.now()
+                        "updated_at": _utcnow()
                     }
                     if summary_id:
                         summaries_col.update_one({"_id": ObjectId(summary_id)}, {"$set": summary_data})
                     else:
-                        summary_data["created_at"] = datetime.datetime.now()
+                        summary_data["created_at"] = _utcnow()
                         res = summaries_col.insert_one(summary_data)
                         topic_entry["summary_id"] = str(res.inserted_id)
                         
                 found = True
                 break
         if not found:
-            print(f"Topic '{topic.title}' was updated but not found in existing course structure.")
+            logger.warning(f"Topic '{topic.title}' was updated but not found in existing course structure.")
             
     # 3. Update the course document with the modified structure
     courses_col.update_one(
         {"_id": course_doc["_id"]},
-        {"$set": {"course_structure": structure, "updated_at": datetime.datetime.now()}}
+        {"$set": {"course_structure": structure, "updated_at": _utcnow()}}
     )
     
     course_doc["course_structure"] = structure
