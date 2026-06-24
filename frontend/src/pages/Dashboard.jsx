@@ -342,7 +342,7 @@ const Dashboard = () => {
                                 <motion.div
                                     className="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-full relative"
                                     initial={{ width: 0 }}
-                                    animate={{ width: `${progressToNextLevel}%` }}
+                                    animate={{ width: progressToNextLevel === 0 && (user?.totalXP ?? 0) > 0 ? '2%' : `${progressToNextLevel}%` }}
                                     transition={{ duration: 1.5, ease: 'easeOut' }}
                                 >
                                     <div className="absolute inset-0 bg-white/20 animate-pulse rounded-full" />
