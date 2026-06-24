@@ -56,8 +56,9 @@ export const getUsers = async (req, res, next) => {
     const limit = Math.min(100, parseInt(req.query.limit) || 20);
     const search = req.query.search?.trim();
 
-    const filter = search
-      ? { $or: [{ name: { $regex: search, $options: 'i' } }, { email: { $regex: search, $options: 'i' } }] }
+    const safeSearch = search ? search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') : null;
+    const filter = safeSearch
+      ? { $or: [{ name: { $regex: safeSearch, $options: 'i' } }, { email: { $regex: safeSearch, $options: 'i' } }] }
       : {};
 
     const [users, total] = await Promise.all([
@@ -146,8 +147,9 @@ export const getCourses = async (req, res, next) => {
     const limit = Math.min(100, parseInt(req.query.limit) || 20);
     const search = req.query.search?.trim();
 
-    const filter = search
-      ? { title: { $regex: search, $options: 'i' } }
+    const safeSearch = search ? search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') : null;
+    const filter = safeSearch
+      ? { title: { $regex: safeSearch, $options: 'i' } }
       : {};
 
     const [courses, total] = await Promise.all([

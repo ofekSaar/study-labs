@@ -8,6 +8,7 @@ import passport from 'passport';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import swaggerUi from 'swagger-ui-express';
+import rateLimit from 'express-rate-limit';
 
 import connectDB from './config/db.js';
 import { recoverStuckGenerations } from './services/aiService.js';
@@ -36,9 +37,39 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// ── Rate Limiters ─────────────────────────────
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { status: 'error', message: 'Too many requests, please try again later.' },
+});
+
+const aiLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { status: 'error', message: 'AI request limit reached, please try again later.' },
+});
+
 // ── Middleware ────────────────────────────────
 app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' },
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", 'data:', 'https:'],
+      connectSrc: ["'self'"],
+      frameSrc: ["'none'"],
+      objectSrc: ["'none'"],
+    },
+  },
+  hsts: { maxAge: 31536000, includeSubDomains: true },
+  referrerPolicy: { policy: 'no-referrer' },
 }));
 
 app.use(cors({
@@ -57,8 +88,8 @@ app.use(cookieParser());
 app.use(passport.initialize());
 configurePassport();
 
-// Serve uploaded files
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// Serve uploaded files — requires authentication
+app.use('/uploads', authenticate, express.static(path.join(__dirname, 'uploads')));
 
 // ── Swagger Docs ─────────────────────────────
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
@@ -68,29 +99,22 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
 
 // ── Health Check ─────────────────────────────
 app.get('/api/health', (req, res) => {
-  res.json({
-    status: 'ok',
-    environment: process.env.NODE_ENV,
-    timestamp: new Date().toISOString(),
-  });
+  res.json({ status: 'ok' });
 });
 
 // ── API Routes ───────────────────────────────
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/courses', courseRoutes);
 app.use('/api/enrollments', enrollmentRoutes);
 app.use('/api/progress', progressRoutes);
 app.use('/api/quizzes', quizRoutes);
-app.use('/api/ai', aiRoutes);
+app.use('/api/ai', aiLimiter, aiRoutes);
 app.use('/api/admin', authenticate, requireAdmin, adminRoutes);
 app.use('/api/instructor', instructorRoutes);
 
 // ── 404 Handler ──────────────────────────────
 app.use((req, res) => {
-  res.status(404).json({
-    status: 'error',
-    message: `Route ${req.method} ${req.originalUrl} not found`,
-  });
+  res.status(404).json({ status: 'error', message: 'Resource not found' });
 });
 
 // ── Error Handler ────────────────────────────

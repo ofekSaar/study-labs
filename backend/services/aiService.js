@@ -84,13 +84,22 @@ export const generateRoadmap = async ({
   }
 
   const { url: AI_SERVICE_URL, apiKey: AI_SERVICE_API_KEY } = getAiConfig();
-  const uploadDir = process.env.UPLOAD_DIR || './uploads';
-  const syllabusPath = path.resolve(uploadDir, syllabus);
+  const uploadDir = path.resolve(process.env.UPLOAD_DIR || './uploads');
+
+  const safeResolvePath = (relativePath) => {
+    const resolved = path.resolve(uploadDir, relativePath);
+    if (!resolved.startsWith(uploadDir + path.sep) && resolved !== uploadDir) {
+      throw new Error(`Path traversal attempt blocked: ${relativePath}`);
+    }
+    return resolved;
+  };
+
+  const syllabusPath = safeResolvePath(syllabus);
   const materialsPaths = materials && materials.length > 0
-    ? materials.map(m => path.resolve(uploadDir, m))
+    ? materials.map(m => safeResolvePath(m))
     : [];
   const newMaterialsPaths = newMaterials && newMaterials.length > 0
-    ? newMaterials.map(m => path.resolve(uploadDir, m))
+    ? newMaterials.map(m => safeResolvePath(m))
     : [];
 
   console.log(`[AI Service] Sending course generation request for Course ID: ${courseId} (isUpdate: ${isUpdate})`);
@@ -261,8 +270,14 @@ export const evaluateAnswer = async ({ question, answer, aiPromptContext }) => {
  */
 export const evaluateCourse = async ({ courseId, syllabus, courseStructure }) => {
   const { url: AI_SERVICE_URL, apiKey: AI_SERVICE_API_KEY } = getAiConfig();
-  const uploadDir = process.env.UPLOAD_DIR || './uploads';
-  const syllabusPath = path.resolve(uploadDir, syllabus);
+  const uploadDir = path.resolve(process.env.UPLOAD_DIR || './uploads');
+  const syllabusPath = (() => {
+    const resolved = path.resolve(uploadDir, syllabus);
+    if (!resolved.startsWith(uploadDir + path.sep) && resolved !== uploadDir) {
+      throw new Error(`Path traversal attempt blocked: ${syllabus}`);
+    }
+    return resolved;
+  })();
 
   console.log(`[AI Service] Evaluating course quality for Course ID: ${courseId}`);
 

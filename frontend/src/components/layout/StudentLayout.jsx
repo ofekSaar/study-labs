@@ -357,7 +357,8 @@ const StudentLayout = ({ children }) => {
     useEffect(() => {
         if (!user?._id) return;
         const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5005';
-        const socket = io(API_BASE_URL, { withCredentials: true });
+        const token = localStorage.getItem('studylabs_token');
+        const socket = io(API_BASE_URL, { withCredentials: true, auth: { token } });
 
         socket.on('connect', () => {
             socket.emit('join_user', user._id);

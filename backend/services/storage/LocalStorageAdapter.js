@@ -54,13 +54,22 @@ class LocalStorageAdapter extends StorageInterface {
     };
   }
 
+  _safeResolve(storagePath) {
+    const baseResolved = path.resolve(this.baseDir);
+    const fullPath = path.resolve(path.join(this.baseDir, storagePath));
+    if (!fullPath.startsWith(baseResolved + path.sep) && fullPath !== baseResolved) {
+      throw new Error('Path traversal attempt blocked');
+    }
+    return fullPath;
+  }
+
   async readContent(storagePath) {
-    const fullPath = path.join(this.baseDir, storagePath);
+    const fullPath = this._safeResolve(storagePath);
     return fs.readFile(fullPath, 'utf-8');
   }
 
   async delete(storagePath) {
-    const fullPath = path.join(this.baseDir, storagePath);
+    const fullPath = this._safeResolve(storagePath);
     try {
       await fs.unlink(fullPath);
     } catch (error) {
