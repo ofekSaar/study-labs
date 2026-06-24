@@ -1,10 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Bell, Megaphone, CheckCheck, Trash2, BookOpen } from 'lucide-react';
+import { Bell, Megaphone, CheckCheck, Trash2, BookOpen, CheckCircle, XCircle } from 'lucide-react';
 import useNotificationStore from '../../store/notificationStore';
 import { useNavigate } from 'react-router-dom';
 
 const typeIcon = (type) => {
     if (type === 'announcement') return <Megaphone size={14} className="text-indigo-500 shrink-0 mt-0.5" />;
+    if (type === 'enrollment_approved') return <CheckCircle size={14} className="text-emerald-500 shrink-0 mt-0.5" />;
+    if (type === 'enrollment_denied') return <XCircle size={14} className="text-red-400 shrink-0 mt-0.5" />;
     return <BookOpen size={14} className="text-emerald-500 shrink-0 mt-0.5" />;
 };
 

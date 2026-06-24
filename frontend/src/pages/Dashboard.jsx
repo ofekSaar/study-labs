@@ -17,6 +17,7 @@ import ConfettiEffect from '../components/gamification/ConfettiEffect';
 import LeaguesPanel from '../components/gamification/LeaguesPanel';
 import QuestPanel from '../components/gamification/QuestPanel';
 import XPMultiplierBanner from '../components/gamification/XPMultiplierBanner';
+import XpHistoryChart from '../components/gamification/XpHistoryChart';
 import LoadingSkeleton from '../components/common/LoadingSkeleton';
 import EmptyState from '../components/common/EmptyState';
 
@@ -406,6 +407,9 @@ const Dashboard = () => {
                     className="pb-10"
                 >
                     <QuestPanel />
+
+                    {/* XP History Chart */}
+                    <XpHistoryChart />
                 </motion.div>
 
             </div>

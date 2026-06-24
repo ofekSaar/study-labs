@@ -6,7 +6,8 @@ import GameMapComponent from '../components/map/GameMap';
 import QuizEditorModal from '../components/quiz/QuizEditorModal';
 import AnnouncementModal from '../components/course/AnnouncementModal';
 import AnnouncementsPanel from '../components/course/AnnouncementsPanel';
-import { ChevronLeft, Loader2, RotateCcw, UploadCloud, X, Pencil, Megaphone } from 'lucide-react';
+import { ChevronLeft, Loader2, RotateCcw, UploadCloud, X, Pencil, Megaphone, Star } from 'lucide-react';
+import ReviewModal from '../components/course/ReviewModal';
 import useAuthStore from '../store/authStore';
 import useCourseStore from '../store/courseStore';
 import { io } from 'socket.io-client';
@@ -35,6 +36,9 @@ const CourseMap = () => {
 
     // Announcement modal state (instructor only)
     const [isAnnouncementOpen, setIsAnnouncementOpen] = useState(false);
+
+    // Review modal state (student only)
+    const [isReviewOpen, setIsReviewOpen] = useState(false);
 
     const handleUploadSubmit = async () => {
         if (uploadFiles.length === 0) return;
@@ -72,7 +76,7 @@ const CourseMap = () => {
 
     useEffect(() => {
         if (courseId) fetchAnnouncements(courseId, course?.title);
-    }, [courseId, fetchAnnouncements]);
+    }, [courseId, fetchAnnouncements, course?.title]);
 
     // Refresh nodes when window regains focus (user comes back from lesson)
     useEffect(() => {
@@ -245,10 +249,19 @@ const CourseMap = () => {
                         </div>
                     )}
 
-                    {/* Student announcements panel */}
+                    {/* Student announcements panel + Course complete review */}
                     {role === 'student' && (
-                        <div className="max-w-xl mx-auto">
+                        <div className="max-w-xl mx-auto space-y-3">
                             <AnnouncementsPanel />
+                            {nodes.length > 0 && nodes.filter(n => n.status === 'completed').length === nodes.length && (
+                                <button
+                                    onClick={() => setIsReviewOpen(true)}
+                                    className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl font-black text-sm text-white transition-all hover:scale-[1.02] active:scale-95"
+                                    style={{ background: 'linear-gradient(135deg, #F59E0B, #D97757)', boxShadow: '0 4px 16px rgba(245,158,11,0.35)' }}
+                                >
+                                    <Star size={15} className="fill-white" /> Rate this Course
+                                </button>
+                            )}
                         </div>
                     )}
 
@@ -416,6 +429,14 @@ const CourseMap = () => {
                     onClose={() => setEditingQuizNode(null)}
                 />
             )}
+
+            {/* Review Modal (student) */}
+            <ReviewModal
+                isOpen={isReviewOpen}
+                onClose={() => setIsReviewOpen(false)}
+                courseId={courseId}
+                courseTitle={course?.title}
+            />
         </Layout>
     );
 };

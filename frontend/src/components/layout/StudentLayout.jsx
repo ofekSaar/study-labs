@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Settings, LogOut, Menu, Map, BookOpen, ChevronRight, ChevronDown, X, Flame, Zap, User, ShoppingBag } from 'lucide-react';
+import { Settings, LogOut, Menu, Map, BookOpen, ChevronRight, ChevronDown, X, Flame, Zap, User, ShoppingBag, Trophy } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { io } from 'socket.io-client';
 import useCourseStore from '../../store/courseStore';
@@ -10,6 +10,7 @@ import SettingsModal from './SettingsModal';
 import ToastManager from '../common/ToastManager';
 import useGamificationStore, { AVATARS, TITLES } from '../../store/gamificationStore';
 import StudentNotificationBell from './StudentNotificationBell';
+import GlobalSearch from '../common/GlobalSearch';
 
 /* ── Logo SVG ── */
 const Logo = ({ size = 32 }) => (
@@ -102,6 +103,11 @@ const SidebarContent = ({ location, navigate, courses, selectedCourseId, setSele
                 </div>
             </div>
 
+            {/* ── Search ── */}
+            <div className="px-3 pb-2">
+                <GlobalSearch />
+            </div>
+
             {/* ── Nav Links ── */}
             <div className="flex-1 overflow-y-auto px-3 py-2 space-y-0.5">
                 <div className="px-4 mb-3 text-[10px] font-black text-slate-400 dark:text-white/20 uppercase tracking-widest">Navigate</div>
@@ -129,6 +135,12 @@ const SidebarContent = ({ location, navigate, courses, selectedCourseId, setSele
                     label="Profile"
                     active={location.pathname === '/profile'}
                     onClick={() => { navigate('/profile'); setIsSidebarOpen(false); }}
+                />
+                <GameNavItem
+                    icon={<Trophy size={18} />}
+                    label="Leaderboard"
+                    active={location.pathname === '/leaderboard'}
+                    onClick={() => { navigate('/leaderboard'); setIsSidebarOpen(false); }}
                 />
                 <GameNavItem
                     icon={<ShoppingBag size={18} />}

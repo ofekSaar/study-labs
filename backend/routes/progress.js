@@ -8,6 +8,7 @@ import {
   completeNode,
   getGlobalLeaderboard,
   getCourseLeaderboard,
+  getXpHistory,
   getGamificationState,
   syncGamificationState,
   buyShopItem,
@@ -185,6 +186,7 @@ router.post(
  *                       isYou:
  *                         type: boolean
  */
+router.get('/xp-history', authenticate, authorize('student'), getXpHistory);
 router.get('/leaderboard', authenticate, getGlobalLeaderboard);
 
 /**

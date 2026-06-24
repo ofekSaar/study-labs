@@ -493,3 +493,38 @@ export const updateActiveCustomizations = async (req, res, next) => {
     next(error);
   }
 };
+
+/**
+ * GET /api/progress/xp-history?days=30
+ * Returns daily XP totals for the authenticated student over the last N days.
+ */
+export const getXpHistory = async (req, res, next) => {
+  try {
+    const days = Math.min(parseInt(req.query.days) || 30, 90);
+    const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+    const events = await XpEvent.aggregate([
+      { $match: { student: req.user._id, createdAt: { $gte: since } } },
+      {
+        $group: {
+          _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+          xp: { $sum: '$xpAwarded' },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+
+    // Fill in missing days with 0
+    const result = [];
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
+      const dateStr = d.toISOString().split('T')[0];
+      const found = events.find(e => e._id === dateStr);
+      result.push({ date: dateStr, xp: found ? found.xp : 0 });
+    }
+
+    res.json({ status: 'success', data: { history: result } });
+  } catch (error) {
+    next(error);
+  }
+};
