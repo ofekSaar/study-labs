@@ -4,6 +4,7 @@ import { X, PlayCircle, BookOpen, Clock, Trophy, Zap, CheckCircle2, Star, ArrowR
 import { useNavigate } from 'react-router-dom';
 import useCourseStore from '../../store/courseStore';
 import sounds from '../../utils/soundManager';
+import ProgressBar from '../common/ProgressBar';
 
 const StarRating = ({ pct }) => {
     const stars = pct >= 90 ? 3 : pct >= 70 ? 2 : 1;
@@ -203,12 +204,7 @@ const NodeDrawer = () => {
                                                             </span>
                                                         </div>
                                                     </div>
-                                                    <div className="h-1.5 w-full bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden mb-1">
-                                                        <div
-                                                            className={`h-full rounded-full transition-all duration-700 ${passed ? 'bg-gradient-to-r from-emerald-400 to-teal-500' : 'bg-gradient-to-r from-red-400 to-red-500'}`}
-                                                            style={{ width: `${scorePct}%` }}
-                                                        />
-                                                    </div>
+                                                    <ProgressBar value={scorePct} variant={passed ? 'done' : 'fail'} height="sm" animated={false} className="mb-1" />
                                                     <p className={`text-[11px] font-bold ${passed ? 'text-emerald-500 dark:text-emerald-400' : 'text-red-400'}`}>
                                                         {correctCount} / {totalAnswerable} correct{passed ? ' ✓ Passed' : ' — Keep Practicing'}
                                                     </p>

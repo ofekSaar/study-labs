@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { X, Save, Trash2, Loader2, ChevronDown, ChevronUp, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Save, Trash2, Loader2, ChevronDown, ChevronUp, AlertTriangle, CheckCircle } from 'lucide-react';
 import api from '../../utils/api';
+import BaseModal from '../common/BaseModal';
 
 const QUESTION_STATUSES = { idle: 'idle', saving: 'saving', saved: 'saved', error: 'error' };
 
@@ -210,51 +211,15 @@ const QuizEditorModal = ({ nodeId, nodeTitle, onClose }) => {
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-            <div
-                className="relative z-10 w-full max-w-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl shadow-2xl flex flex-col max-h-[90vh]"
-                onClick={e => e.stopPropagation()}
-            >
-                {/* Header */}
-                <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 dark:border-white/10 shrink-0">
-                    <div>
-                        <h2 className="text-lg font-black text-slate-800 dark:text-white">Edit Quiz</h2>
-                        <p className="text-xs text-slate-500 dark:text-white/40 mt-0.5 truncate max-w-xs">{nodeTitle}</p>
-                    </div>
-                    <button
-                        onClick={onClose}
-                        className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-white/10 flex items-center justify-center text-slate-500 dark:text-white/50 hover:text-slate-800 dark:hover:text-white transition-colors"
-                    >
-                        <X size={16} />
-                    </button>
-                </div>
-
-                {/* Body */}
-                <div className="flex-1 overflow-y-auto px-6 py-5 space-y-3">
-                    {loading ? (
-                        <div className="flex items-center justify-center py-16">
-                            <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
-                        </div>
-                    ) : error ? (
-                        <div className="text-center py-12 text-red-500 font-semibold text-sm">{error}</div>
-                    ) : questions.length === 0 ? (
-                        <div className="text-center py-12 text-slate-400 text-sm">No questions in this quiz</div>
-                    ) : (
-                        questions.map((q, i) => (
-                            <QuestionCard
-                                key={`${nodeId}-${i}`}
-                                question={q}
-                                index={i}
-                                nodeId={nodeId}
-                                onDelete={handleDelete}
-                            />
-                        ))
-                    )}
-                </div>
-
-                {/* Footer */}
-                <div className="shrink-0 px-6 py-4 border-t border-slate-100 dark:border-white/10 flex justify-between items-center">
+        <BaseModal
+            isOpen
+            onClose={onClose}
+            title="Edit Quiz"
+            subtitle={nodeTitle}
+            size="2xl"
+            bodyClassName="px-6 py-5"
+            footer={(
+                <div className="flex justify-between items-center">
                     <span className="text-xs text-slate-400 dark:text-white/30">
                         {questions.length} {questions.length === 1 ? 'question' : 'questions'}
                     </span>
@@ -265,8 +230,30 @@ const QuizEditorModal = ({ nodeId, nodeTitle, onClose }) => {
                         Close
                     </button>
                 </div>
+            )}
+        >
+            <div className="space-y-3">
+                {loading ? (
+                    <div className="flex items-center justify-center py-16">
+                        <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
+                    </div>
+                ) : error ? (
+                    <div className="text-center py-12 text-red-500 font-semibold text-sm">{error}</div>
+                ) : questions.length === 0 ? (
+                    <div className="text-center py-12 text-slate-400 text-sm">No questions in this quiz</div>
+                ) : (
+                    questions.map((q, i) => (
+                        <QuestionCard
+                            key={`${nodeId}-${i}`}
+                            question={q}
+                            index={i}
+                            nodeId={nodeId}
+                            onDelete={handleDelete}
+                        />
+                    ))
+                )}
             </div>
-        </div>
+        </BaseModal>
     );
 };
 

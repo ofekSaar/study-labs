@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Star, Zap, ChevronUp } from 'lucide-react';
 import useGamificationStore from '../../store/gamificationStore';
+import useFocusTrap from '../../hooks/useFocusTrap';
 
 const LEVEL_TITLES = [
     '', 'Rookie', 'Scholar', 'Explorer', 'Achiever', 'Challenger',
@@ -11,39 +12,14 @@ const LEVEL_TITLES = [
 const LevelUpModal = () => {
     const { showLevelUp, newLevel, dismissLevelUp, setTriggerConfetti } = useGamificationStore();
     const panelRef = useRef(null);
-    const previousFocusRef = useRef(null);
 
+    // Focus management, Esc-to-dismiss and Tab trapping shared with every other dialog.
+    useFocusTrap(panelRef, showLevelUp, dismissLevelUp);
+
+    // Fire the celebration confetti when the modal opens.
     useEffect(() => {
-        if (showLevelUp) {
-            setTriggerConfetti('level_up');
-            previousFocusRef.current = document.activeElement;
-            // Focus the panel so keyboard users can immediately interact
-            setTimeout(() => panelRef.current?.focus(), 50);
-        } else if (previousFocusRef.current) {
-            previousFocusRef.current.focus();
-        }
+        if (showLevelUp) setTriggerConfetti('level_up');
     }, [showLevelUp, setTriggerConfetti]);
-
-    // Esc to dismiss + focus trap
-    useEffect(() => {
-        if (!showLevelUp) return;
-        const handleKey = (e) => {
-            if (e.key === 'Escape') { dismissLevelUp(); return; }
-            if (e.key !== 'Tab') return;
-            const focusable = panelRef.current?.querySelectorAll(
-                'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-            );
-            if (!focusable?.length) return;
-            const first = focusable[0];
-            const last = focusable[focusable.length - 1];
-            if (e.shiftKey ? document.activeElement === first : document.activeElement === last) {
-                e.preventDefault();
-                (e.shiftKey ? last : first).focus();
-            }
-        };
-        document.addEventListener('keydown', handleKey);
-        return () => document.removeEventListener('keydown', handleKey);
-    }, [showLevelUp, dismissLevelUp]);
 
     const title = LEVEL_TITLES[Math.min(newLevel, LEVEL_TITLES.length - 1)] || 'Legend+';
     const xpForLevel = (newLevel - 1) * 100;

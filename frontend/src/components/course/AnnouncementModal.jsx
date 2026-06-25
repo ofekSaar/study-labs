@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { X, Megaphone, Pin, Trash2, Loader2 } from 'lucide-react';
+import { Pin, Trash2, Loader2 } from 'lucide-react';
 import useCourseStore from '../../store/courseStore';
+import BaseModal from '../common/BaseModal';
 
 const AnnouncementModal = ({ courseId, onClose }) => {
     const { announcements, createAnnouncement, deleteAnnouncement } = useCourseStore();
@@ -42,22 +43,13 @@ const AnnouncementModal = ({ courseId, onClose }) => {
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl p-6 max-w-lg w-full shadow-2xl relative flex flex-col max-h-[90vh]">
-                <button
-                    onClick={onClose}
-                    className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-white transition"
-                >
-                    <X size={20} />
-                </button>
-
-                <h3 className="text-lg font-black text-slate-800 dark:text-white mb-1 flex items-center gap-2">
-                    <Megaphone size={18} className="text-indigo-500" /> Course Announcements
-                </h3>
-                <p className="text-xs text-slate-500 dark:text-white/40 font-medium mb-5">
-                    Post a message visible to all enrolled students.
-                </p>
-
+        <BaseModal
+            isOpen
+            onClose={onClose}
+            title="Course Announcements"
+            subtitle="Post a message visible to all enrolled students."
+            size="lg"
+        >
                 {/* Compose */}
                 <div className="space-y-3 mb-5">
                     <input
@@ -128,8 +120,7 @@ const AnnouncementModal = ({ courseId, onClose }) => {
                         ))}
                     </div>
                 )}
-            </div>
-        </div>
+        </BaseModal>
     );
 };
 

@@ -20,6 +20,9 @@ import XPMultiplierBanner from '../components/gamification/XPMultiplierBanner';
 import XpHistoryChart from '../components/gamification/XpHistoryChart';
 import LoadingSkeleton from '../components/common/LoadingSkeleton';
 import EmptyState from '../components/common/EmptyState';
+import ProgressBar from '../components/common/ProgressBar';
+import { calculateLevel } from '../utils/gamification';
+import { XP_PER_LEVEL } from '../constants/gamification';
 
 const getGreeting = () => {
     const h = new Date().getHours();
@@ -86,16 +89,7 @@ const CourseProgressCard = ({ courses, navigate }) => {
                                     }
                                 </div>
                             </div>
-                            <div className="h-1.5 w-full bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden">
-                                <motion.div
-                                    className={`h-full rounded-full ${isDone
-                                        ? 'bg-gradient-to-r from-emerald-400 to-teal-500'
-                                        : 'bg-gradient-to-r from-orange-500 to-amber-400'}`}
-                                    initial={{ width: 0 }}
-                                    animate={{ width: `${pct}%` }}
-                                    transition={{ duration: 1, ease: 'easeOut' }}
-                                />
-                            </div>
+                            <ProgressBar value={pct} variant={isDone ? 'done' : 'progress'} height="sm" />
                         </motion.div>
                     );
                 })}
@@ -117,8 +111,10 @@ const Dashboard = () => {
         generateDailyChallenge();
     }, []); // eslint-disable-line
 
-    const level = user?.totalXP ? Math.floor(user.totalXP / 100) + 1 : 1;
-    const progressToNextLevel = user?.totalXP ? (user.totalXP % 100) : 0;
+    // Derive level/XP from the same source as the profile so the two screens stay in sync.
+    const totalXP = stats.total_xp ?? user?.totalXP ?? 0;
+    const level = stats.level || calculateLevel(totalXP);
+    const progressToNextLevel = totalXP % XP_PER_LEVEL;
 
     // ── Loading skeleton ──
     if (isLoading && courses.length === 0) {
@@ -281,12 +277,7 @@ const Dashboard = () => {
                                 <div className="flex items-center gap-2 ml-auto">
                                     {currentCourse && (
                                         <div className="flex items-center gap-2">
-                                            <div className="h-1.5 w-24 bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden">
-                                                <div
-                                                    className="h-full bg-gradient-to-r from-orange-500 to-amber-400 rounded-full transition-all duration-700"
-                                                    style={{ width: `${Math.round(currentCourse.progress ?? 0)}%` }}
-                                                />
-                                            </div>
+                                            <ProgressBar value={Math.round(currentCourse.progress ?? 0)} variant="progress" height="sm" className="w-24" animated={false} />
                                             <span className="text-[11px] font-black text-slate-500 dark:text-white/50">
                                                 {Math.round(currentCourse.progress ?? 0)}%
                                             </span>
@@ -343,15 +334,15 @@ const Dashboard = () => {
                                 <motion.div
                                     className="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-full relative"
                                     initial={{ width: 0 }}
-                                    animate={{ width: progressToNextLevel === 0 && (user?.totalXP ?? 0) > 0 ? '2%' : `${progressToNextLevel}%` }}
+                                    animate={{ width: progressToNextLevel === 0 && totalXP > 0 ? '2%' : `${progressToNextLevel}%` }}
                                     transition={{ duration: 1.5, ease: 'easeOut' }}
                                 >
                                     <div className="absolute inset-0 bg-white/20 animate-pulse rounded-full" />
                                 </motion.div>
                             </div>
                             <div className="flex justify-between text-[10px] font-bold text-slate-400 dark:text-white/30">
-                                <span>{user?.totalXP ?? 0} XP total</span>
-                                <span>{100 - progressToNextLevel} XP to Level {level + 1}</span>
+                                <span>{totalXP} XP total</span>
+                                <span>{XP_PER_LEVEL - progressToNextLevel} XP to Level {level + 1}</span>
                             </div>
                             {/* Coins row */}
                             <div className="mt-3 pt-3 border-t border-slate-100 dark:border-white/5 flex items-center justify-between">
