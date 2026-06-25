@@ -1,48 +1,15 @@
-import React, { useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { X, Moon, Sun, Volume2, VolumeX, Sparkles, Monitor, Award, Lock } from 'lucide-react';
+import React from 'react';
+import { Moon, Sun, Volume2, VolumeX, Sparkles, Monitor, Award, Lock } from 'lucide-react';
 import useSettingsStore from '../../store/settingsStore';
 import useGamificationStore, { AVATARS, INSTRUCTOR_AVATARS, TITLES } from '../../store/gamificationStore';
 import sounds from '../../utils/soundManager';
 import api from '../../utils/api';
 import useAuthStore from '../../store/authStore';
+import BaseModal from '../common/BaseModal';
 
 const SettingsModal = ({ isOpen, onClose, isInstructor = false }) => {
     const { theme, setTheme, animationsEnabled, toggleAnimations, soundEnabled, toggleSound } = useSettingsStore();
     const { activeAvatar, activeTitle, unlockedAvatars, unlockedTitles, selectAvatar, selectTitle } = useGamificationStore();
-    const panelRef = useRef(null);
-    const previousFocusRef = useRef(null);
-
-    useEffect(() => {
-        if (isOpen) {
-            previousFocusRef.current = document.activeElement;
-            setTimeout(() => panelRef.current?.focus(), 50);
-        } else if (previousFocusRef.current) {
-            previousFocusRef.current.focus();
-        }
-    }, [isOpen]);
-
-    useEffect(() => {
-        if (!isOpen) return;
-        const handleKey = (e) => {
-            if (e.key === 'Escape') { onClose(); return; }
-            if (e.key !== 'Tab') return;
-            const focusable = panelRef.current?.querySelectorAll(
-                'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-            );
-            if (!focusable?.length) return;
-            const first = focusable[0];
-            const last = focusable[focusable.length - 1];
-            if (e.shiftKey ? document.activeElement === first : document.activeElement === last) {
-                e.preventDefault();
-                (e.shiftKey ? last : first).focus();
-            }
-        };
-        document.addEventListener('keydown', handleKey);
-        return () => document.removeEventListener('keydown', handleKey);
-    }, [isOpen, onClose]);
-
-    if (!isOpen) return null;
 
     const handleSelectAvatar = async (id) => {
         sounds.click();
@@ -66,41 +33,25 @@ const SettingsModal = ({ isOpen, onClose, isInstructor = false }) => {
     };
 
     return (
-        <AnimatePresence>
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    onClick={onClose}
-                    className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm dark:bg-black/60"
-                />
-                
-                <motion.div
-                    ref={panelRef}
-                    tabIndex={-1}
-                    role="dialog"
-                    aria-modal="true"
-                    aria-labelledby="settings-title"
-                    initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                    className="relative w-full max-w-lg mx-4 sm:mx-auto bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-white/5 max-h-[85vh] flex flex-col outline-none"
-                >
-                    {/* Header */}
-                    <div className="p-4 sm:p-6 border-b border-slate-100 dark:border-white/5 flex items-center justify-between">
-                        <h2 id="settings-title" className="text-lg sm:text-2xl font-black text-slate-900 dark:text-white">Settings & Customization</h2>
-                        <button 
-                            onClick={onClose}
-                            className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-white/10 text-slate-500 dark:text-slate-400 transition-colors"
-                        >
-                            <X size={20} />
-                        </button>
-                    </div>
+        <BaseModal
+            isOpen={isOpen}
+            onClose={onClose}
+            title="Settings & Customization"
+            size="lg"
+            bodyClassName="p-4 sm:p-6 overflow-y-auto custom-scrollbar"
+            footer={(
+                <div className="flex justify-end">
+                    <button
+                        onClick={onClose}
+                        className="px-6 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold rounded-xl hover:bg-slate-800 dark:hover:bg-slate-100 transition-colors text-xs uppercase tracking-wider"
+                    >
+                        Done
+                    </button>
+                </div>
+            )}
+        >
+            <div className="space-y-6 sm:space-y-8">
 
-                    {/* Scrollable Settings Panel */}
-                    <div className="flex-1 p-4 sm:p-6 overflow-y-auto space-y-6 sm:space-y-8 custom-scrollbar">
-                        
                         {/* Theme Selection */}
                         <div>
                             <h3 className="text-xs font-black text-slate-400 dark:text-white/30 uppercase tracking-widest mb-4">Appearance</h3>
@@ -259,20 +210,8 @@ const SettingsModal = ({ isOpen, onClose, isInstructor = false }) => {
                                 </div>
                             )}
                         </div>
-                    </div>
-
-                    {/* Footer */}
-                    <div className="p-4 sm:p-6 border-t border-slate-100 dark:border-white/5 flex justify-end bg-slate-50 dark:bg-black/10">
-                        <button 
-                            onClick={onClose}
-                            className="px-6 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold rounded-xl hover:bg-slate-800 dark:hover:bg-slate-100 transition-colors text-xs uppercase tracking-wider"
-                        >
-                            Done
-                        </button>
-                    </div>
-                </motion.div>
             </div>
-        </AnimatePresence>
+        </BaseModal>
     );
 };
 

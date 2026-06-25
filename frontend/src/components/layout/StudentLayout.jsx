@@ -11,6 +11,9 @@ import ToastManager from '../common/ToastManager';
 import useGamificationStore, { AVATARS, TITLES } from '../../store/gamificationStore';
 import StudentNotificationBell from './StudentNotificationBell';
 import GlobalSearch from '../common/GlobalSearch';
+import StatPill from '../common/StatPill';
+import ProgressBar from '../common/ProgressBar';
+import GradientBorderCard from '../common/GradientBorderCard';
 
 /* ── Logo SVG ── */
 const Logo = ({ size = 32 }) => (
@@ -92,14 +95,14 @@ const SidebarContent = ({ location, navigate, courses, selectedCourseId, setSele
                         <Logo size={36} />
                         <span className="font-display font-bold text-xl text-slate-800 dark:text-white tracking-tight">StudyLabs</span>
                     </div>
-                    <div
-                        className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl border coin-shine cursor-default"
-                        style={{ background: 'rgba(245,158,11,0.1)', borderColor: 'rgba(245,158,11,0.25)' }}
+                    <StatPill
+                        emoji="💰"
+                        value={(coins || 0).toLocaleString()}
+                        variant="coins"
+                        size="md"
                         title="Coins"
-                    >
-                        <span className="text-sm leading-none select-none">💰</span>
-                        <span className="text-[11px] font-black text-amber-600 dark:text-amber-400 leading-none">{(coins || 0).toLocaleString()}</span>
-                    </div>
+                        className="coin-shine cursor-default"
+                    />
                 </div>
             </div>
 
@@ -197,12 +200,13 @@ const SidebarContent = ({ location, navigate, courses, selectedCourseId, setSele
                                     </div>
 
                                     {/* Animated progress bar */}
-                                    <div className="h-2 w-full bg-slate-200 dark:bg-white/8 rounded-full overflow-hidden">
-                                        <div
-                                            className="h-full rounded-full xp-bar-fill transition-all duration-700"
-                                            style={{ width: `${selectedCourse.progress || 0}%` }}
-                                        />
-                                    </div>
+                                    <ProgressBar
+                                        value={selectedCourse.progress || 0}
+                                        variant="xp"
+                                        height="md"
+                                        animated={false}
+                                        trackClassName="dark:bg-white/8"
+                                    />
                                 </button>
 
                                 {/* Dropdown */}
@@ -255,8 +259,12 @@ const SidebarContent = ({ location, navigate, courses, selectedCourseId, setSele
                     onClick={() => { navigate('/profile'); setIsSidebarOpen(false); }}
                     className="cursor-pointer group/card mb-3"
                 >
-                    <div className="p-px rounded-[18px]" style={{ background: 'linear-gradient(135deg, rgba(217,119,87,0.55), rgba(124,58,237,0.4), rgba(217,119,87,0.3))' }}>
-                        <div className="bg-white dark:bg-[#1A1410] rounded-[17px] p-3 space-y-2.5">
+                    <GradientBorderCard
+                        radius="rounded-[18px]"
+                        innerRadius="rounded-[17px]"
+                        gradientStyle="linear-gradient(135deg, rgba(217,119,87,0.55), rgba(124,58,237,0.4), rgba(217,119,87,0.3))"
+                        innerClassName="bg-white dark:bg-[#1A1410] p-3 space-y-2.5"
+                    >
 
                             {/* Avatar + name row */}
                             <div className="flex items-center gap-3">
@@ -306,15 +314,9 @@ const SidebarContent = ({ location, navigate, courses, selectedCourseId, setSele
                                     <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 dark:text-white/25">XP to Level {(stats.level || 1) + 1}</span>
                                     <span className="text-[8px] font-black text-orange-500">{xpInLevel}/100</span>
                                 </div>
-                                <div className="h-2 rounded-full bg-slate-200 dark:bg-white/8 overflow-hidden">
-                                    <div
-                                        className="h-full rounded-full xp-bar-fill transition-all duration-700"
-                                        style={{ width: `${xpInLevel}%` }}
-                                    />
-                                </div>
+                                <ProgressBar value={xpInLevel} variant="xp" height="md" animated={false} trackClassName="dark:bg-white/8" />
                             </div>
-                        </div>
-                    </div>
+                        </GradientBorderCard>
                 </div>
 
                 {/* Icon-only action row */}
@@ -434,20 +436,8 @@ const StudentLayout = ({ children }) => {
                         <span className="font-display font-bold text-base text-slate-800 dark:text-white">StudyLabs</span>
                     </div>
                     <div className="flex items-center gap-2">
-                        <div
-                            className="flex items-center gap-1 px-2 py-1 rounded-lg border border-orange-500/25"
-                            style={{ background: 'rgba(249,115,22,0.08)' }}
-                        >
-                            <Flame size={12} className="text-orange-500 fill-orange-500" />
-                            <span className="text-[10px] font-black text-orange-600 dark:text-orange-400">{stats.streak || 0}</span>
-                        </div>
-                        <div
-                            className="flex items-center gap-1 px-2 py-1 rounded-lg border border-amber-500/25"
-                            style={{ background: 'rgba(245,158,11,0.08)' }}
-                        >
-                            <Zap size={12} className="text-amber-500" />
-                            <span className="text-[10px] font-black text-amber-600 dark:text-amber-400">{(stats.total_xp || 0).toLocaleString()}</span>
-                        </div>
+                        <StatPill icon={Flame} value={stats.streak || 0} variant="streak" size="sm" title="Streak" />
+                        <StatPill icon={Zap} value={(stats.total_xp || 0).toLocaleString()} variant="xp" size="sm" title="Total XP" />
                         <StudentNotificationBell />
                         <button
                             onClick={() => setIsSidebarOpen(true)}

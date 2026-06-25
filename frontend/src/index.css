@@ -129,6 +129,15 @@ body {
 }
 .btn-gradient:active { transform: translateY(0); }
 
+/* ── Background Gradients (reusable fills) ───────────── */
+/* Single source of truth for the 135deg brand gradients that were
+   previously inlined as style={{ background: 'linear-gradient(...)' }} */
+.bg-grad-primary { background: linear-gradient(135deg, #D97757 0%, #7C3AED 100%); }
+.bg-grad-orange  { background: linear-gradient(135deg, #D97757, #C4613D); }
+.bg-grad-gold    { background: linear-gradient(135deg, #F59E0B, #D97757); }
+.bg-grad-purple  { background: linear-gradient(135deg, #7C3AED, #6366F1); }
+.bg-grad-green   { background: linear-gradient(135deg, #10B981, #059669); }
+
 /* ── Metric Card Gradients ───────────────────────────── */
 .metric-blue { background: linear-gradient(135deg, #FFF4EE 0%, #FFE8DC 100%); border: 1px solid rgba(217,119,87,0.15); }
 .metric-green { background: linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%); border: 1px solid rgba(16,185,129,0.15); }
