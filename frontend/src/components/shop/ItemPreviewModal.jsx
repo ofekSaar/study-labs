@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { createPortal } from 'react-dom';
-import { motion, AnimatePresence } from 'framer-motion';
 import { X, Loader2 } from 'lucide-react';
+import BaseModal from '../common/BaseModal';
 
 const RARITY_LABELS = {
     common: { label: 'Common', color: '#94a3b8' },
@@ -172,59 +171,49 @@ const ItemPreviewModal = ({ item, category, coins, isOwned, onBuy, onClose }) =>
         }
     };
 
-    return createPortal(
-        <AnimatePresence>
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+    return (
+        <BaseModal
+            isOpen
+            onClose={onClose}
+            size="sm"
+            hideClose
+            bodyClassName="p-7"
+            panelClassName="!bg-slate-900 !border-white/10"
+        >
+            <button
                 onClick={onClose}
+                aria-label="Close dialog"
+                className="absolute top-4 right-4 w-8 h-8 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/50 hover:text-white transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
             >
-                <motion.div
-                    initial={{ scale: 0.92, opacity: 0, y: 16 }}
-                    animate={{ scale: 1, opacity: 1, y: 0 }}
-                    exit={{ scale: 0.92, opacity: 0, y: 16 }}
-                    transition={{ type: 'spring', stiffness: 300, damping: 28 }}
-                    className="relative w-full max-w-sm bg-slate-900 border border-white/10 rounded-3xl p-7 shadow-2xl"
-                    onClick={e => e.stopPropagation()}
-                >
-                    <button
-                        onClick={onClose}
-                        className="absolute top-4 right-4 w-8 h-8 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/50 hover:text-white transition"
+                <X size={16} />
+            </button>
+
+            <div className="mb-5">
+                <div className="flex items-center gap-2 mb-1">
+                    <span
+                        className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border"
+                        style={{ color: rarity.color, borderColor: `${rarity.color}44`, background: `${rarity.color}11` }}
                     >
-                        <X size={16} />
-                    </button>
+                        {rarity.label}
+                    </span>
+                    {item.isNew && (
+                        <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border text-emerald-400 border-emerald-400/30 bg-emerald-400/10">
+                            New
+                        </span>
+                    )}
+                </div>
+                <h3 className="text-xl font-black text-white">{item.name}</h3>
+                <p className="text-white/50 text-xs mt-0.5">{item.description}</p>
+            </div>
 
-                    <div className="mb-5">
-                        <div className="flex items-center gap-2 mb-1">
-                            <span
-                                className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border"
-                                style={{ color: rarity.color, borderColor: `${rarity.color}44`, background: `${rarity.color}11` }}
-                            >
-                                {rarity.label}
-                            </span>
-                            {item.isNew && (
-                                <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border text-emerald-400 border-emerald-400/30 bg-emerald-400/10">
-                                    New
-                                </span>
-                            )}
-                        </div>
-                        <h3 className="text-xl font-black text-white">{item.name}</h3>
-                        <p className="text-white/50 text-xs mt-0.5">{item.description}</p>
-                    </div>
-
-                    <PreviewComponent
-                        item={item}
-                        coins={coins}
-                        isOwned={isOwned}
-                        onBuy={handleBuy}
-                        buying={buying}
-                    />
-                </motion.div>
-            </motion.div>
-        </AnimatePresence>,
-        document.body
+            <PreviewComponent
+                item={item}
+                coins={coins}
+                isOwned={isOwned}
+                onBuy={handleBuy}
+                buying={buying}
+            />
+        </BaseModal>
     );
 };
 
