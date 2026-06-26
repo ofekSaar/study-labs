@@ -24,9 +24,13 @@ const useAuthStore = create((set) => ({
 
         try {
             const { data } = await api.get('/api/auth/me');
+            const storedRole = localStorage.getItem('active_role');
+            const userRoles = data.user.roles || (data.user.role ? [data.user.role] : []);
+            const activeRole = (storedRole && userRoles.includes(storedRole)) ? storedRole : data.user.role;
+
             set({
                 user: data.user,
-                role: data.user.role,
+                role: activeRole,
                 isAuthenticated: true,
                 isLoading: false,
             });
@@ -44,9 +48,13 @@ const useAuthStore = create((set) => ({
         setToken(token);
         try {
             const { data } = await api.get('/api/auth/me');
+            const storedRole = localStorage.getItem('active_role');
+            const userRoles = data.user.roles || (data.user.role ? [data.user.role] : []);
+            const activeRole = (storedRole && userRoles.includes(storedRole)) ? storedRole : data.user.role;
+
             set({
                 user: data.user,
-                role: data.user.role,
+                role: activeRole,
                 isAuthenticated: true,
                 isLoading: false,
             });
@@ -75,9 +83,14 @@ const useAuthStore = create((set) => ({
             if (data.token) {
                 setToken(data.token);
             }
+            
+            const userRoles = data.user.roles || (data.user.role ? [data.user.role] : []);
+            const activeRole = userRoles.includes('instructor') ? 'instructor' : 'student';
+            localStorage.setItem('active_role', activeRole);
+
             set({
                 user: data.user,
-                role: data.user.role,
+                role: activeRole,
             });
             return data.user;
         } catch (error) {
@@ -85,6 +98,20 @@ const useAuthStore = create((set) => ({
             const message = error.data?.message || error.message || 'Failed to set role';
             throw new Error(message);
         }
+    },
+
+    /**
+     * Switch active role locally in the frontend (for multi-role users).
+     */
+    switchRole: (newRole) => {
+        set((state) => {
+            const userRoles = state.user?.roles || (state.user?.role ? [state.user.role] : []);
+            if (userRoles.includes(newRole)) {
+                localStorage.setItem('active_role', newRole);
+                return { role: newRole };
+            }
+            return {};
+        });
     },
 
     /**
@@ -104,6 +131,7 @@ const useAuthStore = create((set) => ({
      */
     logout: () => {
         removeToken();
+        localStorage.removeItem('active_role');
         set({
             user: null,
             role: null,

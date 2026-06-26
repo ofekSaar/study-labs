@@ -326,7 +326,10 @@ const SidebarContent = ({ location, navigate, courses, selectedCourseId, setSele
                     </div>
                     {user?.roles?.includes('instructor') && (
                         <button
-                            onClick={() => navigate('/instructor')}
+                            onClick={() => {
+                                useAuthStore.getState().switchRole('instructor');
+                                navigate('/instructor');
+                            }}
                             title="Switch to Instructor"
                             className="flex-1 flex flex-col items-center gap-0.5 py-2 rounded-xl hover:bg-purple-500/10 dark:hover:bg-purple-500/15 text-purple-500 dark:text-purple-400 transition-all border border-transparent hover:border-purple-500/20"
                         >

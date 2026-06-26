@@ -304,7 +304,10 @@ const SidebarContent = ({ location, navigate, user, instructorStats, _setIsSideb
                 <div className="flex items-center gap-1">
                     {user?.roles?.includes('student') && (
                         <button
-                            onClick={() => navigate('/')}
+                            onClick={() => {
+                                useAuthStore.getState().switchRole('student');
+                                navigate('/');
+                            }}
                             title="Switch to Student"
                             className="flex-1 flex flex-col items-center gap-0.5 py-2 rounded-xl hover:bg-orange-500/10 dark:hover:bg-orange-500/15 text-orange-500 dark:text-orange-400 transition-all border border-transparent hover:border-orange-500/20"
                         >
