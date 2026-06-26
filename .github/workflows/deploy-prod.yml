@@ -35,13 +35,17 @@ jobs:
         run: |
           snap list --all | awk '/disabled/{print $1, $3}' | while read snapname revision; do sudo snap remove "$snapname" --revision="$revision" 2>/dev/null || true; done
           docker image prune -f || true
+          docker volume prune -f || true
+          docker builder prune -af || true
 
       - name: Build and restart all services
         run: |
           docker compose down
           docker compose up --build -d
-          # Remove dangling images and keep only the 5 most recent image versions per service
-          docker image prune -f
+          # Remove dangling images, unused volumes, build cache, and keep only the 5 most recent image versions per service
+          docker image prune -f || true
+          docker volume prune -f || true
+          docker builder prune -f || true
           for image in study-labs-backend study-labs-frontend study-labs-ai-engine; do
             docker images "$image" --format "{{.ID}}" | tail -n +6 | xargs -r docker rmi -f || true
           done
