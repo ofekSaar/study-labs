@@ -3,7 +3,8 @@
 FROM node:20.12.2-alpine AS base
 WORKDIR /app
 COPY package*.json ./
-RUN npm install
+RUN --mount=type=cache,target=/root/.npm npm install
+
 
 # Stage 2: Development (For local development via compose)
 FROM base AS development

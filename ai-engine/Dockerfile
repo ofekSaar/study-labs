@@ -17,9 +17,11 @@ RUN groupadd -r app && useradd -r -m -g app app
 
 # Install python dependencies
 # Install CPU-only torch first to prevent sentence-transformers pulling the full GPU build
-RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install torch --index-url https://download.pytorch.org/whl/cpu
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install -r requirements.txt
 
 # Copy application code with ownership
 COPY --chown=app:app . .

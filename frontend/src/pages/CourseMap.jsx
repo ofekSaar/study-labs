@@ -21,6 +21,7 @@ const CourseMap = () => {
     const navigate = useNavigate();
     const { role } = useAuthStore();
     const { fetchCourseNodes, regenerateCourse, fetchAnnouncements, courses, isLoading: storeLoading } = useCourseStore();
+    const course = courses.find(c => c.id === courseId || c._id === courseId);
     const [localLoading, setLocalLoading] = useState(true);
     const [retrying, setRetrying] = useState(false);
     const [retryError, setRetryError] = useState(null);
@@ -89,7 +90,7 @@ const CourseMap = () => {
         return () => window.removeEventListener('focus', handleFocus);
     }, [courseId, localLoading, fetchCourseNodes]);
 
-    const course = courses.find(c => c.id === courseId || c._id === courseId);
+
 
     const attemptsUsed = course?.generationAttempts || 1;
     const canRetry = attemptsUsed < MAX_GENERATION_ATTEMPTS;
