@@ -1,4 +1,5 @@
 import React from 'react';
+import Button from './Button';
 
 const EmptyState = ({ icon: Icon, title, description, action }) => (
     <div className="glass-card rounded-3xl border-2 border-dashed border-slate-200 dark:border-white/10 p-10 flex flex-col items-center justify-center text-center gap-4">
@@ -14,12 +15,9 @@ const EmptyState = ({ icon: Icon, title, description, action }) => (
             )}
         </div>
         {action && (
-            <button
-                onClick={action.onClick}
-                className="mt-2 px-5 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-400 hover:to-purple-400 text-white text-sm font-bold rounded-xl transition-all shadow-[0_0_15px_rgba(99,102,241,0.25)]"
-            >
+            <Button onClick={action.onClick} className="mt-2">
                 {action.label}
-            </button>
+            </Button>
         )}
     </div>
 );

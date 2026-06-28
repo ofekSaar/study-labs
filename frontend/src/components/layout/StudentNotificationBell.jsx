@@ -40,9 +40,12 @@ const StudentNotificationBell = ({ dropUp = false }) => {
     return (
         <div ref={ref} className="relative">
             <button
+                type="button"
                 onClick={handleOpen}
                 className="relative p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 text-slate-500 dark:text-white/50 hover:text-slate-800 dark:hover:text-white transition-colors"
-                aria-label="Notifications"
+                aria-label={unread > 0 ? `Notifications, ${unread} unread` : 'Notifications'}
+                aria-haspopup="true"
+                aria-expanded={open}
             >
                 <Bell size={20} />
                 {unread > 0 && (
@@ -61,15 +64,19 @@ const StudentNotificationBell = ({ dropUp = false }) => {
                             {notifications.length > 0 && (
                                 <>
                                     <button
+                                        type="button"
                                         onClick={markAllRead}
                                         title="Mark all read"
+                                        aria-label="Mark all notifications as read"
                                         className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors"
                                     >
                                         <CheckCheck size={14} />
                                     </button>
                                     <button
+                                        type="button"
                                         onClick={clearAll}
                                         title="Clear all"
+                                        aria-label="Clear all notifications"
                                         className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400 hover:text-red-500 transition-colors"
                                     >
                                         <Trash2 size={14} />

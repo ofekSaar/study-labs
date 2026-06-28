@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { clickableProps } from '../../utils/a11y';
 import { Settings, LogOut, Menu, Map, BookOpen, ChevronRight, ChevronDown, X, Flame, Zap, User, ShoppingBag, Trophy } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { io } from 'socket.io-client';
@@ -256,7 +257,7 @@ const SidebarContent = ({ location, navigate, courses, selectedCourseId, setSele
 
                 {/* Player Card with gradient border */}
                 <div
-                    onClick={() => { navigate('/profile'); setIsSidebarOpen(false); }}
+                    {...clickableProps(() => { navigate('/profile'); setIsSidebarOpen(false); }, 'Open my profile')}
                     className="cursor-pointer group/card mb-3"
                 >
                     <GradientBorderCard
