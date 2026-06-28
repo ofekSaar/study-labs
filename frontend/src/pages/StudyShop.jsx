@@ -7,6 +7,7 @@ import { Coins, ShoppingBag, Zap, HelpCircle, Clock, Star } from 'lucide-react';
 import { motion, useSpring, useTransform, AnimatePresence } from 'framer-motion';
 import ConfettiEffect from '../components/gamification/ConfettiEffect';
 import ItemPreviewModal from '../components/shop/ItemPreviewModal';
+import { clickableProps } from '../utils/a11y';
 
 // ── Sub-components ────────────────────────────────────────────────────────
 
@@ -36,7 +37,7 @@ const ItemCard = ({ item, category, isOwned, ownedCount, onPreview }) => {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
-            onClick={() => onPreview(item, category)}
+            {...clickableProps(() => onPreview(item, category), `Preview ${item.name}`)}
             className="group relative bg-white dark:bg-white/[0.03] border border-slate-200/60 dark:border-white/[0.06] rounded-2xl p-4 flex items-center justify-between gap-4 cursor-pointer hover:border-indigo-400/40 dark:hover:border-indigo-500/30 transition-all hover:shadow-lg"
             style={{ '--accent': r.color }}
         >
@@ -117,7 +118,7 @@ const FeaturedBanner = ({ item, coins, isOwned, onPreview }) => {
             animate={{ opacity: 1, y: 0 }}
             className="relative rounded-3xl overflow-hidden border cursor-pointer group"
             style={{ borderColor: `${r.color}33`, background: `linear-gradient(135deg, ${r.color}11 0%, transparent 60%)` }}
-            onClick={() => onPreview(item, item.category)}
+            {...clickableProps(() => onPreview(item, item.category), `Preview featured item ${item.name}`)}
         >
             <div className="absolute inset-0 pointer-events-none" style={{ background: `radial-gradient(ellipse at 80% 50%, ${r.color}15 0%, transparent 70%)` }} />
             <div className="relative z-10 p-5 sm:p-7 flex flex-col sm:flex-row sm:items-center justify-between gap-4">

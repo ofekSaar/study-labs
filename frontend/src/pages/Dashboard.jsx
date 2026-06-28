@@ -21,6 +21,9 @@ import XpHistoryChart from '../components/gamification/XpHistoryChart';
 import LoadingSkeleton from '../components/common/LoadingSkeleton';
 import EmptyState from '../components/common/EmptyState';
 import ProgressBar from '../components/common/ProgressBar';
+import Button from '../components/common/Button';
+import StatCard from '../components/common/StatCard';
+import { clickableProps } from '../utils/a11y';
 import { calculateLevel } from '../utils/gamification';
 import { XP_PER_LEVEL } from '../constants/gamification';
 
@@ -31,22 +34,6 @@ const getGreeting = () => {
     if (h < HOUR_AFTERNOON_END) return 'Good afternoon';
     if (h < HOUR_EVENING_END) return 'Good evening';
     return 'Good night';
-};
-
-const StatCard = ({ icon, value, label, color, glow }) => {
-    const Icon = icon;
-    return (
-        <motion.div
-            whileHover={{ y: -3, scale: 1.02 }}
-            transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-            className="glass-card rounded-2xl p-4 flex flex-col items-center justify-center text-center gap-1 shadow-sm relative overflow-hidden group cursor-default"
-        >
-            <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 ${color} rounded-2xl`} style={{ opacity: 0.04 }} />
-            <Icon size={20} className={glow} />
-            <span className="text-2xl font-black text-slate-900 dark:text-white leading-none">{value}</span>
-            <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-white/40">{label}</span>
-        </motion.div>
-    );
 };
 
 const CourseProgressCard = ({ courses, navigate }) => {
@@ -76,7 +63,7 @@ const CourseProgressCard = ({ courses, navigate }) => {
                             key={course.id || course._id}
                             whileHover={{ x: 3 }}
                             className="group/course cursor-pointer"
-                            onClick={() => navigate(`/course/${course.id || course._id}`)}
+                            {...clickableProps(() => navigate(`/course/${course.id || course._id}`), `Open course ${course.title}`)}
                         >
                             <div className="flex items-center justify-between mb-1.5">
                                 <span className="text-xs font-bold text-slate-700 dark:text-white/80 truncate max-w-[160px] group-hover/course:text-orange-500 dark:group-hover/course:text-orange-300 transition-colors">
@@ -216,14 +203,14 @@ const Dashboard = () => {
                             }
                         </p>
                     </div>
-                    <button
+                    <Button
                         onClick={() => navigate('/my-courses')}
-                        className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-white text-sm font-bold rounded-2xl shadow-lg shadow-orange-500/25 transition-all hover:shadow-orange-500/40 hover:-translate-y-0.5 shrink-0"
+                        icon={BookOpen}
+                        iconAfter={ArrowRight}
+                        className="shrink-0"
                     >
-                        <BookOpen size={15} />
                         Browse Courses
-                        <ArrowRight size={14} />
-                    </button>
+                    </Button>
                 </motion.header>
 
                 {/* ── Stats Strip ── */}
@@ -284,9 +271,12 @@ const Dashboard = () => {
                                         </div>
                                     )}
                                     <button
+                                        type="button"
                                         onClick={() => setIsRoadmapCollapsed(v => !v)}
                                         className="w-7 h-7 rounded-xl bg-slate-200/70 dark:bg-white/10 hover:bg-slate-300/70 dark:hover:bg-white/20 flex items-center justify-center text-slate-500 dark:text-white/50 transition-colors"
                                         title={isRoadmapCollapsed ? 'Expand' : 'Collapse'}
+                                        aria-label={isRoadmapCollapsed ? 'Expand learning path' : 'Collapse learning path'}
+                                        aria-expanded={!isRoadmapCollapsed}
                                     >
                                         {isRoadmapCollapsed ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
                                     </button>

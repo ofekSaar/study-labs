@@ -4,10 +4,11 @@ import InstructorLayout from '../components/layout/InstructorLayout';
 import useCourseStore from '../store/courseStore';
 import useEnrollmentStore from '../store/enrollmentStore';
 import { getDeptStyle } from '../utils/departmentStyles';
+import Button from '../components/common/Button';
 import {
     Search, BookOpen, Users, ArrowRight, Loader2, Trash2,
     Zap, Star, Layers, Check, X, Clock, AlertCircle,
-    UserCheck, ChevronDown, Pencil, Save
+    UserCheck, ChevronDown, Pencil, Save, Plus
 } from 'lucide-react';
 
 const COURSE_AVATARS = [
@@ -123,17 +124,10 @@ const EditCourseModal = ({ course, onClose, onSave }) => {
 
                 {/* Footer */}
                 <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-100 dark:border-white/10">
-                    <button onClick={onClose} className="px-5 py-2.5 rounded-xl text-sm font-bold text-slate-600 dark:text-white/60 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">
-                        Cancel
-                    </button>
-                    <button
-                        onClick={handleSave}
-                        disabled={saving}
-                        className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-sm font-bold shadow-[0_4px_14px_rgba(124,58,237,0.35)] hover:shadow-[0_6px_20px_rgba(124,58,237,0.5)] hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100"
-                    >
-                        {saving ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />}
+                    <Button variant="subtle" onClick={onClose}>Cancel</Button>
+                    <Button variant="purple" onClick={handleSave} loading={saving} icon={Save}>
                         {saving ? 'Saving…' : 'Save Changes'}
-                    </button>
+                    </Button>
                 </div>
             </div>
         </div>
@@ -390,12 +384,14 @@ const ManagedCourses = () => {
                                     className="w-full pl-11 pr-4 py-3 rounded-2xl border border-slate-200 dark:border-white/10 bg-white/70 dark:bg-black/30 backdrop-blur-md text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-white/40 focus:border-[#D97757] focus:bg-white dark:focus:bg-slate-900/60 focus:outline-none transition-all shadow-sm focus:shadow-md dark:shadow-inner"
                                 />
                             </div>
-                            <button
+                            <Button
+                                variant="purple"
                                 onClick={() => navigate('/instructor/create')}
-                                className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-3 rounded-2xl font-bold shadow-[0_4px_15px_rgba(124,58,237,0.35)] hover:shadow-[0_6px_20px_rgba(124,58,237,0.5)] hover:scale-[1.02] active:scale-[0.98] transition-all whitespace-nowrap flex items-center gap-2 text-sm"
+                                icon={Plus}
+                                className="whitespace-nowrap"
                             >
-                                + New Course
-                            </button>
+                                New Course
+                            </Button>
                         </div>
                     )}
                 </div>
