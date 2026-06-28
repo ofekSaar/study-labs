@@ -558,12 +558,14 @@ const ManagedCourses = () => {
                                                                 <Pencil size={16} />
                                                             </button>
                                                         </div>
-                                                        <button
+                                                        <Button
+                                                            variant="purple"
                                                             onClick={() => navigate(`/instructor/course/${course.id}`)}
-                                                            className="flex-1 h-10 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-[0_4px_14px_rgba(124,58,237,0.35)] hover:shadow-[0_6px_20px_rgba(124,58,237,0.5)] group-hover:scale-[1.02] active:scale-[0.97]"
+                                                            iconAfter={ArrowRight}
+                                                            className="flex-1 h-10"
                                                         >
-                                                            Open Course <ArrowRight size={16} />
-                                                        </button>
+                                                            Open Course
+                                                        </Button>
                                                     </div>
                                                 </div>
                                             </div>
@@ -581,12 +583,14 @@ const ManagedCourses = () => {
                                     {searchTerm ? 'Try adjusting your search filters.' : "You haven't created any courses yet."}
                                 </p>
                                 {!searchTerm && (
-                                    <button
+                                    <Button
+                                        variant="purple"
+                                        size="lg"
                                         onClick={() => navigate('/instructor/create')}
-                                        className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-8 py-3.5 rounded-xl font-bold shadow-[0_0_15px_rgba(124,58,237,0.4)] hover:shadow-[0_0_22px_rgba(124,58,237,0.6)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300"
+                                        icon={Plus}
                                     >
                                         Create Your First Course
-                                    </button>
+                                    </Button>
                                 )}
                             </div>
                         )}
