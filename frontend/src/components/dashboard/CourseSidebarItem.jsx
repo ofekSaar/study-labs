@@ -1,12 +1,14 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { ChevronRight, PlayCircle } from 'lucide-react';
+import { clickableProps } from '../../utils/a11y';
 
 const CourseSidebarItem = ({ course, isSelected, onClick }) => {
     return (
         <motion.div
             layout
-            onClick={onClick}
+            {...clickableProps(onClick, `Select course ${course.title}`)}
+            aria-pressed={isSelected}
             className={`cursor-pointer group relative p-3 rounded-xl transition-all duration-300 ${isSelected
                     ? 'bg-slate-100 dark:bg-white/10 border border-slate-200 dark:border-indigo-500/30 shadow-lg dark:shadow-indigo-500/10'
                     : 'hover:bg-slate-200/50 dark:hover:bg-white/5 border border-transparent'

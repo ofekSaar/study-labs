@@ -47,6 +47,21 @@ body {
         radial-gradient(ellipse 40% 40% at 50% 50%, rgba(196,97,61,0.04) 0%, transparent 70%);
 }
 
+/* ── Global Keyboard Focus ───────────────────────────── */
+/* A single, consistent focus ring for every interactive element so keyboard
+   navigation is always visible. Uses :focus-visible so it never shows on
+   mouse/touch interaction. Components can opt out with `focus-visible:ring-0`. */
+:where(a, button, [role="button"], input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: none;
+    border-radius: max(0.5rem, 4px);
+    box-shadow: 0 0 0 2px #F8F5F1, 0 0 0 4px var(--color-studylabs-orange);
+}
+.dark :where(a, button, [role="button"], input, select, textarea, summary, [tabindex]):focus-visible {
+    box-shadow: 0 0 0 2px #100C09, 0 0 0 4px var(--color-studylabs-orange);
+}
+/* Inputs already carry their own ring utilities in places — keep their radius */
+:where(input, select, textarea):focus-visible { border-radius: inherit; }
+
 /* ── Scrollbar ───────────────────────────────────────── */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { clickableProps } from '../../utils/a11y';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import useCourseStore from '../../store/courseStore';
@@ -354,7 +355,8 @@ const RoadmapView = () => {
                                         {/* ── Card column ── */}
                                         <div className="flex-1 min-w-0">
                                             <motion.div
-                                                onClick={() => handleToggleExpand(nodeId)}
+                                                {...clickableProps(() => handleToggleExpand(nodeId), `${isExpanded ? 'Collapse' : 'Expand'} ${node.title}`)}
+                                                aria-expanded={isExpanded}
                                                 whileHover={{ scale: 1.01, y: -1, transition: { duration: 0.15 } }}
                                                 whileTap={{ scale: 0.985 }}
                                                 className={`

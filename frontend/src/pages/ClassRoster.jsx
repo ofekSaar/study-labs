@@ -4,6 +4,7 @@ import { Users, Zap, Flame, CheckSquare, Square, Mail, SlidersHorizontal, Trendi
 import useCourseStore from '../store/courseStore';
 import useEnrollmentStore from '../store/enrollmentStore';
 import api from '../utils/api';
+import { clickableProps } from '../utils/a11y';
 
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
 const daysSince = (date) => date ? Math.floor((Date.now() - new Date(date)) / MS_PER_DAY) : null;
@@ -257,7 +258,8 @@ const ClassRoster = () => {
                                 return (
                                     <div
                                         key={student._id}
-                                        onClick={() => toggleSelect(student._id)}
+                                        {...clickableProps(() => toggleSelect(student._id), `Select ${student.name || 'student'}`)}
+                                        aria-pressed={isChecked}
                                         className={`relative bg-white dark:bg-white/5 border-2 rounded-3xl p-5 cursor-pointer transition-all duration-200 hover:shadow-lg group ${
                                             isChecked
                                                 ? 'border-purple-500 shadow-[0_0_0_3px_rgba(124,58,237,0.15)]'
