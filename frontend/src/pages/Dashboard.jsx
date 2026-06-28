@@ -23,6 +23,7 @@ import EmptyState from '../components/common/EmptyState';
 import ProgressBar from '../components/common/ProgressBar';
 import Button from '../components/common/Button';
 import StatCard from '../components/common/StatCard';
+import CountUp from '../components/common/CountUp';
 import { clickableProps } from '../utils/a11y';
 import { calculateLevel } from '../utils/gamification';
 import { XP_PER_LEVEL } from '../constants/gamification';
@@ -220,11 +221,11 @@ const Dashboard = () => {
                     transition={{ duration: 0.4, delay: 0.1 }}
                     className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3"
                 >
-                    <StatCard icon={Trophy} value={level} label="Level" color="bg-amber-500" glow="text-amber-500 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
-                    <StatCard icon={Zap} value={(user?.totalXP ?? 0).toLocaleString()} label="Total XP" color="bg-orange-500" glow="text-orange-500 fill-orange-500/20 drop-shadow-[0_0_8px_rgba(217,119,87,0.6)]" />
-                    <StatCard icon={Flame} value={user?.streak ?? 0} label="Day Streak" color="bg-orange-500" glow="text-orange-500 fill-orange-500/20 drop-shadow-[0_0_8px_rgba(249,115,22,0.5)]" />
-                    <StatCard icon={BookOpen} value={courses.length} label="Enrolled" color="bg-teal-500" glow="text-teal-500 drop-shadow-[0_0_8px_rgba(20,184,166,0.5)]" />
-                    <StatCard icon={Star} value={unlockedBadges?.length ?? 0} label="Badges" color="bg-purple-500" glow="text-purple-500 fill-purple-500/10 drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]" />
+                    <StatCard icon={Trophy} value={<CountUp value={level} />} label="Level" color="bg-amber-500" glow="text-amber-500 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
+                    <StatCard icon={Zap} value={<CountUp value={user?.totalXP ?? 0} />} label="Total XP" color="bg-orange-500" glow="text-orange-500 fill-orange-500/20 drop-shadow-[0_0_8px_rgba(217,119,87,0.6)]" />
+                    <StatCard icon={Flame} value={<CountUp value={user?.streak ?? 0} />} label="Day Streak" color="bg-orange-500" glow="text-orange-500 fill-orange-500/20 drop-shadow-[0_0_8px_rgba(249,115,22,0.5)]" />
+                    <StatCard icon={BookOpen} value={<CountUp value={courses.length} />} label="Enrolled" color="bg-teal-500" glow="text-teal-500 drop-shadow-[0_0_8px_rgba(20,184,166,0.5)]" />
+                    <StatCard icon={Star} value={<CountUp value={unlockedBadges?.length ?? 0} />} label="Badges" color="bg-purple-500" glow="text-purple-500 fill-purple-500/10 drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]" />
                 </motion.div>
 
                 {/* XP Multiplier Banner */}
@@ -338,7 +339,7 @@ const Dashboard = () => {
                             <div className="mt-3 pt-3 border-t border-slate-100 dark:border-white/5 flex items-center justify-between">
                                 <div className="flex items-center gap-1.5 text-amber-500">
                                     <Coins size={14} className="fill-amber-500/20" />
-                                    <span className="text-sm font-black">{(coins ?? 0).toLocaleString()}</span>
+                                    <span className="text-sm font-black"><CountUp value={coins ?? 0} /></span>
                                     <span className="text-[10px] font-bold text-slate-400 dark:text-white/30 uppercase tracking-wide">Coins</span>
                                 </div>
                                 <button
