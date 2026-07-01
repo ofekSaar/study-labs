@@ -61,10 +61,11 @@ const ReviewModal = ({ isOpen, onClose, courseId, courseTitle, onReviewed }) => 
 
                 {/* Comment */}
                 <div>
-                    <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 dark:text-white/30 mb-2 block">
+                    <label htmlFor="review-comment" className="text-[11px] font-black uppercase tracking-widest text-slate-400 dark:text-white/30 mb-2 block">
                         Comment (optional)
                     </label>
                     <textarea
+                        id="review-comment"
                         value={comment}
                         onChange={e => setComment(e.target.value)}
                         maxLength={500}

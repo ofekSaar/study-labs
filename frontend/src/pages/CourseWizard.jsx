@@ -4,6 +4,7 @@ import { useForm, FormProvider } from 'react-hook-form';
 import { ChevronRight, ChevronLeft, Check, Loader2, FileText, UploadCloud, Brain, Trophy, Sparkles, MapPin, CheckCircle2, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../utils/api';
+import useToastStore from '../store/toastStore';
 
 import StepCoreDetails from '../components/wizard/StepCoreDetails';
 import StepMaterials from '../components/wizard/StepMaterials';
@@ -94,7 +95,7 @@ const CourseWizard = () => {
             setIsSuccess(true);
         } catch (error) {
             clearInterval(stepInterval);
-            alert(error.message || 'Failed to create course');
+            useToastStore.getState().error('Course creation failed', error.message || 'Failed to create course. Please try again.');
             setIsProcessing(false);
         }
     };
@@ -112,7 +113,7 @@ const CourseWizard = () => {
                         navigate('/instructor');
                     } else if (course.generationStatus === 'failed') {
                         clearInterval(interval);
-                        alert('AI generation failed. Please try again.');
+                        useToastStore.getState().error('Generation failed', 'AI course generation failed. Please try again.');
                         navigate('/instructor');
                     }
                 } catch (err) {

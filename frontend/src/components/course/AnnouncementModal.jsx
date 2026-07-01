@@ -52,7 +52,9 @@ const AnnouncementModal = ({ courseId, onClose }) => {
         >
                 {/* Compose */}
                 <div className="space-y-3 mb-5">
+                    <label htmlFor="announcement-title" className="sr-only">Announcement title</label>
                     <input
+                        id="announcement-title"
                         type="text"
                         placeholder="Announcement title"
                         value={title}
@@ -60,7 +62,9 @@ const AnnouncementModal = ({ courseId, onClose }) => {
                         maxLength={200}
                         className="w-full px-4 py-2.5 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 text-sm font-semibold text-slate-800 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
                     />
+                    <label htmlFor="announcement-content" className="sr-only">Announcement content</label>
                     <textarea
+                        id="announcement-content"
                         placeholder="Write your message here…"
                         value={content}
                         onChange={(e) => setContent(e.target.value)}
@@ -72,6 +76,9 @@ const AnnouncementModal = ({ courseId, onClose }) => {
                         <button
                             type="button"
                             onClick={() => setIsPinned(!isPinned)}
+                            role="switch"
+                            aria-checked={isPinned}
+                            aria-label="Pin this announcement"
                             className={`w-9 h-5 rounded-full transition-colors ${isPinned ? 'bg-indigo-500' : 'bg-slate-200 dark:bg-white/10'} flex items-center px-0.5`}
                         >
                             <span className={`w-4 h-4 rounded-full bg-white shadow transition-transform ${isPinned ? 'translate-x-4' : 'translate-x-0'}`} />
@@ -112,6 +119,7 @@ const AnnouncementModal = ({ courseId, onClose }) => {
                                 <button
                                     onClick={() => handleDelete(ann._id)}
                                     disabled={deletingId === ann._id}
+                                    aria-label={`Delete announcement "${ann.title}"`}
                                     className="shrink-0 p-1.5 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-400 hover:text-red-500 transition disabled:opacity-40"
                                 >
                                     {deletingId === ann._id ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}

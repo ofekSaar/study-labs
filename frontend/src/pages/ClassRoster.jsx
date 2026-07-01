@@ -3,6 +3,7 @@ import InstructorLayout from '../components/layout/InstructorLayout';
 import { Users, Zap, Flame, CheckSquare, Square, Mail, SlidersHorizontal, TrendingUp, AlertTriangle, Clock, UserPlus, X } from 'lucide-react';
 import useCourseStore from '../store/courseStore';
 import useEnrollmentStore from '../store/enrollmentStore';
+import useToastStore from '../store/toastStore';
 import api from '../utils/api';
 import { clickableProps } from '../utils/a11y';
 
@@ -44,6 +45,7 @@ const ClassRoster = () => {
                 setStudents(data.students || []);
             } catch (err) {
                 console.error('Failed to fetch students', err);
+                useToastStore.getState().error('Failed to load roster', 'Could not fetch students for this course. Please try again.');
             } finally {
                 setIsLoading(false);
             }
@@ -285,7 +287,7 @@ const ClassRoster = () => {
                                         {/* Avatar + Info */}
                                         <div className="flex items-center gap-3 mb-4">
                                             {student.avatar && (student.avatar.startsWith('http') || student.avatar.startsWith('/')) ? (
-                                                <img src={student.avatar} alt="" className="w-12 h-12 rounded-2xl object-cover border border-slate-200 dark:border-white/10 flex-shrink-0" />
+                                                <img src={student.avatar} alt={student.name ? `${student.name}'s avatar` : 'Student avatar'} className="w-12 h-12 rounded-2xl object-cover border border-slate-200 dark:border-white/10 flex-shrink-0" />
                                             ) : (
                                                 <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-white/10 border border-slate-200 dark:border-white/5 flex items-center justify-center text-2xl flex-shrink-0 select-none">
                                                     {student.avatar || '🎓'}

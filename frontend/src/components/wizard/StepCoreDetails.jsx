@@ -38,9 +38,11 @@ const StepCoreDetails = () => {
                 <div className="lg:col-span-3 space-y-5">
                     {/* Course Name */}
                     <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-1.5">Course Name</label>
+                        <label htmlFor="course-title" className="block text-sm font-bold text-gray-700 mb-1.5">Course Name</label>
                         <input
+                            id="course-title"
                             {...register('title', { required: 'Course Name is required' })}
+                            aria-invalid={!!errors.title}
                             className={`w-full px-4 py-3 rounded-xl border-2 font-medium transition-all duration-200 outline-none
                                 ${errors.title
                                     ? 'border-red-400 bg-red-50 focus:border-red-500'
@@ -52,8 +54,8 @@ const StepCoreDetails = () => {
                     </div>
 
                     {/* Department Grid */}
-                    <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-2">Academic Department</label>
+                    <div role="group" aria-labelledby="dept-group-label">
+                        <label id="dept-group-label" className="block text-sm font-bold text-gray-700 mb-2">Academic Department</label>
                         <input type="hidden" {...register('department', { required: 'Please select a department' })} />
                         <div className="grid grid-cols-3 gap-2">
                             {DEPARTMENTS.map((dept) => {
@@ -63,6 +65,7 @@ const StepCoreDetails = () => {
                                     <button
                                         key={dept.value}
                                         type="button"
+                                        aria-pressed={isSelected}
                                         onClick={() => setValue('department', dept.value, { shouldValidate: true })}
                                         className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all duration-200 cursor-pointer
                                             ${isSelected
@@ -86,16 +89,18 @@ const StepCoreDetails = () => {
                     {/* Description */}
                     <div>
                         <div className="flex items-center justify-between mb-1.5">
-                            <label className="text-sm font-bold text-gray-700">Description</label>
+                            <label htmlFor="course-description" className="text-sm font-bold text-gray-700">Description</label>
                             <span className={`text-xs font-medium ${description.length >= 10 ? 'text-emerald-600' : 'text-gray-400'}`}>
                                 {description.length}/200
                             </span>
                         </div>
                         <textarea
+                            id="course-description"
                             {...register('description', {
                                 required: 'Description is required',
                                 minLength: { value: 10, message: 'Must be at least 10 characters' }
                             })}
+                            aria-invalid={!!errors.description}
                             maxLength={200}
                             className={`w-full px-4 py-3 rounded-xl border-2 transition-all duration-200 outline-none h-28 resize-none
                                 ${errors.description

@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import InstructorLayout from '../components/layout/InstructorLayout';
 import useCourseStore from '../store/courseStore';
 import useEnrollmentStore from '../store/enrollmentStore';
+import useToastStore from '../store/toastStore';
 import { getDeptStyle } from '../utils/departmentStyles';
 import Button from '../components/common/Button';
 import {
@@ -339,7 +340,12 @@ const ManagedCourses = () => {
     const handleDelete = async (courseId, courseTitle) => {
         if (!window.confirm(`Are you sure you want to delete "${courseTitle}"? This action cannot be undone.`)) return;
         setDeletingId(courseId);
-        try { await deleteCourse(courseId); } catch (error) { alert('Failed to delete course: ' + (error.message || 'Unknown error')); }
+        try {
+            await deleteCourse(courseId);
+            useToastStore.getState().success('Course deleted', `"${courseTitle}" has been deleted.`);
+        } catch (error) {
+            useToastStore.getState().error('Delete failed', error.message || 'Failed to delete course. Please try again.');
+        }
         finally { setDeletingId(null); }
     };
 

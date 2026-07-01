@@ -8,7 +8,7 @@ const Pagination = ({ page, pages, onPage }) => (
             onClick={() => onPage(page - 1)}
             disabled={page <= 1}
             aria-label="Previous page"
-            className="w-8 h-8 rounded-lg border border-slate-200/60 dark:border-white/10 flex items-center justify-center disabled:opacity-30 hover:bg-slate-100 dark:hover:bg-white/5 transition"
+            className="w-8 h-8 rounded-lg border border-slate-200/60 dark:border-white/10 flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent hover:bg-slate-100 dark:hover:bg-white/5 transition"
         >
             <ChevronLeft size={14} />
         </button>
@@ -20,7 +20,7 @@ const Pagination = ({ page, pages, onPage }) => (
             onClick={() => onPage(page + 1)}
             disabled={page >= pages}
             aria-label="Next page"
-            className="w-8 h-8 rounded-lg border border-slate-200/60 dark:border-white/10 flex items-center justify-center disabled:opacity-30 hover:bg-slate-100 dark:hover:bg-white/5 transition"
+            className="w-8 h-8 rounded-lg border border-slate-200/60 dark:border-white/10 flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent hover:bg-slate-100 dark:hover:bg-white/5 transition"
         >
             <ChevronRight size={14} />
         </button>

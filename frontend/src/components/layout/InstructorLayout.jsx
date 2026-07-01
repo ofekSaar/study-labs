@@ -140,7 +140,7 @@ const NotificationBell = () => {
                                     <div className="flex items-start gap-2 mb-1.5">
                                         <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-purple-100 to-violet-100 dark:from-purple-900/40 dark:to-violet-900/40 flex items-center justify-center text-sm flex-shrink-0">
                                             {e.student?.avatar ? (
-                                                <img src={e.student.avatar} alt="" className="w-7 h-7 rounded-lg object-cover" />
+                                                <img src={e.student.avatar} alt={e.student?.name ? `${e.student.name}'s avatar` : 'Student avatar'} className="w-7 h-7 rounded-lg object-cover" />
                                             ) : (
                                                 <span className="text-[10px] font-black text-purple-600 dark:text-purple-400">
                                                     {e.student?.name?.[0]?.toUpperCase() || '?'}

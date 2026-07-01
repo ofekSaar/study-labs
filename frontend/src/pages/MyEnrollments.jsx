@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import StudentLayout from '../components/layout/StudentLayout';
 import useEnrollmentStore from '../store/enrollmentStore';
+import useToastStore from '../store/toastStore';
 import api from '../utils/api';
 import { Search } from 'lucide-react';
+import Button from '../components/common/Button';
 
 const DEPARTMENTS = ['All', 'Computer Science', 'Mathematics', 'Science', 'Business'];
 
@@ -23,19 +25,23 @@ const MyEnrollments = () => {
     const { myEnrollments, fetchMyEnrollments, requestEnrollment } = useEnrollmentStore();
     const [availableCourses, setAvailableCourses] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [isRequesting, setIsRequesting] = useState(false);
+    const [loadError, setLoadError] = useState(false);
+    const [requestingId, setRequestingId] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [activeDept, setActiveDept] = useState('All');
 
     useEffect(() => {
         const loadData = async () => {
             setIsLoading(true);
+            setLoadError(false);
             await fetchMyEnrollments();
             try {
                 const { data } = await api.get('/api/courses');
                 setAvailableCourses(data.courses || []);
             } catch (error) {
                 console.error("Failed to fetch courses", error);
+                setLoadError(true);
+                useToastStore.getState().error('Failed to load courses', 'Please refresh the page to try again.');
             }
             setIsLoading(false);
         };
@@ -43,14 +49,15 @@ const MyEnrollments = () => {
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     const handleRequest = async (courseId) => {
-        setIsRequesting(true);
+        setRequestingId(courseId);
         try {
             await requestEnrollment(courseId);
             await fetchMyEnrollments();
+            useToastStore.getState().success('Request sent', 'Your enrollment request has been submitted.');
         } catch (error) {
-            alert(error.message || "Failed to request enrollment");
+            useToastStore.getState().error('Request failed', error.message || 'Failed to request enrollment');
         } finally {
-            setIsRequesting(false);
+            setRequestingId(null);
         }
     };
 
@@ -125,14 +132,21 @@ const MyEnrollments = () => {
                     </div>
                 </div>
 
+                {loadError && !isLoading && (
+                    <div className="mb-6 px-4 py-3 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm font-medium">
+                        Couldn't load the full course list. Some courses may be missing — try refreshing the page.
+                    </div>
+                )}
+
                 {isLoading ? (
-                    <div className="flex justify-center p-12">
+                    <div className="flex justify-center p-12" role="status" aria-live="polite">
                         <div className="animate-spin w-8 h-8 border-4 border-[#D97757] border-t-transparent rounded-full"></div>
+                        <span className="sr-only">Loading courses…</span>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                         {filteredCourses.map((course) => {
-                            const enrollment = myEnrollments.find(e => e.course._id === course._id || e.course === course._id);
+                            const enrollment = myEnrollments.find(e => (e.course._id || e.course) === course._id);
                             const gradient = getDeptGradient(course.department);
 
                             return (
@@ -162,7 +176,7 @@ const MyEnrollments = () => {
                                         <p className="text-slate-500 dark:text-white/60 text-sm mb-5 line-clamp-3 flex-1">{course.description}</p>
 
                                         <div className="flex items-center gap-3 mb-5 bg-slate-100 dark:bg-black/20 p-3 rounded-2xl border border-slate-200/50 dark:border-white/5">
-                                            <img src={course.instructor?.avatar || 'https://via.placeholder.com/150'} alt="Instructor" className="w-10 h-10 rounded-full bg-slate-200 dark:bg-white/10 border border-slate-300 dark:border-white/20" />
+                                            <img src={course.instructor?.avatar || 'https://via.placeholder.com/150'} alt={course.instructor?.name ? `${course.instructor.name}'s avatar` : 'Instructor avatar'} className="w-10 h-10 rounded-full bg-slate-200 dark:bg-white/10 border border-slate-300 dark:border-white/20" />
                                             <div className="text-sm">
                                                 <p className="text-slate-800 dark:text-white font-bold">{course.instructor?.name || 'Instructor'}</p>
                                                 <p className="text-[10px] text-slate-400 dark:text-white/40 uppercase tracking-widest mt-0.5">Course Creator</p>
@@ -174,13 +188,16 @@ const MyEnrollments = () => {
                                                 {enrollment ? getStatusBadge(enrollment.status) : <span className="text-slate-400 dark:text-white/40 text-sm font-bold tracking-wide uppercase">Not enrolled</span>}
                                             </div>
                                             {(!enrollment || enrollment.status === 'denied') && (
-                                                <button
+                                                <Button
+                                                    variant="gradient"
+                                                    size="sm"
                                                     onClick={() => handleRequest(course._id)}
-                                                    disabled={isRequesting}
-                                                    className="btn-gradient text-white px-5 py-2.5 rounded-xl text-sm font-bold disabled:opacity-50"
+                                                    loading={requestingId === course._id}
+                                                    disabled={requestingId !== null && requestingId !== course._id}
+                                                    aria-label={enrollment?.status === 'denied' ? `Request access again for ${course.title}` : `Request access for ${course.title}`}
                                                 >
                                                     {enrollment?.status === 'denied' ? 'Request Again' : 'Request Access'}
-                                                </button>
+                                                </Button>
                                             )}
                                         </div>
                                     </div>
