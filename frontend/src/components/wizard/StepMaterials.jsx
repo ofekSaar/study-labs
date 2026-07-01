@@ -2,6 +2,7 @@ import React, { useCallback, useMemo } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { useDropzone } from 'react-dropzone';
 import { UploadCloud, FileText, Video, X, Presentation, FileSpreadsheet, CheckCircle2, Sparkles, Eye, Info } from 'lucide-react';
+import useToastStore from '../../store/toastStore';
 
 const FILE_TYPE_META = {
     pdf: { label: 'PDF', color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-200' },
@@ -66,7 +67,7 @@ const StepMaterials = () => {
         const existingFileSignatures = new Set(materials.map(f => `${f.name}_${f.size}`));
         const uniqueNewFiles = acceptedFiles.filter(file => !existingFileSignatures.has(`${file.name}_${file.size}`));
         if (uniqueNewFiles.length < acceptedFiles.length) {
-            alert(`${acceptedFiles.length - uniqueNewFiles.length} duplicate file(s) were skipped.`);
+            useToastStore.getState().info('Duplicate files skipped', `${acceptedFiles.length - uniqueNewFiles.length} duplicate file(s) were skipped.`);
         }
         const newFiles = uniqueNewFiles.map(file => Object.assign(file, { preview: URL.createObjectURL(file) }));
         setValue('materials', [...materials, ...newFiles], { shouldValidate: true });

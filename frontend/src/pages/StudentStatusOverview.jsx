@@ -7,6 +7,7 @@ import {
   CheckCircle, Search, Flame,
 } from 'lucide-react';
 import useCourseStore from '../store/courseStore';
+import useToastStore from '../store/toastStore';
 import api from '../utils/api';
 
 // ── helpers ────────────────────────────────────────────────────────────────────
@@ -235,7 +236,7 @@ const TopPerformers = ({ leaderboard, loading }) => {
               'bg-orange-50/40 border-orange-200/40 dark:bg-orange-500/5 dark:border-orange-500/15'
             }`}>
               <span className="text-2xl w-8 text-center flex-shrink-0 select-none">{RANK_MEDAL[i]}</span>
-              <AvatarDisplay avatar={s.avatar} size="w-9 h-9" />
+              <AvatarDisplay avatar={s.avatar} size="w-9 h-9" name={s.name} />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-bold text-slate-800 dark:text-white truncate leading-tight">{s.name || 'Student'}</p>
                 <p className="text-[11px] text-slate-400 dark:text-white/40 font-medium">Lv.{s.level || levelFromXP(s.xp)} · {(s.xp || 0).toLocaleString()} XP</p>
@@ -253,9 +254,9 @@ const TopPerformers = ({ leaderboard, loading }) => {
 
 // ── avatar helper ──────────────────────────────────────────────────────────────
 
-const AvatarDisplay = ({ avatar, size = 'w-10 h-10' }) => {
+const AvatarDisplay = ({ avatar, size = 'w-10 h-10', name }) => {
   if (avatar && (avatar.startsWith('http') || avatar.startsWith('/'))) {
-    return <img src={avatar} alt="" className={`${size} rounded-full border border-slate-200 dark:border-white/10 flex-shrink-0 object-cover`} />;
+    return <img src={avatar} alt={name ? `${name}'s avatar` : 'Student avatar'} className={`${size} rounded-full border border-slate-200 dark:border-white/10 flex-shrink-0 object-cover`} />;
   }
   return (
     <div className={`${size} rounded-full bg-slate-100 dark:bg-white/10 border border-slate-200 dark:border-white/5 flex items-center justify-center text-base flex-shrink-0 select-none`}>
@@ -336,6 +337,7 @@ const StudentStatusOverview = () => {
         setAnalytics(res.data);
       } catch (e) {
         console.error('Failed to fetch analytics', e);
+        useToastStore.getState().error('Failed to load analytics', 'Please try selecting the course again.');
       } finally {
         setIsLoading(false);
       }
@@ -349,6 +351,7 @@ const StudentStatusOverview = () => {
         setStudents(res.data?.students || []);
       } catch (e) {
         console.error('Failed to fetch students', e);
+        useToastStore.getState().error('Failed to load students', 'Please try selecting the course again.');
       } finally {
         setStudentsLoading(false);
       }
@@ -369,6 +372,7 @@ const StudentStatusOverview = () => {
         setLeaderboard(res.data || []);
       } catch (e) {
         console.error('Failed to fetch leaderboard', e);
+        useToastStore.getState().error('Failed to load leaderboard', 'Please try again in a moment.');
       } finally {
         setLeaderboardLoading(false);
       }
@@ -735,7 +739,7 @@ const StudentStatusOverview = () => {
                         const iss = issueConfig(item.issue);
                         return (
                           <div key={i} className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 dark:bg-black/20 border border-slate-200/60 dark:border-white/5 hover:bg-slate-100/50 dark:hover:bg-white/5 transition-colors">
-                            <AvatarDisplay avatar={item.student?.avatar} size="w-9 h-9" />
+                            <AvatarDisplay avatar={item.student?.avatar} size="w-9 h-9" name={item.student?.name} />
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 flex-wrap">
                                 <p className="text-sm font-bold text-slate-800 dark:text-white break-words leading-tight" title={item.student?.name || 'Student'}>
@@ -871,7 +875,7 @@ const StudentStatusOverview = () => {
                             {/* Name + avatar */}
                             <td className="px-4 py-4">
                               <div className="flex items-center gap-3">
-                                <AvatarDisplay avatar={s.student?.avatar} size="w-8 h-8" />
+                                <AvatarDisplay avatar={s.student?.avatar} size="w-8 h-8" name={s.student?.name} />
                                 <div>
                                   <p className="font-bold text-slate-800 dark:text-white leading-tight">{s.student?.name || 'Unknown'}</p>
                                   <p className="text-[11px] text-slate-400 dark:text-white/40 leading-tight">{s.student?.email || '—'}</p>
@@ -1050,7 +1054,7 @@ const StudentStatusOverview = () => {
                           }
                         </div>
                         {/* Avatar */}
-                        <AvatarDisplay avatar={s.avatar} size="w-10 h-10" />
+                        <AvatarDisplay avatar={s.avatar} size="w-10 h-10" name={s.name} />
                         {/* Name + XP bar */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1.5">

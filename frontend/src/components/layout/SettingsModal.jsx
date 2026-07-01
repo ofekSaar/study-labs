@@ -5,6 +5,7 @@ import useGamificationStore, { AVATARS, INSTRUCTOR_AVATARS, TITLES } from '../..
 import sounds from '../../utils/soundManager';
 import api from '../../utils/api';
 import useAuthStore from '../../store/authStore';
+import useToastStore from '../../store/toastStore';
 import BaseModal from '../common/BaseModal';
 
 const SettingsModal = ({ isOpen, onClose, isInstructor = false }) => {
@@ -23,6 +24,7 @@ const SettingsModal = ({ isOpen, onClose, isInstructor = false }) => {
                 await useAuthStore.getState().initialize();
             } catch (err) {
                 console.error('Failed to sync avatar with database:', err);
+                useToastStore.getState().error('Avatar not saved', 'Your avatar changed locally, but failed to sync — it may reset on your next login.');
             }
         }
     };

@@ -107,7 +107,7 @@ const InstructorsTab = () => {
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
                         {inst.avatar ? (
-                          <img src={inst.avatar} alt="" className="w-8 h-8 rounded-lg object-cover flex-shrink-0" />
+                          <img src={inst.avatar} alt={inst.name ? `${inst.name}'s avatar` : 'Instructor avatar'} className="w-8 h-8 rounded-lg object-cover flex-shrink-0" />
                         ) : (
                           <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center flex-shrink-0 text-purple-600 dark:text-purple-400 font-black text-sm">
                             {inst.name?.[0]?.toUpperCase() ?? '?'}

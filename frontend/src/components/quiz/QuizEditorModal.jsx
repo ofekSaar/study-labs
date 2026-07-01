@@ -91,10 +91,11 @@ const QuestionCard = ({ question, index, nodeId, onDelete }) => {
 
                     {/* Question text */}
                     <div>
-                        <label className="block text-xs font-bold text-slate-500 dark:text-white/50 uppercase tracking-wider mb-1.5">
+                        <label htmlFor={`question-text-${nodeId}-${index}`} className="block text-xs font-bold text-slate-500 dark:text-white/50 uppercase tracking-wider mb-1.5">
                             Question Text
                         </label>
                         <textarea
+                            id={`question-text-${nodeId}-${index}`}
                             value={form.question}
                             onChange={e => setForm(f => ({ ...f, question: e.target.value }))}
                             rows={2}
@@ -116,11 +117,13 @@ const QuestionCard = ({ question, index, nodeId, onDelete }) => {
                                         name={`correct-${nodeId}-${index}`}
                                         checked={form.correctAnswerIndex === i}
                                         onChange={() => setForm(f => ({ ...f, correctAnswerIndex: i }))}
+                                        aria-label={`Mark option ${i + 1} as correct`}
                                         className="accent-indigo-500 w-4 h-4 shrink-0 cursor-pointer"
                                     />
                                     <input
                                         value={opt}
                                         onChange={e => setOption(i, e.target.value)}
+                                        aria-label={`Option ${i + 1} text`}
                                         className="flex-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 text-slate-800 dark:text-white text-sm focus:border-indigo-400 focus:outline-none transition-colors"
                                         placeholder={`Option ${i + 1}`}
                                         dir="auto"
@@ -132,10 +135,11 @@ const QuestionCard = ({ question, index, nodeId, onDelete }) => {
 
                     {/* Explanation */}
                     <div>
-                        <label className="block text-xs font-bold text-slate-500 dark:text-white/50 uppercase tracking-wider mb-1.5">
+                        <label htmlFor={`question-explanation-${nodeId}-${index}`} className="block text-xs font-bold text-slate-500 dark:text-white/50 uppercase tracking-wider mb-1.5">
                             Explanation (shown after answer)
                         </label>
                         <textarea
+                            id={`question-explanation-${nodeId}-${index}`}
                             value={form.explanation}
                             onChange={e => setForm(f => ({ ...f, explanation: e.target.value }))}
                             rows={2}

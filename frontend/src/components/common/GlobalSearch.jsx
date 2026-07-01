@@ -71,6 +71,7 @@ const GlobalSearch = () => {
                 <input
                     ref={inputRef}
                     type="text"
+                    aria-label="Search courses"
                     value={query}
                     onChange={e => setQuery(e.target.value)}
                     onFocus={() => { if (results.length > 0) setIsOpen(true); }}
@@ -78,7 +79,10 @@ const GlobalSearch = () => {
                     className="flex-1 bg-transparent text-xs font-medium text-slate-700 dark:text-white placeholder-slate-400 dark:placeholder-white/25 focus:outline-none min-w-0"
                 />
                 {query && (
-                    <button onClick={() => { setQuery(''); setResults([]); setIsOpen(false); inputRef.current?.focus(); }}>
+                    <button
+                        onClick={() => { setQuery(''); setResults([]); setIsOpen(false); inputRef.current?.focus(); }}
+                        aria-label="Clear search"
+                    >
                         <X size={13} className="text-slate-400 dark:text-white/30 hover:text-slate-600 dark:hover:text-white/60 transition-colors" />
                     </button>
                 )}

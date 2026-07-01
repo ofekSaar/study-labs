@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
+import useToastStore from '../store/toastStore';
 import { GraduationCap, Presentation, Check } from 'lucide-react';
 
 const RoleSelectPage = () => {
@@ -31,7 +32,7 @@ const RoleSelectPage = () => {
 
     const handleContinue = async () => {
         if (selectedRoles.length === 0) {
-            alert('Please select at least one role.');
+            useToastStore.getState().info('Select a role', 'Please select at least one role.');
             return;
         }
 
@@ -56,11 +57,11 @@ const RoleSelectPage = () => {
                 } else if (currentRole === 'instructor') {
                     navigate('/instructor', { replace: true });
                 } else {
-                    alert('Your account already has a role assigned. Logging out...');
+                    useToastStore.getState().error('Role already set', 'Your account already has a role assigned. Logging out...');
                     navigate('/login', { replace: true });
                 }
             } else {
-                alert('Failed to set role. Please try again.');
+                useToastStore.getState().error('Something went wrong', 'Failed to set role. Please try again.');
             }
             setIsSubmitting(false);
         }

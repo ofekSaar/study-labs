@@ -18,6 +18,7 @@ const Leaderboard = ({ courseId }) => {
     const [entries, setEntries] = useState([]);
     const [period, setPeriod] = useState('weekly');
     const [isLoading, setIsLoading] = useState(true);
+    const [isMockData, setIsMockData] = useState(false);
     const [refreshKey, setRefreshKey] = useState(0);
     const { user: currentUser } = useCourseStore();
     const { activeAvatar } = useGamificationStore();
@@ -52,15 +53,17 @@ const Leaderboard = ({ courseId }) => {
                     ? `/api/progress/course/${courseId}/leaderboard?period=${period}`
                     : `/api/progress/leaderboard?period=${period}`;
                 const { data } = await api.get(endpoint);
-                
+
                 // Map avatars/emojis if not present
                 const mapped = (data.leaderboard || []).map((e, idx) => ({
                     ...e,
                     avatar: e.isYou ? currentUserEmoji : (MOCK_EMOJIS[idx % MOCK_EMOJIS.length])
                 }));
                 setEntries(mapped);
+                setIsMockData(false);
             } catch {
-                // Mock leaderboard when API not yet implemented
+                // Leaderboard API unavailable — fall back to demo data, but flag it so the UI can be transparent about it
+                setIsMockData(true);
                 setEntries([
                     { rank: 1, name: 'Alex K.', xp: 1850, avatar: '🥷', isYou: false },
                     { rank: 2, name: 'Sarah M.', xp: 1620, avatar: '🦄', isYou: false },
@@ -87,6 +90,14 @@ const Leaderboard = ({ courseId }) => {
                         <Trophy size={16} className="text-amber-500 fill-amber-500/25" />
                     </div>
                     <h3 className="text-sm font-black text-slate-800 dark:text-white">Leaderboard</h3>
+                    {!isLoading && isMockData && (
+                        <span
+                            className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20"
+                            title="Live leaderboard data is unavailable right now — showing demo data."
+                        >
+                            Demo
+                        </span>
+                    )}
                 </div>
                 {/* Period toggle */}
                 <div className="flex bg-slate-100 dark:bg-white/5 rounded-xl p-0.5 gap-0.5 border border-slate-200/50 dark:border-white/5">
