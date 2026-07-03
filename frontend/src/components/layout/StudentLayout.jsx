@@ -24,6 +24,7 @@ import useToastStore from '../../store/toastStore';
 import SettingsModal from './SettingsModal';
 import ToastManager from '../common/ToastManager';
 import useGamificationStore, { AVATARS, TITLES } from '../../store/gamificationStore';
+import { XP_PER_LEVEL } from '../../constants/gamification';
 import StudentNotificationBell from './StudentNotificationBell';
 import GlobalSearch from '../common/GlobalSearch';
 import StatPill from '../common/StatPill';
@@ -107,26 +108,30 @@ const GameNavItem = ({ icon, label, active, onClick, badge }) => (
 );
 
 /* ── Sidebar Content ── */
-const SidebarContent = ({
-    location,
-    navigate,
-    courses,
-    selectedCourseId,
-    setSelectedCourse,
-    user,
-    setIsSidebarOpen,
-    setIsSettingsOpen,
-    handleLogout,
-}) => {
+const SidebarContent = ({ onNavigate, onOpenSettings }) => {
+    const navigate = useNavigate();
+    const location = useLocation();
+    const { courses, selectedCourseId, setSelectedCourse } = useCourseStore();
+    const { user, logout } = useAuthStore();
     const { activeAvatar, activeTitle, activeFrame, stats, coins } = useGamificationStore();
     const [isCourseDropdownOpen, setIsCourseDropdownOpen] = React.useState(false);
+
+    const go = (path) => {
+        navigate(path);
+        onNavigate?.();
+    };
+
+    const handleLogout = () => {
+        logout();
+        navigate('/login');
+    };
 
     const currentAvatar = AVATARS.find((a) => a.id === activeAvatar) || {
         emoji: '🎓',
         name: 'Student',
     };
     const currentTitle = TITLES.find((t) => t.id === activeTitle) || { name: 'Beginner' };
-    const xpInLevel = (stats.total_xp || 0) % 100;
+    const xpInLevel = (stats.total_xp || 0) % XP_PER_LEVEL;
 
     return (
         <div className="flex flex-col h-full">
@@ -180,55 +185,37 @@ const SidebarContent = ({
                     }
                     label="Dashboard"
                     active={location.pathname === '/'}
-                    onClick={() => {
-                        navigate('/');
-                        setIsSidebarOpen(false);
-                    }}
+                    onClick={() => go('/')}
                 />
                 <GameNavItem
                     icon={<BookOpen size={18} />}
                     label="My Courses"
                     active={location.pathname === '/my-courses'}
-                    onClick={() => {
-                        navigate('/my-courses');
-                        setIsSidebarOpen(false);
-                    }}
+                    onClick={() => go('/my-courses')}
                 />
                 <GameNavItem
                     icon={<Map size={18} />}
                     label="Find Courses"
                     active={location.pathname === '/enrollments'}
-                    onClick={() => {
-                        navigate('/enrollments');
-                        setIsSidebarOpen(false);
-                    }}
+                    onClick={() => go('/enrollments')}
                 />
                 <GameNavItem
                     icon={<User size={18} />}
                     label="Profile"
                     active={location.pathname === '/profile'}
-                    onClick={() => {
-                        navigate('/profile');
-                        setIsSidebarOpen(false);
-                    }}
+                    onClick={() => go('/profile')}
                 />
                 <GameNavItem
                     icon={<Trophy size={18} />}
                     label="Leaderboard"
                     active={location.pathname === '/leaderboard'}
-                    onClick={() => {
-                        navigate('/leaderboard');
-                        setIsSidebarOpen(false);
-                    }}
+                    onClick={() => go('/leaderboard')}
                 />
                 <GameNavItem
                     icon={<ShoppingBag size={18} />}
                     label="Study Shop"
                     active={location.pathname === '/shop'}
-                    onClick={() => {
-                        navigate('/shop');
-                        setIsSidebarOpen(false);
-                    }}
+                    onClick={() => go('/shop')}
                     badge={coins > 0}
                 />
 
@@ -313,10 +300,9 @@ const SidebarContent = ({
                                                         key={course.id}
                                                         onClick={() => {
                                                             setSelectedCourse(course.id);
-                                                            if (location.pathname !== '/')
-                                                                navigate('/');
                                                             setIsCourseDropdownOpen(false);
-                                                            setIsSidebarOpen(false);
+                                                            if (location.pathname !== '/') go('/');
+                                                            else onNavigate?.();
                                                         }}
                                                         className={`w-full text-left p-2.5 rounded-xl transition-colors flex items-center gap-3 ${
                                                             isCurrent
@@ -353,10 +339,7 @@ const SidebarContent = ({
             <div className="p-4 pt-3 border-t border-slate-200 dark:border-white/8">
                 {/* Player Card with gradient border */}
                 <div
-                    {...clickableProps(() => {
-                        navigate('/profile');
-                        setIsSidebarOpen(false);
-                    }, 'Open my profile')}
+                    {...clickableProps(() => go('/profile'), 'Open my profile')}
                     className="cursor-pointer group/card mb-3"
                 >
                     <GradientBorderCard
@@ -431,7 +414,7 @@ const SidebarContent = ({
                                     XP to Level {(stats.level || 1) + 1}
                                 </span>
                                 <span className="text-[8px] font-black text-orange-500">
-                                    {xpInLevel}/100
+                                    {xpInLevel}/{XP_PER_LEVEL}
                                 </span>
                             </div>
                             <ProgressBar
@@ -478,7 +461,7 @@ const SidebarContent = ({
                         </button>
                     )}
                     <button
-                        onClick={() => setIsSettingsOpen(true)}
+                        onClick={() => onOpenSettings()}
                         title="Settings"
                         className="flex-1 flex flex-col items-center gap-0.5 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-white/5 text-slate-400 dark:text-white/30 hover:text-slate-600 dark:hover:text-white/60 transition-all border border-transparent hover:border-slate-200 dark:hover:border-white/10"
                     >
@@ -504,10 +487,7 @@ const SidebarContent = ({
 };
 
 const StudentLayout = ({ children }) => {
-    const navigate = useNavigate();
-    const location = useLocation();
-    const { courses, selectedCourseId, setSelectedCourse, courseUser } = useCourseStore();
-    const { logout, user } = useAuthStore();
+    const { user } = useAuthStore();
     const { stats } = useGamificationStore();
     const { addNotification } = useNotificationStore();
     const { addToast } = useToastStore();
@@ -539,29 +519,14 @@ const StudentLayout = ({ children }) => {
         return () => socket.disconnect();
     }, [user?._id, addNotification, addToast]);
 
-    const handleLogout = () => {
-        logout();
-        navigate('/login');
-    };
-
-    const sidebarProps = {
-        location,
-        navigate,
-        courses,
-        selectedCourseId,
-        setSelectedCourse,
-        courseUser,
-        user,
-        setIsSidebarOpen,
-        setIsSettingsOpen,
-        handleLogout,
-    };
-
     return (
         <div className="min-h-screen flex font-sans bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300">
             {/* ── Desktop Sidebar ── */}
             <aside className="hidden lg:flex flex-col w-72 sticky top-0 h-screen z-30 sidebar-theme">
-                <SidebarContent {...sidebarProps} />
+                <SidebarContent
+                    onNavigate={() => setIsSidebarOpen(false)}
+                    onOpenSettings={() => setIsSettingsOpen(true)}
+                />
             </aside>
 
             {/* ── Mobile Overlay ── */}
@@ -581,7 +546,10 @@ const StudentLayout = ({ children }) => {
                                 <X size={18} />
                             </button>
                         </div>
-                        <SidebarContent {...sidebarProps} />
+                        <SidebarContent
+                            onNavigate={() => setIsSidebarOpen(false)}
+                            onOpenSettings={() => setIsSettingsOpen(true)}
+                        />
                     </aside>
                 </div>
             )}

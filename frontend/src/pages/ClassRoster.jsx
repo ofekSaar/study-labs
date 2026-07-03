@@ -19,6 +19,9 @@ import useEnrollmentStore from '../store/enrollmentStore';
 import useToastStore from '../store/toastStore';
 import api from '../utils/api';
 import { clickableProps } from '../utils/a11y';
+import Spinner from '../components/common/Spinner';
+import Button from '../components/common/Button';
+import logger from '../utils/logger';
 
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
 const daysSince = (date) => (date ? Math.floor((Date.now() - new Date(date)) / MS_PER_DAY) : null);
@@ -48,16 +51,20 @@ const ClassRoster = () => {
         }
     }, [courses, selectedCourseId]);
 
+    const loadStudents = async (courseId) => {
+        const { data } = await api.get(`/api/courses/${courseId}/students`);
+        setStudents(data.students || []);
+    };
+
     useEffect(() => {
         const fetchStudents = async () => {
             if (!selectedCourseId) return;
             setSelected(new Set());
             setIsLoading(true);
             try {
-                const { data } = await api.get(`/api/courses/${selectedCourseId}/students`);
-                setStudents(data.students || []);
+                await loadStudents(selectedCourseId);
             } catch (err) {
-                console.error('Failed to fetch students', err);
+                logger.error('Failed to fetch students', err);
                 useToastStore
                     .getState()
                     .error(
@@ -112,9 +119,7 @@ const ClassRoster = () => {
             const enrollment = await addStudentToCourse(selectedCourseId, addEmail.trim());
             setAddSuccess(`${enrollment.student?.name || addEmail} was added successfully.`);
             setAddEmail('');
-            // Refresh student list
-            const { data } = await api.get(`/api/courses/${selectedCourseId}/students`);
-            setStudents(data.students || []);
+            await loadStudents(selectedCourseId);
         } catch (err) {
             setAddError(err.message || 'Failed to add student');
         } finally {
@@ -182,23 +187,20 @@ const ClassRoster = () => {
                         </select>
 
                         {/* Add Student button */}
-                        <button
+                        <Button
+                            variant="purple"
+                            icon={UserPlus}
+                            disabled={!selectedCourseId}
+                            className="flex-shrink-0"
                             onClick={() => {
                                 setShowAddModal(true);
                                 setAddError('');
                                 setAddSuccess('');
                                 setAddEmail('');
                             }}
-                            disabled={!selectedCourseId}
-                            className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-black text-sm text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
-                            style={{
-                                background: 'linear-gradient(135deg, #7C3AED, #D97757)',
-                                boxShadow: '0 4px 15px rgba(124,58,237,0.35)',
-                            }}
                         >
-                            <UserPlus size={16} />
                             <span className="hidden sm:inline">Add Student</span>
-                        </button>
+                        </Button>
                     </div>
                 </div>
 
@@ -318,9 +320,7 @@ const ClassRoster = () => {
 
                 {/* Student Grid */}
                 {isLoading ? (
-                    <div className="flex items-center justify-center py-24">
-                        <div className="animate-spin w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full" />
-                    </div>
+                    <Spinner center color="purple" label="Loading roster" />
                 ) : students.length === 0 ? (
                     <div className="text-center py-24 bg-white/70 dark:bg-white/5 border border-dashed border-slate-200 dark:border-white/10 rounded-3xl">
                         <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-white/5 flex items-center justify-center mx-auto mb-4">
@@ -599,30 +599,23 @@ const ClassRoster = () => {
                             )}
 
                             <div className="flex gap-3 pt-1">
-                                <button
-                                    type="button"
+                                <Button
+                                    variant="ghost"
+                                    className="flex-1"
                                     onClick={() => setShowAddModal(false)}
-                                    className="flex-1 py-2.5 rounded-xl font-black text-sm text-slate-600 dark:text-white/60 bg-slate-100 dark:bg-white/8 hover:bg-slate-200 dark:hover:bg-white/12 transition-colors border border-slate-200 dark:border-white/10"
                                 >
                                     Cancel
-                                </button>
-                                <button
+                                </Button>
+                                <Button
                                     type="submit"
-                                    disabled={isAdding || !addEmail.trim()}
-                                    className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-black text-sm text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                                    style={{
-                                        background: 'linear-gradient(135deg, #7C3AED, #D97757)',
-                                        boxShadow: '0 4px 15px rgba(124,58,237,0.35)',
-                                    }}
+                                    variant="purple"
+                                    icon={UserPlus}
+                                    loading={isAdding}
+                                    disabled={!addEmail.trim()}
+                                    className="flex-1"
                                 >
-                                    {isAdding ? (
-                                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                    ) : (
-                                        <>
-                                            <UserPlus size={15} /> Add Student
-                                        </>
-                                    )}
-                                </button>
+                                    Add Student
+                                </Button>
                             </div>
                         </form>
                     </div>

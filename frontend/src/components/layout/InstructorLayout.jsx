@@ -18,6 +18,7 @@ import {
     XCircle,
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import Spinner from '../common/Spinner';
 import useAuthStore from '../../store/authStore';
 import useCourseStore from '../../store/courseStore';
 import useEnrollmentStore from '../../store/enrollmentStore';
@@ -231,7 +232,11 @@ const NotificationBell = () => {
                                             className="flex-1 flex items-center justify-center gap-1 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[10px] font-black transition-colors border border-emerald-500/20 disabled:opacity-50"
                                         >
                                             {actionLoading === e._id + '-approve' ? (
-                                                <div className="w-3 h-3 border border-emerald-500 border-t-transparent rounded-full animate-spin" />
+                                                <Spinner
+                                                    size="xs"
+                                                    color="emerald"
+                                                    label="Approving"
+                                                />
                                             ) : (
                                                 <>
                                                     <Check size={10} /> Approve
@@ -244,7 +249,7 @@ const NotificationBell = () => {
                                             className="flex-1 flex items-center justify-center gap-1 py-1 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-500 dark:text-red-400 text-[10px] font-black transition-colors border border-red-500/20 disabled:opacity-50"
                                         >
                                             {actionLoading === e._id + '-deny' ? (
-                                                <div className="w-3 h-3 border border-red-500 border-t-transparent rounded-full animate-spin" />
+                                                <Spinner size="xs" color="red" label="Denying" />
                                             ) : (
                                                 <>
                                                     <XCircle size={10} /> Deny
@@ -262,16 +267,22 @@ const NotificationBell = () => {
     );
 };
 
-const SidebarContent = ({
-    location,
-    navigate,
-    user,
-    instructorStats,
-    _setIsSidebarOpen,
-    setIsSettingsOpen,
-    handleLogout,
-}) => {
+const SidebarContent = ({ onNavigate, onOpenSettings }) => {
+    const navigate = useNavigate();
+    const location = useLocation();
+    const { user, logout } = useAuthStore();
+    const { instructorStats } = useCourseStore();
     const { activeAvatar } = useGamificationStore();
+
+    const go = (path) => {
+        navigate(path);
+        onNavigate?.();
+    };
+
+    const handleLogout = () => {
+        logout();
+        navigate('/login');
+    };
     const currentAvatar =
         INSTRUCTOR_AVATARS.find((a) => a.id === activeAvatar) || INSTRUCTOR_AVATARS[0];
 
@@ -317,42 +328,42 @@ const SidebarContent = ({
                     icon={<Home size={18} />}
                     label="Dashboard"
                     active={location.pathname === '/instructor'}
-                    onClick={() => navigate('/instructor')}
+                    onClick={() => go('/instructor')}
                 />
 
                 <GameNavItem
                     icon={<TrendingUp size={18} />}
                     label="Student Status"
                     active={location.pathname === '/instructor/status'}
-                    onClick={() => navigate('/instructor/status')}
+                    onClick={() => go('/instructor/status')}
                 />
 
                 <GameNavItem
                     icon={<GraduationCap size={18} />}
                     label="Class Roster"
                     active={location.pathname === '/instructor/class'}
-                    onClick={() => navigate('/instructor/class')}
+                    onClick={() => go('/instructor/class')}
                 />
 
                 <GameNavItem
                     icon={<PlusCircle size={18} />}
                     label="Create Course"
                     active={location.pathname === '/instructor/create'}
-                    onClick={() => navigate('/instructor/create')}
+                    onClick={() => go('/instructor/create')}
                 />
 
                 <GameNavItem
                     icon={<BookOpen size={18} />}
                     label="Managed Courses"
                     active={location.pathname.includes('/instructor/managed')}
-                    onClick={() => navigate('/instructor/managed')}
+                    onClick={() => go('/instructor/managed')}
                 />
 
                 <GameNavItem
                     icon={<BarChart2 size={18} />}
                     label="Statistics"
                     active={location.pathname === '/instructor/stats'}
-                    onClick={() => navigate('/instructor/stats')}
+                    onClick={() => go('/instructor/stats')}
                 />
             </div>
 
@@ -464,7 +475,7 @@ const SidebarContent = ({
                     )}
                     <NotificationBell />
                     <button
-                        onClick={() => setIsSettingsOpen(true)}
+                        onClick={() => onOpenSettings()}
                         title="Settings"
                         className="flex-1 flex flex-col items-center gap-0.5 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-white/5 text-slate-400 dark:text-white/30 hover:text-slate-600 dark:hover:text-white/60 transition-all border border-transparent hover:border-slate-200 dark:hover:border-white/10"
                     >
@@ -510,10 +521,7 @@ const MobileBellButton = () => {
 };
 
 const InstructorLayout = ({ children }) => {
-    const navigate = useNavigate();
-    const location = useLocation();
-    const { logout, user } = useAuthStore();
-    const { instructorStats, fetchInstructorStats } = useCourseStore();
+    const { fetchInstructorStats } = useCourseStore();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
@@ -521,26 +529,14 @@ const InstructorLayout = ({ children }) => {
         fetchInstructorStats();
     }, [fetchInstructorStats]);
 
-    const handleLogout = () => {
-        logout();
-        navigate('/login');
-    };
-
-    const sidebarProps = {
-        location,
-        navigate,
-        user,
-        instructorStats,
-        setIsSidebarOpen,
-        setIsSettingsOpen,
-        handleLogout,
-    };
-
     return (
         <div className="min-h-screen flex font-sans bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300">
             {/* Desktop Sidebar */}
             <aside className="hidden md:flex flex-col w-72 sticky top-0 h-screen z-30 sidebar-theme">
-                <SidebarContent {...sidebarProps} />
+                <SidebarContent
+                    onNavigate={() => setIsSidebarOpen(false)}
+                    onOpenSettings={() => setIsSettingsOpen(true)}
+                />
             </aside>
 
             {/* Mobile Overlay */}
@@ -560,7 +556,10 @@ const InstructorLayout = ({ children }) => {
                                 <X size={18} />
                             </button>
                         </div>
-                        <SidebarContent {...sidebarProps} />
+                        <SidebarContent
+                            onNavigate={() => setIsSidebarOpen(false)}
+                            onOpenSettings={() => setIsSettingsOpen(true)}
+                        />
                     </aside>
                 </div>
             )}

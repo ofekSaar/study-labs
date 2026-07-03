@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Search, BookOpen, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../utils/api';
+import Spinner from './Spinner';
 
 const DEPT_COLORS = {
     cs: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
@@ -71,7 +72,7 @@ const GlobalSearch = () => {
                 }`}
             >
                 {isLoading ? (
-                    <div className="w-4 h-4 border-2 border-orange-500 border-t-transparent rounded-full animate-spin flex-shrink-0" />
+                    <Spinner size="sm" label="Searching" />
                 ) : (
                     <Search size={15} className="text-slate-400 dark:text-white/30 flex-shrink-0" />
                 )}

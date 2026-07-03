@@ -23,6 +23,7 @@ import StepCoreDetails from '../components/wizard/StepCoreDetails';
 import StepMaterials from '../components/wizard/StepMaterials';
 import StepAIConfig from '../components/wizard/StepAIConfig';
 import StepGamification from '../components/wizard/StepGamification';
+import logger from '../utils/logger';
 
 const steps = [
     { title: 'Details', component: StepCoreDetails, icon: FileText, xp: 50 },
@@ -150,7 +151,7 @@ const CourseWizard = () => {
                         navigate('/instructor');
                     }
                 } catch (err) {
-                    console.error('Failed to poll course status:', err);
+                    logger.error('Failed to poll course status:', err);
                 }
             }, 2000);
         }

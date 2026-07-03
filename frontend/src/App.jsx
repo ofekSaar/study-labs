@@ -1,6 +1,7 @@
 import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import ProtectedRoute from './components/auth/ProtectedRoute';
+import Spinner from './components/common/Spinner';
 import useAuthStore from './store/authStore';
 import useSettingsStore from './store/settingsStore';
 import useGamificationStore from './store/gamificationStore';
@@ -50,6 +51,12 @@ const ThemeWrapper = ({ children }) => {
     return children;
 };
 
+const FullScreenLoader = () => (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-slate-900">
+        <Spinner />
+    </div>
+);
+
 const AuthWrapper = ({ children }) => {
     const { initialize, isLoading } = useAuthStore();
 
@@ -58,11 +65,7 @@ const AuthWrapper = ({ children }) => {
     }, [initialize]);
 
     if (isLoading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-slate-900">
-                <div className="animate-spin w-8 h-8 border-4 border-studylabs-blue border-t-transparent rounded-full"></div>
-            </div>
-        );
+        return <FullScreenLoader />;
     }
 
     return children;
@@ -73,13 +76,7 @@ function App() {
         <BrowserRouter>
             <ThemeWrapper>
                 <AuthWrapper>
-                    <Suspense
-                        fallback={
-                            <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-slate-900">
-                                <div className="animate-spin w-8 h-8 border-4 border-studylabs-blue border-t-transparent rounded-full"></div>
-                            </div>
-                        }
-                    >
+                    <Suspense fallback={<FullScreenLoader />}>
                         <Routes>
                             <Route path="/login" element={<LoginPage />} />
                             <Route path="/auth/callback" element={<AuthCallback />} />

@@ -11,6 +11,7 @@ import api from '../../utils/api';
 import useAuthStore from '../../store/authStore';
 import useToastStore from '../../store/toastStore';
 import BaseModal from '../common/BaseModal';
+import logger from '../../utils/logger';
 
 const SettingsModal = ({ isOpen, onClose, isInstructor = false }) => {
     const { theme, setTheme, animationsEnabled, toggleAnimations, soundEnabled, toggleSound } =
@@ -35,7 +36,7 @@ const SettingsModal = ({ isOpen, onClose, isInstructor = false }) => {
                 await api.put('/api/auth/profile', { avatar: selected.emoji });
                 await useAuthStore.getState().initialize();
             } catch (err) {
-                console.error('Failed to sync avatar with database:', err);
+                logger.error('Failed to sync avatar with database:', err);
                 useToastStore
                     .getState()
                     .error(

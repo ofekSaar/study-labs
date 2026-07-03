@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
+import Spinner from '../components/common/Spinner';
 
 const AuthCallback = () => {
     const navigate = useNavigate();
@@ -55,7 +56,7 @@ const AuthCallback = () => {
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50">
             <div className="flex flex-col items-center">
-                <div className="animate-spin w-8 h-8 border-4 border-studylabs-blue border-t-transparent rounded-full mb-4"></div>
+                <Spinner className="mb-4" label="Completing sign in" />
                 <p className="text-gray-500 font-medium">Completing sign in...</p>
             </div>
         </div>

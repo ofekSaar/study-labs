@@ -3,6 +3,7 @@ import { Star, Send } from 'lucide-react';
 import api from '../../utils/api';
 import useToastStore from '../../store/toastStore';
 import BaseModal from '../common/BaseModal';
+import Spinner from '../common/Spinner';
 
 const StarRating = ({ value, onChange }) => (
     <div className="flex items-center gap-1">
@@ -112,7 +113,7 @@ const ReviewModal = ({ isOpen, onClose, courseId, courseTitle, onReviewed }) => 
                     className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl font-black text-sm text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed bg-grad-gold"
                 >
                     {isSubmitting ? (
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <Spinner size="sm" color="white" label="Submitting review" />
                     ) : (
                         <>
                             <Send size={14} /> Submit Review

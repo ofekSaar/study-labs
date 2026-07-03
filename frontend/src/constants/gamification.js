@@ -212,11 +212,27 @@ export const FRAMES = [
     { id: 'diamond', name: 'Diamond Sparkle', levelReq: 1 },
 ];
 
+// swatches: preview colors shown in the profile theme picker
 export const THEMES = [
-    { id: 'default', name: 'Default Mode', levelReq: 1 },
-    { id: 'arcade', name: 'Retro Arcade', levelReq: 1 },
-    { id: 'space', name: 'Space Nebula', levelReq: 1 },
-    { id: 'cyberpunk', name: 'Neon Cyberpunk', levelReq: 1 },
+    {
+        id: 'default',
+        name: 'Default Mode',
+        levelReq: 1,
+        swatches: ['#6366f1', '#8b5cf6', '#64748b'],
+    },
+    {
+        id: 'arcade',
+        name: 'Retro Arcade',
+        levelReq: 1,
+        swatches: ['#10b981', '#84cc16', '#0f172a'],
+    },
+    { id: 'space', name: 'Space Nebula', levelReq: 1, swatches: ['#6366f1', '#8b5cf6', '#0ea5e9'] },
+    {
+        id: 'cyberpunk',
+        name: 'Neon Cyberpunk',
+        levelReq: 1,
+        swatches: ['#ec4899', '#06b6d4', '#0f172a'],
+    },
 ];
 
 // rarity: 'common' | 'rare' | 'epic' | 'legendary'

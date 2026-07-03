@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
 import { Zap, Flame, Trophy } from 'lucide-react';
 import useCourseStore from '../../store/courseStore';
+import { calculateLevel } from '../../utils/gamification';
 
 const AnimatedNumber = ({ value }) => {
     const mv = useMotionValue(value);
@@ -17,7 +18,7 @@ const AnimatedNumber = ({ value }) => {
 
 const XPHeader = () => {
     const { user } = useCourseStore();
-    const level = user?.totalXP ? Math.floor(user.totalXP / 100) + 1 : 1;
+    const level = calculateLevel(user?.totalXP || 0);
 
     return (
         <motion.div

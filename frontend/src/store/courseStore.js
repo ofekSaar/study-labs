@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import api from '../utils/api.js';
 import useNotificationStore from './notificationStore.js';
 import useToastStore from './toastStore.js';
+import logger from '../utils/logger.js';
 
 const SEEN_ANNOUNCEMENTS_KEY = 'studylabs_seen_announcements';
 
@@ -48,7 +49,7 @@ const useCourseStore = create((set) => ({
                 },
             }));
         } catch (error) {
-            console.error('Failed to fetch stats:', error);
+            logger.error('Failed to fetch stats:', error);
         }
     },
 
@@ -108,7 +109,7 @@ const useCourseStore = create((set) => ({
             const { data } = await api.get('/api/instructor/stats');
             set({ instructorStats: data });
         } catch (error) {
-            console.error('Failed to fetch instructor stats:', error);
+            logger.error('Failed to fetch instructor stats:', error);
         }
     },
 
@@ -180,7 +181,7 @@ const useCourseStore = create((set) => ({
             });
             return data;
         } catch (error) {
-            console.error('Failed to fetch nodes:', error);
+            logger.error('Failed to fetch nodes:', error);
             return null;
         }
     },
@@ -215,7 +216,7 @@ const useCourseStore = create((set) => ({
             }));
             return data;
         } catch (error) {
-            console.error('Failed to complete node:', error);
+            logger.error('Failed to complete node:', error);
             throw error;
         }
     },
@@ -242,7 +243,7 @@ const useCourseStore = create((set) => ({
                     state.selectedCourseId === courseId ? null : state.selectedCourseId,
             }));
         } catch (error) {
-            console.error('Failed to delete course:', error);
+            logger.error('Failed to delete course:', error);
             throw error;
         }
     },
@@ -278,7 +279,7 @@ const useCourseStore = create((set) => ({
                 markSeen(newOnes.map((a) => a._id));
             }
         } catch (error) {
-            console.error('Failed to fetch announcements:', error);
+            logger.error('Failed to fetch announcements:', error);
         }
     },
 
@@ -323,7 +324,7 @@ const useCourseStore = create((set) => ({
             }));
             return data;
         } catch (error) {
-            console.error('Failed to regenerate course:', error);
+            logger.error('Failed to regenerate course:', error);
             throw error;
         }
     },

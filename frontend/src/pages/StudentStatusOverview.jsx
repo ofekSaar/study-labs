@@ -6,14 +6,9 @@ import {
     Trophy,
     TrendingUp,
     Brain,
-    ChevronUp,
-    ChevronDown,
-    ChevronsUpDown,
     AlertTriangle,
-    Medal,
     Zap,
     Star,
-    Activity,
     CheckCircle,
     Search,
     Flame,
@@ -21,396 +16,24 @@ import {
 import useCourseStore from '../store/courseStore';
 import useToastStore from '../store/toastStore';
 import api from '../utils/api';
-
-// ── helpers ────────────────────────────────────────────────────────────────────
-
-function difficultyFromPct(pct) {
-    if (pct >= 70)
-        return {
-            label: 'Easy',
-            color: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20 dark:bg-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30',
-        };
-    if (pct >= 30)
-        return {
-            label: 'Medium',
-            color: 'bg-amber-500/10 text-amber-600 border-amber-500/20 dark:bg-amber-500/20 dark:text-amber-400 dark:border-amber-500/30',
-        };
-    return {
-        label: 'Challenging',
-        color: 'bg-rose-500/10 text-rose-500 border-rose-500/20 dark:bg-rose-500/20 dark:text-rose-400 dark:border-rose-500/30',
-    };
-}
-
-function relativeTime(dateStr) {
-    if (!dateStr) return 'Never';
-    const days = Math.floor((Date.now() - new Date(dateStr).getTime()) / 86400000);
-    if (days === 0) return 'Today';
-    if (days === 1) return 'Yesterday';
-    if (days < 7) return `${days} days ago`;
-    const weeks = Math.floor(days / 7);
-    if (weeks === 1) return '1 week ago';
-    if (weeks < 5) return `${weeks} weeks ago`;
-    return `${Math.floor(days / 30)} months ago`;
-}
-
-function studentBadge(s) {
-    if (s.completion === 0)
-        return {
-            label: 'Not Started',
-            color: 'bg-slate-100 text-slate-500 border-slate-200 dark:bg-white/5 dark:text-white/40 dark:border-white/10',
-        };
-    const daysSince = s.lastActivityDate
-        ? Math.floor((Date.now() - new Date(s.lastActivityDate).getTime()) / 86400000)
-        : 999;
-    if (s.completion < 30 || daysSince > 7)
-        return {
-            label: 'At Risk',
-            color: 'bg-red-500/10 text-red-500 border-red-500/20 dark:bg-red-500/20 dark:text-red-400 dark:border-red-500/30',
-        };
-    return {
-        label: 'On Track',
-        color: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20 dark:bg-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30',
-    };
-}
-
-function levelFromXP(xp) {
-    return Math.floor((xp || 0) / 100) + 1;
-}
-
-function completionBarGradient(pct) {
-    if (pct >= 70) return 'from-emerald-500 to-teal-400';
-    if (pct >= 30) return 'from-amber-500 to-orange-400';
-    return 'from-red-500 to-rose-400';
-}
-
-function issueConfig(issue) {
-    if (!issue || issue === 'Never started')
-        return {
-            label: 'Never started',
-            cls: 'bg-red-500/10 text-red-500 border-red-500/20 dark:bg-red-500/20 dark:text-red-400 dark:border-red-500/30',
-        };
-    if (issue.startsWith('Inactive'))
-        return {
-            label: issue,
-            cls: 'bg-orange-500/10 text-orange-600 border-orange-500/20 dark:bg-orange-500/20 dark:text-orange-400 dark:border-orange-500/30',
-        };
-    return {
-        label: 'Low progress',
-        cls: 'bg-amber-500/10 text-amber-600 border-amber-500/20 dark:bg-amber-500/20 dark:text-amber-400 dark:border-amber-500/30',
-    };
-}
-
-const RANK_MEDAL = ['🥇', '🥈', '🥉'];
-
-// ── skeleton loaders ───────────────────────────────────────────────────────────
-
-const TableSkeleton = ({ cols = 4, rows = 5 }) => (
-    <div className="overflow-x-auto rounded-2xl border border-slate-200/60 dark:border-white/5 bg-slate-50/50 dark:bg-black/20">
-        <table className="w-full border-collapse">
-            <tbody className="divide-y divide-slate-200/50 dark:divide-white/5">
-                {Array.from({ length: rows }).map((_, i) => (
-                    <tr key={i}>
-                        {Array.from({ length: cols }).map((_, j) => (
-                            <td key={j} className="px-5 py-4">
-                                <div
-                                    className="h-4 rounded-full bg-slate-200 dark:bg-white/10 animate-pulse"
-                                    style={{ width: `${55 + ((j * 17 + i * 11) % 35)}%` }}
-                                />
-                            </td>
-                        ))}
-                    </tr>
-                ))}
-            </tbody>
-        </table>
-    </div>
-);
-
-const CardSkeleton = ({ rows = 3 }) => (
-    <div className="space-y-3">
-        {Array.from({ length: rows }).map((_, i) => (
-            <div
-                key={i}
-                className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 dark:bg-black/20 border border-slate-200/60 dark:border-white/5"
-            >
-                <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-white/10 animate-pulse flex-shrink-0" />
-                <div className="flex-1 space-y-2">
-                    <div className="h-3 rounded-full bg-slate-200 dark:bg-white/10 animate-pulse w-3/4" />
-                    <div className="h-2.5 rounded-full bg-slate-200 dark:bg-white/10 animate-pulse w-1/2" />
-                </div>
-            </div>
-        ))}
-    </div>
-);
-
-// ── mini SVG progress ring ─────────────────────────────────────────────────────
-
-const MiniRing = ({ pct, size = 52, stroke = 6, color = '#8B5CF6' }) => {
-    const r = (size - stroke) / 2;
-    const circ = 2 * Math.PI * r;
-    const filled = Math.min(pct / 100, 1) * circ;
-    return (
-        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="flex-shrink-0">
-            <circle
-                cx={size / 2}
-                cy={size / 2}
-                r={r}
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={stroke}
-                className="text-slate-200 dark:text-white/10"
-            />
-            <circle
-                cx={size / 2}
-                cy={size / 2}
-                r={r}
-                fill="none"
-                stroke={color}
-                strokeWidth={stroke}
-                strokeDasharray={`${filled} ${circ}`}
-                strokeLinecap="round"
-                transform={`rotate(-90 ${size / 2} ${size / 2})`}
-                style={{ filter: `drop-shadow(0 0 4px ${color}80)` }}
-            />
-        </svg>
-    );
-};
-
-// ── class health score widget ──────────────────────────────────────────────────
-
-const ClassHealthScore = ({
-    score,
-    avgCompletion,
-    retentionHealth,
-    atRiskCount,
-    totalStudents,
-    isLoading,
-}) => {
-    const r = 56;
-    const circ = 2 * Math.PI * r;
-    const filled = (Math.min(score, 100) / 100) * circ;
-    const ringColor = score >= 70 ? '#10b981' : score >= 40 ? '#f59e0b' : '#ef4444';
-    const label = score >= 70 ? 'Healthy' : score >= 40 ? 'Needs Attention' : 'At Risk';
-    const labelColor =
-        score >= 70 ? 'text-emerald-500' : score >= 40 ? 'text-amber-500' : 'text-red-500';
-
-    return (
-        <div className="bg-gradient-to-br from-white to-slate-50 dark:from-white/8 dark:to-white/3 border border-slate-200/80 dark:border-white/15 rounded-3xl shadow-[0_12px_40px_rgba(0,0,0,0.06)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.5)] p-8 relative overflow-hidden group">
-            <div className="absolute inset-0 bg-gradient-to-br from-violet-500/5 to-indigo-500/3 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-            <div className="flex flex-col md:flex-row items-center gap-8 relative z-10">
-                {/* Ring */}
-                <div className="relative flex-shrink-0">
-                    {isLoading ? (
-                        <div className="w-[140px] h-[140px] rounded-full bg-slate-200 dark:bg-white/10 animate-pulse" />
-                    ) : (
-                        <>
-                            <svg width="140" height="140" viewBox="0 0 140 140">
-                                <circle
-                                    cx="70"
-                                    cy="70"
-                                    r={r}
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="14"
-                                    className="text-slate-100 dark:text-white/8"
-                                />
-                                <circle
-                                    cx="70"
-                                    cy="70"
-                                    r={r}
-                                    fill="none"
-                                    stroke={ringColor}
-                                    strokeWidth="14"
-                                    strokeDasharray={`${filled} ${circ}`}
-                                    strokeLinecap="round"
-                                    transform="rotate(-90 70 70)"
-                                    style={{
-                                        transition: 'stroke-dasharray 1.2s cubic-bezier(.4,0,.2,1)',
-                                        filter: `drop-shadow(0 0 10px ${ringColor}60)`,
-                                    }}
-                                />
-                            </svg>
-                            <div className="absolute inset-0 flex flex-col items-center justify-center select-none">
-                                <span className="text-4xl font-black text-slate-900 dark:text-white leading-none">
-                                    {score}
-                                </span>
-                                <span
-                                    className={`text-[10px] font-black uppercase tracking-widest mt-1 ${labelColor}`}
-                                >
-                                    {label}
-                                </span>
-                            </div>
-                        </>
-                    )}
-                </div>
-
-                {/* Label + indicators */}
-                <div className="flex-1">
-                    <h3 className="text-2xl font-display font-black text-slate-900 dark:text-white mb-1">
-                        Class Health Score
-                    </h3>
-                    <p className="text-sm text-slate-500 dark:text-white/50 mb-6">
-                        Overall snapshot of engagement, completion &amp; retention
-                    </p>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                        <HealthIndicator
-                            label="Avg Completion"
-                            value={`${Math.round(avgCompletion)}%`}
-                            color="text-indigo-500"
-                            icon={<TrendingUp size={14} />}
-                        />
-                        <HealthIndicator
-                            label="Retention Rate"
-                            value={`${Math.round(retentionHealth)}%`}
-                            color="text-emerald-500"
-                            icon={<Activity size={14} />}
-                        />
-                        <HealthIndicator
-                            label="At-Risk Students"
-                            value={atRiskCount}
-                            color="text-red-500"
-                            icon={<AlertTriangle size={14} />}
-                        />
-                        <HealthIndicator
-                            label="Total Students"
-                            value={totalStudents}
-                            color="text-purple-500"
-                            icon={<Users size={14} />}
-                        />
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-const HealthIndicator = ({ label, value, color, icon }) => (
-    <div className="flex flex-col gap-1 p-3 rounded-2xl bg-slate-50 dark:bg-black/20 border border-slate-200/60 dark:border-white/5">
-        <span
-            className={`flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider ${color}`}
-        >
-            {icon}
-            {label}
-        </span>
-        <span className="text-2xl font-black text-slate-900 dark:text-white">{value}</span>
-    </div>
-);
-
-// ── top performers widget ──────────────────────────────────────────────────────
-
-const TopPerformers = ({ leaderboard, loading }) => {
-    const top3 = leaderboard.slice(0, 3);
-    return (
-        <div className="bg-gradient-to-br from-white to-slate-50 dark:from-white/8 dark:to-white/3 border border-slate-200/80 dark:border-white/15 p-6 rounded-3xl shadow-[0_12px_40px_rgba(0,0,0,0.06)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.5)] relative overflow-hidden group">
-            <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-orange-500/3 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-            <h3 className="font-display font-bold text-lg text-slate-900 dark:text-white mb-4 flex items-center gap-2 relative z-10">
-                <div className="p-1.5 rounded-xl bg-amber-100 dark:bg-amber-500/10">
-                    <Medal size={18} className="text-amber-600 dark:text-amber-400" />
-                </div>
-                Top Performers
-            </h3>
-            <div className="space-y-2 relative z-10">
-                {loading ? (
-                    <CardSkeleton rows={3} />
-                ) : top3.length === 0 ? (
-                    <EmptyState icon={<Medal size={18} />} title="No data yet" compact />
-                ) : (
-                    top3.map((s, i) => (
-                        <div
-                            key={s.userId || i}
-                            className={`flex items-center gap-3 p-3 rounded-2xl border transition-colors ${
-                                i === 0
-                                    ? 'bg-amber-50/60 border-amber-200/60 dark:bg-amber-500/8 dark:border-amber-500/20'
-                                    : i === 1
-                                      ? 'bg-slate-100/60 border-slate-200/60 dark:bg-white/5 dark:border-white/10'
-                                      : 'bg-orange-50/40 border-orange-200/40 dark:bg-orange-500/5 dark:border-orange-500/15'
-                            }`}
-                        >
-                            <span className="text-2xl w-8 text-center flex-shrink-0 select-none">
-                                {RANK_MEDAL[i]}
-                            </span>
-                            <AvatarDisplay avatar={s.avatar} size="w-9 h-9" name={s.name} />
-                            <div className="flex-1 min-w-0">
-                                <p className="text-sm font-bold text-slate-800 dark:text-white truncate leading-tight">
-                                    {s.name || 'Student'}
-                                </p>
-                                <p className="text-[11px] text-slate-400 dark:text-white/40 font-medium">
-                                    Lv.{s.level || levelFromXP(s.xp)} ·{' '}
-                                    {(s.xp || 0).toLocaleString()} XP
-                                </p>
-                            </div>
-                            <span className="text-amber-500 dark:text-amber-400 flex-shrink-0">
-                                <Zap size={14} />
-                            </span>
-                        </div>
-                    ))
-                )}
-            </div>
-        </div>
-    );
-};
-
-// ── avatar helper ──────────────────────────────────────────────────────────────
-
-const AvatarDisplay = ({ avatar, size = 'w-10 h-10', name }) => {
-    if (avatar && (avatar.startsWith('http') || avatar.startsWith('/'))) {
-        return (
-            <img
-                src={avatar}
-                alt={name ? `${name}'s avatar` : 'Student avatar'}
-                className={`${size} rounded-full border border-slate-200 dark:border-white/10 flex-shrink-0 object-cover`}
-            />
-        );
-    }
-    return (
-        <div
-            className={`${size} rounded-full bg-slate-100 dark:bg-white/10 border border-slate-200 dark:border-white/5 flex items-center justify-center text-base flex-shrink-0 select-none`}
-        >
-            {avatar || '🎓'}
-        </div>
-    );
-};
-
-// ── concept card ──────────────────────────────────────────────────────────────
-
-const ConceptCard = ({ item }) => {
-    const ringColor =
-        item.masteryLevel > 85 ? '#10b981' : item.masteryLevel > 72 ? '#f59e0b' : '#ef4444';
-    const bgCls =
-        item.masteryLevel > 85
-            ? 'bg-emerald-50/60 dark:bg-emerald-500/5 border-emerald-200/50 dark:border-emerald-500/15'
-            : item.masteryLevel > 72
-              ? 'bg-amber-50/60 dark:bg-amber-500/5 border-amber-200/50 dark:border-amber-500/15'
-              : 'bg-red-50/60 dark:bg-red-500/5 border-red-200/50 dark:border-red-500/15';
-    const chipCls =
-        item.status === 'Excellent'
-            ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20 dark:bg-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30'
-            : item.status === 'Moderate'
-              ? 'bg-amber-500/10 text-amber-600 border-amber-500/20 dark:bg-amber-500/20 dark:text-amber-400 dark:border-amber-500/30'
-              : 'bg-red-500/10 text-red-500 border-red-500/20 dark:bg-red-500/20 dark:text-red-400 dark:border-red-500/30';
-
-    return (
-        <div
-            className={`flex flex-col items-center gap-3 p-5 rounded-2xl border transition-all hover:scale-[1.02] ${bgCls}`}
-        >
-            <MiniRing pct={item.masteryLevel} size={72} stroke={7} color={ringColor} />
-            <div className="text-center">
-                <p className="text-sm font-bold text-slate-800 dark:text-white leading-tight line-clamp-2 mb-2">
-                    {item.topic}
-                </p>
-                <div className="flex items-center justify-center gap-2">
-                    <span className="text-2xl font-black text-slate-900 dark:text-white">
-                        {item.masteryLevel}%
-                    </span>
-                    <span
-                        className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border ${chipCls}`}
-                    >
-                        {item.status}
-                    </span>
-                </div>
-            </div>
-        </div>
-    );
-};
+import { calculateLevel } from '../utils/gamification';
+import ClassHealthScore from '../components/instructor/ClassHealthScore';
+import TopPerformers from '../components/instructor/TopPerformers';
+import AvatarDisplay from '../components/instructor/AvatarDisplay';
+import ConceptCard from '../components/instructor/ConceptCard';
+import MetricCard from '../components/instructor/MetricCard';
+import SortableHeader from '../components/instructor/SortableHeader';
+import PanelEmptyState from '../components/instructor/PanelEmptyState';
+import { TableSkeleton, CardSkeleton } from '../components/common/Skeletons';
+import {
+    difficultyFromPct,
+    relativeTime,
+    studentBadge,
+    completionBarGradient,
+    issueConfig,
+    RANK_MEDAL,
+} from '../utils/studentStatus';
+import logger from '../utils/logger';
 
 // ── main component ─────────────────────────────────────────────────────────────
 
@@ -454,7 +77,7 @@ const StudentStatusOverview = () => {
                 const res = await api.get(`/api/courses/${selectedCourseId}/analytics`);
                 setAnalytics(res.data);
             } catch (e) {
-                console.error('Failed to fetch analytics', e);
+                logger.error('Failed to fetch analytics', e);
                 useToastStore
                     .getState()
                     .error('Failed to load analytics', 'Please try selecting the course again.');
@@ -470,7 +93,7 @@ const StudentStatusOverview = () => {
                 const res = await api.get(`/api/courses/${selectedCourseId}/students`);
                 setStudents(res.data?.students || []);
             } catch (e) {
-                console.error('Failed to fetch students', e);
+                logger.error('Failed to fetch students', e);
                 useToastStore
                     .getState()
                     .error('Failed to load students', 'Please try selecting the course again.');
@@ -495,7 +118,7 @@ const StudentStatusOverview = () => {
                 );
                 setLeaderboard(res.data || []);
             } catch (e) {
-                console.error('Failed to fetch leaderboard', e);
+                logger.error('Failed to fetch leaderboard', e);
                 useToastStore
                     .getState()
                     .error('Failed to load leaderboard', 'Please try again in a moment.');
@@ -723,7 +346,7 @@ const StudentStatusOverview = () => {
                     <MetricCard
                         label="Class XP"
                         value={(metrics.totalXP || 0).toLocaleString()}
-                        subtitle={`Avg Lv.${levelFromXP(metrics.totalStudents > 0 ? Math.round(metrics.totalXP / metrics.totalStudents) : 0)}`}
+                        subtitle={`Avg Lv.${calculateLevel(metrics.totalStudents > 0 ? Math.round(metrics.totalXP / metrics.totalStudents) : 0)}`}
                         icon={<Zap size={26} className="text-amber-500 dark:text-amber-400" />}
                         glowColor="rgba(245,158,11,0.5)"
                         trend={metrics.totalXP > 0 ? 'up' : 'neutral'}
@@ -847,7 +470,7 @@ const StudentStatusOverview = () => {
                                     {isLoading ? (
                                         <TableSkeleton cols={4} rows={5} />
                                     ) : !analytics?.nodeProgress?.length ? (
-                                        <EmptyState
+                                        <PanelEmptyState
                                             icon={<BookOpen size={24} />}
                                             title="No modules yet"
                                             subtitle="Create course modules to see progress here."
@@ -966,7 +589,7 @@ const StudentStatusOverview = () => {
                                         {isLoading ? (
                                             <CardSkeleton rows={3} />
                                         ) : atRisk.length === 0 ? (
-                                            <EmptyState
+                                            <PanelEmptyState
                                                 icon={
                                                     <Star
                                                         size={18}
@@ -1103,13 +726,13 @@ const StudentStatusOverview = () => {
                             {studentsLoading ? (
                                 <TableSkeleton cols={9} rows={6} />
                             ) : students.length === 0 ? (
-                                <EmptyState
+                                <PanelEmptyState
                                     icon={<Users size={24} />}
                                     title="No students enrolled"
                                     subtitle="Students will appear here once they join."
                                 />
                             ) : filteredStudents.length === 0 ? (
-                                <EmptyState
+                                <PanelEmptyState
                                     icon={<Search size={24} />}
                                     title="No results"
                                     subtitle="Try a different search or filter."
@@ -1179,7 +802,7 @@ const StudentStatusOverview = () => {
                                                 const rank = sortedStudents.indexOf(s) + 1;
                                                 const isTop3 = rank <= 3;
                                                 const isAtRisk = badge.label === 'At Risk';
-                                                const level = levelFromXP(s.totalXP);
+                                                const level = calculateLevel(s.totalXP);
                                                 const barGrad = completionBarGradient(s.completion);
                                                 const rowCls = isTop3
                                                     ? 'bg-amber-50/30 dark:bg-amber-500/5'
@@ -1345,7 +968,7 @@ const StudentStatusOverview = () => {
                                     ))}
                                 </div>
                             ) : sortedConcepts.length === 0 ? (
-                                <EmptyState
+                                <PanelEmptyState
                                     icon={<Brain size={24} />}
                                     title="No concept data yet"
                                     subtitle="Generate a course curriculum to see mastery breakdown."
@@ -1401,7 +1024,7 @@ const StudentStatusOverview = () => {
                             {leaderboardLoading ? (
                                 <TableSkeleton cols={5} rows={8} />
                             ) : leaderboard.length === 0 ? (
-                                <EmptyState
+                                <PanelEmptyState
                                     icon={<Trophy size={24} />}
                                     title="No leaderboard data"
                                     subtitle="Students need to earn XP for this period."
@@ -1411,7 +1034,7 @@ const StudentStatusOverview = () => {
                                     {leaderboard.map((s, i) => {
                                         const rank = s.rank || i + 1;
                                         const isTop3 = rank <= 3;
-                                        const level = s.level || levelFromXP(s.xp);
+                                        const level = s.level || calculateLevel(s.xp);
                                         const xpBarWidth = Math.round(((s.xp || 0) / topXP) * 100);
                                         const borderCls =
                                             rank === 1
@@ -1503,85 +1126,5 @@ const StudentStatusOverview = () => {
         </InstructorLayout>
     );
 };
-
-// ── sub-components ─────────────────────────────────────────────────────────────
-
-const MetricCard = ({ label, value, icon, glowColor, subtitle, trend, badge }) => (
-    <div
-        className="p-7 rounded-3xl flex flex-col justify-between cursor-default transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_20px_40px_rgba(0,0,0,0.12)] dark:hover:shadow-[0_20px_40px_rgba(0,0,0,0.6)] bg-gradient-to-br from-white to-slate-50 dark:from-white/8 dark:to-white/3 border border-slate-200/80 dark:border-white/15 relative overflow-hidden group"
-        style={{ boxShadow: '0 12px 40px rgba(0,0,0,0.04)' }}
-    >
-        <div
-            className="absolute inset-0 opacity-0 group-hover:opacity-25 transition-opacity duration-500 pointer-events-none"
-            style={{
-                background: `radial-gradient(circle at center, ${glowColor} 0%, transparent 70%)`,
-            }}
-        />
-        <div className="flex justify-between items-start relative z-10">
-            <div className="p-3.5 rounded-2xl bg-gradient-to-br from-slate-100 to-slate-50 dark:from-white/10 dark:to-white/5 border border-slate-200/60 dark:border-white/10 shadow-sm">
-                {icon}
-            </div>
-            {trend && trend !== 'neutral' && (
-                <div
-                    className={`p-1.5 rounded-xl ${trend === 'up' ? 'bg-emerald-100 dark:bg-emerald-500/10' : 'bg-red-100 dark:bg-red-500/10'}`}
-                >
-                    {trend === 'up' ? (
-                        <TrendingUp size={14} className="text-emerald-600 dark:text-emerald-400" />
-                    ) : (
-                        <ChevronDown size={14} className="text-red-600 dark:text-red-400" />
-                    )}
-                </div>
-            )}
-        </div>
-        <div className="relative z-10 mt-4">
-            <p className="text-slate-400 dark:text-white/50 text-[10px] font-black uppercase tracking-widest mb-1">
-                {label}
-            </p>
-            <div className="flex items-end gap-2">
-                <p className="text-4xl font-black text-slate-900 dark:text-white drop-shadow-sm dark:drop-shadow-md leading-none">
-                    {value}
-                </p>
-                {badge && (
-                    <span className="text-[10px] font-black text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-500/15 border border-amber-200 dark:border-amber-500/25 px-2 py-0.5 rounded-lg mb-0.5">
-                        {badge}
-                    </span>
-                )}
-            </div>
-            {subtitle && (
-                <p className="text-xs text-slate-400 dark:text-white/40 font-medium mt-1">
-                    {subtitle}
-                </p>
-            )}
-        </div>
-    </div>
-);
-
-const SortableHeader = ({ field, label, current, dir, onSort, align = 'right' }) => {
-    const active = current === field;
-    const Icon = active ? (dir === 'asc' ? ChevronUp : ChevronDown) : ChevronsUpDown;
-    return (
-        <th
-            className={`px-4 py-3 whitespace-nowrap text-${align} cursor-pointer select-none hover:text-slate-700 dark:hover:text-white/70 transition-colors`}
-            onClick={() => onSort(field)}
-        >
-            <span className="inline-flex items-center gap-1">
-                {label}
-                <Icon size={12} className={active ? 'text-purple-500' : 'opacity-40'} />
-            </span>
-        </th>
-    );
-};
-
-const EmptyState = ({ icon, title, subtitle, compact = false }) => (
-    <div
-        className={`text-center text-slate-400 dark:text-white/40 font-medium flex flex-col items-center ${compact ? 'py-8' : 'py-12'}`}
-    >
-        <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-white/5 flex items-center justify-center mb-3 text-slate-400 dark:text-white/30">
-            {icon}
-        </div>
-        <p className="font-bold text-slate-600 dark:text-white/50 text-sm">{title}</p>
-        {subtitle && <p className="text-xs mt-1 text-slate-400 dark:text-white/30">{subtitle}</p>}
-    </div>
-);
 
 export default StudentStatusOverview;

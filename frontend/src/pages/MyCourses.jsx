@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import StudentLayout from '../components/layout/StudentLayout';
 import useCourseStore from '../store/courseStore';
 import { Search, Play, GraduationCap, BookMarked } from 'lucide-react';
+import Spinner from '../components/common/Spinner';
+import Button from '../components/common/Button';
 
 const MyCourses = () => {
     const navigate = useNavigate();
@@ -81,9 +83,7 @@ const MyCourses = () => {
 
                 {/* Course Grid */}
                 {isLoading ? (
-                    <div className="flex items-center justify-center py-20">
-                        <div className="animate-spin w-8 h-8 border-4 border-[#D97757] border-t-transparent rounded-full"></div>
-                    </div>
+                    <Spinner center label="Loading courses" />
                 ) : enrolledCourses.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {enrolledCourses.map((course) => (
@@ -154,13 +154,15 @@ const MyCourses = () => {
                                                 </div>
                                             </div>
 
-                                            <button
+                                            <Button
+                                                variant="gradient"
+                                                size="lg"
+                                                fullWidth
+                                                icon={Play}
                                                 onClick={() => navigate(`/course/${course.id}`)}
-                                                className="btn-gradient w-full text-white py-3.5 rounded-xl font-bold flex items-center justify-center gap-2"
                                             >
-                                                <Play size={18} fill="currentColor" />
                                                 Continue Learning
-                                            </button>
+                                            </Button>
                                         </div>
                                     </div>
                                 </div>
@@ -181,12 +183,13 @@ const MyCourses = () => {
                                 : "You haven't enrolled in any courses yet. Start your journey today!"}
                         </p>
                         {!searchTerm && (
-                            <button
+                            <Button
+                                variant="gradient"
+                                size="lg"
                                 onClick={() => navigate('/enrollments')}
-                                className="btn-gradient text-white px-8 py-3.5 rounded-xl font-bold"
                             >
                                 Browse Catalog
-                            </button>
+                            </Button>
                         )}
                     </div>
                 )}

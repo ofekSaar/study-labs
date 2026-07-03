@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ContentRenderer from '../components/common/ContentRenderer';
+import Spinner from '../components/common/Spinner';
 import api from '../utils/api';
 import useCourseStore from '../store/courseStore';
 import useGamificationStore from '../store/gamificationStore';
@@ -23,6 +24,7 @@ import useAuthStore from '../store/authStore';
 import ConfettiEffect from '../components/gamification/ConfettiEffect';
 import LevelUpModal from '../components/gamification/LevelUpModal';
 import useToastStore from '../store/toastStore';
+import logger from '../utils/logger';
 
 const LessonQuiz = () => {
     const { courseId, id } = useParams();
@@ -61,7 +63,7 @@ const LessonQuiz = () => {
                     setQuizData([]);
                 }
             } catch (error) {
-                console.error('Failed to load lesson data', error);
+                logger.error('Failed to load lesson data', error);
                 setLoadError(true);
             } finally {
                 setIsLoading(false);
@@ -93,7 +95,7 @@ const LessonQuiz = () => {
                 });
                 progressResult = res?.data || null;
             } catch (progressErr) {
-                console.warn('Progress update skipped:', progressErr.message);
+                logger.warn('Progress update skipped:', progressErr.message);
             }
 
             await fetchCourseNodes(courseId);
@@ -160,7 +162,7 @@ const LessonQuiz = () => {
                     role="status"
                     aria-live="polite"
                 >
-                    <div className="animate-spin w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full"></div>
+                    <Spinner size="lg" color="indigo" label="Preparing lesson" />
                     <p className="text-slate-500 dark:text-white/40 font-medium">
                         Preparing your lesson materials...
                     </p>

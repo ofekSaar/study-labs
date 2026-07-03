@@ -5,6 +5,8 @@ import useToastStore from '../store/toastStore';
 import api from '../utils/api';
 import { Search } from 'lucide-react';
 import Button from '../components/common/Button';
+import Spinner from '../components/common/Spinner';
+import logger from '../utils/logger';
 
 const DEPARTMENTS = ['All', 'Computer Science', 'Mathematics', 'Science', 'Business'];
 
@@ -43,7 +45,7 @@ const MyEnrollments = () => {
                 const { data } = await api.get('/api/courses');
                 setAvailableCourses(data.courses || []);
             } catch (error) {
-                console.error('Failed to fetch courses', error);
+                logger.error('Failed to fetch courses', error);
                 setLoadError(true);
                 useToastStore
                     .getState()
@@ -181,7 +183,7 @@ const MyEnrollments = () => {
 
                 {isLoading ? (
                     <div className="flex justify-center p-12" role="status" aria-live="polite">
-                        <div className="animate-spin w-8 h-8 border-4 border-[#D97757] border-t-transparent rounded-full"></div>
+                        <Spinner label="Loading courses" />
                         <span className="sr-only">Loading courses…</span>
                     </div>
                 ) : (

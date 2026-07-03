@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import api from '../utils/api.js';
+import logger from '../utils/logger.js';
 
 const useEnrollmentStore = create((set) => ({
     myEnrollments: [],
@@ -71,7 +72,7 @@ const useEnrollmentStore = create((set) => ({
             set({ pendingEnrollments: data.enrollments || [] });
             return data.enrollments || [];
         } catch (error) {
-            console.error('Failed to fetch pending enrollments', error);
+            logger.error('Failed to fetch pending enrollments', error);
             return [];
         }
     },

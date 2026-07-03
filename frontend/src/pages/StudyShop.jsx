@@ -8,6 +8,7 @@ import { motion, useSpring, useTransform, AnimatePresence } from 'framer-motion'
 import ConfettiEffect from '../components/gamification/ConfettiEffect';
 import ItemPreviewModal from '../components/shop/ItemPreviewModal';
 import { clickableProps } from '../utils/a11y';
+import Button from '../components/common/Button';
 
 // ── Sub-components ────────────────────────────────────────────────────────
 
@@ -202,8 +203,10 @@ const FeaturedBanner = ({ item, coins, isOwned, onPreview }) => {
                     ) : (
                         <>
                             <p className="font-black text-amber-400 text-xl">🪙 {item.cost}</p>
-                            <button
-                                className="mt-1.5 text-xs font-black px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 transition group-hover:scale-105"
+                            <Button
+                                variant="gold"
+                                size="sm"
+                                className="mt-1.5 group-hover:scale-105"
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     onPreview(item, item.category);
@@ -211,7 +214,7 @@ const FeaturedBanner = ({ item, coins, isOwned, onPreview }) => {
                                 disabled={coins < item.cost}
                             >
                                 {coins >= item.cost ? 'Preview & Buy' : 'Not enough coins'}
-                            </button>
+                            </Button>
                         </>
                     )}
                 </div>

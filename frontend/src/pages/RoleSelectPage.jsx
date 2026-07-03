@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
 import useToastStore from '../store/toastStore';
 import { GraduationCap, Presentation, Check } from 'lucide-react';
+import logger from '../utils/logger';
 
 const RoleSelectPage = () => {
     const navigate = useNavigate();
@@ -47,7 +48,7 @@ const RoleSelectPage = () => {
                 navigate('/', { replace: true });
             }
         } catch (error) {
-            console.error('Role selection error:', error);
+            logger.error('Role selection error:', error);
             // Check if the error is because role is already set
             if (error.message?.includes('already set')) {
                 // User already has a role, just redirect

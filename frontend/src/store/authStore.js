@@ -4,6 +4,33 @@ import useGamificationStore from './gamificationStore.js';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5005';
 
+/** All roles a user holds, tolerating both the `roles` array and legacy `role` field. */
+const rolesOf = (user) => user?.roles || (user?.role ? [user.role] : []);
+
+/** Resolve the active role: the persisted choice if the user still holds it, else their default. */
+const resolveActiveRole = (user) => {
+    const storedRole = localStorage.getItem('active_role');
+    return storedRole && rolesOf(user).includes(storedRole) ? storedRole : user.role;
+};
+
+/** Fetch the current user and hydrate auth + gamification state. */
+const loadCurrentUser = async (set) => {
+    const { data } = await api.get('/api/auth/me');
+    set({
+        user: data.user,
+        role: resolveActiveRole(data.user),
+        isAuthenticated: true,
+        isLoading: false,
+    });
+    useGamificationStore.getState().fetchGamificationState();
+    return data.user;
+};
+
+const clearAuth = (set) => {
+    removeToken();
+    set({ user: null, role: null, isAuthenticated: false, isLoading: false });
+};
+
 const useAuthStore = create((set) => ({
     user: null,
     role: null,
@@ -23,22 +50,9 @@ const useAuthStore = create((set) => ({
         }
 
         try {
-            const { data } = await api.get('/api/auth/me');
-            const storedRole = localStorage.getItem('active_role');
-            const userRoles = data.user.roles || (data.user.role ? [data.user.role] : []);
-            const activeRole =
-                storedRole && userRoles.includes(storedRole) ? storedRole : data.user.role;
-
-            set({
-                user: data.user,
-                role: activeRole,
-                isAuthenticated: true,
-                isLoading: false,
-            });
-            useGamificationStore.getState().fetchGamificationState();
+            await loadCurrentUser(set);
         } catch {
-            removeToken();
-            set({ user: null, role: null, isAuthenticated: false, isLoading: false });
+            clearAuth(set);
         }
     },
 
@@ -48,23 +62,9 @@ const useAuthStore = create((set) => ({
     handleAuthCallback: async (token) => {
         setToken(token);
         try {
-            const { data } = await api.get('/api/auth/me');
-            const storedRole = localStorage.getItem('active_role');
-            const userRoles = data.user.roles || (data.user.role ? [data.user.role] : []);
-            const activeRole =
-                storedRole && userRoles.includes(storedRole) ? storedRole : data.user.role;
-
-            set({
-                user: data.user,
-                role: activeRole,
-                isAuthenticated: true,
-                isLoading: false,
-            });
-            useGamificationStore.getState().fetchGamificationState();
-            return data.user;
+            return await loadCurrentUser(set);
         } catch {
-            removeToken();
-            set({ user: null, role: null, isAuthenticated: false, isLoading: false });
+            clearAuth(set);
             return null;
         }
     },
@@ -84,8 +84,7 @@ const useAuthStore = create((set) => ({
                 setToken(data.token);
             }
 
-            const userRoles = data.user.roles || (data.user.role ? [data.user.role] : []);
-            const activeRole = userRoles.includes('instructor') ? 'instructor' : 'student';
+            const activeRole = rolesOf(data.user).includes('instructor') ? 'instructor' : 'student';
             localStorage.setItem('active_role', activeRole);
 
             set({
@@ -105,8 +104,7 @@ const useAuthStore = create((set) => ({
      */
     switchRole: (newRole) => {
         set((state) => {
-            const userRoles = state.user?.roles || (state.user?.role ? [state.user.role] : []);
-            if (userRoles.includes(newRole)) {
+            if (rolesOf(state.user).includes(newRole)) {
                 localStorage.setItem('active_role', newRole);
                 return { role: newRole };
             }

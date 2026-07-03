@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import useCourseStore from '../store/courseStore';
+import Spinner from '../components/common/Spinner';
 import useEnrollmentStore from '../store/enrollmentStore';
 import useAuthStore from '../store/authStore';
 import AtRiskStudentsWidget from '../components/analytics/AtRiskStudentsWidget';
@@ -202,7 +203,7 @@ const PendingRow = ({ enrollment, onApprove, onDeny, loadingId }) => {
                     className="flex items-center gap-0.5 px-2 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[10px] font-black border border-emerald-500/20 transition-colors disabled:opacity-50"
                 >
                     {approving ? (
-                        <div className="w-3 h-3 border border-emerald-500 border-t-transparent rounded-full animate-spin" />
+                        <Spinner size="xs" color="emerald" label="Approving" />
                     ) : (
                         <>
                             <Check size={10} /> Approve
@@ -215,7 +216,7 @@ const PendingRow = ({ enrollment, onApprove, onDeny, loadingId }) => {
                     className="flex items-center gap-0.5 px-2 py-1 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-500 dark:text-red-400 text-[10px] font-black border border-red-500/20 transition-colors disabled:opacity-50"
                 >
                     {denying ? (
-                        <div className="w-3 h-3 border border-red-500 border-t-transparent rounded-full animate-spin" />
+                        <Spinner size="xs" color="red" label="Denying" />
                     ) : (
                         <>
                             <XCircle size={10} /> Deny
@@ -351,7 +352,7 @@ const InstructorDashboard = () => {
                 {/* ── KPI Row ── */}
                 {isLoading && !instructorStats ? (
                     <div className="h-28 w-full flex items-center justify-center">
-                        <div className="animate-spin w-7 h-7 border-4 border-purple-500 border-t-transparent rounded-full" />
+                        <Spinner color="purple" label="Loading stats" />
                     </div>
                 ) : (
                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">

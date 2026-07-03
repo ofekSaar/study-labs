@@ -6,6 +6,7 @@ import useEnrollmentStore from '../store/enrollmentStore';
 import useToastStore from '../store/toastStore';
 import { getDeptStyle } from '../utils/departmentStyles';
 import Button from '../components/common/Button';
+import Spinner from '../components/common/Spinner';
 import {
     Search,
     BookOpen,
@@ -334,9 +335,7 @@ const EnrollmentTab = ({ courses, preselectedCourseId }) => {
             {/* Table */}
             <div className="bg-white/80 dark:bg-white/5 border border-slate-200/80 dark:border-white/10 rounded-3xl overflow-hidden backdrop-blur-md shadow-sm">
                 {isLoading ? (
-                    <div className="flex justify-center py-20">
-                        <div className="animate-spin w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full" />
-                    </div>
+                    <Spinner center color="purple" label="Loading course" />
                 ) : !selectedCourseId ? (
                     <div className="text-center py-20 px-6">
                         <div className="w-14 h-14 rounded-full bg-slate-100 dark:bg-white/5 flex items-center justify-center mx-auto mb-4">
@@ -646,9 +645,7 @@ const ManagedCourses = () => {
                         )}
 
                         {isLoading ? (
-                            <div className="flex items-center justify-center py-20">
-                                <div className="animate-spin w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full" />
-                            </div>
+                            <Spinner center color="purple" label="Loading courses" />
                         ) : filteredCourses.length > 0 ? (
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                                 {filteredCourses.map((course) => {

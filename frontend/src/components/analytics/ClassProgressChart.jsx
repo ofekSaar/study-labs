@@ -10,6 +10,7 @@ import {
     Cell,
 } from 'recharts';
 import useSettingsStore from '../../store/settingsStore';
+import Spinner from '../common/Spinner';
 
 const ClassProgressChart = ({ data, isLoading }) => {
     const { theme } = useSettingsStore();
@@ -37,7 +38,7 @@ const ClassProgressChart = ({ data, isLoading }) => {
     if (isLoading) {
         return (
             <div className="h-64 w-full flex items-center justify-center">
-                <div className="animate-spin w-8 h-8 border-4 border-studylabs-blue border-t-transparent rounded-full"></div>
+                <Spinner label="Loading chart" />
             </div>
         );
     }

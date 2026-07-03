@@ -13,6 +13,8 @@ import {
     FRAMES,
     THEMES,
 } from '../constants/gamification';
+import { calculateLevel } from '../utils/gamification';
+import logger from '../utils/logger.js';
 
 export { AVATARS, INSTRUCTOR_AVATARS, TITLES, QUEST_DEFINITIONS, SHOP_ITEMS, FRAMES, THEMES };
 
@@ -35,7 +37,7 @@ const useGamificationStore = create(
                 try {
                     await api.put('/api/progress/gamification/active', { [payloadKey]: id });
                 } catch (err) {
-                    console.error(`[Gamification Store] Failed to save active ${payloadKey}:`, err);
+                    logger.error(`[Gamification Store] Failed to save active ${payloadKey}:`, err);
                 }
             };
             return {
@@ -141,7 +143,7 @@ const useGamificationStore = create(
                             }
                         }
                     } catch (error) {
-                        console.error('[Gamification Store] Failed to fetch state:', error.message);
+                        logger.error('[Gamification Store] Failed to fetch state:', error.message);
                     }
                 },
 
@@ -171,7 +173,7 @@ const useGamificationStore = create(
                         };
                         await api.put('/api/progress/gamification/sync', payload);
                     } catch (error) {
-                        console.error('[Gamification Store] Failed to sync state:', error.message);
+                        logger.error('[Gamification Store] Failed to sync state:', error.message);
                     }
                 },
 
@@ -231,8 +233,8 @@ const useGamificationStore = create(
                 clearConfetti: () => set({ triggerConfetti: false, confettiReason: null }),
 
                 checkLevelUp: (previousXP, newXP) => {
-                    const oldLevel = Math.floor(previousXP / 100) + 1;
-                    const newLevel = Math.floor(newXP / 100) + 1;
+                    const oldLevel = calculateLevel(previousXP);
+                    const newLevel = calculateLevel(newXP);
 
                     // NOTE: coins are minted server-side (gamificationService) — the
                     // client no longer mints them here. This function now only drives
@@ -549,7 +551,7 @@ const useGamificationStore = create(
                             if (res?.data) get().applyServerReward(res.data);
                         })
                         .catch((err) => {
-                            console.error('[Gamification Store] Quest claim failed:', err.message);
+                            logger.error('[Gamification Store] Quest claim failed:', err.message);
                             set((state) => ({
                                 questsClaimed: state.questsClaimed.filter((id) => id !== questId),
                             }));
@@ -687,7 +689,7 @@ const useGamificationStore = create(
                             return true;
                         }
                     } catch (err) {
-                        console.error('[Gamification Store] Purchase failed:', err);
+                        logger.error('[Gamification Store] Purchase failed:', err);
                         useToastStore
                             .getState()
                             .success('Purchase Failed', err.message || 'Server error', 3000);

@@ -11,6 +11,7 @@ import {
     THEMES,
     LEVEL_MILESTONES,
     QUEST_DEFINITIONS,
+    XP_PER_LEVEL,
 } from '../constants/gamification';
 import { calculateLevel } from '../utils/gamification';
 import Leaderboard from '../components/gamification/Leaderboard';
@@ -28,13 +29,6 @@ import {
     GraduationCap,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-
-const THEME_SWATCHES = {
-    default: ['#6366f1', '#8b5cf6', '#64748b'],
-    arcade: ['#10b981', '#84cc16', '#0f172a'],
-    space: ['#6366f1', '#8b5cf6', '#0ea5e9'],
-    cyberpunk: ['#ec4899', '#06b6d4', '#0f172a'],
-};
 
 const StudentProfile = () => {
     const { user: courseUser } = useCourseStore();
@@ -74,7 +68,7 @@ const StudentProfile = () => {
 
     const totalXP = stats.total_xp ?? user?.totalXP ?? 0;
     const level = stats.level || calculateLevel(totalXP);
-    const progressToNext = totalXP % 100;
+    const progressToNext = totalXP % XP_PER_LEVEL;
 
     const displayQuests = [
         { category: 'Daily', ...QUEST_DEFINITIONS.daily[0] },
@@ -530,7 +524,7 @@ const StudentProfile = () => {
                             {THEMES.map((themeItem) => {
                                 const isUnlocked = unlockedThemes.includes(themeItem.id);
                                 const isActive = activeTheme === themeItem.id;
-                                const swatches = THEME_SWATCHES[themeItem.id] || [];
+                                const swatches = themeItem.swatches || [];
                                 return (
                                     <button
                                         key={themeItem.id}
