@@ -1,5 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
+import {
+    AreaChart,
+    Area,
+    XAxis,
+    YAxis,
+    Tooltip,
+    ResponsiveContainer,
+    CartesianGrid,
+} from 'recharts';
 import { Zap, TrendingUp } from 'lucide-react';
 import api from '../../utils/api';
 
@@ -31,10 +39,15 @@ const XpHistoryChart = () => {
             try {
                 const { data } = await api.get(`/api/progress/xp-history?days=${days}`);
                 const raw = data.history || [];
-                setHistory(raw.map(d => ({
-                    date: new Date(d.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }),
-                    xp: d.xp,
-                })));
+                setHistory(
+                    raw.map((d) => ({
+                        date: new Date(d.date).toLocaleDateString('en-GB', {
+                            day: 'numeric',
+                            month: 'short',
+                        }),
+                        xp: d.xp,
+                    }))
+                );
                 setTotalXp(raw.reduce((s, d) => s + d.xp, 0));
             } catch {
                 setHistory([]);
@@ -54,14 +67,16 @@ const XpHistoryChart = () => {
                         <TrendingUp size={15} className="text-amber-500" />
                     </div>
                     <div>
-                        <h3 className="text-sm font-black text-slate-800 dark:text-white leading-tight">XP Progress</h3>
+                        <h3 className="text-sm font-black text-slate-800 dark:text-white leading-tight">
+                            XP Progress
+                        </h3>
                         <p className="text-[10px] text-slate-400 dark:text-white/35 font-medium">
                             {totalXp.toLocaleString()} XP earned in {days} days
                         </p>
                     </div>
                 </div>
                 <div className="flex bg-slate-100 dark:bg-white/5 rounded-xl p-0.5 gap-0.5 border border-slate-200/50 dark:border-white/8">
-                    {DAYS_OPTIONS.map(d => (
+                    {DAYS_OPTIONS.map((d) => (
                         <button
                             key={d}
                             onClick={() => setDays(d)}
@@ -83,7 +98,10 @@ const XpHistoryChart = () => {
                     <div className="h-full rounded-2xl bg-slate-100 dark:bg-white/5 animate-pulse" />
                 ) : (
                     <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={history} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+                        <AreaChart
+                            data={history}
+                            margin={{ top: 4, right: 4, left: -20, bottom: 0 }}
+                        >
                             <defs>
                                 <linearGradient id="xpGrad" x1="0" y1="0" x2="0" y2="1">
                                     <stop offset="5%" stopColor="#F59E0B" stopOpacity={0.3} />
@@ -93,13 +111,21 @@ const XpHistoryChart = () => {
                             <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.1)" />
                             <XAxis
                                 dataKey="date"
-                                tick={{ fontSize: 9, fill: 'rgba(148,163,184,0.7)', fontWeight: 700 }}
+                                tick={{
+                                    fontSize: 9,
+                                    fill: 'rgba(148,163,184,0.7)',
+                                    fontWeight: 700,
+                                }}
                                 interval={Math.floor(history.length / 4)}
                                 axisLine={false}
                                 tickLine={false}
                             />
                             <YAxis
-                                tick={{ fontSize: 9, fill: 'rgba(148,163,184,0.7)', fontWeight: 700 }}
+                                tick={{
+                                    fontSize: 9,
+                                    fill: 'rgba(148,163,184,0.7)',
+                                    fontWeight: 700,
+                                }}
                                 axisLine={false}
                                 tickLine={false}
                             />
@@ -111,7 +137,12 @@ const XpHistoryChart = () => {
                                 strokeWidth={2.5}
                                 fill="url(#xpGrad)"
                                 dot={false}
-                                activeDot={{ r: 4, fill: '#F59E0B', stroke: '#fff', strokeWidth: 2 }}
+                                activeDot={{
+                                    r: 4,
+                                    fill: '#F59E0B',
+                                    stroke: '#fff',
+                                    strokeWidth: 2,
+                                }}
                             />
                         </AreaChart>
                     </ResponsiveContainer>

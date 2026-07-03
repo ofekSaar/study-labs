@@ -8,9 +8,9 @@ jest.mock('../store/gamificationStore', () => {
         __esModule: true,
         default: {
             getState: () => ({
-                fetchGamificationState: jest.fn()
-            })
-        }
+                fetchGamificationState: jest.fn(),
+            }),
+        },
     };
 });
 
@@ -29,9 +29,9 @@ const mockFetchResponse = (payload, ok = true, status = 200) => {
                     return 'application/json';
                 }
                 return null;
-            }
+            },
         },
-        json: () => Promise.resolve({ data: payload })
+        json: () => Promise.resolve({ data: payload }),
     });
 };
 
@@ -45,9 +45,9 @@ const mockFetchErrorResponse = (message, status = 400) => {
                     return 'application/json';
                 }
                 return null;
-            }
+            },
         },
-        json: () => Promise.resolve({ message })
+        json: () => Promise.resolve({ message }),
     });
 };
 
@@ -78,9 +78,7 @@ describe('useAuthStore Zustand Store', () => {
         localStorage.setItem('studylabs_token', 'valid_token_123');
         const mockUser = { _id: 'u1', name: 'John Doe', role: 'student' };
 
-        global.fetch.mockImplementationOnce(() =>
-            mockFetchResponse({ user: mockUser })
-        );
+        global.fetch.mockImplementationOnce(() => mockFetchResponse({ user: mockUser }));
 
         await act(async () => {
             await useAuthStore.getState().initialize();
@@ -97,9 +95,7 @@ describe('useAuthStore Zustand Store', () => {
     test('should fail initialization and clear token when token is invalid/expired', async () => {
         localStorage.setItem('studylabs_token', 'invalid_token');
 
-        global.fetch.mockImplementationOnce(() =>
-            mockFetchErrorResponse('Unauthorized', 401)
-        );
+        global.fetch.mockImplementationOnce(() => mockFetchErrorResponse('Unauthorized', 401));
 
         await act(async () => {
             await useAuthStore.getState().initialize();
@@ -127,9 +123,7 @@ describe('useAuthStore Zustand Store', () => {
     test('should handle authentication callback successfully', async () => {
         const mockUser = { _id: 'u1', name: 'John Doe', role: 'instructor' };
 
-        global.fetch.mockImplementationOnce(() =>
-            mockFetchResponse({ user: mockUser })
-        );
+        global.fetch.mockImplementationOnce(() => mockFetchResponse({ user: mockUser }));
 
         let userResult;
         await act(async () => {
@@ -145,9 +139,7 @@ describe('useAuthStore Zustand Store', () => {
     });
 
     test('should clear state on authentication callback failure', async () => {
-        global.fetch.mockImplementationOnce(() =>
-            mockFetchErrorResponse('Auth error', 400)
-        );
+        global.fetch.mockImplementationOnce(() => mockFetchErrorResponse('Auth error', 400));
 
         let userResult;
         await act(async () => {
@@ -183,9 +175,7 @@ describe('useAuthStore Zustand Store', () => {
     test('should set role for user with array role input successfully', async () => {
         const mockUser = { _id: 'u1', name: 'John Doe', role: 'student' };
 
-        global.fetch.mockImplementationOnce(() =>
-            mockFetchResponse({ user: mockUser })
-        );
+        global.fetch.mockImplementationOnce(() => mockFetchResponse({ user: mockUser }));
 
         await act(async () => {
             await useAuthStore.getState().setRole(['student']);
@@ -219,7 +209,7 @@ describe('useAuthStore Zustand Store', () => {
             useAuthStore.setState({
                 user: { _id: 'u1' },
                 role: 'student',
-                isAuthenticated: true
+                isAuthenticated: true,
             });
         });
 

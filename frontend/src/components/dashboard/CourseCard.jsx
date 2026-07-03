@@ -4,7 +4,9 @@ import { ChevronRight } from 'lucide-react';
 const CourseCard = ({ title, professor, icon, progress, color = 'bg-studylabs-blue' }) => {
     return (
         <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex flex-col gap-3 hover:shadow-md transition-shadow cursor-pointer">
-            <div className={`w-12 h-12 ${color} rounded-xl flex items-center justify-center text-white`}>
+            <div
+                className={`w-12 h-12 ${color} rounded-xl flex items-center justify-center text-white`}
+            >
                 {icon}
             </div>
 
@@ -19,10 +21,7 @@ const CourseCard = ({ title, professor, icon, progress, color = 'bg-studylabs-bl
                     <span>{progress}%</span>
                 </div>
                 <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
-                    <div
-                        className={`h-full ${color}`}
-                        style={{ width: `${progress}%` }}
-                    />
+                    <div className={`h-full ${color}`} style={{ width: `${progress}%` }} />
                 </div>
             </div>
         </div>

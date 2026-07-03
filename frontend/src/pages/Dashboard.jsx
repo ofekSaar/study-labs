@@ -1,15 +1,31 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { HOUR_LATE_NIGHT_END, HOUR_MORNING_END, HOUR_AFTERNOON_END, HOUR_EVENING_END } from '../constants/config';
+import {
+    HOUR_LATE_NIGHT_END,
+    HOUR_MORNING_END,
+    HOUR_AFTERNOON_END,
+    HOUR_EVENING_END,
+} from '../constants/config';
 import StudentLayout from '../components/layout/StudentLayout';
 import RoadmapView from '../components/dashboard/RoadmapView';
 import NodeDrawer from '../components/dashboard/NodeDrawer';
 import useCourseStore from '../store/courseStore';
 import useGamificationStore from '../store/gamificationStore';
 import {
-    Trophy, Flame, Zap, BookOpen, Target, Star,
-    ArrowRight, CheckCircle, Clock, TrendingUp, Coins, ChevronDown, ChevronUp
+    Trophy,
+    Flame,
+    Zap,
+    BookOpen,
+    Target,
+    Star,
+    ArrowRight,
+    CheckCircle,
+    Clock,
+    TrendingUp,
+    Coins,
+    ChevronDown,
+    ChevronUp,
 } from 'lucide-react';
 import DailyChallengeCard from '../components/gamification/DailyChallengeCard';
 import LevelUpModal from '../components/gamification/LevelUpModal';
@@ -63,20 +79,30 @@ const CourseProgressCard = ({ courses, navigate }) => {
                             key={course.id || course._id}
                             whileHover={{ x: 3 }}
                             className="group/course cursor-pointer"
-                            {...clickableProps(() => navigate(`/course/${course.id || course._id}`), `Open course ${course.title}`)}
+                            {...clickableProps(
+                                () => navigate(`/course/${course.id || course._id}`),
+                                `Open course ${course.title}`
+                            )}
                         >
                             <div className="flex items-center justify-between mb-1.5">
                                 <span className="text-xs font-bold text-slate-700 dark:text-white/80 truncate max-w-[160px] group-hover/course:text-orange-500 dark:group-hover/course:text-orange-300 transition-colors">
                                     {course.title}
                                 </span>
                                 <div className="flex items-center gap-1.5 shrink-0">
-                                    {isDone
-                                        ? <CheckCircle size={13} className="text-emerald-500" />
-                                        : <span className="text-[10px] font-black text-slate-400 dark:text-white/40">{pct}%</span>
-                                    }
+                                    {isDone ? (
+                                        <CheckCircle size={13} className="text-emerald-500" />
+                                    ) : (
+                                        <span className="text-[10px] font-black text-slate-400 dark:text-white/40">
+                                            {pct}%
+                                        </span>
+                                    )}
                                 </div>
                             </div>
-                            <ProgressBar value={pct} variant={isDone ? 'done' : 'progress'} height="sm" />
+                            <ProgressBar
+                                value={pct}
+                                variant={isDone ? 'done' : 'progress'}
+                                height="sm"
+                            />
                         </motion.div>
                     );
                 })}
@@ -87,8 +113,17 @@ const CourseProgressCard = ({ courses, navigate }) => {
 
 const Dashboard = () => {
     const navigate = useNavigate();
-    const { courses, fetchCourses, fetchStats, isLoading, user, selectedCourseId, setSelectedCourse } = useCourseStore();
-    const { logActivity, generateDailyChallenge, stats, unlockedBadges, coins } = useGamificationStore();
+    const {
+        courses,
+        fetchCourses,
+        fetchStats,
+        isLoading,
+        user,
+        selectedCourseId,
+        setSelectedCourse,
+    } = useCourseStore();
+    const { logActivity, generateDailyChallenge, stats, unlockedBadges, coins } =
+        useGamificationStore();
     const [isRoadmapCollapsed, setIsRoadmapCollapsed] = useState(false);
 
     useEffect(() => {
@@ -109,21 +144,36 @@ const Dashboard = () => {
             <StudentLayout title="Dashboard">
                 <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
                     <div className="absolute inset-0 dot-grid opacity-60" />
-                    <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full"
-                        style={{ background: 'radial-gradient(circle, rgba(217,119,87,0.12) 0%, transparent 70%)', filter: 'blur(40px)' }} />
+                    <div
+                        className="absolute -top-32 -left-32 w-96 h-96 rounded-full"
+                        style={{
+                            background:
+                                'radial-gradient(circle, rgba(217,119,87,0.12) 0%, transparent 70%)',
+                            filter: 'blur(40px)',
+                        }}
+                    />
                 </div>
                 <div className="relative z-[1] p-4 lg:p-6 max-w-[1600px] mx-auto flex flex-col gap-6">
                     <LoadingSkeleton rows={2} heights={['h-8', 'h-4']} className="w-72" />
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                        {[...Array(4)].map((_, i) => <div key={i} className="shimmer h-24 rounded-2xl" />)}
+                        {[...Array(4)].map((_, i) => (
+                            <div key={i} className="shimmer h-24 rounded-2xl" />
+                        ))}
                     </div>
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                         <div className="lg:col-span-8 glass-card rounded-3xl p-6 min-h-[480px]">
-                            <LoadingSkeleton rows={6} heights={['h-5', 'h-4', 'h-4', 'h-4', 'h-4', 'h-4']} />
+                            <LoadingSkeleton
+                                rows={6}
+                                heights={['h-5', 'h-4', 'h-4', 'h-4', 'h-4', 'h-4']}
+                            />
                         </div>
                         <div className="lg:col-span-4 flex flex-col gap-5">
-                            <div className="glass-card rounded-3xl p-5"><LoadingSkeleton rows={4} heights={['h-5', 'h-20', 'h-4', 'h-8']} /></div>
-                            <div className="glass-card rounded-3xl p-5"><LoadingSkeleton rows={3} heights={['h-5', 'h-4', 'h-10']} /></div>
+                            <div className="glass-card rounded-3xl p-5">
+                                <LoadingSkeleton rows={4} heights={['h-5', 'h-20', 'h-4', 'h-8']} />
+                            </div>
+                            <div className="glass-card rounded-3xl p-5">
+                                <LoadingSkeleton rows={3} heights={['h-5', 'h-4', 'h-10']} />
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -147,9 +197,11 @@ const Dashboard = () => {
         );
     }
 
-    const currentCourse = courses.find(c => (c.id || c._id) === selectedCourseId) || courses[0];
-    const inProgressCourses = courses.filter(c => (c.progress ?? 0) > 0 && (c.progress ?? 0) < 100);
-    const completedCourses = courses.filter(c => (c.progress ?? 0) >= 100);
+    const currentCourse = courses.find((c) => (c.id || c._id) === selectedCourseId) || courses[0];
+    const inProgressCourses = courses.filter(
+        (c) => (c.progress ?? 0) > 0 && (c.progress ?? 0) < 100
+    );
+    const completedCourses = courses.filter((c) => (c.progress ?? 0) >= 100);
 
     return (
         <StudentLayout title="Dashboard">
@@ -159,16 +211,33 @@ const Dashboard = () => {
             {/* Ambient background */}
             <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
                 <div className="absolute inset-0 dot-grid opacity-60" />
-                <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full"
-                    style={{ background: 'radial-gradient(circle, rgba(217,119,87,0.12) 0%, transparent 70%)', filter: 'blur(40px)' }} />
-                <div className="absolute top-1/2 -right-32 w-80 h-80 rounded-full"
-                    style={{ background: 'radial-gradient(circle, rgba(124,58,237,0.08) 0%, transparent 70%)', filter: 'blur(40px)' }} />
-                <div className="absolute -bottom-20 left-1/3 w-72 h-72 rounded-full"
-                    style={{ background: 'radial-gradient(circle, rgba(16,185,129,0.08) 0%, transparent 70%)', filter: 'blur(40px)' }} />
+                <div
+                    className="absolute -top-32 -left-32 w-96 h-96 rounded-full"
+                    style={{
+                        background:
+                            'radial-gradient(circle, rgba(217,119,87,0.12) 0%, transparent 70%)',
+                        filter: 'blur(40px)',
+                    }}
+                />
+                <div
+                    className="absolute top-1/2 -right-32 w-80 h-80 rounded-full"
+                    style={{
+                        background:
+                            'radial-gradient(circle, rgba(124,58,237,0.08) 0%, transparent 70%)',
+                        filter: 'blur(40px)',
+                    }}
+                />
+                <div
+                    className="absolute -bottom-20 left-1/3 w-72 h-72 rounded-full"
+                    style={{
+                        background:
+                            'radial-gradient(circle, rgba(16,185,129,0.08) 0%, transparent 70%)',
+                        filter: 'blur(40px)',
+                    }}
+                />
             </div>
 
             <div className="relative z-[1] p-4 lg:p-6 max-w-[1600px] mx-auto flex flex-col gap-6">
-
                 {/* ── Header ── */}
                 <motion.header
                     initial={{ opacity: 0, y: -16 }}
@@ -185,7 +254,8 @@ const Dashboard = () => {
                                 <span
                                     className="text-xs font-black px-3 py-1 rounded-full shrink-0"
                                     style={{
-                                        background: 'linear-gradient(135deg, rgba(217,119,87,0.12), rgba(124,58,237,0.08))',
+                                        background:
+                                            'linear-gradient(135deg, rgba(217,119,87,0.12), rgba(124,58,237,0.08))',
                                         border: '1px solid rgba(217,119,87,0.3)',
                                         color: '#D97757',
                                     }}
@@ -198,9 +268,8 @@ const Dashboard = () => {
                             {inProgressCourses.length > 0
                                 ? `You have ${inProgressCourses.length} course${inProgressCourses.length > 1 ? 's' : ''} in progress — keep it up!`
                                 : completedCourses.length > 0
-                                    ? `You've completed ${completedCourses.length} course${completedCourses.length > 1 ? 's' : ''}. Ready for more?`
-                                    : 'Ready to start your learning journey?'
-                            }
+                                  ? `You've completed ${completedCourses.length} course${completedCourses.length > 1 ? 's' : ''}. Ready for more?`
+                                  : 'Ready to start your learning journey?'}
                         </p>
                     </div>
                     <Button
@@ -220,11 +289,41 @@ const Dashboard = () => {
                     transition={{ duration: 0.4, delay: 0.1 }}
                     className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3"
                 >
-                    <StatCard icon={Trophy} value={level} label="Level" color="bg-amber-500" glow="text-amber-500 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
-                    <StatCard icon={Zap} value={(user?.totalXP ?? 0).toLocaleString()} label="Total XP" color="bg-orange-500" glow="text-orange-500 fill-orange-500/20 drop-shadow-[0_0_8px_rgba(217,119,87,0.6)]" />
-                    <StatCard icon={Flame} value={user?.streak ?? 0} label="Day Streak" color="bg-orange-500" glow="text-orange-500 fill-orange-500/20 drop-shadow-[0_0_8px_rgba(249,115,22,0.5)]" />
-                    <StatCard icon={BookOpen} value={courses.length} label="Enrolled" color="bg-teal-500" glow="text-teal-500 drop-shadow-[0_0_8px_rgba(20,184,166,0.5)]" />
-                    <StatCard icon={Star} value={unlockedBadges?.length ?? 0} label="Badges" color="bg-purple-500" glow="text-purple-500 fill-purple-500/10 drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]" />
+                    <StatCard
+                        icon={Trophy}
+                        value={level}
+                        label="Level"
+                        color="bg-amber-500"
+                        glow="text-amber-500 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]"
+                    />
+                    <StatCard
+                        icon={Zap}
+                        value={(user?.totalXP ?? 0).toLocaleString()}
+                        label="Total XP"
+                        color="bg-orange-500"
+                        glow="text-orange-500 fill-orange-500/20 drop-shadow-[0_0_8px_rgba(217,119,87,0.6)]"
+                    />
+                    <StatCard
+                        icon={Flame}
+                        value={user?.streak ?? 0}
+                        label="Day Streak"
+                        color="bg-orange-500"
+                        glow="text-orange-500 fill-orange-500/20 drop-shadow-[0_0_8px_rgba(249,115,22,0.5)]"
+                    />
+                    <StatCard
+                        icon={BookOpen}
+                        value={courses.length}
+                        label="Enrolled"
+                        color="bg-teal-500"
+                        glow="text-teal-500 drop-shadow-[0_0_8px_rgba(20,184,166,0.5)]"
+                    />
+                    <StatCard
+                        icon={Star}
+                        value={unlockedBadges?.length ?? 0}
+                        label="Badges"
+                        color="bg-purple-500"
+                        glow="text-purple-500 fill-purple-500/10 drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]"
+                    />
                 </motion.div>
 
                 {/* XP Multiplier Banner */}
@@ -232,7 +331,6 @@ const Dashboard = () => {
 
                 {/* ── Main Bento Grid ── */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-
                     {/* ── Learning Path (8 cols) ── */}
                     <motion.div
                         layout
@@ -247,24 +345,35 @@ const Dashboard = () => {
                         <div className="p-4 sm:p-5 border-b border-slate-200 dark:border-white/10 bg-slate-100/50 dark:bg-black/20 z-10 backdrop-blur-md">
                             <div className="flex items-center justify-between gap-3 flex-wrap">
                                 <h2 className="text-base font-bold text-slate-800 dark:text-white flex items-center gap-2">
-                                    <Target size={18} className="text-orange-500 dark:text-orange-400" />
+                                    <Target
+                                        size={18}
+                                        className="text-orange-500 dark:text-orange-400"
+                                    />
                                     Learning Path
                                 </h2>
                                 {courses.length > 1 && (
                                     <select
                                         value={selectedCourseId || ''}
-                                        onChange={e => setSelectedCourse(e.target.value)}
+                                        onChange={(e) => setSelectedCourse(e.target.value)}
                                         className="text-xs font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-1.5 text-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500 cursor-pointer max-w-[200px] truncate"
                                     >
-                                        {courses.map(c => (
-                                            <option key={c.id || c._id} value={c.id || c._id}>{c.title}</option>
+                                        {courses.map((c) => (
+                                            <option key={c.id || c._id} value={c.id || c._id}>
+                                                {c.title}
+                                            </option>
                                         ))}
                                     </select>
                                 )}
                                 <div className="flex items-center gap-2 ml-auto">
                                     {currentCourse && (
                                         <div className="flex items-center gap-2">
-                                            <ProgressBar value={Math.round(currentCourse.progress ?? 0)} variant="progress" height="sm" className="w-24" animated={false} />
+                                            <ProgressBar
+                                                value={Math.round(currentCourse.progress ?? 0)}
+                                                variant="progress"
+                                                height="sm"
+                                                className="w-24"
+                                                animated={false}
+                                            />
                                             <span className="text-[11px] font-black text-slate-500 dark:text-white/50">
                                                 {Math.round(currentCourse.progress ?? 0)}%
                                             </span>
@@ -272,13 +381,21 @@ const Dashboard = () => {
                                     )}
                                     <button
                                         type="button"
-                                        onClick={() => setIsRoadmapCollapsed(v => !v)}
+                                        onClick={() => setIsRoadmapCollapsed((v) => !v)}
                                         className="w-7 h-7 rounded-xl bg-slate-200/70 dark:bg-white/10 hover:bg-slate-300/70 dark:hover:bg-white/20 flex items-center justify-center text-slate-500 dark:text-white/50 transition-colors"
                                         title={isRoadmapCollapsed ? 'Expand' : 'Collapse'}
-                                        aria-label={isRoadmapCollapsed ? 'Expand learning path' : 'Collapse learning path'}
+                                        aria-label={
+                                            isRoadmapCollapsed
+                                                ? 'Expand learning path'
+                                                : 'Collapse learning path'
+                                        }
                                         aria-expanded={!isRoadmapCollapsed}
                                     >
-                                        {isRoadmapCollapsed ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
+                                        {isRoadmapCollapsed ? (
+                                            <ChevronDown size={14} />
+                                        ) : (
+                                            <ChevronUp size={14} />
+                                        )}
                                     </button>
                                 </div>
                             </div>
@@ -314,7 +431,9 @@ const Dashboard = () => {
                         <div className="glass-card rounded-3xl p-5 shadow-lg relative overflow-hidden">
                             <div className="absolute inset-0 bg-gradient-to-br from-orange-500/4 to-amber-500/4 pointer-events-none" />
                             <div className="flex items-center justify-between mb-3">
-                                <h3 className="text-xs font-black text-slate-500 dark:text-white/50 uppercase tracking-widest">XP Progress</h3>
+                                <h3 className="text-xs font-black text-slate-500 dark:text-white/50 uppercase tracking-widest">
+                                    XP Progress
+                                </h3>
                                 <span className="text-xs font-black text-orange-500 dark:text-orange-300 flex items-center gap-1">
                                     <Zap size={12} className="fill-orange-500/30" />
                                     Level {level}
@@ -324,7 +443,12 @@ const Dashboard = () => {
                                 <motion.div
                                     className="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-full relative"
                                     initial={{ width: 0 }}
-                                    animate={{ width: progressToNextLevel === 0 && totalXP > 0 ? '2%' : `${progressToNextLevel}%` }}
+                                    animate={{
+                                        width:
+                                            progressToNextLevel === 0 && totalXP > 0
+                                                ? '2%'
+                                                : `${progressToNextLevel}%`,
+                                    }}
                                     transition={{ duration: 1.5, ease: 'easeOut' }}
                                 >
                                     <div className="absolute inset-0 bg-white/20 animate-pulse rounded-full" />
@@ -332,14 +456,20 @@ const Dashboard = () => {
                             </div>
                             <div className="flex justify-between text-[10px] font-bold text-slate-400 dark:text-white/30">
                                 <span>{totalXP} XP total</span>
-                                <span>{XP_PER_LEVEL - progressToNextLevel} XP to Level {level + 1}</span>
+                                <span>
+                                    {XP_PER_LEVEL - progressToNextLevel} XP to Level {level + 1}
+                                </span>
                             </div>
                             {/* Coins row */}
                             <div className="mt-3 pt-3 border-t border-slate-100 dark:border-white/5 flex items-center justify-between">
                                 <div className="flex items-center gap-1.5 text-amber-500">
                                     <Coins size={14} className="fill-amber-500/20" />
-                                    <span className="text-sm font-black">{(coins ?? 0).toLocaleString()}</span>
-                                    <span className="text-[10px] font-bold text-slate-400 dark:text-white/30 uppercase tracking-wide">Coins</span>
+                                    <span className="text-sm font-black">
+                                        {(coins ?? 0).toLocaleString()}
+                                    </span>
+                                    <span className="text-[10px] font-bold text-slate-400 dark:text-white/30 uppercase tracking-wide">
+                                        Coins
+                                    </span>
                                 </div>
                                 <button
                                     onClick={() => navigate('/shop')}
@@ -359,17 +489,30 @@ const Dashboard = () => {
                         {/* Quick achievements */}
                         {(stats?.lessons_completed > 0 || stats?.perfect_quizzes > 0) && (
                             <div className="glass-card rounded-3xl p-4 shadow-sm">
-                                <h3 className="text-[10px] font-black text-slate-500 dark:text-white/40 uppercase tracking-widest mb-3">Achievements</h3>
+                                <h3 className="text-[10px] font-black text-slate-500 dark:text-white/40 uppercase tracking-widest mb-3">
+                                    Achievements
+                                </h3>
                                 <div className="grid grid-cols-2 gap-2">
                                     <div className="bg-slate-100 dark:bg-black/30 rounded-2xl p-3 text-center border border-slate-200/50 dark:border-white/5">
                                         <Clock size={14} className="text-teal-500 mx-auto mb-1" />
-                                        <div className="text-lg font-black text-slate-800 dark:text-white leading-none">{stats?.lessons_completed ?? 0}</div>
-                                        <div className="text-[9px] font-bold text-slate-400 dark:text-white/30 uppercase tracking-wide mt-0.5">Lessons</div>
+                                        <div className="text-lg font-black text-slate-800 dark:text-white leading-none">
+                                            {stats?.lessons_completed ?? 0}
+                                        </div>
+                                        <div className="text-[9px] font-bold text-slate-400 dark:text-white/30 uppercase tracking-wide mt-0.5">
+                                            Lessons
+                                        </div>
                                     </div>
                                     <div className="bg-slate-100 dark:bg-black/30 rounded-2xl p-3 text-center border border-slate-200/50 dark:border-white/5">
-                                        <Star size={14} className="text-amber-500 mx-auto mb-1 fill-amber-500/20" />
-                                        <div className="text-lg font-black text-slate-800 dark:text-white leading-none">{stats?.perfect_quizzes ?? 0}</div>
-                                        <div className="text-[9px] font-bold text-slate-400 dark:text-white/30 uppercase tracking-wide mt-0.5">Perfect Quizzes</div>
+                                        <Star
+                                            size={14}
+                                            className="text-amber-500 mx-auto mb-1 fill-amber-500/20"
+                                        />
+                                        <div className="text-lg font-black text-slate-800 dark:text-white leading-none">
+                                            {stats?.perfect_quizzes ?? 0}
+                                        </div>
+                                        <div className="text-[9px] font-bold text-slate-400 dark:text-white/30 uppercase tracking-wide mt-0.5">
+                                            Perfect Quizzes
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -392,7 +535,6 @@ const Dashboard = () => {
                     {/* XP History Chart */}
                     <XpHistoryChart />
                 </motion.div>
-
             </div>
 
             <NodeDrawer />

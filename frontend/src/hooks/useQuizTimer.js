@@ -13,7 +13,13 @@ import sounds from '../utils/soundManager';
  * @param {Function} params.onTimeUp        - Called when the timer reaches zero.
  * @returns {{ timeLeft: number, isTimeUp: boolean, speedBonusActive: boolean, setSpeedBonusActive: Function }}
  */
-export const useQuizTimer = ({ questionKey, isSubmitted, isSummaryQuestion, isEvaluating, onTimeUp }) => {
+export const useQuizTimer = ({
+    questionKey,
+    isSubmitted,
+    isSummaryQuestion,
+    isEvaluating,
+    onTimeUp,
+}) => {
     const [timeLeft, setTimeLeft] = useState(QUIZ_TIMER_SECONDS);
     const [isTimeUp, setIsTimeUp] = useState(false);
     const [speedBonusActive, setSpeedBonusActive] = useState(false);
@@ -34,7 +40,7 @@ export const useQuizTimer = ({ questionKey, isSubmitted, isSummaryQuestion, isEv
         /* eslint-enable react-hooks/set-state-in-effect */
 
         const interval = setInterval(() => {
-            setTimeLeft(prev => {
+            setTimeLeft((prev) => {
                 if (prev <= 1) {
                     clearInterval(interval);
                     handleTimeUpInternal();

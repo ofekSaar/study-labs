@@ -3,7 +3,17 @@ import StudentLayout from '../components/layout/StudentLayout';
 import InstructorLayout from '../components/layout/InstructorLayout';
 import QuizEngine from '../components/quiz/QuizEngine';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ChevronLeft, BookOpen, GraduationCap, ArrowRight, Trophy, Zap, Clock, Star, RefreshCw } from 'lucide-react';
+import {
+    ChevronLeft,
+    BookOpen,
+    GraduationCap,
+    ArrowRight,
+    Trophy,
+    Zap,
+    Clock,
+    Star,
+    RefreshCw,
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ContentRenderer from '../components/common/ContentRenderer';
 import api from '../utils/api';
@@ -29,7 +39,13 @@ const LessonQuiz = () => {
     const [showReward, setShowReward] = useState(null);
 
     // Gamification
-    const { setTriggerConfetti, applyServerReward, logActivity, completeChallenge, dailyChallenge } = useGamificationStore();
+    const {
+        setTriggerConfetti,
+        applyServerReward,
+        logActivity,
+        completeChallenge,
+        dailyChallenge,
+    } = useGamificationStore();
 
     useEffect(() => {
         const fetchData = async () => {
@@ -56,18 +72,24 @@ const LessonQuiz = () => {
 
     const { courses, fetchCourseNodes } = useCourseStore();
 
-    const handleComplete = async (score, answersData, isPerfectScore, correctCount, totalAnswerable) => {
+    const handleComplete = async (
+        score,
+        answersData,
+        isPerfectScore,
+        correctCount,
+        totalAnswerable
+    ) => {
         try {
             await api.post('/api/quizzes/submit', {
                 nodeId: id,
-                answers: answersData || []
+                answers: answersData || [],
             });
 
             let progressResult = null;
             try {
                 const res = await api.post('/api/progress/complete-node', {
                     courseId: courseId,
-                    nodeId: id
+                    nodeId: id,
                 });
                 progressResult = res?.data || null;
             } catch (progressErr) {
@@ -76,10 +98,10 @@ const LessonQuiz = () => {
 
             await fetchCourseNodes(courseId);
 
-            const course = courses.find(c => c._id === courseId || c.id === courseId);
+            const course = courses.find((c) => c._id === courseId || c.id === courseId);
             let nextNode = null;
             if (course && course.nodes) {
-                const currentIndex = course.nodes.findIndex(n => n._id === id);
+                const currentIndex = course.nodes.findIndex((n) => n._id === id);
                 if (currentIndex !== -1 && currentIndex < course.nodes.length - 1) {
                     nextNode = course.nodes[currentIndex + 1];
                 }
@@ -95,7 +117,10 @@ const LessonQuiz = () => {
             }
 
             // Check for daily challenge completion
-            if (dailyChallenge?.id === 'complete_lesson' || (isPerfect && dailyChallenge?.id === 'quiz_perfect')) {
+            if (
+                dailyChallenge?.id === 'complete_lesson' ||
+                (isPerfect && dailyChallenge?.id === 'quiz_perfect')
+            ) {
                 completeChallenge();
             }
 
@@ -117,18 +142,28 @@ const LessonQuiz = () => {
                 correctCount: correctCount ?? 0,
                 totalAnswerable: totalAnswerable ?? 0,
             });
-
         } catch (error) {
-            useToastStore.getState().error('Submission failed', error.message || 'Failed to submit quiz. Please try again.');
+            useToastStore
+                .getState()
+                .error(
+                    'Submission failed',
+                    error.message || 'Failed to submit quiz. Please try again.'
+                );
         }
     };
 
     if (isLoading) {
         return (
             <Layout title="Loading Lesson...">
-                <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center gap-4 p-4 sm:p-8 md:p-12" role="status" aria-live="polite">
+                <div
+                    className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center gap-4 p-4 sm:p-8 md:p-12"
+                    role="status"
+                    aria-live="polite"
+                >
                     <div className="animate-spin w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full"></div>
-                    <p className="text-slate-500 dark:text-white/40 font-medium">Preparing your lesson materials...</p>
+                    <p className="text-slate-500 dark:text-white/40 font-medium">
+                        Preparing your lesson materials...
+                    </p>
                 </div>
             </Layout>
         );
@@ -138,8 +173,13 @@ const LessonQuiz = () => {
         return (
             <Layout title="Lesson">
                 <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center gap-4 p-4 sm:p-8 md:p-12 text-center">
-                    <p className="text-slate-700 dark:text-white font-bold text-lg">Couldn't load this lesson.</p>
-                    <p className="text-slate-500 dark:text-white/40 max-w-sm">There was a problem fetching the lesson content. Please check your connection and try again.</p>
+                    <p className="text-slate-700 dark:text-white font-bold text-lg">
+                        Couldn't load this lesson.
+                    </p>
+                    <p className="text-slate-500 dark:text-white/40 max-w-sm">
+                        There was a problem fetching the lesson content. Please check your
+                        connection and try again.
+                    </p>
                     <button
                         onClick={() => navigate(-1)}
                         className="mt-2 px-5 py-2.5 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white font-bold transition"
@@ -153,9 +193,10 @@ const LessonQuiz = () => {
 
     // ── Reward Overlay ──
     if (showReward) {
-        const pct = showReward.totalAnswerable > 0
-            ? Math.round((showReward.correctCount / showReward.totalAnswerable) * 100)
-            : 0;
+        const pct =
+            showReward.totalAnswerable > 0
+                ? Math.round((showReward.correctCount / showReward.totalAnswerable) * 100)
+                : 0;
         const passed = pct >= 70;
 
         return (
@@ -181,24 +222,32 @@ const LessonQuiz = () => {
                                 showReward.isPerfect
                                     ? 'bg-gradient-to-br from-yellow-400 to-orange-500'
                                     : passed
-                                        ? 'bg-gradient-to-br from-indigo-500 to-purple-500'
-                                        : 'bg-gradient-to-br from-slate-600 to-slate-700'
+                                      ? 'bg-gradient-to-br from-indigo-500 to-purple-500'
+                                      : 'bg-gradient-to-br from-slate-600 to-slate-700'
                             }`}
                         >
-                            {showReward.isPerfect
-                                ? <Star size={48} className="text-white fill-white drop-shadow-md" />
-                                : passed
-                                    ? <Trophy size={48} className="text-white drop-shadow-md" />
-                                    : <RefreshCw size={48} className="text-white drop-shadow-md" />
-                            }
+                            {showReward.isPerfect ? (
+                                <Star size={48} className="text-white fill-white drop-shadow-md" />
+                            ) : passed ? (
+                                <Trophy size={48} className="text-white drop-shadow-md" />
+                            ) : (
+                                <RefreshCw size={48} className="text-white drop-shadow-md" />
+                            )}
                         </motion.div>
 
                         <h2 className="text-2xl sm:text-3xl font-black text-white mb-1 relative z-10">
-                            {showReward.isPerfect ? '🎉 Perfect Score!' : passed ? 'Awesome Job!' : 'Keep Practicing!'}
+                            {showReward.isPerfect
+                                ? '🎉 Perfect Score!'
+                                : passed
+                                  ? 'Awesome Job!'
+                                  : 'Keep Practicing!'}
                         </h2>
                         {showReward.totalAnswerable > 0 && (
-                            <p className={`font-bold text-sm mb-3 relative z-10 ${showReward.isPerfect ? 'text-yellow-400' : passed ? 'text-indigo-400' : 'text-slate-400'}`}>
-                                {showReward.correctCount} / {showReward.totalAnswerable} correct ({pct}%)
+                            <p
+                                className={`font-bold text-sm mb-3 relative z-10 ${showReward.isPerfect ? 'text-yellow-400' : passed ? 'text-indigo-400' : 'text-slate-400'}`}
+                            >
+                                {showReward.correctCount} / {showReward.totalAnswerable} correct (
+                                {pct}%)
                             </p>
                         )}
 
@@ -246,9 +295,13 @@ const LessonQuiz = () => {
                             className="w-full py-4 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-400 hover:to-purple-400 text-white rounded-2xl font-bold text-lg transition-all shadow-[0_0_20px_rgba(99,102,241,0.3)] flex items-center justify-center gap-2 relative z-10"
                         >
                             {showReward.nextNodeId ? (
-                                <><ArrowRight size={20} /> Continue to Next Lesson</>
+                                <>
+                                    <ArrowRight size={20} /> Continue to Next Lesson
+                                </>
                             ) : (
-                                <><Trophy size={20} /> Back to Map</>
+                                <>
+                                    <Trophy size={20} /> Back to Map
+                                </>
                             )}
                         </motion.button>
                     </motion.div>
@@ -263,12 +316,20 @@ const LessonQuiz = () => {
             <Layout title={nodeData?.title || 'Lesson'}>
                 <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col">
                     <div className="bg-white dark:bg-slate-900 px-6 py-4 flex items-center gap-4 sticky top-0 z-10 border-b border-slate-200 dark:border-white/10">
-                        <button onClick={() => navigate(-1)} aria-label="Go back" className="w-10 h-10 rounded-full hover:bg-slate-100 dark:hover:bg-white/10 flex items-center justify-center transition text-slate-600 dark:text-white">
+                        <button
+                            onClick={() => navigate(-1)}
+                            aria-label="Go back"
+                            className="w-10 h-10 rounded-full hover:bg-slate-100 dark:hover:bg-white/10 flex items-center justify-center transition text-slate-600 dark:text-white"
+                        >
                             <ChevronLeft size={24} />
                         </button>
                         <div>
-                            <h1 className="font-bold text-slate-900 dark:text-white" dir="auto">{nodeData?.title || 'Lesson Summary'}</h1>
-                            <p className="text-xs text-slate-400 dark:text-white/40">Read the summary carefully before the quiz</p>
+                            <h1 className="font-bold text-slate-900 dark:text-white" dir="auto">
+                                {nodeData?.title || 'Lesson Summary'}
+                            </h1>
+                            <p className="text-xs text-slate-400 dark:text-white/40">
+                                Read the summary carefully before the quiz
+                            </p>
                         </div>
                     </div>
 
@@ -278,22 +339,35 @@ const LessonQuiz = () => {
                                 <div className="w-10 h-10 bg-indigo-500 rounded-xl flex items-center justify-center text-white">
                                     <BookOpen size={20} />
                                 </div>
-                                <h2 className="text-xl font-display font-bold text-slate-900 dark:text-white">Study Guide</h2>
+                                <h2 className="text-xl font-display font-bold text-slate-900 dark:text-white">
+                                    Study Guide
+                                </h2>
                             </div>
                             {nodeData?.isMaterialGrounded === false && (
                                 <div className="bg-amber-500/10 border-b border-amber-500/20 px-6 sm:px-8 py-3.5 flex items-center gap-3 text-amber-800 dark:text-amber-300">
                                     <span className="text-xl">⚠️</span>
                                     <div className="text-xs sm:text-sm font-semibold leading-normal">
-                                        <p className="font-bold text-amber-900 dark:text-amber-200">AI-Generated Content Warning</p>
-                                        <p className="opacity-90">This topic was not covered in the uploaded course materials. The summary and quiz questions were generated using the AI's general knowledge.</p>
+                                        <p className="font-bold text-amber-900 dark:text-amber-200">
+                                            AI-Generated Content Warning
+                                        </p>
+                                        <p className="opacity-90">
+                                            This topic was not covered in the uploaded course
+                                            materials. The summary and quiz questions were generated
+                                            using the AI's general knowledge.
+                                        </p>
                                     </div>
                                 </div>
                             )}
                             <div className="p-4 sm:p-8 md:p-10 prose prose-slate dark:prose-invert max-w-none">
                                 {nodeData?.content ? (
-                                    <ContentRenderer content={nodeData.content} className="text-slate-700 dark:text-slate-300 leading-relaxed" />
+                                    <ContentRenderer
+                                        content={nodeData.content}
+                                        className="text-slate-700 dark:text-slate-300 leading-relaxed"
+                                    />
                                 ) : (
-                                    <p className="text-slate-400 italic">No summary available for this lesson.</p>
+                                    <p className="text-slate-400 italic">
+                                        No summary available for this lesson.
+                                    </p>
                                 )}
                             </div>
 
@@ -303,8 +377,12 @@ const LessonQuiz = () => {
                                         <GraduationCap size={24} />
                                     </div>
                                     <div>
-                                        <p className="text-sm font-bold text-slate-900 dark:text-white">Ready for the test?</p>
-                                        <p className="text-xs text-slate-500 dark:text-white/40">{quizData.length} questions • Earn up to 200 XP</p>
+                                        <p className="text-sm font-bold text-slate-900 dark:text-white">
+                                            Ready for the test?
+                                        </p>
+                                        <p className="text-xs text-slate-500 dark:text-white/40">
+                                            {quizData.length} questions • Earn up to 200 XP
+                                        </p>
                                     </div>
                                 </div>
                                 <button
@@ -326,17 +404,33 @@ const LessonQuiz = () => {
         <Layout title="Quiz">
             <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col">
                 <div className="bg-white dark:bg-slate-900 px-4 py-3 flex items-center gap-3 sticky top-0 z-10 border-b border-slate-100 dark:border-white/10">
-                    <button onClick={() => setStep('summary')} aria-label="Back to lesson summary" className="w-9 h-9 rounded-full hover:bg-slate-100 dark:hover:bg-white/10 flex items-center justify-center transition text-slate-600 dark:text-white flex-shrink-0">
+                    <button
+                        onClick={() => setStep('summary')}
+                        aria-label="Back to lesson summary"
+                        className="w-9 h-9 rounded-full hover:bg-slate-100 dark:hover:bg-white/10 flex items-center justify-center transition text-slate-600 dark:text-white flex-shrink-0"
+                    >
                         <ChevronLeft size={22} />
                     </button>
                     <div className="flex-1 min-w-0">
-                        <h1 className="font-bold text-slate-900 dark:text-white text-sm sm:text-base truncate" dir="auto">{nodeData?.title} • Quiz</h1>
-                        <p className="text-xs text-slate-400 dark:text-white/40">Score at least 70% to pass</p>
+                        <h1
+                            className="font-bold text-slate-900 dark:text-white text-sm sm:text-base truncate"
+                            dir="auto"
+                        >
+                            {nodeData?.title} • Quiz
+                        </h1>
+                        <p className="text-xs text-slate-400 dark:text-white/40">
+                            Score at least 70% to pass
+                        </p>
                     </div>
                     {/* XP badge */}
                     <div className="flex items-center gap-1 bg-indigo-500/10 dark:bg-indigo-500/20 border border-indigo-500/20 dark:border-indigo-400/30 px-2.5 py-1.5 rounded-xl flex-shrink-0">
-                        <Zap size={13} className="text-indigo-500 dark:text-indigo-400 fill-indigo-500/20" />
-                        <span className="text-xs font-bold text-indigo-600 dark:text-indigo-300 whitespace-nowrap">Up to 200 XP</span>
+                        <Zap
+                            size={13}
+                            className="text-indigo-500 dark:text-indigo-400 fill-indigo-500/20"
+                        />
+                        <span className="text-xs font-bold text-indigo-600 dark:text-indigo-300 whitespace-nowrap">
+                            Up to 200 XP
+                        </span>
                     </div>
                 </div>
 

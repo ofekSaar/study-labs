@@ -24,7 +24,7 @@ const RoleSelectPage = () => {
 
     const toggleRole = (selectedRole) => {
         if (selectedRoles.includes(selectedRole)) {
-            setSelectedRoles(selectedRoles.filter(r => r !== selectedRole));
+            setSelectedRoles(selectedRoles.filter((r) => r !== selectedRole));
         } else {
             setSelectedRoles([...selectedRoles, selectedRole]);
         }
@@ -57,11 +57,18 @@ const RoleSelectPage = () => {
                 } else if (currentRole === 'instructor') {
                     navigate('/instructor', { replace: true });
                 } else {
-                    useToastStore.getState().error('Role already set', 'Your account already has a role assigned. Logging out...');
+                    useToastStore
+                        .getState()
+                        .error(
+                            'Role already set',
+                            'Your account already has a role assigned. Logging out...'
+                        );
                     navigate('/login', { replace: true });
                 }
             } else {
-                useToastStore.getState().error('Something went wrong', 'Failed to set role. Please try again.');
+                useToastStore
+                    .getState()
+                    .error('Something went wrong', 'Failed to set role. Please try again.');
             }
             setIsSubmitting(false);
         }
@@ -88,11 +95,17 @@ const RoleSelectPage = () => {
                 <div className="w-12 h-12 bg-studylabs-blue rounded-xl flex items-center justify-center text-white font-bold shadow-xl shadow-blue-200/50 dark:shadow-none text-2xl">
                     S
                 </div>
-                <h1 className="font-display font-extrabold text-2xl sm:text-4xl text-slate-900 dark:text-white tracking-tight">StudyLabs</h1>
+                <h1 className="font-display font-extrabold text-2xl sm:text-4xl text-slate-900 dark:text-white tracking-tight">
+                    StudyLabs
+                </h1>
             </div>
 
-            <h2 className="text-xl font-medium text-slate-500 dark:text-white/60 mb-2">You're almost in. Select your role(s).</h2>
-            <p className="text-sm text-slate-400 dark:text-white/40 mb-8">You can select both if you want to teach and learn!</p>
+            <h2 className="text-xl font-medium text-slate-500 dark:text-white/60 mb-2">
+                You're almost in. Select your role(s).
+            </h2>
+            <p className="text-sm text-slate-400 dark:text-white/40 mb-8">
+                You can select both if you want to teach and learn!
+            </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full max-w-2xl mb-8">
                 {/* Student Card */}
@@ -110,16 +123,22 @@ const RoleSelectPage = () => {
                             <Check size={20} className="text-white" strokeWidth={3} />
                         </div>
                     )}
-                    <div className={`w-20 h-20 rounded-2xl flex items-center justify-center transition-colors ${
-                        isSelected('student')
-                            ? 'bg-studylabs-blue text-white'
-                            : 'bg-blue-50 dark:bg-blue-950/20 text-studylabs-blue group-hover:bg-studylabs-blue group-hover:text-white'
-                    }`}>
+                    <div
+                        className={`w-20 h-20 rounded-2xl flex items-center justify-center transition-colors ${
+                            isSelected('student')
+                                ? 'bg-studylabs-blue text-white'
+                                : 'bg-blue-50 dark:bg-blue-950/20 text-studylabs-blue group-hover:bg-studylabs-blue group-hover:text-white'
+                        }`}
+                    >
                         <GraduationCap size={40} />
                     </div>
                     <div className="text-center">
-                        <h3 className="font-display font-bold text-2xl text-slate-900 dark:text-white mb-2">Student</h3>
-                        <p className="text-slate-500 dark:text-white/60">Access your learning maps, quizzes, and track your progress.</p>
+                        <h3 className="font-display font-bold text-2xl text-slate-900 dark:text-white mb-2">
+                            Student
+                        </h3>
+                        <p className="text-slate-500 dark:text-white/60">
+                            Access your learning maps, quizzes, and track your progress.
+                        </p>
                     </div>
                 </button>
 
@@ -138,16 +157,22 @@ const RoleSelectPage = () => {
                             <Check size={20} className="text-white" strokeWidth={3} />
                         </div>
                     )}
-                    <div className={`w-20 h-20 rounded-2xl flex items-center justify-center transition-colors ${
-                        isSelected('instructor')
-                            ? 'bg-purple-500 text-white'
-                            : 'bg-purple-50 dark:bg-purple-950/20 text-purple-500 group-hover:bg-purple-500 group-hover:text-white'
-                    }`}>
+                    <div
+                        className={`w-20 h-20 rounded-2xl flex items-center justify-center transition-colors ${
+                            isSelected('instructor')
+                                ? 'bg-purple-500 text-white'
+                                : 'bg-purple-50 dark:bg-purple-950/20 text-purple-500 group-hover:bg-purple-500 group-hover:text-white'
+                        }`}
+                    >
                         <Presentation size={40} />
                     </div>
                     <div className="text-center">
-                        <h3 className="font-display font-bold text-2xl text-slate-900 dark:text-white mb-2">Instructor</h3>
-                        <p className="text-slate-500 dark:text-white/60">Manage courses, view analytics, and create new learning maps.</p>
+                        <h3 className="font-display font-bold text-2xl text-slate-900 dark:text-white mb-2">
+                            Instructor
+                        </h3>
+                        <p className="text-slate-500 dark:text-white/60">
+                            Manage courses, view analytics, and create new learning maps.
+                        </p>
                     </div>
                 </button>
             </div>
@@ -165,8 +190,7 @@ const RoleSelectPage = () => {
                 <p className="mt-4 text-sm text-slate-500 dark:text-white/40">
                     {selectedRoles.length === 2
                         ? '🎉 Great! You can both teach and learn'
-                        : `Selected: ${selectedRoles[0].charAt(0).toUpperCase() + selectedRoles[0].slice(1)}`
-                    }
+                        : `Selected: ${selectedRoles[0].charAt(0).toUpperCase() + selectedRoles[0].slice(1)}`}
                 </p>
             )}
         </div>

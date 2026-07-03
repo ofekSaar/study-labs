@@ -59,7 +59,14 @@ const ThemePreview = ({ item, coins, isOwned, onBuy, buying }) => (
         <div className="text-center space-y-2">
             <p className="text-slate-400 dark:text-white/50 text-xs">Color palette</p>
             <div className="flex gap-2 mt-3 justify-center">
-                {(item.swatchColors ?? [item.previewColors?.[0], item.previewColors?.[1], '#ffffff22', '#00000022']).map((c, i) => (
+                {(
+                    item.swatchColors ?? [
+                        item.previewColors?.[0],
+                        item.previewColors?.[1],
+                        '#ffffff22',
+                        '#00000022',
+                    ]
+                ).map((c, i) => (
                     <div
                         key={i}
                         className="w-10 h-10 rounded-xl border border-white/10 shadow"
@@ -70,14 +77,19 @@ const ThemePreview = ({ item, coins, isOwned, onBuy, buying }) => (
         </div>
         <div
             className="w-full rounded-2xl p-5 border border-white/10 text-sm space-y-2"
-            style={{ background: `linear-gradient(135deg, ${item.previewColors?.[0] ?? '#6366f1'}33, ${item.previewColors?.[1] ?? '#0f172a'})` }}
+            style={{
+                background: `linear-gradient(135deg, ${item.previewColors?.[0] ?? '#6366f1'}33, ${item.previewColors?.[1] ?? '#0f172a'})`,
+            }}
         >
             <div className="flex items-center gap-2">
                 <span className="text-2xl">{item.emoji}</span>
                 <span className="font-black text-white">{item.name}</span>
             </div>
             <div className="h-2 rounded-full bg-white/10 overflow-hidden">
-                <div className="h-full w-2/3 rounded-full" style={{ background: item.previewColors?.[0] ?? '#6366f1' }} />
+                <div
+                    className="h-full w-2/3 rounded-full"
+                    style={{ background: item.previewColors?.[0] ?? '#6366f1' }}
+                />
             </div>
             <p className="text-white/50 text-xs">{item.description}</p>
         </div>
@@ -142,7 +154,14 @@ const BuyOrOwned = ({ item, coins, isOwned, onBuy, buying }) => {
                     : 'bg-slate-700 text-slate-400 cursor-not-allowed opacity-60'
             }`}
         >
-            {buying ? <Loader2 size={16} className="animate-spin" /> : <><span>🪙</span>{item.cost} Coins — Buy Now</>}
+            {buying ? (
+                <Loader2 size={16} className="animate-spin" />
+            ) : (
+                <>
+                    <span>🪙</span>
+                    {item.cost} Coins — Buy Now
+                </>
+            )}
         </button>
     );
 };
@@ -192,7 +211,11 @@ const ItemPreviewModal = ({ item, category, coins, isOwned, onBuy, onClose }) =>
                 <div className="flex items-center gap-2 mb-1">
                     <span
                         className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border"
-                        style={{ color: rarity.color, borderColor: `${rarity.color}44`, background: `${rarity.color}11` }}
+                        style={{
+                            color: rarity.color,
+                            borderColor: `${rarity.color}44`,
+                            background: `${rarity.color}11`,
+                        }}
                     >
                         {rarity.label}
                     </span>

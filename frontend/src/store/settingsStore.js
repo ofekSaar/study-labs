@@ -9,7 +9,8 @@ const useSettingsStore = create(
             soundEnabled: true,
 
             setTheme: (theme) => set({ theme }),
-            toggleAnimations: () => set((state) => ({ animationsEnabled: !state.animationsEnabled })),
+            toggleAnimations: () =>
+                set((state) => ({ animationsEnabled: !state.animationsEnabled })),
             toggleSound: () => set((state) => ({ soundEnabled: !state.soundEnabled })),
         }),
         {

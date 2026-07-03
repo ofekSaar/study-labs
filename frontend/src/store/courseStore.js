@@ -6,8 +6,11 @@ import useToastStore from './toastStore.js';
 const SEEN_ANNOUNCEMENTS_KEY = 'studylabs_seen_announcements';
 
 function getSeenIds() {
-    try { return new Set(JSON.parse(localStorage.getItem(SEEN_ANNOUNCEMENTS_KEY)) || []); }
-    catch { return new Set(); }
+    try {
+        return new Set(JSON.parse(localStorage.getItem(SEEN_ANNOUNCEMENTS_KEY)) || []);
+    } catch {
+        return new Set();
+    }
 }
 
 function markSeen(ids) {
@@ -59,7 +62,9 @@ const useCourseStore = create((set) => ({
             // For each enrolled course, fetch progress
             const enrichedCourses = await Promise.all(
                 courses
-                    .filter((c) => c.enrollmentStatus === 'approved' || c.enrollmentStatus === 'active')
+                    .filter(
+                        (c) => c.enrollmentStatus === 'approved' || c.enrollmentStatus === 'active'
+                    )
                     .map(async (course) => {
                         try {
                             const progressRes = await api.get(`/api/progress/course/${course._id}`);
@@ -134,8 +139,8 @@ const useCourseStore = create((set) => ({
             const courseMeta = data.course || {};
 
             set((state) => {
-                const exists = state.courses.some(c => c.id === courseId || c._id === courseId);
-                
+                const exists = state.courses.some((c) => c.id === courseId || c._id === courseId);
+
                 // Generation metadata travels with the course payload — keep it in sync so the
                 // failed/generating states (and the retry button) render on a direct page load.
                 const genMeta = {
@@ -149,7 +154,7 @@ const useCourseStore = create((set) => ({
                     // Update existing course with fetched nodes
                     return {
                         courses: state.courses.map((c) =>
-                            (c.id === courseId || c._id === courseId)
+                            c.id === courseId || c._id === courseId
                                 ? { ...c, ...genMeta, nodes }
                                 : c
                         ),
@@ -197,7 +202,8 @@ const useCourseStore = create((set) => ({
                         progress: data.percentComplete,
                         nodes: course.nodes.map((node) => {
                             if (node._id === nodeId) return { ...node, status: 'completed' };
-                            if (data.nextNode && node._id === data.nextNode._id) return { ...node, status: 'current' };
+                            if (data.nextNode && node._id === data.nextNode._id)
+                                return { ...node, status: 'current' };
                             return node;
                         }),
                     };
@@ -219,7 +225,7 @@ const useCourseStore = create((set) => ({
         const updated = data.course;
         set((state) => ({
             courses: state.courses.map((c) =>
-                (c.id === courseId || c._id === courseId)
+                c.id === courseId || c._id === courseId
                     ? { ...c, ...updated, id: c.id || c._id }
                     : c
             ),
@@ -232,7 +238,8 @@ const useCourseStore = create((set) => ({
             await api.delete(`/api/courses/${courseId}`);
             set((state) => ({
                 courses: state.courses.filter((c) => c.id !== courseId && c._id !== courseId),
-                selectedCourseId: state.selectedCourseId === courseId ? null : state.selectedCourseId,
+                selectedCourseId:
+                    state.selectedCourseId === courseId ? null : state.selectedCourseId,
             }));
         } catch (error) {
             console.error('Failed to delete course:', error);
@@ -279,7 +286,9 @@ const useCourseStore = create((set) => ({
         const { data } = await api.post(`/api/courses/${courseId}/announcements`, payload);
         set((state) => ({
             announcements: [data.announcement, ...state.announcements].sort(
-                (a, b) => (b.isPinned ? 1 : 0) - (a.isPinned ? 1 : 0) || new Date(b.createdAt) - new Date(a.createdAt)
+                (a, b) =>
+                    (b.isPinned ? 1 : 0) - (a.isPinned ? 1 : 0) ||
+                    new Date(b.createdAt) - new Date(a.createdAt)
             ),
         }));
         return data.announcement;
@@ -299,15 +308,16 @@ const useCourseStore = create((set) => ({
             // Flip the course back to 'generating' so CourseMap's poller resumes.
             set((state) => ({
                 courses: state.courses.map((c) =>
-                    (c.id === courseId || c._id === courseId)
+                    c.id === courseId || c._id === courseId
                         ? {
-                            ...c,
-                            generationStatus: 'generating',
-                            generationError: null,
-                            generationProgress: 'Restarting AI generation...',
-                            generationAttempts: data?.generationAttempts ?? (c.generationAttempts || 1) + 1,
-                            nodes: [],
-                        }
+                              ...c,
+                              generationStatus: 'generating',
+                              generationError: null,
+                              generationProgress: 'Restarting AI generation...',
+                              generationAttempts:
+                                  data?.generationAttempts ?? (c.generationAttempts || 1) + 1,
+                              nodes: [],
+                          }
                         : c
                 ),
             }));

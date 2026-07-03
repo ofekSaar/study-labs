@@ -1,5 +1,22 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Home, Settings, LogOut, Menu, PlusCircle, BookOpen, ChevronRight, X, Users, TrendingUp, GraduationCap, BarChart2, BookMarked, Bell, Check, XCircle } from 'lucide-react';
+import {
+    Home,
+    Settings,
+    LogOut,
+    Menu,
+    PlusCircle,
+    BookOpen,
+    ChevronRight,
+    X,
+    Users,
+    TrendingUp,
+    GraduationCap,
+    BarChart2,
+    BookMarked,
+    Bell,
+    Check,
+    XCircle,
+} from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import useAuthStore from '../../store/authStore';
 import useCourseStore from '../../store/courseStore';
@@ -9,15 +26,23 @@ import useGamificationStore, { INSTRUCTOR_AVATARS } from '../../store/gamificati
 
 /* ── Logo SVG ── */
 const Logo = ({ size = 32 }) => (
-    <div className="rounded-xl flex items-center justify-center flex-shrink-0"
+    <div
+        className="rounded-xl flex items-center justify-center flex-shrink-0"
         style={{
-            width: size, height: size,
+            width: size,
+            height: size,
             background: 'linear-gradient(135deg, #7C3AED, #D97757)',
             boxShadow: '0 0 16px rgba(124,58,237,0.5)',
-        }}>
+        }}
+    >
         <svg width={size * 0.55} height={size * 0.55} viewBox="0 0 24 24" fill="none">
-            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"
-                stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+            <path
+                d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"
+                stroke="white"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            />
         </svg>
     </div>
 );
@@ -31,7 +56,14 @@ const GameNavItem = ({ icon, label, active, onClick }) => (
                 ? 'text-purple-700 dark:text-purple-300 bg-gradient-to-r from-purple-500/15 to-violet-500/5 dark:from-purple-500/20 dark:to-violet-500/8 border border-purple-500/30 dark:border-purple-500/40 shadow-sm'
                 : 'text-slate-600 dark:text-white/50 hover:text-slate-900 dark:hover:text-white/90 hover:bg-purple-500/5 dark:hover:bg-white/5 border border-transparent'
         }`}
-        style={active ? { boxShadow: '-3px 0 12px rgba(124,58,237,0.2), inset 0 0 20px rgba(124,58,237,0.04)' } : {}}
+        style={
+            active
+                ? {
+                      boxShadow:
+                          '-3px 0 12px rgba(124,58,237,0.2), inset 0 0 20px rgba(124,58,237,0.04)',
+                  }
+                : {}
+        }
     >
         {/* Active left glow bar */}
         {active && (
@@ -56,20 +88,31 @@ const GameNavItem = ({ icon, label, active, onClick }) => (
         </span>
 
         <span className="relative flex-1 text-left">{label}</span>
-        {active && <ChevronRight size={12} className="ml-auto text-purple-500/70 relative shrink-0" />}
+        {active && (
+            <ChevronRight size={12} className="ml-auto text-purple-500/70 relative shrink-0" />
+        )}
     </button>
 );
 
 /* ── Notification Bell ── */
 const NotificationBell = () => {
-    const { pendingEnrollments, fetchPendingEnrollments, approvePendingEnrollment, denyPendingEnrollment } = useEnrollmentStore();
+    const {
+        pendingEnrollments,
+        fetchPendingEnrollments,
+        approvePendingEnrollment,
+        denyPendingEnrollment,
+    } = useEnrollmentStore();
     const [isOpen, setIsOpen] = useState(false);
     const [actionLoading, setActionLoading] = useState(null);
     const panelRef = useRef(null);
 
-    const refresh = useCallback(() => { fetchPendingEnrollments(); }, [fetchPendingEnrollments]);
+    const refresh = useCallback(() => {
+        fetchPendingEnrollments();
+    }, [fetchPendingEnrollments]);
 
-    useEffect(() => { refresh(); }, [refresh]);
+    useEffect(() => {
+        refresh();
+    }, [refresh]);
 
     useEffect(() => {
         const interval = setInterval(refresh, 30000);
@@ -87,12 +130,20 @@ const NotificationBell = () => {
 
     const handleApprove = async (id) => {
         setActionLoading(id + '-approve');
-        try { await approvePendingEnrollment(id); } finally { setActionLoading(null); }
+        try {
+            await approvePendingEnrollment(id);
+        } finally {
+            setActionLoading(null);
+        }
     };
 
     const handleDeny = async (id) => {
         setActionLoading(id + '-deny');
-        try { await denyPendingEnrollment(id); } finally { setActionLoading(null); }
+        try {
+            await denyPendingEnrollment(id);
+        } finally {
+            setActionLoading(null);
+        }
     };
 
     const count = pendingEnrollments.length;
@@ -100,7 +151,7 @@ const NotificationBell = () => {
     return (
         <div className="relative flex-1" ref={panelRef}>
             <button
-                onClick={() => setIsOpen(o => !o)}
+                onClick={() => setIsOpen((o) => !o)}
                 title="Enrollment Requests"
                 className={`w-full flex flex-col items-center gap-0.5 py-2 rounded-xl relative transition-all border ${
                     count > 0
@@ -120,12 +171,18 @@ const NotificationBell = () => {
             </button>
 
             {isOpen && (
-                <div className="absolute bottom-full mb-2 bg-white dark:bg-[#1a1625] rounded-xl shadow-2xl border border-slate-200 dark:border-white/10 overflow-hidden z-50"
-                    style={{ maxHeight: '320px', width: '280px', left: 0 }}>
+                <div
+                    className="absolute bottom-full mb-2 bg-white dark:bg-[#1a1625] rounded-xl shadow-2xl border border-slate-200 dark:border-white/10 overflow-hidden z-50"
+                    style={{ maxHeight: '320px', width: '280px', left: 0 }}
+                >
                     <div className="px-3 py-2 border-b border-slate-100 dark:border-white/8 flex items-center justify-between">
-                        <span className="text-[11px] font-black text-slate-700 dark:text-white/80 uppercase tracking-wider">Enrollment Requests</span>
+                        <span className="text-[11px] font-black text-slate-700 dark:text-white/80 uppercase tracking-wider">
+                            Enrollment Requests
+                        </span>
                         {count > 0 && (
-                            <span className="px-1.5 py-0.5 rounded-md bg-amber-500/15 text-amber-600 dark:text-amber-400 text-[9px] font-black">{count} pending</span>
+                            <span className="px-1.5 py-0.5 rounded-md bg-amber-500/15 text-amber-600 dark:text-amber-400 text-[9px] font-black">
+                                {count} pending
+                            </span>
                         )}
                     </div>
                     <div className="overflow-y-auto" style={{ maxHeight: '260px' }}>
@@ -135,12 +192,23 @@ const NotificationBell = () => {
                                 <span className="text-[11px] font-bold">No pending requests</span>
                             </div>
                         ) : (
-                            pendingEnrollments.map(e => (
-                                <div key={e._id} className="px-3 py-2.5 border-b border-slate-50 dark:border-white/5 last:border-0 hover:bg-slate-50 dark:hover:bg-white/3 transition-colors">
+                            pendingEnrollments.map((e) => (
+                                <div
+                                    key={e._id}
+                                    className="px-3 py-2.5 border-b border-slate-50 dark:border-white/5 last:border-0 hover:bg-slate-50 dark:hover:bg-white/3 transition-colors"
+                                >
                                     <div className="flex items-start gap-2 mb-1.5">
                                         <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-purple-100 to-violet-100 dark:from-purple-900/40 dark:to-violet-900/40 flex items-center justify-center text-sm flex-shrink-0">
                                             {e.student?.avatar ? (
-                                                <img src={e.student.avatar} alt={e.student?.name ? `${e.student.name}'s avatar` : 'Student avatar'} className="w-7 h-7 rounded-lg object-cover" />
+                                                <img
+                                                    src={e.student.avatar}
+                                                    alt={
+                                                        e.student?.name
+                                                            ? `${e.student.name}'s avatar`
+                                                            : 'Student avatar'
+                                                    }
+                                                    className="w-7 h-7 rounded-lg object-cover"
+                                                />
                                             ) : (
                                                 <span className="text-[10px] font-black text-purple-600 dark:text-purple-400">
                                                     {e.student?.name?.[0]?.toUpperCase() || '?'}
@@ -148,8 +216,12 @@ const NotificationBell = () => {
                                             )}
                                         </div>
                                         <div className="min-w-0 flex-1">
-                                            <p className="text-[11px] font-bold text-slate-800 dark:text-white/90 truncate leading-tight">{e.student?.name}</p>
-                                            <p className="text-[9px] text-slate-400 dark:text-white/35 truncate">{e.course?.title}</p>
+                                            <p className="text-[11px] font-bold text-slate-800 dark:text-white/90 truncate leading-tight">
+                                                {e.student?.name}
+                                            </p>
+                                            <p className="text-[9px] text-slate-400 dark:text-white/35 truncate">
+                                                {e.course?.title}
+                                            </p>
                                         </div>
                                     </div>
                                     <div className="flex gap-1.5">
@@ -161,7 +233,9 @@ const NotificationBell = () => {
                                             {actionLoading === e._id + '-approve' ? (
                                                 <div className="w-3 h-3 border border-emerald-500 border-t-transparent rounded-full animate-spin" />
                                             ) : (
-                                                <><Check size={10} /> Approve</>
+                                                <>
+                                                    <Check size={10} /> Approve
+                                                </>
                                             )}
                                         </button>
                                         <button
@@ -172,7 +246,9 @@ const NotificationBell = () => {
                                             {actionLoading === e._id + '-deny' ? (
                                                 <div className="w-3 h-3 border border-red-500 border-t-transparent rounded-full animate-spin" />
                                             ) : (
-                                                <><XCircle size={10} /> Deny</>
+                                                <>
+                                                    <XCircle size={10} /> Deny
+                                                </>
                                             )}
                                         </button>
                                     </div>
@@ -186,28 +262,44 @@ const NotificationBell = () => {
     );
 };
 
-const SidebarContent = ({ location, navigate, user, instructorStats, _setIsSidebarOpen, setIsSettingsOpen, handleLogout }) => {
+const SidebarContent = ({
+    location,
+    navigate,
+    user,
+    instructorStats,
+    _setIsSidebarOpen,
+    setIsSettingsOpen,
+    handleLogout,
+}) => {
     const { activeAvatar } = useGamificationStore();
-    const currentAvatar = INSTRUCTOR_AVATARS.find(a => a.id === activeAvatar) || INSTRUCTOR_AVATARS[0];
+    const currentAvatar =
+        INSTRUCTOR_AVATARS.find((a) => a.id === activeAvatar) || INSTRUCTOR_AVATARS[0];
 
     const activeCourses = instructorStats?.generation?.readyCourses ?? '—';
     const totalStudents = instructorStats?.enrollments?.totalStudents ?? '—';
-    const completionRate = instructorStats?.engagement?.avgCompletionRate != null
-        ? `${instructorStats.engagement.avgCompletionRate}%`
-        : '—';
+    const completionRate =
+        instructorStats?.engagement?.avgCompletionRate != null
+            ? `${instructorStats.engagement.avgCompletionRate}%`
+            : '—';
 
     return (
         <div className="flex flex-col h-full">
-
             {/* ── Logo ── */}
             <div className="p-5 pb-4">
                 <div className="flex items-center gap-3">
                     <Logo size={36} />
                     <div>
-                        <span className="font-display font-bold text-xl text-slate-800 dark:text-white leading-none block tracking-tight">StudyLabs</span>
+                        <span className="font-display font-bold text-xl text-slate-800 dark:text-white leading-none block tracking-tight">
+                            StudyLabs
+                        </span>
                         <span
                             className="text-[9px] font-black uppercase tracking-widest mt-0.5 block"
-                            style={{ background: 'linear-gradient(135deg, #7C3AED, #D97757)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}
+                            style={{
+                                background: 'linear-gradient(135deg, #7C3AED, #D97757)',
+                                WebkitBackgroundClip: 'text',
+                                WebkitTextFillColor: 'transparent',
+                                backgroundClip: 'text',
+                            }}
                         >
                             Instructor Mode
                         </span>
@@ -217,51 +309,83 @@ const SidebarContent = ({ location, navigate, user, instructorStats, _setIsSideb
 
             {/* ── Nav ── */}
             <div className="flex-1 overflow-y-auto px-3 py-2 space-y-0.5">
-                <div className="px-4 mb-3 text-[10px] font-black text-slate-400 dark:text-white/20 uppercase tracking-widest">Navigate</div>
+                <div className="px-4 mb-3 text-[10px] font-black text-slate-400 dark:text-white/20 uppercase tracking-widest">
+                    Navigate
+                </div>
 
-                <GameNavItem icon={<Home size={18} />} label="Dashboard"
+                <GameNavItem
+                    icon={<Home size={18} />}
+                    label="Dashboard"
                     active={location.pathname === '/instructor'}
-                    onClick={() => navigate('/instructor')} />
+                    onClick={() => navigate('/instructor')}
+                />
 
-                <GameNavItem icon={<TrendingUp size={18} />} label="Student Status"
+                <GameNavItem
+                    icon={<TrendingUp size={18} />}
+                    label="Student Status"
                     active={location.pathname === '/instructor/status'}
-                    onClick={() => navigate('/instructor/status')} />
+                    onClick={() => navigate('/instructor/status')}
+                />
 
-                <GameNavItem icon={<GraduationCap size={18} />} label="Class Roster"
+                <GameNavItem
+                    icon={<GraduationCap size={18} />}
+                    label="Class Roster"
                     active={location.pathname === '/instructor/class'}
-                    onClick={() => navigate('/instructor/class')} />
+                    onClick={() => navigate('/instructor/class')}
+                />
 
-                <GameNavItem icon={<PlusCircle size={18} />} label="Create Course"
+                <GameNavItem
+                    icon={<PlusCircle size={18} />}
+                    label="Create Course"
                     active={location.pathname === '/instructor/create'}
-                    onClick={() => navigate('/instructor/create')} />
+                    onClick={() => navigate('/instructor/create')}
+                />
 
-                <GameNavItem icon={<BookOpen size={18} />} label="Managed Courses"
+                <GameNavItem
+                    icon={<BookOpen size={18} />}
+                    label="Managed Courses"
                     active={location.pathname.includes('/instructor/managed')}
-                    onClick={() => navigate('/instructor/managed')} />
+                    onClick={() => navigate('/instructor/managed')}
+                />
 
-                <GameNavItem icon={<BarChart2 size={18} />} label="Statistics"
+                <GameNavItem
+                    icon={<BarChart2 size={18} />}
+                    label="Statistics"
                     active={location.pathname === '/instructor/stats'}
-                    onClick={() => navigate('/instructor/stats')} />
+                    onClick={() => navigate('/instructor/stats')}
+                />
             </div>
 
             {/* ── Instructor Card + Actions ── */}
             <div className="p-4 pt-3 border-t border-slate-200 dark:border-white/8">
-
                 {/* Instructor Card */}
                 <div className="mb-3">
-                    <div className="p-px rounded-[18px]" style={{ background: 'linear-gradient(135deg, rgba(124,58,237,0.55), rgba(217,119,87,0.4), rgba(124,58,237,0.3))' }}>
+                    <div
+                        className="p-px rounded-[18px]"
+                        style={{
+                            background:
+                                'linear-gradient(135deg, rgba(124,58,237,0.55), rgba(217,119,87,0.4), rgba(124,58,237,0.3))',
+                        }}
+                    >
                         <div className="bg-white dark:bg-[#16131A] rounded-[17px] p-3 space-y-2">
-
                             <div className="flex items-center gap-3">
                                 <div className="relative flex-shrink-0">
-                                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-100 to-violet-100 dark:from-purple-900/40 dark:to-violet-900/40 flex items-center justify-center text-3xl shadow-md select-none"
-                                        style={{ boxShadow: '0 0 0 2px rgba(124,58,237,0.3), 0 4px 12px rgba(124,58,237,0.2)' }}>
+                                    <div
+                                        className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-100 to-violet-100 dark:from-purple-900/40 dark:to-violet-900/40 flex items-center justify-center text-3xl shadow-md select-none"
+                                        style={{
+                                            boxShadow:
+                                                '0 0 0 2px rgba(124,58,237,0.3), 0 4px 12px rgba(124,58,237,0.2)',
+                                        }}
+                                    >
                                         {currentAvatar.emoji}
                                     </div>
                                     {/* Instructor badge */}
                                     <div
                                         className="absolute -bottom-1.5 -right-1.5 px-1.5 py-0.5 rounded-lg text-[8px] font-black text-white leading-none select-none"
-                                        style={{ background: 'linear-gradient(135deg, #7C3AED, #D97757)', boxShadow: '0 2px 6px rgba(124,58,237,0.5)' }}
+                                        style={{
+                                            background: 'linear-gradient(135deg, #7C3AED, #D97757)',
+                                            boxShadow: '0 2px 6px rgba(124,58,237,0.5)',
+                                        }}
                                     >
                                         PRO
                                     </div>
@@ -274,7 +398,12 @@ const SidebarContent = ({ location, navigate, user, instructorStats, _setIsSideb
                                     </p>
                                     <p
                                         className="text-[9px] font-black uppercase tracking-widest mt-0.5"
-                                        style={{ background: 'linear-gradient(135deg, #7C3AED, #D97757)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}
+                                        style={{
+                                            background: 'linear-gradient(135deg, #7C3AED, #D97757)',
+                                            WebkitBackgroundClip: 'text',
+                                            WebkitTextFillColor: 'transparent',
+                                            backgroundClip: 'text',
+                                        }}
                                     >
                                         Instructor
                                     </p>
@@ -287,11 +416,15 @@ const SidebarContent = ({ location, navigate, user, instructorStats, _setIsSideb
                                         </div>
                                         <div className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-purple-500/10 dark:bg-purple-500/15 border border-purple-500/20">
                                             <Users size={9} className="text-purple-500" />
-                                            <span className="text-[8px] font-black text-purple-600 dark:text-purple-400">{totalStudents} students</span>
+                                            <span className="text-[8px] font-black text-purple-600 dark:text-purple-400">
+                                                {totalStudents} students
+                                            </span>
                                         </div>
                                         <div className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-orange-500/10 dark:bg-orange-500/15 border border-orange-500/20">
                                             <TrendingUp size={9} className="text-orange-500" />
-                                            <span className="text-[8px] font-black text-orange-600 dark:text-orange-400">{completionRate}</span>
+                                            <span className="text-[8px] font-black text-orange-600 dark:text-orange-400">
+                                                {completionRate}
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
@@ -311,10 +444,22 @@ const SidebarContent = ({ location, navigate, user, instructorStats, _setIsSideb
                             title="Switch to Student"
                             className="flex-1 flex flex-col items-center gap-0.5 py-2 rounded-xl hover:bg-orange-500/10 dark:hover:bg-orange-500/15 text-orange-500 dark:text-orange-400 transition-all border border-transparent hover:border-orange-500/20"
                         >
-                            <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                            <svg
+                                className="w-4 h-4 flex-shrink-0"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
+                                />
                             </svg>
-                            <span className="text-[8px] font-black uppercase tracking-wide">Student</span>
+                            <span className="text-[8px] font-black uppercase tracking-wide">
+                                Student
+                            </span>
                         </button>
                     )}
                     <NotificationBell />
@@ -324,7 +469,9 @@ const SidebarContent = ({ location, navigate, user, instructorStats, _setIsSideb
                         className="flex-1 flex flex-col items-center gap-0.5 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-white/5 text-slate-400 dark:text-white/30 hover:text-slate-600 dark:hover:text-white/60 transition-all border border-transparent hover:border-slate-200 dark:hover:border-white/10"
                     >
                         <Settings size={16} />
-                        <span className="text-[8px] font-black uppercase tracking-wide">Settings</span>
+                        <span className="text-[8px] font-black uppercase tracking-wide">
+                            Settings
+                        </span>
                     </button>
                     <button
                         onClick={handleLogout}
@@ -332,7 +479,9 @@ const SidebarContent = ({ location, navigate, user, instructorStats, _setIsSideb
                         className="flex-1 flex flex-col items-center gap-0.5 py-2 rounded-xl hover:bg-red-50 dark:hover:bg-red-500/10 text-red-400/60 hover:text-red-500 dark:hover:text-red-400 transition-all border border-transparent hover:border-red-200 dark:hover:border-red-500/20"
                     >
                         <LogOut size={16} />
-                        <span className="text-[8px] font-black uppercase tracking-wide">Logout</span>
+                        <span className="text-[8px] font-black uppercase tracking-wide">
+                            Logout
+                        </span>
                     </button>
                 </div>
             </div>
@@ -368,15 +517,27 @@ const InstructorLayout = ({ children }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
-    useEffect(() => { fetchInstructorStats(); }, [fetchInstructorStats]);
+    useEffect(() => {
+        fetchInstructorStats();
+    }, [fetchInstructorStats]);
 
-    const handleLogout = () => { logout(); navigate('/login'); };
+    const handleLogout = () => {
+        logout();
+        navigate('/login');
+    };
 
-    const sidebarProps = { location, navigate, user, instructorStats, setIsSidebarOpen, setIsSettingsOpen, handleLogout };
+    const sidebarProps = {
+        location,
+        navigate,
+        user,
+        instructorStats,
+        setIsSidebarOpen,
+        setIsSettingsOpen,
+        handleLogout,
+    };
 
     return (
         <div className="min-h-screen flex font-sans bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300">
-
             {/* Desktop Sidebar */}
             <aside className="hidden md:flex flex-col w-72 sticky top-0 h-screen z-30 sidebar-theme">
                 <SidebarContent {...sidebarProps} />
@@ -385,11 +546,17 @@ const InstructorLayout = ({ children }) => {
             {/* Mobile Overlay */}
             {isSidebarOpen && (
                 <div className="fixed inset-0 z-50 md:hidden">
-                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsSidebarOpen(false)} />
+                    <div
+                        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                        onClick={() => setIsSidebarOpen(false)}
+                        aria-hidden="true"
+                    />
                     <aside className="absolute left-0 top-0 bottom-0 w-[85vw] max-w-72 sidebar-theme shadow-2xl">
                         <div className="absolute top-4 right-4 z-10">
-                            <button onClick={() => setIsSidebarOpen(false)}
-                                className="p-2 rounded-xl bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-white/60 hover:text-slate-800 dark:hover:text-white transition-colors">
+                            <button
+                                onClick={() => setIsSidebarOpen(false)}
+                                className="p-2 rounded-xl bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-white/60 hover:text-slate-800 dark:hover:text-white transition-colors"
+                            >
                                 <X size={18} />
                             </button>
                         </div>
@@ -405,10 +572,17 @@ const InstructorLayout = ({ children }) => {
                     <div className="flex items-center gap-2.5">
                         <Logo size={32} />
                         <div>
-                            <span className="font-display font-bold text-base text-slate-800 dark:text-white leading-none block">StudyLabs</span>
+                            <span className="font-display font-bold text-base text-slate-800 dark:text-white leading-none block">
+                                StudyLabs
+                            </span>
                             <span
                                 className="text-[8px] font-black uppercase tracking-widest block"
-                                style={{ background: 'linear-gradient(135deg, #7C3AED, #D97757)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}
+                                style={{
+                                    background: 'linear-gradient(135deg, #7C3AED, #D97757)',
+                                    WebkitBackgroundClip: 'text',
+                                    WebkitTextFillColor: 'transparent',
+                                    backgroundClip: 'text',
+                                }}
                             >
                                 Instructor
                             </span>
@@ -416,19 +590,23 @@ const InstructorLayout = ({ children }) => {
                     </div>
                     <div className="flex items-center gap-1">
                         <MobileBellButton />
-                        <button onClick={() => setIsSidebarOpen(true)}
-                            className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 text-slate-600 dark:text-white/80 transition-colors">
+                        <button
+                            onClick={() => setIsSidebarOpen(true)}
+                            className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 text-slate-600 dark:text-white/80 transition-colors"
+                        >
                             <Menu size={22} />
                         </button>
                     </div>
                 </header>
 
-                <main className="flex-1 relative page-enter">
-                    {children}
-                </main>
+                <main className="flex-1 relative page-enter">{children}</main>
             </div>
 
-            <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} isInstructor={true} />
+            <SettingsModal
+                isOpen={isSettingsOpen}
+                onClose={() => setIsSettingsOpen(false)}
+                isInstructor={true}
+            />
         </div>
     );
 };

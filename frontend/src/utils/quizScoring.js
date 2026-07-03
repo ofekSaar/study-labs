@@ -1,4 +1,11 @@
-import { QUIZ_TIMER_SECONDS, SPEED_BONUS_THRESHOLD, XP_MCQ_BASE, XP_MCQ_BONUS, XP_OPEN_BASE, XP_OPEN_BONUS } from '../constants/config';
+import {
+    QUIZ_TIMER_SECONDS,
+    SPEED_BONUS_THRESHOLD,
+    XP_MCQ_BASE,
+    XP_MCQ_BONUS,
+    XP_OPEN_BASE,
+    XP_OPEN_BONUS,
+} from '../constants/config';
 
 const OPEN_SPEED_THRESHOLD_SECONDS = 10;
 
@@ -10,7 +17,7 @@ const OPEN_SPEED_THRESHOLD_SECONDS = 10;
  * @returns {{ xp: number, gotSpeedBonus: boolean }}
  */
 export const calcMCQScore = (timeTaken, multiplier) => {
-    const gotSpeedBonus = timeTaken <= (QUIZ_TIMER_SECONDS - SPEED_BONUS_THRESHOLD);
+    const gotSpeedBonus = timeTaken <= QUIZ_TIMER_SECONDS - SPEED_BONUS_THRESHOLD;
     const xp = Math.round((gotSpeedBonus ? XP_MCQ_BONUS : XP_MCQ_BASE) * multiplier);
     return { xp, gotSpeedBonus };
 };

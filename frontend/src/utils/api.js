@@ -24,69 +24,68 @@ export const removeToken = () => localStorage.removeItem('studylabs_token');
  * Core fetch wrapper with auth headers and error handling.
  */
 const apiFetch = async (endpoint, options = {}) => {
-  const token = getToken();
+    const token = getToken();
 
-  const config = {
-    ...options,
-    headers: {
-      ...(options.headers || {}),
-    },
-  };
+    const config = {
+        ...options,
+        headers: {
+            ...(options.headers || {}),
+        },
+    };
 
-  // Add auth header if token exists
-  if (token) {
-    config.headers['Authorization'] = `Bearer ${token}`;
-  }
-
-  // Add JSON content-type for non-FormData bodies
-  if (options.body && !(options.body instanceof FormData)) {
-    config.headers['Content-Type'] = 'application/json';
-    if (typeof options.body === 'object') {
-      config.body = JSON.stringify(options.body);
+    // Add auth header if token exists
+    if (token) {
+        config.headers['Authorization'] = `Bearer ${token}`;
     }
-  }
 
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+    // Add JSON content-type for non-FormData bodies
+    if (options.body && !(options.body instanceof FormData)) {
+        config.headers['Content-Type'] = 'application/json';
+        if (typeof options.body === 'object') {
+            config.body = JSON.stringify(options.body);
+        }
+    }
 
-  // Handle non-JSON responses
-  const contentType = response.headers.get('content-type');
-  if (!contentType || !contentType.includes('application/json')) {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+
+    // Handle non-JSON responses
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response;
+    }
+
+    const data = await response.json();
+
     if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        const error = new Error(data.message || 'Something went wrong');
+        error.status = response.status;
+        error.data = data;
+        throw error;
     }
-    return response;
-  }
 
-  const data = await response.json();
-
-  if (!response.ok) {
-    const error = new Error(data.message || 'Something went wrong');
-    error.status = response.status;
-    error.data = data;
-    throw error;
-  }
-
-  return data;
+    return data;
 };
 
 // ── Convenience methods ─────────────────────────
 
 export const api = {
-  get: (endpoint) => apiFetch(endpoint, { method: 'GET' }),
+    get: (endpoint) => apiFetch(endpoint, { method: 'GET' }),
 
-  post: (endpoint, body) => apiFetch(endpoint, { method: 'POST', body }),
+    post: (endpoint, body) => apiFetch(endpoint, { method: 'POST', body }),
 
-  put: (endpoint, body) => apiFetch(endpoint, { method: 'PUT', body }),
+    put: (endpoint, body) => apiFetch(endpoint, { method: 'PUT', body }),
 
-  delete: (endpoint) => apiFetch(endpoint, { method: 'DELETE' }),
+    delete: (endpoint) => apiFetch(endpoint, { method: 'DELETE' }),
 
-  /**
-   * Upload files via multipart/form-data.
-   * @param {string} endpoint
-   * @param {FormData} formData
-   */
-  upload: (endpoint, formData) =>
-    apiFetch(endpoint, { method: 'POST', body: formData }),
+    /**
+     * Upload files via multipart/form-data.
+     * @param {string} endpoint
+     * @param {FormData} formData
+     */
+    upload: (endpoint, formData) => apiFetch(endpoint, { method: 'POST', body: formData }),
 };
 
 export default api;

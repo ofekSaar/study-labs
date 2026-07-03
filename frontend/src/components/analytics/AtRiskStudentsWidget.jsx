@@ -9,7 +9,7 @@ const AtRiskStudentsWidget = ({ courses = [] }) => {
     const [selectedCourseId, setSelectedCourseId] = useState(null);
     const navigate = useNavigate();
 
-    const readyCourses = courses.filter(c => c.generationStatus === 'ready').slice(0, 5);
+    const readyCourses = courses.filter((c) => c.generationStatus === 'ready').slice(0, 5);
 
     useEffect(() => {
         if (readyCourses.length > 0 && !selectedCourseId) {
@@ -36,7 +36,10 @@ const AtRiskStudentsWidget = ({ courses = [] }) => {
     if (readyCourses.length === 0) return null;
 
     return (
-        <div className="bg-white dark:bg-white/5 border border-red-200/60 dark:border-red-500/15 rounded-2xl overflow-hidden" style={{ boxShadow: '0 4px 16px rgba(0,0,0,0.04)' }}>
+        <div
+            className="bg-white dark:bg-white/5 border border-red-200/60 dark:border-red-500/15 rounded-2xl overflow-hidden"
+            style={{ boxShadow: '0 4px 16px rgba(0,0,0,0.04)' }}
+        >
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-red-100 dark:border-red-500/10">
                 <div className="flex items-center gap-2">
@@ -63,7 +66,7 @@ const AtRiskStudentsWidget = ({ courses = [] }) => {
             {/* Course selector */}
             {readyCourses.length > 1 && (
                 <div className="px-4 py-2 flex gap-1.5 flex-wrap border-b border-slate-100 dark:border-white/5">
-                    {readyCourses.map(c => (
+                    {readyCourses.map((c) => (
                         <button
                             key={c._id}
                             onClick={() => setSelectedCourseId(c._id)}
@@ -83,7 +86,10 @@ const AtRiskStudentsWidget = ({ courses = [] }) => {
             <div className="divide-y divide-slate-100 dark:divide-white/5">
                 {isLoading ? (
                     Array.from({ length: 3 }).map((_, i) => (
-                        <div key={i} className="h-12 mx-3 my-1.5 rounded-xl bg-slate-100 dark:bg-white/5 animate-pulse" />
+                        <div
+                            key={i}
+                            className="h-12 mx-3 my-1.5 rounded-xl bg-slate-100 dark:bg-white/5 animate-pulse"
+                        />
                     ))
                 ) : atRiskStudents.length === 0 ? (
                     <div className="py-8 flex flex-col items-center gap-2 text-slate-400 dark:text-white/30">
@@ -93,12 +99,17 @@ const AtRiskStudentsWidget = ({ courses = [] }) => {
                     </div>
                 ) : (
                     atRiskStudents.slice(0, 5).map((s, i) => (
-                        <div key={i} className="flex items-center gap-3 px-4 py-2.5 hover:bg-red-50/50 dark:hover:bg-red-500/5 transition-colors">
+                        <div
+                            key={i}
+                            className="flex items-center gap-3 px-4 py-2.5 hover:bg-red-50/50 dark:hover:bg-red-500/5 transition-colors"
+                        >
                             <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-red-100 to-orange-100 dark:from-red-900/30 dark:to-orange-900/30 flex items-center justify-center flex-shrink-0 text-sm font-black text-red-600 dark:text-red-400">
                                 {s.student?.name?.[0]?.toUpperCase() || '?'}
                             </div>
                             <div className="flex-1 min-w-0">
-                                <p className="text-xs font-bold text-slate-800 dark:text-white truncate">{s.student?.name || 'Unknown'}</p>
+                                <p className="text-xs font-bold text-slate-800 dark:text-white truncate">
+                                    {s.student?.name || 'Unknown'}
+                                </p>
                                 <div className="flex items-center gap-2 mt-0.5">
                                     {s.daysSinceActive > 5 ? (
                                         <span className="flex items-center gap-0.5 text-[9px] font-bold text-amber-500">
@@ -109,11 +120,15 @@ const AtRiskStudentsWidget = ({ courses = [] }) => {
                                             <TrendingDown size={9} /> {s.completion}% done
                                         </span>
                                     )}
-                                    <span className="text-[9px] text-slate-400 dark:text-white/25">{s.issue}</span>
+                                    <span className="text-[9px] text-slate-400 dark:text-white/25">
+                                        {s.issue}
+                                    </span>
                                 </div>
                             </div>
                             <button
-                                onClick={() => navigate(`/instructor/managed?announce=${selectedCourseId}`)}
+                                onClick={() =>
+                                    navigate(`/instructor/managed?announce=${selectedCourseId}`)
+                                }
                                 title="Send announcement"
                                 className="p-1.5 rounded-lg hover:bg-red-100 dark:hover:bg-red-500/15 text-red-400 hover:text-red-600 transition-colors"
                             >

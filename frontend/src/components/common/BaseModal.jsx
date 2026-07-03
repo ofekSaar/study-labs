@@ -75,12 +75,17 @@ const BaseModal = ({
                             <div className="px-6 pt-6 pb-4 border-b border-slate-100 dark:border-white/8 flex items-start justify-between gap-4 shrink-0">
                                 <div className="min-w-0">
                                     {title && (
-                                        <h2 id={titleId} className="text-lg font-black text-slate-800 dark:text-white truncate">
+                                        <h2
+                                            id={titleId}
+                                            className="text-lg font-black text-slate-800 dark:text-white truncate"
+                                        >
                                             {title}
                                         </h2>
                                     )}
                                     {subtitle && (
-                                        <p className="text-sm text-slate-500 dark:text-white/40 mt-0.5 truncate">{subtitle}</p>
+                                        <p className="text-sm text-slate-500 dark:text-white/40 mt-0.5 truncate">
+                                            {subtitle}
+                                        </p>
                                     )}
                                 </div>
                                 {!hideClose && (

@@ -13,9 +13,10 @@ const MyCourses = () => {
         fetchCourses();
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-    const enrolledCourses = courses.filter(course =>
-        course.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        course.department?.toLowerCase().includes(searchTerm.toLowerCase())
+    const enrolledCourses = courses.filter(
+        (course) =>
+            course.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            course.department?.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     return (
@@ -23,22 +24,40 @@ const MyCourses = () => {
             {/* Ambient background */}
             <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
                 <div className="absolute inset-0 dot-grid opacity-60" />
-                <div className="absolute top-0 right-0 w-96 h-96 rounded-full"
-                    style={{ background: 'radial-gradient(circle, rgba(217,119,87,0.12) 0%, transparent 70%)', filter: 'blur(40px)' }} />
-                <div className="absolute bottom-0 left-0 w-96 h-96 rounded-full"
-                    style={{ background: 'radial-gradient(circle, rgba(124,58,237,0.10) 0%, transparent 70%)', filter: 'blur(40px)' }} />
+                <div
+                    className="absolute top-0 right-0 w-96 h-96 rounded-full"
+                    style={{
+                        background:
+                            'radial-gradient(circle, rgba(217,119,87,0.12) 0%, transparent 70%)',
+                        filter: 'blur(40px)',
+                    }}
+                />
+                <div
+                    className="absolute bottom-0 left-0 w-96 h-96 rounded-full"
+                    style={{
+                        background:
+                            'radial-gradient(circle, rgba(124,58,237,0.10) 0%, transparent 70%)',
+                        filter: 'blur(40px)',
+                    }}
+                />
             </div>
 
             <div className="relative z-[1] max-w-[1600px] mx-auto px-4 sm:px-6 py-4 sm:py-6 md:py-8 pb-32 animate-fade-in">
-
                 {/* Header */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
                     <div>
-                        <h1 className="text-2xl sm:text-3xl md:text-4xl font-display font-black text-slate-900 dark:text-white drop-shadow-sm dark:drop-shadow-md tracking-tight">My Courses</h1>
-                        <p className="text-slate-500 dark:text-white/60 text-base sm:text-lg mt-1 font-medium">Pick up where you left off in your learning journey.</p>
+                        <h1 className="text-2xl sm:text-3xl md:text-4xl font-display font-black text-slate-900 dark:text-white drop-shadow-sm dark:drop-shadow-md tracking-tight">
+                            My Courses
+                        </h1>
+                        <p className="text-slate-500 dark:text-white/60 text-base sm:text-lg mt-1 font-medium">
+                            Pick up where you left off in your learning journey.
+                        </p>
                     </div>
                     <div className="relative flex-1 md:w-80 max-w-sm">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-white/40" size={18} />
+                        <Search
+                            className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-white/40"
+                            size={18}
+                        />
                         <input
                             type="text"
                             placeholder="Search my courses..."
@@ -54,7 +73,8 @@ const MyCourses = () => {
                     <div className="flex items-center gap-2 mb-8">
                         <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#D97757]/10 border border-[#D97757]/20 text-[#D97757] text-sm font-bold">
                             <BookMarked size={14} />
-                            {enrolledCourses.length} {enrolledCourses.length === 1 ? 'Course' : 'Courses'} Enrolled
+                            {enrolledCourses.length}{' '}
+                            {enrolledCourses.length === 1 ? 'Course' : 'Courses'} Enrolled
                         </span>
                     </div>
                 )}
@@ -66,7 +86,7 @@ const MyCourses = () => {
                     </div>
                 ) : enrolledCourses.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {enrolledCourses.map(course => (
+                        {enrolledCourses.map((course) => (
                             <div
                                 key={course.id}
                                 className="glass-card rounded-3xl hover:-translate-y-1 hover:shadow-xl transition-all duration-300 group flex flex-col h-full relative overflow-hidden"
@@ -83,15 +103,21 @@ const MyCourses = () => {
                                             {course.courseAvatar || '📚'}
                                         </div>
                                         <div className="flex flex-col items-end">
-                                            <span className="text-[10px] font-black text-slate-400 dark:text-white/40 uppercase tracking-widest mb-1.5">Progress</span>
+                                            <span className="text-[10px] font-black text-slate-400 dark:text-white/40 uppercase tracking-widest mb-1.5">
+                                                Progress
+                                            </span>
                                             <div className="flex items-center gap-2">
                                                 <div className="w-24 h-2 bg-slate-200 dark:bg-black/40 rounded-full overflow-hidden shadow-inner">
                                                     <div
                                                         className="h-full bg-gradient-to-r from-[#D97757] to-[#C4613D] rounded-full shadow-[0_0_10px_rgba(217,119,87,0.5)]"
-                                                        style={{ width: `${course.progress || 0}%` }}
+                                                        style={{
+                                                            width: `${course.progress || 0}%`,
+                                                        }}
                                                     />
                                                 </div>
-                                                <span className="text-sm font-black text-emerald-600 dark:text-emerald-400 drop-shadow-sm">{Math.round(course.progress || 0)}%</span>
+                                                <span className="text-sm font-black text-emerald-600 dark:text-emerald-400 drop-shadow-sm">
+                                                    {Math.round(course.progress || 0)}%
+                                                </span>
                                             </div>
                                         </div>
                                     </div>
@@ -107,13 +133,24 @@ const MyCourses = () => {
                                         <div className="mt-auto">
                                             <div className="flex items-center gap-3 mb-4 bg-slate-100 dark:bg-black/20 p-3 rounded-2xl border border-slate-200/50 dark:border-white/5">
                                                 <img
-                                                    src={course.instructor?.avatar || 'https://via.placeholder.com/150'}
-                                                    alt={course.instructor?.name ? `${course.instructor.name}'s avatar` : 'Instructor avatar'}
+                                                    src={
+                                                        course.instructor?.avatar ||
+                                                        'https://via.placeholder.com/150'
+                                                    }
+                                                    alt={
+                                                        course.instructor?.name
+                                                            ? `${course.instructor.name}'s avatar`
+                                                            : 'Instructor avatar'
+                                                    }
                                                     className="w-10 h-10 rounded-full bg-slate-200 dark:bg-white/10 border border-slate-300 dark:border-white/20"
                                                 />
                                                 <div className="text-sm">
-                                                    <p className="text-slate-800 dark:text-white font-bold">{course.instructor?.name || 'Instructor'}</p>
-                                                    <p className="text-[10px] text-slate-400 dark:text-white/40 uppercase tracking-widest mt-0.5">Course Creator</p>
+                                                    <p className="text-slate-800 dark:text-white font-bold">
+                                                        {course.instructor?.name || 'Instructor'}
+                                                    </p>
+                                                    <p className="text-[10px] text-slate-400 dark:text-white/40 uppercase tracking-widest mt-0.5">
+                                                        Course Creator
+                                                    </p>
                                                 </div>
                                             </div>
 
@@ -135,9 +172,13 @@ const MyCourses = () => {
                         <div className="w-20 h-20 bg-[#D97757]/10 border border-[#D97757]/20 text-[#D97757] rounded-full flex items-center justify-center mx-auto mb-6">
                             <GraduationCap size={40} />
                         </div>
-                        <h3 className="text-2xl font-black text-slate-900 dark:text-white drop-shadow-sm dark:drop-shadow-md mb-3">No courses yet</h3>
+                        <h3 className="text-2xl font-black text-slate-900 dark:text-white drop-shadow-sm dark:drop-shadow-md mb-3">
+                            No courses yet
+                        </h3>
                         <p className="text-slate-500 dark:text-white/60 mb-8 max-w-md mx-auto text-lg">
-                            {searchTerm ? 'No enrolled courses match your search.' : "You haven't enrolled in any courses yet. Start your journey today!"}
+                            {searchTerm
+                                ? 'No enrolled courses match your search.'
+                                : "You haven't enrolled in any courses yet. Start your journey today!"}
                         </p>
                         {!searchTerm && (
                             <button

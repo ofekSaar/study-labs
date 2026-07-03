@@ -26,7 +26,8 @@ const useAuthStore = create((set) => ({
             const { data } = await api.get('/api/auth/me');
             const storedRole = localStorage.getItem('active_role');
             const userRoles = data.user.roles || (data.user.role ? [data.user.role] : []);
-            const activeRole = (storedRole && userRoles.includes(storedRole)) ? storedRole : data.user.role;
+            const activeRole =
+                storedRole && userRoles.includes(storedRole) ? storedRole : data.user.role;
 
             set({
                 user: data.user,
@@ -50,7 +51,8 @@ const useAuthStore = create((set) => ({
             const { data } = await api.get('/api/auth/me');
             const storedRole = localStorage.getItem('active_role');
             const userRoles = data.user.roles || (data.user.role ? [data.user.role] : []);
-            const activeRole = (storedRole && userRoles.includes(storedRole)) ? storedRole : data.user.role;
+            const activeRole =
+                storedRole && userRoles.includes(storedRole) ? storedRole : data.user.role;
 
             set({
                 user: data.user,
@@ -74,16 +76,14 @@ const useAuthStore = create((set) => ({
     setRole: async (roleInput) => {
         try {
             // Support both single role and array of roles
-            const payload = Array.isArray(roleInput)
-                ? { roles: roleInput }
-                : { role: roleInput };
+            const payload = Array.isArray(roleInput) ? { roles: roleInput } : { role: roleInput };
 
             const { data } = await api.put('/api/auth/role', payload);
             // Update token with new role
             if (data.token) {
                 setToken(data.token);
             }
-            
+
             const userRoles = data.user.roles || (data.user.role ? [data.user.role] : []);
             const activeRole = userRoles.includes('instructor') ? 'instructor' : 'student';
             localStorage.setItem('active_role', activeRole);

@@ -22,7 +22,10 @@ const XPMultiplierBanner = () => {
             <div className="flex items-center gap-3 relative z-10">
                 {/* Glowing Zap Icon */}
                 <div className="w-10 h-10 rounded-2xl bg-white/10 flex items-center justify-center animate-pulse shrink-0">
-                    <Zap size={22} className="text-amber-300 fill-amber-300 drop-shadow-[0_0_10px_rgba(252,211,77,0.8)]" />
+                    <Zap
+                        size={22}
+                        className="text-amber-300 fill-amber-300 drop-shadow-[0_0_10px_rgba(252,211,77,0.8)]"
+                    />
                 </div>
                 <div>
                     <h3 className="text-sm font-black uppercase tracking-wider flex items-center gap-2">

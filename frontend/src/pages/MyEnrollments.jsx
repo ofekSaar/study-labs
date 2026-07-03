@@ -12,9 +12,13 @@ const getDeptGradient = (dept) => {
     const d = dept?.toLowerCase() || '';
     if (d.includes('computer') || d.includes('cs') || d.includes('software'))
         return 'from-purple-600 to-indigo-600';
-    if (d.includes('math'))
-        return 'from-blue-500 to-cyan-500';
-    if (d.includes('science') || d.includes('biology') || d.includes('chemistry') || d.includes('physics'))
+    if (d.includes('math')) return 'from-blue-500 to-cyan-500';
+    if (
+        d.includes('science') ||
+        d.includes('biology') ||
+        d.includes('chemistry') ||
+        d.includes('physics')
+    )
         return 'from-emerald-500 to-teal-500';
     if (d.includes('business') || d.includes('economics') || d.includes('marketing'))
         return 'from-amber-500 to-orange-500';
@@ -39,9 +43,11 @@ const MyEnrollments = () => {
                 const { data } = await api.get('/api/courses');
                 setAvailableCourses(data.courses || []);
             } catch (error) {
-                console.error("Failed to fetch courses", error);
+                console.error('Failed to fetch courses', error);
                 setLoadError(true);
-                useToastStore.getState().error('Failed to load courses', 'Please refresh the page to try again.');
+                useToastStore
+                    .getState()
+                    .error('Failed to load courses', 'Please refresh the page to try again.');
             }
             setIsLoading(false);
         };
@@ -53,15 +59,19 @@ const MyEnrollments = () => {
         try {
             await requestEnrollment(courseId);
             await fetchMyEnrollments();
-            useToastStore.getState().success('Request sent', 'Your enrollment request has been submitted.');
+            useToastStore
+                .getState()
+                .success('Request sent', 'Your enrollment request has been submitted.');
         } catch (error) {
-            useToastStore.getState().error('Request failed', error.message || 'Failed to request enrollment');
+            useToastStore
+                .getState()
+                .error('Request failed', error.message || 'Failed to request enrollment');
         } finally {
             setRequestingId(null);
         }
     };
 
-    const filteredCourses = availableCourses.filter(course => {
+    const filteredCourses = availableCourses.filter((course) => {
         const matchesSearch =
             course.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             course.description?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -74,11 +84,23 @@ const MyEnrollments = () => {
     const getStatusBadge = (status) => {
         switch (status) {
             case 'approved':
-                return <span className="px-3 py-1 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full text-xs font-bold uppercase tracking-wide">Approved</span>;
+                return (
+                    <span className="px-3 py-1 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full text-xs font-bold uppercase tracking-wide">
+                        Approved
+                    </span>
+                );
             case 'pending':
-                return <span className="px-3 py-1 bg-orange-500/20 text-orange-400 border border-orange-500/30 rounded-full text-xs font-bold uppercase tracking-wide">Pending</span>;
+                return (
+                    <span className="px-3 py-1 bg-orange-500/20 text-orange-400 border border-orange-500/30 rounded-full text-xs font-bold uppercase tracking-wide">
+                        Pending
+                    </span>
+                );
             case 'denied':
-                return <span className="px-3 py-1 bg-red-500/20 text-red-400 border border-red-500/30 rounded-full text-xs font-bold uppercase tracking-wide">Denied</span>;
+                return (
+                    <span className="px-3 py-1 bg-red-500/20 text-red-400 border border-red-500/30 rounded-full text-xs font-bold uppercase tracking-wide">
+                        Denied
+                    </span>
+                );
             default:
                 return null;
         }
@@ -89,24 +111,42 @@ const MyEnrollments = () => {
             {/* Ambient background */}
             <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
                 <div className="absolute inset-0 dot-grid opacity-60" />
-                <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full"
-                    style={{ background: 'radial-gradient(circle, rgba(217,119,87,0.12) 0%, transparent 70%)', filter: 'blur(40px)' }} />
-                <div className="absolute top-1/2 -right-32 w-80 h-80 rounded-full"
-                    style={{ background: 'radial-gradient(circle, rgba(124,58,237,0.10) 0%, transparent 70%)', filter: 'blur(40px)' }} />
+                <div
+                    className="absolute -top-32 -left-32 w-96 h-96 rounded-full"
+                    style={{
+                        background:
+                            'radial-gradient(circle, rgba(217,119,87,0.12) 0%, transparent 70%)',
+                        filter: 'blur(40px)',
+                    }}
+                />
+                <div
+                    className="absolute top-1/2 -right-32 w-80 h-80 rounded-full"
+                    style={{
+                        background:
+                            'radial-gradient(circle, rgba(124,58,237,0.10) 0%, transparent 70%)',
+                        filter: 'blur(40px)',
+                    }}
+                />
             </div>
 
             <div className="relative z-[1] p-4 sm:p-6 max-w-[1600px] mx-auto pb-32">
-
                 {/* Header */}
                 <div className="mb-6">
-                    <h1 className="font-display text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 dark:text-white mb-1 tracking-tight drop-shadow-sm dark:drop-shadow-md">Discover Courses</h1>
-                    <p className="text-slate-500 dark:text-white/60 text-lg font-medium">Browse available courses and request enrollment.</p>
+                    <h1 className="font-display text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 dark:text-white mb-1 tracking-tight drop-shadow-sm dark:drop-shadow-md">
+                        Discover Courses
+                    </h1>
+                    <p className="text-slate-500 dark:text-white/60 text-lg font-medium">
+                        Browse available courses and request enrollment.
+                    </p>
                 </div>
 
                 {/* Search + Filter Row */}
                 <div className="flex flex-col sm:flex-row gap-3 mb-6">
                     <div className="relative flex-1 max-w-sm">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-white/40" size={18} />
+                        <Search
+                            className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-white/40"
+                            size={18}
+                        />
                         <input
                             type="text"
                             placeholder="Search courses..."
@@ -116,7 +156,7 @@ const MyEnrollments = () => {
                         />
                     </div>
                     <div className="flex items-center gap-2 flex-wrap">
-                        {DEPARTMENTS.map(dept => (
+                        {DEPARTMENTS.map((dept) => (
                             <button
                                 key={dept}
                                 onClick={() => setActiveDept(dept)}
@@ -134,7 +174,8 @@ const MyEnrollments = () => {
 
                 {loadError && !isLoading && (
                     <div className="mb-6 px-4 py-3 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm font-medium">
-                        Couldn't load the full course list. Some courses may be missing — try refreshing the page.
+                        Couldn't load the full course list. Some courses may be missing — try
+                        refreshing the page.
                     </div>
                 )}
 
@@ -146,18 +187,31 @@ const MyEnrollments = () => {
                 ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                         {filteredCourses.map((course) => {
-                            const enrollment = myEnrollments.find(e => (e.course._id || e.course) === course._id);
+                            const enrollment = myEnrollments.find(
+                                (e) => (e.course._id || e.course) === course._id
+                            );
                             const gradient = getDeptGradient(course.department);
 
                             return (
-                                <div key={course._id} className="glass-card rounded-3xl hover:-translate-y-1 hover:shadow-xl transition-all duration-300 flex flex-col overflow-hidden h-full group relative">
+                                <div
+                                    key={course._id}
+                                    className="glass-card rounded-3xl hover:-translate-y-1 hover:shadow-xl transition-all duration-300 flex flex-col overflow-hidden h-full group relative"
+                                >
                                     {/* Inner glow hover */}
                                     <div className="absolute inset-0 bg-gradient-to-br from-[#D97757]/8 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
 
                                     {/* Course header banner */}
-                                    <div className={`h-36 bg-gradient-to-br ${course.color || gradient} relative overflow-hidden`}>
+                                    <div
+                                        className={`h-36 bg-gradient-to-br ${course.color || gradient} relative overflow-hidden`}
+                                    >
                                         {/* Subtle pattern overlay */}
-                                        <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 20% 80%, rgba(255,255,255,0.3) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(255,255,255,0.2) 0%, transparent 50%)' }} />
+                                        <div
+                                            className="absolute inset-0 opacity-20"
+                                            style={{
+                                                backgroundImage:
+                                                    'radial-gradient(circle at 20% 80%, rgba(255,255,255,0.3) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(255,255,255,0.2) 0%, transparent 50%)',
+                                            }}
+                                        />
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                                         <div className="absolute bottom-4 left-5">
                                             <span className="px-3 py-1.5 bg-white/15 backdrop-blur-md text-white text-[10px] font-black tracking-widest rounded-full border border-white/25 shadow-inner uppercase">
@@ -173,19 +227,42 @@ const MyEnrollments = () => {
                                         <h3 className="font-display font-bold text-xl text-slate-900 dark:text-white mb-2 drop-shadow-sm dark:drop-shadow-md group-hover:text-[#D97757] dark:group-hover:text-[#D97757] transition-colors">
                                             {course.title}
                                         </h3>
-                                        <p className="text-slate-500 dark:text-white/60 text-sm mb-5 line-clamp-3 flex-1">{course.description}</p>
+                                        <p className="text-slate-500 dark:text-white/60 text-sm mb-5 line-clamp-3 flex-1">
+                                            {course.description}
+                                        </p>
 
                                         <div className="flex items-center gap-3 mb-5 bg-slate-100 dark:bg-black/20 p-3 rounded-2xl border border-slate-200/50 dark:border-white/5">
-                                            <img src={course.instructor?.avatar || 'https://via.placeholder.com/150'} alt={course.instructor?.name ? `${course.instructor.name}'s avatar` : 'Instructor avatar'} className="w-10 h-10 rounded-full bg-slate-200 dark:bg-white/10 border border-slate-300 dark:border-white/20" />
+                                            <img
+                                                src={
+                                                    course.instructor?.avatar ||
+                                                    'https://via.placeholder.com/150'
+                                                }
+                                                alt={
+                                                    course.instructor?.name
+                                                        ? `${course.instructor.name}'s avatar`
+                                                        : 'Instructor avatar'
+                                                }
+                                                className="w-10 h-10 rounded-full bg-slate-200 dark:bg-white/10 border border-slate-300 dark:border-white/20"
+                                            />
                                             <div className="text-sm">
-                                                <p className="text-slate-800 dark:text-white font-bold">{course.instructor?.name || 'Instructor'}</p>
-                                                <p className="text-[10px] text-slate-400 dark:text-white/40 uppercase tracking-widest mt-0.5">Course Creator</p>
+                                                <p className="text-slate-800 dark:text-white font-bold">
+                                                    {course.instructor?.name || 'Instructor'}
+                                                </p>
+                                                <p className="text-[10px] text-slate-400 dark:text-white/40 uppercase tracking-widest mt-0.5">
+                                                    Course Creator
+                                                </p>
                                             </div>
                                         </div>
 
                                         <div className="mt-auto pt-4 border-t border-slate-200 dark:border-white/10 flex items-center justify-between">
                                             <div>
-                                                {enrollment ? getStatusBadge(enrollment.status) : <span className="text-slate-400 dark:text-white/40 text-sm font-bold tracking-wide uppercase">Not enrolled</span>}
+                                                {enrollment ? (
+                                                    getStatusBadge(enrollment.status)
+                                                ) : (
+                                                    <span className="text-slate-400 dark:text-white/40 text-sm font-bold tracking-wide uppercase">
+                                                        Not enrolled
+                                                    </span>
+                                                )}
                                             </div>
                                             {(!enrollment || enrollment.status === 'denied') && (
                                                 <Button
@@ -193,10 +270,19 @@ const MyEnrollments = () => {
                                                     size="sm"
                                                     onClick={() => handleRequest(course._id)}
                                                     loading={requestingId === course._id}
-                                                    disabled={requestingId !== null && requestingId !== course._id}
-                                                    aria-label={enrollment?.status === 'denied' ? `Request access again for ${course.title}` : `Request access for ${course.title}`}
+                                                    disabled={
+                                                        requestingId !== null &&
+                                                        requestingId !== course._id
+                                                    }
+                                                    aria-label={
+                                                        enrollment?.status === 'denied'
+                                                            ? `Request access again for ${course.title}`
+                                                            : `Request access for ${course.title}`
+                                                    }
                                                 >
-                                                    {enrollment?.status === 'denied' ? 'Request Again' : 'Request Access'}
+                                                    {enrollment?.status === 'denied'
+                                                        ? 'Request Again'
+                                                        : 'Request Access'}
                                                 </Button>
                                             )}
                                         </div>
@@ -210,7 +296,9 @@ const MyEnrollments = () => {
                                 <div className="w-24 h-24 mb-6 rounded-full bg-[#D97757]/10 border border-[#D97757]/20 flex items-center justify-center">
                                     <span className="text-4xl opacity-60">🛸</span>
                                 </div>
-                                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">No Courses Found</h3>
+                                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
+                                    No Courses Found
+                                </h3>
                                 <p className="text-slate-500 dark:text-white/40 max-w-md">
                                     {searchTerm || activeDept !== 'All'
                                         ? 'Try adjusting your search or filters.'

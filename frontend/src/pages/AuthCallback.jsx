@@ -5,7 +5,7 @@ import useAuthStore from '../store/authStore';
 const AuthCallback = () => {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
-    const handleAuthCallback = useAuthStore(state => state.handleAuthCallback);
+    const handleAuthCallback = useAuthStore((state) => state.handleAuthCallback);
     const [error, setError] = useState(null);
 
     useEffect(() => {
@@ -14,7 +14,7 @@ const AuthCallback = () => {
             const errParam = searchParams.get('error');
 
             if (errParam) {
-                setError("Authentication failed.");
+                setError('Authentication failed.');
                 setTimeout(() => navigate('/login'), 3000);
                 return;
             }
@@ -30,7 +30,7 @@ const AuthCallback = () => {
                         navigate('/instructor');
                     }
                 } else {
-                    setError("Failed to fetch user profile.");
+                    setError('Failed to fetch user profile.');
                     setTimeout(() => navigate('/login'), 3000);
                 }
             } else {

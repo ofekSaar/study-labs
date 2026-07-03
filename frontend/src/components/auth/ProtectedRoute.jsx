@@ -9,7 +9,7 @@ const ProtectedRoute = ({ children, allowedRole }) => {
         return <Navigate to="/login" replace />;
     }
 
-    const userRoles = (user?.roles?.length > 0) ? user.roles : (role ? [role] : []);
+    const userRoles = user?.roles?.length > 0 ? user.roles : role ? [role] : [];
     const isAdmin = userRoles.includes('admin');
 
     // Admins bypass the role-select flow

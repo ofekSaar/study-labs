@@ -3,11 +3,28 @@ import { Loader2, Save, RefreshCw } from 'lucide-react';
 import api from '../../utils/api';
 
 const PRICE_LABELS = {
-    avatars:  { wizard_scholar: 'Wizard Scholar', cyber_learner: 'Cyber Learner', unicorn_scholar: 'Academic Unicorn' },
-    titles:   { knowledge_alchemist: 'Alchemist of Knowledge', ultimate_mind: 'Ultimate Mind', legendary_scholar: 'Legendary Scholar' },
-    themes:   { arcade: 'Retro Arcade', space: 'Space Nebula', cyberpunk: 'Neon Cyberpunk' },
-    frames:   { bronze: 'Bronze Glow', silver: 'Silver Glow', gold: 'Gold Shine', diamond: 'Diamond Sparkle' },
-    powerups: { streak_shield: 'Streak Shield', xp_boost: 'XP Boost Token', weekend_freeze: 'Weekend Freeze' },
+    avatars: {
+        wizard_scholar: 'Wizard Scholar',
+        cyber_learner: 'Cyber Learner',
+        unicorn_scholar: 'Academic Unicorn',
+    },
+    titles: {
+        knowledge_alchemist: 'Alchemist of Knowledge',
+        ultimate_mind: 'Ultimate Mind',
+        legendary_scholar: 'Legendary Scholar',
+    },
+    themes: { arcade: 'Retro Arcade', space: 'Space Nebula', cyberpunk: 'Neon Cyberpunk' },
+    frames: {
+        bronze: 'Bronze Glow',
+        silver: 'Silver Glow',
+        gold: 'Gold Shine',
+        diamond: 'Diamond Sparkle',
+    },
+    powerups: {
+        streak_shield: 'Streak Shield',
+        xp_boost: 'XP Boost Token',
+        weekend_freeze: 'Weekend Freeze',
+    },
 };
 
 const ShopPricesTab = () => {
@@ -19,12 +36,15 @@ const ShopPricesTab = () => {
 
     useEffect(() => {
         api.get('/api/admin/shop/prices')
-            .then(res => { setPrices(res.data.prices); setDraft(structuredClone(res.data.prices)); })
+            .then((res) => {
+                setPrices(res.data.prices);
+                setDraft(structuredClone(res.data.prices));
+            })
             .finally(() => setLoading(false));
     }, []);
 
     const handleChange = (cat, key, val) => {
-        setDraft(prev => ({ ...prev, [cat]: { ...prev[cat], [key]: parseInt(val) || 0 } }));
+        setDraft((prev) => ({ ...prev, [cat]: { ...prev[cat], [key]: parseInt(val) || 0 } }));
     };
 
     const handleSave = async () => {
@@ -52,8 +72,13 @@ const ShopPricesTab = () => {
     return (
         <div className="space-y-5 max-w-xl">
             {Object.entries(draft ?? {}).map(([cat, items]) => (
-                <div key={cat} className="bg-white dark:bg-white/[0.03] border border-slate-200/60 dark:border-white/[0.06] rounded-2xl p-5">
-                    <h3 className="font-black text-slate-700 dark:text-white/60 text-xs uppercase tracking-widest mb-4 capitalize">{cat}</h3>
+                <div
+                    key={cat}
+                    className="bg-white dark:bg-white/[0.03] border border-slate-200/60 dark:border-white/[0.06] rounded-2xl p-5"
+                >
+                    <h3 className="font-black text-slate-700 dark:text-white/60 text-xs uppercase tracking-widest mb-4 capitalize">
+                        {cat}
+                    </h3>
                     <div className="space-y-3">
                         {Object.entries(items).map(([key, val]) => (
                             <div key={key} className="flex items-center justify-between gap-4">
@@ -66,7 +91,7 @@ const ShopPricesTab = () => {
                                         type="number"
                                         min="0"
                                         value={val}
-                                        onChange={e => handleChange(cat, key, e.target.value)}
+                                        onChange={(e) => handleChange(cat, key, e.target.value)}
                                         className="w-20 text-right px-2 py-1.5 text-sm font-black rounded-lg border border-slate-200/60 dark:border-white/10 bg-slate-50 dark:bg-white/5 text-slate-800 dark:text-white focus:outline-none focus:border-indigo-500"
                                     />
                                 </div>
