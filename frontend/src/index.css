@@ -164,6 +164,14 @@ body {
     background-clip: text;
 }
 
+/* Instructor brand gradient (purple → orange) */
+.text-gradient-instructor {
+    background: linear-gradient(135deg, #7c3aed, #d97757);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
 .text-gradient-gold {
     background: linear-gradient(135deg, #f59e0b, #ef4444);
     -webkit-background-clip: text;
@@ -192,6 +200,9 @@ body {
 /* ── Background Gradients (reusable fills) ───────────── */
 /* Single source of truth for the 135deg brand gradients that were
    previously inlined as style={{ background: 'linear-gradient(...)' }} */
+.bg-grad-instructor {
+    background: linear-gradient(135deg, #7c3aed, #d97757);
+}
 .bg-grad-primary {
     background: linear-gradient(135deg, #d97757 0%, #7c3aed 100%);
 }

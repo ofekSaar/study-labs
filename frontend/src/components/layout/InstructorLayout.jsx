@@ -28,11 +28,10 @@ import useGamificationStore, { INSTRUCTOR_AVATARS } from '../../store/gamificati
 /* ── Logo SVG ── */
 const Logo = ({ size = 32 }) => (
     <div
-        className="rounded-xl flex items-center justify-center flex-shrink-0"
+        className="rounded-xl flex items-center justify-center flex-shrink-0 bg-grad-instructor"
         style={{
             width: size,
             height: size,
-            background: 'linear-gradient(135deg, #7C3AED, #D97757)',
             boxShadow: '0 0 16px rgba(124,58,237,0.5)',
         }}
     >
@@ -303,15 +302,7 @@ const SidebarContent = ({ onNavigate, onOpenSettings }) => {
                         <span className="font-display font-bold text-xl text-slate-800 dark:text-white leading-none block tracking-tight">
                             StudyLabs
                         </span>
-                        <span
-                            className="text-[9px] font-black uppercase tracking-widest mt-0.5 block"
-                            style={{
-                                background: 'linear-gradient(135deg, #7C3AED, #D97757)',
-                                WebkitBackgroundClip: 'text',
-                                WebkitTextFillColor: 'transparent',
-                                backgroundClip: 'text',
-                            }}
-                        >
+                        <span className="text-[9px] font-black uppercase tracking-widest mt-0.5 block text-gradient-instructor">
                             Instructor Mode
                         </span>
                     </div>
@@ -392,11 +383,8 @@ const SidebarContent = ({ onNavigate, onOpenSettings }) => {
                                     </div>
                                     {/* Instructor badge */}
                                     <div
-                                        className="absolute -bottom-1.5 -right-1.5 px-1.5 py-0.5 rounded-lg text-[8px] font-black text-white leading-none select-none"
-                                        style={{
-                                            background: 'linear-gradient(135deg, #7C3AED, #D97757)',
-                                            boxShadow: '0 2px 6px rgba(124,58,237,0.5)',
-                                        }}
+                                        className="absolute -bottom-1.5 -right-1.5 px-1.5 py-0.5 rounded-lg text-[8px] font-black text-white leading-none select-none bg-grad-instructor"
+                                        style={{ boxShadow: '0 2px 6px rgba(124,58,237,0.5)' }}
                                     >
                                         PRO
                                     </div>
@@ -407,15 +395,7 @@ const SidebarContent = ({ onNavigate, onOpenSettings }) => {
                                     <p className="text-sm font-black text-slate-800 dark:text-white truncate leading-tight">
                                         {user?.name || 'Instructor'}
                                     </p>
-                                    <p
-                                        className="text-[9px] font-black uppercase tracking-widest mt-0.5"
-                                        style={{
-                                            background: 'linear-gradient(135deg, #7C3AED, #D97757)',
-                                            WebkitBackgroundClip: 'text',
-                                            WebkitTextFillColor: 'transparent',
-                                            backgroundClip: 'text',
-                                        }}
-                                    >
+                                    <p className="text-[9px] font-black uppercase tracking-widest mt-0.5 text-gradient-instructor">
                                         Instructor
                                     </p>
                                     <div className="flex items-center gap-1.5 mt-1.5">
@@ -574,15 +554,7 @@ const InstructorLayout = ({ children }) => {
                             <span className="font-display font-bold text-base text-slate-800 dark:text-white leading-none block">
                                 StudyLabs
                             </span>
-                            <span
-                                className="text-[8px] font-black uppercase tracking-widest block"
-                                style={{
-                                    background: 'linear-gradient(135deg, #7C3AED, #D97757)',
-                                    WebkitBackgroundClip: 'text',
-                                    WebkitTextFillColor: 'transparent',
-                                    backgroundClip: 'text',
-                                }}
-                            >
+                            <span className="text-[8px] font-black uppercase tracking-widest block text-gradient-instructor">
                                 Instructor
                             </span>
                         </div>

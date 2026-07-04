@@ -7,6 +7,7 @@ import useToastStore from '../store/toastStore';
 import { getDeptStyle } from '../utils/departmentStyles';
 import Button from '../components/common/Button';
 import Spinner from '../components/common/Spinner';
+import PanelEmptyState from '../components/instructor/PanelEmptyState';
 import {
     Search,
     BookOpen,
@@ -346,18 +347,11 @@ const EnrollmentTab = ({ courses, preselectedCourseId }) => {
                         </p>
                     </div>
                 ) : courseEnrollments.length === 0 ? (
-                    <div className="text-center py-20 px-6">
-                        <div className="w-14 h-14 rounded-full bg-slate-100 dark:bg-white/5 flex items-center justify-center mx-auto mb-4">
-                            <AlertCircle size={28} className="text-slate-400" />
-                        </div>
-                        <h3 className="text-base font-bold text-slate-800 dark:text-white mb-1">
-                            No requests found
-                        </h3>
-                        <p className="text-slate-500 dark:text-white/50 text-sm">
-                            There are no {statusFilter === 'pending' ? 'pending ' : ''}enrollment
-                            requests for this course.
-                        </p>
-                    </div>
+                    <PanelEmptyState
+                        icon={<AlertCircle size={28} />}
+                        title="No requests found"
+                        subtitle={`There are no ${statusFilter === 'pending' ? 'pending ' : ''}enrollment requests for this course.`}
+                    />
                 ) : (
                     <div className="overflow-x-auto">
                         <table className="w-full text-left text-sm">

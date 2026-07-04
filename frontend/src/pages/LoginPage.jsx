@@ -198,9 +198,8 @@ const LoginPage = () => {
                     {/* Logo + title */}
                     <div className="flex flex-col items-center mb-8">
                         <div
-                            className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4"
+                            className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4 bg-grad-orange"
                             style={{
-                                background: 'linear-gradient(135deg, #D97757, #C4613D)',
                                 boxShadow:
                                     '0 0 30px rgba(217,119,87,0.55), 0 0 70px rgba(217,119,87,0.2)',
                             }}

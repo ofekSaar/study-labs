@@ -34,11 +34,10 @@ import GradientBorderCard from '../common/GradientBorderCard';
 /* ── Logo SVG ── */
 const Logo = ({ size = 32 }) => (
     <div
-        className="rounded-xl flex items-center justify-center flex-shrink-0"
+        className="rounded-xl flex items-center justify-center flex-shrink-0 bg-grad-orange"
         style={{
             width: size,
             height: size,
-            background: 'linear-gradient(135deg, #D97757, #C4613D)',
             boxShadow: '0 0 16px rgba(217,119,87,0.5)',
         }}
     >
@@ -244,6 +243,8 @@ const SidebarContent = ({ onNavigate, onOpenSettings }) => {
                                         onClick={() =>
                                             setIsCourseDropdownOpen(!isCourseDropdownOpen)
                                         }
+                                        aria-expanded={isCourseDropdownOpen}
+                                        aria-haspopup="listbox"
                                         className={`w-full text-left p-3 rounded-2xl border transition-all duration-300 ${
                                             isCourseDropdownOpen
                                                 ? 'bg-orange-500/10 dark:bg-orange-500/15 border-orange-500/40'
@@ -375,15 +376,7 @@ const SidebarContent = ({ onNavigate, onOpenSettings }) => {
                                     {user?.name || 'Student'}
                                 </p>
                                 {/* Gradient title */}
-                                <p
-                                    className="text-[9px] font-black uppercase tracking-widest mt-0.5"
-                                    style={{
-                                        background: 'linear-gradient(135deg, #D97757, #7C3AED)',
-                                        WebkitBackgroundClip: 'text',
-                                        WebkitTextFillColor: 'transparent',
-                                        backgroundClip: 'text',
-                                    }}
-                                >
+                                <p className="text-[9px] font-black uppercase tracking-widest mt-0.5 text-gradient-blue">
                                     {currentTitle.name}
                                 </p>
                                 {/* Mini stat pills */}

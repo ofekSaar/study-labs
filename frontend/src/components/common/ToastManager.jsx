@@ -76,6 +76,7 @@ const Toast = ({ toast }) => {
                 {/* Dismiss */}
                 <button
                     onClick={() => removeToast(toast.id)}
+                    aria-label="Dismiss notification"
                     className="flex-shrink-0 text-white/60 hover:text-white transition-colors mt-0.5"
                 >
                     <X size={14} />
@@ -100,7 +101,11 @@ const ToastManager = () => {
     const visible = toasts.slice(0, MAX_VISIBLE_TOASTS);
 
     return (
-        <div className="fixed top-4 left-3 right-3 sm:top-auto sm:bottom-6 sm:left-auto sm:right-6 sm:w-80 z-[9999] flex flex-col gap-2 pointer-events-none">
+        <div
+            role="status"
+            aria-live="polite"
+            className="fixed top-4 left-3 right-3 sm:top-auto sm:bottom-6 sm:left-auto sm:right-6 sm:w-80 z-[9999] flex flex-col gap-2 pointer-events-none"
+        >
             <AnimatePresence mode="popLayout">
                 {visible.map((toast) => (
                     <div key={toast.id} className="pointer-events-auto">

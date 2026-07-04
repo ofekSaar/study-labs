@@ -21,6 +21,7 @@ import api from '../utils/api';
 import { clickableProps } from '../utils/a11y';
 import Spinner from '../components/common/Spinner';
 import Button from '../components/common/Button';
+import EmptyState from '../components/common/EmptyState';
 import logger from '../utils/logger';
 
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
@@ -322,14 +323,11 @@ const ClassRoster = () => {
                 {isLoading ? (
                     <Spinner center color="purple" label="Loading roster" />
                 ) : students.length === 0 ? (
-                    <div className="text-center py-24 bg-white/70 dark:bg-white/5 border border-dashed border-slate-200 dark:border-white/10 rounded-3xl">
-                        <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-white/5 flex items-center justify-center mx-auto mb-4">
-                            <Users size={32} className="text-slate-400 dark:text-white/30" />
-                        </div>
-                        <p className="text-slate-500 dark:text-white/50 font-medium">
-                            No enrolled students yet.
-                        </p>
-                    </div>
+                    <EmptyState
+                        icon={Users}
+                        title="No enrolled students yet"
+                        description="Students will appear here once they enroll in this course."
+                    />
                 ) : (
                     <>
                         {/* Select All */}
