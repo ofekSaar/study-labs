@@ -2,10 +2,11 @@ import React, { useEffect } from 'react';
 import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
 import { Zap, Flame, Trophy } from 'lucide-react';
 import useCourseStore from '../../store/courseStore';
+import { calculateLevel } from '../../utils/gamification';
 
 const AnimatedNumber = ({ value }) => {
     const mv = useMotionValue(value);
-    const display = useTransform(mv, v => Math.round(v).toLocaleString());
+    const display = useTransform(mv, (v) => Math.round(v).toLocaleString());
 
     useEffect(() => {
         const controls = animate(mv, value, { duration: 0.8, ease: [0.16, 1, 0.3, 1] });
@@ -17,7 +18,7 @@ const AnimatedNumber = ({ value }) => {
 
 const XPHeader = () => {
     const { user } = useCourseStore();
-    const level = user?.totalXP ? Math.floor(user.totalXP / 100) + 1 : 1;
+    const level = calculateLevel(user?.totalXP || 0);
 
     return (
         <motion.div
@@ -41,7 +42,8 @@ const XPHeader = () => {
                     className="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl"
                     style={{
                         background: 'rgba(249,115,22,0.18)',
-                        boxShadow: '0 0 16px rgba(249,115,22,0.15), inset 0 1px 0 rgba(249,115,22,0.2)',
+                        boxShadow:
+                            '0 0 16px rgba(249,115,22,0.15), inset 0 1px 0 rgba(249,115,22,0.2)',
                     }}
                 >
                     <Flame
@@ -53,7 +55,9 @@ const XPHeader = () => {
                         <span className="font-black text-lg text-white tabular-nums">
                             <AnimatedNumber value={user?.streak ?? 0} />
                         </span>
-                        <span className="text-[8px] uppercase font-black text-orange-400 tracking-widest mt-0.5">Streak</span>
+                        <span className="text-[8px] uppercase font-black text-orange-400 tracking-widest mt-0.5">
+                            Streak
+                        </span>
                     </div>
                 </div>
 
@@ -64,7 +68,8 @@ const XPHeader = () => {
                     className="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl"
                     style={{
                         background: 'rgba(245,158,11,0.15)',
-                        boxShadow: '0 0 16px rgba(245,158,11,0.12), inset 0 1px 0 rgba(245,158,11,0.2)',
+                        boxShadow:
+                            '0 0 16px rgba(245,158,11,0.12), inset 0 1px 0 rgba(245,158,11,0.2)',
                     }}
                 >
                     <Zap
@@ -76,7 +81,9 @@ const XPHeader = () => {
                         <span className="font-black text-lg text-white tabular-nums">
                             <AnimatedNumber value={user?.totalXP ?? 0} />
                         </span>
-                        <span className="text-[8px] uppercase font-black text-amber-400 tracking-widest mt-0.5">Total XP</span>
+                        <span className="text-[8px] uppercase font-black text-amber-400 tracking-widest mt-0.5">
+                            Total XP
+                        </span>
                     </div>
                 </div>
 
@@ -87,7 +94,8 @@ const XPHeader = () => {
                     className="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl"
                     style={{
                         background: 'rgba(16,185,129,0.15)',
-                        boxShadow: '0 0 16px rgba(16,185,129,0.12), inset 0 1px 0 rgba(16,185,129,0.2)',
+                        boxShadow:
+                            '0 0 16px rgba(16,185,129,0.12), inset 0 1px 0 rgba(16,185,129,0.2)',
                     }}
                 >
                     <Trophy
@@ -99,7 +107,9 @@ const XPHeader = () => {
                         <span className="font-black text-lg text-white tabular-nums">
                             <AnimatedNumber value={level} />
                         </span>
-                        <span className="text-[8px] uppercase font-black text-emerald-400 tracking-widest mt-0.5">Level</span>
+                        <span className="text-[8px] uppercase font-black text-emerald-400 tracking-widest mt-0.5">
+                            Level
+                        </span>
                     </div>
                 </div>
             </div>

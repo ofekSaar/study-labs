@@ -27,7 +27,7 @@ describe('useToastStore Zustand Store', () => {
                 type: 'info',
                 title: 'Test Notification',
                 message: 'Hello World',
-                duration: 2000
+                duration: 2000,
             });
         });
 

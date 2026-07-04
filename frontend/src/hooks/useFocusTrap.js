@@ -29,7 +29,10 @@ export default function useFocusTrap(panelRef, isOpen, onClose) {
     useEffect(() => {
         if (!isOpen) return undefined;
         const handleKey = (e) => {
-            if (e.key === 'Escape') { onClose?.(); return; }
+            if (e.key === 'Escape') {
+                onClose?.();
+                return;
+            }
             if (e.key !== 'Tab') return;
             const focusable = panelRef.current?.querySelectorAll(FOCUSABLE);
             if (!focusable?.length) return;

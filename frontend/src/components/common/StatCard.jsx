@@ -22,8 +22,12 @@ const StatCard = ({ icon: Icon, value, label, color = 'bg-orange-500', glow = ''
             style={{ opacity: 0.04 }}
         />
         {Icon && <Icon size={20} className={glow} />}
-        <span className="text-2xl font-black text-slate-900 dark:text-white leading-none">{value}</span>
-        <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-white/40">{label}</span>
+        <span className="text-2xl font-black text-slate-900 dark:text-white leading-none">
+            {value}
+        </span>
+        <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-white/40">
+            {label}
+        </span>
     </motion.div>
 );
 

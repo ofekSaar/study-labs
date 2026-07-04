@@ -9,7 +9,7 @@ describe('useSettingsStore Zustand Store', () => {
             useSettingsStore.setState({
                 theme: 'light',
                 animationsEnabled: true,
-                soundEnabled: true
+                soundEnabled: true,
             });
         });
     });

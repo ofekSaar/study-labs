@@ -1,22 +1,46 @@
 import React, { useCallback, useMemo } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { useDropzone } from 'react-dropzone';
-import { UploadCloud, FileText, Video, X, Presentation, FileSpreadsheet, CheckCircle2, Sparkles, Eye, Info } from 'lucide-react';
+import {
+    UploadCloud,
+    FileText,
+    Video,
+    X,
+    Presentation,
+    FileSpreadsheet,
+    CheckCircle2,
+    Sparkles,
+    Eye,
+    Info,
+} from 'lucide-react';
 import useToastStore from '../../store/toastStore';
 
 const FILE_TYPE_META = {
     pdf: { label: 'PDF', color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-200' },
-    pptx: { label: 'PPTX', color: 'text-orange-600', bg: 'bg-orange-50', border: 'border-orange-200' },
+    pptx: {
+        label: 'PPTX',
+        color: 'text-orange-600',
+        bg: 'bg-orange-50',
+        border: 'border-orange-200',
+    },
     docx: { label: 'DOCX', color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200' },
     xlsx: { label: 'XLSX', color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-200' },
-    mp4: { label: 'MP4', color: 'text-purple-600', bg: 'bg-purple-50', border: 'border-purple-200' },
+    mp4: {
+        label: 'MP4',
+        color: 'text-purple-600',
+        bg: 'bg-purple-50',
+        border: 'border-purple-200',
+    },
 };
 
 const getFileMeta = (file) => {
     if (file.type?.includes('pdf') || file.name?.endsWith('.pdf')) return FILE_TYPE_META.pdf;
-    if (file.type?.includes('presentation') || file.name?.endsWith('.pptx')) return FILE_TYPE_META.pptx;
-    if (file.type?.includes('wordprocessing') || file.name?.endsWith('.docx')) return FILE_TYPE_META.docx;
-    if (file.type?.includes('spreadsheet') || file.name?.endsWith('.xlsx')) return FILE_TYPE_META.xlsx;
+    if (file.type?.includes('presentation') || file.name?.endsWith('.pptx'))
+        return FILE_TYPE_META.pptx;
+    if (file.type?.includes('wordprocessing') || file.name?.endsWith('.docx'))
+        return FILE_TYPE_META.docx;
+    if (file.type?.includes('spreadsheet') || file.name?.endsWith('.xlsx'))
+        return FILE_TYPE_META.xlsx;
     if (file.type?.includes('mp4') || file.name?.endsWith('.mp4')) return FILE_TYPE_META.mp4;
     return { label: 'FILE', color: 'text-gray-600', bg: 'bg-gray-50', border: 'border-gray-200' };
 };
@@ -31,13 +55,19 @@ const getFileIcon = (file) => {
 
 const materialQuality = (count) => {
     if (count === 0) return { label: 'No materials yet', color: 'text-gray-400', bar: 0 };
-    if (count === 1) return { label: 'Add more for better AI results', color: 'text-amber-600', bar: 33 };
+    if (count === 1)
+        return { label: 'Add more for better AI results', color: 'text-amber-600', bar: 33 };
     if (count === 2) return { label: 'Getting better!', color: 'text-amber-500', bar: 66 };
     return { label: 'Great! AI has plenty to work with', color: 'text-emerald-600', bar: 100 };
 };
 
 const StepMaterials = () => {
-    const { register, setValue, watch, formState: { errors } } = useFormContext();
+    const {
+        register,
+        setValue,
+        watch,
+        formState: { errors },
+    } = useFormContext();
     const watchedSyllabus = watch('syllabus');
     const syllabus = useMemo(() => watchedSyllabus || [], [watchedSyllabus]);
     const watchedMaterials = watch('materials');
@@ -46,32 +76,53 @@ const StepMaterials = () => {
 
     const quality = materialQuality(materials.length);
 
-    const onDropSyllabus = useCallback(acceptedFiles => {
-        const newFile = Object.assign(acceptedFiles[0], { preview: URL.createObjectURL(acceptedFiles[0]) });
-        setValue('syllabus', [newFile], { shouldValidate: true });
-    }, [setValue]);
+    const onDropSyllabus = useCallback(
+        (acceptedFiles) => {
+            const newFile = Object.assign(acceptedFiles[0], {
+                preview: URL.createObjectURL(acceptedFiles[0]),
+            });
+            setValue('syllabus', [newFile], { shouldValidate: true });
+        },
+        [setValue]
+    );
 
     const removeSyllabus = () => setValue('syllabus', [], { shouldValidate: true });
 
-    const { getRootProps: getSyllabusProps, getInputProps: getSyllabusInputProps, isDragActive: isSyllabusDragActive } = useDropzone({
+    const {
+        getRootProps: getSyllabusProps,
+        getInputProps: getSyllabusInputProps,
+        isDragActive: isSyllabusDragActive,
+    } = useDropzone({
         onDrop: onDropSyllabus,
         maxFiles: 1,
         accept: {
             'application/pdf': ['.pdf'],
             'application/vnd.openxmlformats-officedocument.presentationml.presentation': ['.pptx'],
-            'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx']
-        }
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+        },
     });
 
-    const onDropMaterials = useCallback(acceptedFiles => {
-        const existingFileSignatures = new Set(materials.map(f => `${f.name}_${f.size}`));
-        const uniqueNewFiles = acceptedFiles.filter(file => !existingFileSignatures.has(`${file.name}_${file.size}`));
-        if (uniqueNewFiles.length < acceptedFiles.length) {
-            useToastStore.getState().info('Duplicate files skipped', `${acceptedFiles.length - uniqueNewFiles.length} duplicate file(s) were skipped.`);
-        }
-        const newFiles = uniqueNewFiles.map(file => Object.assign(file, { preview: URL.createObjectURL(file) }));
-        setValue('materials', [...materials, ...newFiles], { shouldValidate: true });
-    }, [materials, setValue]);
+    const onDropMaterials = useCallback(
+        (acceptedFiles) => {
+            const existingFileSignatures = new Set(materials.map((f) => `${f.name}_${f.size}`));
+            const uniqueNewFiles = acceptedFiles.filter(
+                (file) => !existingFileSignatures.has(`${file.name}_${file.size}`)
+            );
+            if (uniqueNewFiles.length < acceptedFiles.length) {
+                useToastStore
+                    .getState()
+                    .info(
+                        'Duplicate files skipped',
+                        `${acceptedFiles.length - uniqueNewFiles.length} duplicate file(s) were skipped.`
+                    );
+            }
+            const newFiles = uniqueNewFiles.map((file) =>
+                Object.assign(file, { preview: URL.createObjectURL(file) })
+            );
+            setValue('materials', [...materials, ...newFiles], { shouldValidate: true });
+        },
+        [materials, setValue]
+    );
 
     const removeMaterial = (index) => {
         const newFiles = [...materials];
@@ -79,15 +130,19 @@ const StepMaterials = () => {
         setValue('materials', newFiles, { shouldValidate: true });
     };
 
-    const { getRootProps: getMaterialsProps, getInputProps: getMaterialsInputProps, isDragActive: isMaterialsDragActive } = useDropzone({
+    const {
+        getRootProps: getMaterialsProps,
+        getInputProps: getMaterialsInputProps,
+        isDragActive: isMaterialsDragActive,
+    } = useDropzone({
         onDrop: onDropMaterials,
         accept: {
             'application/pdf': ['.pdf'],
             'application/vnd.openxmlformats-officedocument.presentationml.presentation': ['.pptx'],
             'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
             'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
-            'video/mp4': ['.mp4']
-        }
+            'video/mp4': ['.mp4'],
+        },
     });
 
     React.useEffect(() => {
@@ -98,8 +153,12 @@ const StepMaterials = () => {
 
     React.useEffect(() => {
         return () => {
-            syllabus.forEach(file => { if (file.preview) URL.revokeObjectURL(file.preview); });
-            materials.forEach(file => { if (file.preview) URL.revokeObjectURL(file.preview); });
+            syllabus.forEach((file) => {
+                if (file.preview) URL.revokeObjectURL(file.preview);
+            });
+            materials.forEach((file) => {
+                if (file.preview) URL.revokeObjectURL(file.preview);
+            });
         };
     }, [syllabus, materials]);
 
@@ -108,8 +167,12 @@ const StepMaterials = () => {
             {/* Header */}
             <div className="flex items-start justify-between">
                 <div>
-                    <h3 className="text-2xl font-display font-bold text-gray-900">Course Materials</h3>
-                    <p className="text-gray-500 mt-1">Upload your syllabus and course materials below.</p>
+                    <h3 className="text-2xl font-display font-bold text-gray-900">
+                        Course Materials
+                    </h3>
+                    <p className="text-gray-500 mt-1">
+                        Upload your syllabus and course materials below.
+                    </p>
                 </div>
                 <div className="flex items-center gap-1.5 bg-amber-50 border border-amber-200 text-amber-700 px-3 py-1.5 rounded-full text-xs font-bold shrink-0">
                     <Sparkles size={12} />
@@ -134,19 +197,32 @@ const StepMaterials = () => {
                     <div
                         {...getSyllabusProps()}
                         className={`relative border-2 border-dashed rounded-2xl p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-200
-                            ${isSyllabusDragActive
-                                ? 'border-studylabs-orange bg-orange-50 scale-[1.01]'
-                                : 'border-gray-200 hover:border-studylabs-orange hover:bg-orange-50/40'
+                            ${
+                                isSyllabusDragActive
+                                    ? 'border-studylabs-orange bg-orange-50 scale-[1.01]'
+                                    : 'border-gray-200 hover:border-studylabs-orange hover:bg-orange-50/40'
                             }`}
                     >
                         <input {...getSyllabusInputProps()} />
-                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-3 transition-all duration-200 ${isSyllabusDragActive ? 'bg-studylabs-orange text-white scale-110' : 'bg-orange-100 text-studylabs-orange'}`}>
-                            <UploadCloud size={28} className={isSyllabusDragActive ? 'animate-bounce' : ''} />
+                        <div
+                            className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-3 transition-all duration-200 ${isSyllabusDragActive ? 'bg-studylabs-orange text-white scale-110' : 'bg-orange-100 text-studylabs-orange'}`}
+                        >
+                            <UploadCloud
+                                size={28}
+                                className={isSyllabusDragActive ? 'animate-bounce' : ''}
+                            />
                         </div>
                         <p className="font-bold text-gray-800 text-sm">
-                            {isSyllabusDragActive ? 'Drop syllabus here...' : 'Drag & Drop syllabus'}
+                            {isSyllabusDragActive
+                                ? 'Drop syllabus here...'
+                                : 'Drag & Drop syllabus'}
                         </p>
-                        <p className="text-xs text-gray-400 mt-1">or <span className="text-studylabs-orange font-semibold">click to browse</span></p>
+                        <p className="text-xs text-gray-400 mt-1">
+                            or{' '}
+                            <span className="text-studylabs-orange font-semibold">
+                                click to browse
+                            </span>
+                        </p>
                         <p className="text-xs text-gray-300 mt-2">PDF, PPTX or DOCX</p>
                     </div>
                 ) : (
@@ -156,8 +232,12 @@ const StepMaterials = () => {
                                 <CheckCircle2 size={20} />
                             </div>
                             <div className="overflow-hidden">
-                                <p className="truncate font-bold text-emerald-800 text-sm">{syllabus[0].name}</p>
-                                <p className="text-xs text-emerald-500">{(syllabus[0].size / 1024 / 1024).toFixed(2)} MB</p>
+                                <p className="truncate font-bold text-emerald-800 text-sm">
+                                    {syllabus[0].name}
+                                </p>
+                                <p className="text-xs text-emerald-500">
+                                    {(syllabus[0].size / 1024 / 1024).toFixed(2)} MB
+                                </p>
                             </div>
                         </div>
                         <button
@@ -169,7 +249,9 @@ const StepMaterials = () => {
                         </button>
                     </div>
                 )}
-                {errors.syllabus && <p className="text-red-500 text-xs font-medium">{errors.syllabus.message}</p>}
+                {errors.syllabus && (
+                    <p className="text-red-500 text-xs font-medium">{errors.syllabus.message}</p>
+                )}
             </div>
 
             <div className="border-t border-gray-100" />
@@ -177,9 +259,14 @@ const StepMaterials = () => {
             {/* Materials Section */}
             <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                    <h4 className="font-bold text-gray-800 text-sm">Course Materials <span className="text-gray-400 font-normal">(Optional)</span></h4>
+                    <h4 className="font-bold text-gray-800 text-sm">
+                        Course Materials{' '}
+                        <span className="text-gray-400 font-normal">(Optional)</span>
+                    </h4>
                     {materials.length > 0 && (
-                        <span className="text-xs font-bold text-gray-500">{materials.length} file{materials.length !== 1 ? 's' : ''}</span>
+                        <span className="text-xs font-bold text-gray-500">
+                            {materials.length} file{materials.length !== 1 ? 's' : ''}
+                        </span>
                     )}
                 </div>
 
@@ -191,20 +278,28 @@ const StepMaterials = () => {
                             style={{ width: `${quality.bar}%` }}
                         />
                     </div>
-                    <span className={`text-xs font-medium shrink-0 ${quality.color}`}>{quality.label}</span>
+                    <span className={`text-xs font-medium shrink-0 ${quality.color}`}>
+                        {quality.label}
+                    </span>
                 </div>
 
                 <div
                     {...getMaterialsProps()}
                     className={`border-2 border-dashed rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-200
-                        ${isMaterialsDragActive
-                            ? 'border-studylabs-purple bg-purple-50 scale-[1.01]'
-                            : 'border-gray-200 hover:border-studylabs-purple hover:bg-purple-50/30'
+                        ${
+                            isMaterialsDragActive
+                                ? 'border-studylabs-purple bg-purple-50 scale-[1.01]'
+                                : 'border-gray-200 hover:border-studylabs-purple hover:bg-purple-50/30'
                         }`}
                 >
                     <input {...getMaterialsInputProps()} />
-                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-2 transition-all duration-200 ${isMaterialsDragActive ? 'bg-studylabs-purple text-white scale-110' : 'bg-purple-100 text-studylabs-purple'}`}>
-                        <UploadCloud size={24} className={isMaterialsDragActive ? 'animate-bounce' : ''} />
+                    <div
+                        className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-2 transition-all duration-200 ${isMaterialsDragActive ? 'bg-studylabs-purple text-white scale-110' : 'bg-purple-100 text-studylabs-purple'}`}
+                    >
+                        <UploadCloud
+                            size={24}
+                            className={isMaterialsDragActive ? 'animate-bounce' : ''}
+                        />
                     </div>
                     <p className="font-bold text-gray-700 text-sm">
                         {isMaterialsDragActive ? 'Drop files here...' : 'Drag & Drop materials'}
@@ -218,18 +313,29 @@ const StepMaterials = () => {
                             const meta = getFileMeta(file);
                             const Icon = getFileIcon(file);
                             return (
-                                <div key={idx} className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-100 shadow-sm">
+                                <div
+                                    key={idx}
+                                    className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-100 shadow-sm"
+                                >
                                     <div className="flex items-center gap-3 overflow-hidden">
-                                        <div className={`p-2 rounded-lg ${meta.bg} ${meta.color} shrink-0`}>
+                                        <div
+                                            className={`p-2 rounded-lg ${meta.bg} ${meta.color} shrink-0`}
+                                        >
                                             <Icon size={16} />
                                         </div>
-                                        <span className="truncate font-medium text-gray-700 text-sm">{file.name}</span>
-                                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${meta.bg} ${meta.color} ${meta.border} border shrink-0`}>
+                                        <span className="truncate font-medium text-gray-700 text-sm">
+                                            {file.name}
+                                        </span>
+                                        <span
+                                            className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${meta.bg} ${meta.color} ${meta.border} border shrink-0`}
+                                        >
                                             {meta.label}
                                         </span>
                                     </div>
                                     <div className="flex items-center gap-2 shrink-0 ml-2">
-                                        <span className="text-xs text-gray-400">{(file.size / 1024 / 1024).toFixed(2)} MB</span>
+                                        <span className="text-xs text-gray-400">
+                                            {(file.size / 1024 / 1024).toFixed(2)} MB
+                                        </span>
                                         <button
                                             type="button"
                                             onClick={() => removeMaterial(idx)}
@@ -248,19 +354,28 @@ const StepMaterials = () => {
             <div className="border-t border-gray-100" />
 
             {/* Image Analysis Toggle */}
-            <div className={`rounded-2xl border-2 p-4 transition-all duration-200 ${analyzeImages ? 'border-purple-200 bg-gradient-to-r from-purple-50 to-indigo-50' : 'border-gray-100 bg-gray-50'}`}>
+            <div
+                className={`rounded-2xl border-2 p-4 transition-all duration-200 ${analyzeImages ? 'border-purple-200 bg-gradient-to-r from-purple-50 to-indigo-50' : 'border-gray-100 bg-gray-50'}`}
+            >
                 <div className="flex items-start justify-between gap-4">
                     <div className="flex items-start gap-3">
-                        <div className={`p-2.5 rounded-xl shrink-0 mt-0.5 transition-colors ${analyzeImages ? 'bg-purple-100 text-studylabs-purple' : 'bg-gray-200 text-gray-400'}`}>
+                        <div
+                            className={`p-2.5 rounded-xl shrink-0 mt-0.5 transition-colors ${analyzeImages ? 'bg-purple-100 text-studylabs-purple' : 'bg-gray-200 text-gray-400'}`}
+                        >
                             <Eye size={18} />
                         </div>
                         <div>
                             <div className="flex items-center gap-2 mb-0.5">
-                                <h4 className="font-bold text-gray-900 text-sm">AI Image Analysis</h4>
-                                <span className="text-[10px] font-black bg-studylabs-purple text-white px-2 py-0.5 rounded-full uppercase tracking-wide">PRO TIP</span>
+                                <h4 className="font-bold text-gray-900 text-sm">
+                                    AI Image Analysis
+                                </h4>
+                                <span className="text-[10px] font-black bg-studylabs-purple text-white px-2 py-0.5 rounded-full uppercase tracking-wide">
+                                    PRO TIP
+                                </span>
                             </div>
                             <p className="text-xs text-gray-500 leading-relaxed">
-                                Analyzes charts, diagrams, and photos embedded in your documents to include their content in lessons.
+                                Analyzes charts, diagrams, and photos embedded in your documents to
+                                include their content in lessons.
                             </p>
                             <div className="flex items-center gap-1.5 mt-2 text-xs text-amber-600 bg-amber-50 border border-amber-100 px-2 py-1 rounded-lg w-fit">
                                 <Info size={11} />
@@ -273,6 +388,7 @@ const StepMaterials = () => {
                             type="checkbox"
                             checked={analyzeImages || false}
                             onChange={(e) => setValue('analyzeImages', e.target.checked)}
+                            aria-label="Analyze images in documents"
                             className="sr-only peer"
                         />
                         <div className="w-12 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-6 after:content-[''] after:absolute after:top-0.5 after:start-0.5 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-studylabs-purple shadow-inner"></div>

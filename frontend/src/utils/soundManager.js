@@ -58,9 +58,9 @@ const sounds = {
     /** Correct answer – upbeat ding */
     correct: () => {
         if (!isSoundEnabled()) return;
-        playTone(523, 0.12, 'sine', 0.35);        // C5
-        playTone(659, 0.18, 'sine', 0.3, 0.1);    // E5
-        playTone(784, 0.25, 'sine', 0.25, 0.22);  // G5
+        playTone(523, 0.12, 'sine', 0.35); // C5
+        playTone(659, 0.18, 'sine', 0.3, 0.1); // E5
+        playTone(784, 0.25, 'sine', 0.25, 0.22); // G5
     },
 
     /** Wrong answer – low buzz */

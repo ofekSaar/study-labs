@@ -15,7 +15,7 @@ const WeeklyInsights = () => {
                 title: '🔥 Unstoppable Momentum!',
                 description: `Outstanding! You are on a ${streak}-day study streak. Your consistency is legendary. Keep logging in daily to secure your Quest Multipliers and defend your leaderboard position!`,
                 tip: 'Tip: Solve a quiz before midnight to secure your daily streak bonus!',
-                color: 'from-orange-500/10 to-amber-500/5 border-orange-500/20 text-orange-800 dark:text-orange-300'
+                color: 'from-orange-500/10 to-amber-500/5 border-orange-500/20 text-orange-800 dark:text-orange-300',
             };
         }
 
@@ -24,7 +24,7 @@ const WeeklyInsights = () => {
                 title: '⚡ Lightning Reflexes!',
                 description: `You've achieved ${fast_answers} Speed Bonuses by answering under 5 seconds! While your quick thinking is incredible, consider taking an extra 20 seconds on open-ended assignments to guarantee maximum AI evaluation XP.`,
                 tip: 'Tip: Slow down slightly on written essays to score a Perfect Quest +300 XP!',
-                color: 'from-amber-500/10 to-yellow-500/5 border-amber-500/20 text-amber-800 dark:text-amber-300'
+                color: 'from-amber-500/10 to-yellow-500/5 border-amber-500/20 text-amber-800 dark:text-amber-300',
             };
         }
 
@@ -33,7 +33,7 @@ const WeeklyInsights = () => {
                 title: '🦉 The Night Owl Scholar',
                 description: `You did a midnight study session! Studying late shows immense dedication. Try to tackle a conceptual study guide early tomorrow morning when your focus is fresh to unlock the "Early Bird" rare badge.`,
                 tip: 'Tip: Unlocking "Early Bird" grants a permanent +20% Streak XP multiplier!',
-                color: 'from-purple-500/10 to-indigo-500/5 border-purple-500/20 text-purple-800 dark:text-purple-300'
+                color: 'from-purple-500/10 to-indigo-500/5 border-purple-500/20 text-purple-800 dark:text-purple-300',
             };
         }
 
@@ -42,7 +42,7 @@ const WeeklyInsights = () => {
                 title: '📚 Academic Titan',
                 description: `Incredible work! You've finished ${lessons_completed} lessons recently. Your academic velocity is excellent. Try to focus on scoring 100% on the upcoming quiz to secure a Milestone chest reward!`,
                 tip: 'Tip: Review the summary guide carefully before hitting "Start Quiz"!',
-                color: 'from-emerald-500/10 to-teal-500/5 border-emerald-500/20 text-emerald-800 dark:text-emerald-300'
+                color: 'from-emerald-500/10 to-teal-500/5 border-emerald-500/20 text-emerald-800 dark:text-emerald-300',
             };
         }
 
@@ -50,8 +50,8 @@ const WeeklyInsights = () => {
         return {
             title: '🎯 Ready for Lift-off?',
             description: `Welcome to your learning dashboard! Complete your first conceptual lesson today to secure a guaranteed +150 XP and start building your custom learning streak.`,
-            tip: 'Tip: Finish today\'s active quest for a fast Level 2 promotion!',
-            color: 'from-indigo-500/10 to-purple-500/5 border-indigo-500/20 text-indigo-800 dark:text-indigo-300'
+            tip: "Tip: Finish today's active quest for a fast Level 2 promotion!",
+            color: 'from-indigo-500/10 to-purple-500/5 border-indigo-500/20 text-indigo-800 dark:text-indigo-300',
         };
     };
 
@@ -69,7 +69,10 @@ const WeeklyInsights = () => {
                 {/* Header */}
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
-                        <Brain size={18} className="text-indigo-500 dark:text-indigo-400 animate-pulse" />
+                        <Brain
+                            size={18}
+                            className="text-indigo-500 dark:text-indigo-400 animate-pulse"
+                        />
                         <h3 className="text-xs font-black text-slate-500 dark:text-white/50 uppercase tracking-widest flex items-center gap-1.5">
                             AI Weekly Insights
                             <Sparkles size={12} className="text-indigo-500 animate-bounce" />

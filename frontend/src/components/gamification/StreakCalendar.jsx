@@ -7,8 +7,8 @@ import useCourseStore from '../../store/courseStore';
 const DAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
 const STREAK_MILESTONES = [
-    { days: 3,  label: '3 days',  icon: '🌱' },
-    { days: 7,  label: '7 days',  icon: '⚡' },
+    { days: 3, label: '3 days', icon: '🌱' },
+    { days: 7, label: '7 days', icon: '⚡' },
     { days: 30, label: '30 days', icon: '🏆' },
 ];
 
@@ -32,15 +32,16 @@ const StreakCalendar = () => {
 
     const streak = user?.streak ?? 0;
 
-    const activeCount = days.filter(d => d.isActive).length;
+    const activeCount = days.filter((d) => d.isActive).length;
 
     const bestStreak = useMemo(() => {
         if (!activityLog.length) return 0;
         const sorted = [...activityLog].sort();
-        let best = 1, curr = 1;
+        let best = 1,
+            curr = 1;
         for (let i = 1; i < sorted.length; i++) {
             const prev = new Date(sorted[i - 1]);
-            const cur  = new Date(sorted[i]);
+            const cur = new Date(sorted[i]);
             const diff = Math.round((cur - prev) / (1000 * 60 * 60 * 24));
             curr = diff === 1 ? curr + 1 : 1;
             if (curr > best) best = curr;
@@ -48,12 +49,7 @@ const StreakCalendar = () => {
         return best;
     }, [activityLog]);
 
-    const weeks = [
-        days.slice(0,  7),
-        days.slice(7,  14),
-        days.slice(14, 21),
-        days.slice(21, 28),
-    ];
+    const weeks = [days.slice(0, 7), days.slice(7, 14), days.slice(14, 21), days.slice(21, 28)];
 
     return (
         <div className="glass-card rounded-3xl p-4 sm:p-6 relative overflow-hidden group">
@@ -69,7 +65,9 @@ const StreakCalendar = () => {
                         <div className="flex flex-wrap items-center gap-3">
                             <div className="flex items-center gap-1.5 bg-orange-500/10 border border-orange-500/20 px-2.5 py-1 rounded-xl">
                                 <Flame size={14} className="text-orange-500 fill-orange-500/40" />
-                                <span className="text-sm font-black text-orange-500">{streak} days</span>
+                                <span className="text-sm font-black text-orange-500">
+                                    {streak} days
+                                </span>
                             </div>
                             <span className="text-xs text-slate-400 dark:text-white/30 font-bold">
                                 Best: {bestStreak}d
@@ -82,7 +80,7 @@ const StreakCalendar = () => {
 
                     {/* Milestone chips */}
                     <div className="flex flex-wrap gap-1.5">
-                        {STREAK_MILESTONES.map(m => (
+                        {STREAK_MILESTONES.map((m) => (
                             <span
                                 key={m.days}
                                 className={`inline-flex items-center gap-1 text-[10px] font-black px-2.5 py-1 rounded-full border transition-all ${
@@ -100,7 +98,10 @@ const StreakCalendar = () => {
                 {/* Day column headers */}
                 <div className="grid grid-cols-7 gap-0.5 sm:gap-1 mb-0.5 sm:mb-1">
                     {DAYS.map((d, i) => (
-                        <div key={i} className="text-center text-[9px] sm:text-[10px] font-black text-slate-400 dark:text-white/30">
+                        <div
+                            key={i}
+                            className="text-center text-[9px] sm:text-[10px] font-black text-slate-400 dark:text-white/30"
+                        >
                             {d}
                         </div>
                     ))}
@@ -111,7 +112,8 @@ const StreakCalendar = () => {
                     {weeks.map((week, wi) => (
                         <div key={wi} className="grid grid-cols-7 gap-0.5 sm:gap-1">
                             {week.map((day, di) => {
-                                const hasRightConnection = di < 6 && day.isActive && week[di + 1]?.isActive;
+                                const hasRightConnection =
+                                    di < 6 && day.isActive && week[di + 1]?.isActive;
 
                                 return (
                                     <div key={day.iso} className="relative aspect-square">
@@ -126,9 +128,10 @@ const StreakCalendar = () => {
                                             className={`
                                                 w-full h-full rounded-lg flex items-center justify-center text-[9px] sm:text-[10px] font-extrabold relative z-10 select-none transition-all duration-200
                                                 ${day.isToday ? 'ring-2 ring-indigo-500 ring-offset-1 ring-offset-transparent' : ''}
-                                                ${day.isActive
-                                                    ? 'bg-gradient-to-br from-orange-400 to-red-500 text-white shadow-[0_3px_8px_rgba(249,115,22,0.35)]'
-                                                    : 'bg-slate-100 dark:bg-white/5 text-slate-400 dark:text-white/20 hover:bg-slate-200 dark:hover:bg-white/8'
+                                                ${
+                                                    day.isActive
+                                                        ? 'bg-gradient-to-br from-orange-400 to-red-500 text-white shadow-[0_3px_8px_rgba(249,115,22,0.35)]'
+                                                        : 'bg-slate-100 dark:bg-white/5 text-slate-400 dark:text-white/20 hover:bg-slate-200 dark:hover:bg-white/8'
                                                 }
                                             `}
                                         >
@@ -148,11 +151,15 @@ const StreakCalendar = () => {
                 <div className="flex items-center gap-3 mt-3 justify-end">
                     <div className="flex items-center gap-1.5">
                         <div className="w-3 h-3 rounded bg-slate-200 dark:bg-white/10" />
-                        <span className="text-[10px] text-slate-400 dark:text-white/30 font-bold">Inactive</span>
+                        <span className="text-[10px] text-slate-400 dark:text-white/30 font-bold">
+                            Inactive
+                        </span>
                     </div>
                     <div className="flex items-center gap-1.5">
                         <div className="w-3 h-3 rounded bg-gradient-to-br from-orange-400 to-red-500" />
-                        <span className="text-[10px] text-slate-400 dark:text-white/30 font-bold">Active day</span>
+                        <span className="text-[10px] text-slate-400 dark:text-white/30 font-bold">
+                            Active day
+                        </span>
                     </div>
                 </div>
             </div>

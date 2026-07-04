@@ -1,5 +1,15 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { CheckCircle, XCircle, ArrowRight, BrainCircuit, Loader2, Clock, Zap, AlertCircle, Flame } from 'lucide-react';
+import {
+    CheckCircle,
+    XCircle,
+    ArrowRight,
+    BrainCircuit,
+    Loader2,
+    Clock,
+    Zap,
+    AlertCircle,
+    Flame,
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ContentRenderer from '../common/ContentRenderer';
 import { isRTL } from '../../utils/rtl';
@@ -36,7 +46,7 @@ const QuizEngine = ({ questions, onComplete }) => {
         onTimeUp: useCallback(() => {
             setFeedback({
                 isCorrect: false,
-                message: '⌛ Time expired! Try to answer faster on the next question.'
+                message: '⌛ Time expired! Try to answer faster on the next question.',
             });
             setIsSubmitted(true);
             incrementStat('no_mistake_streak', 0);
@@ -51,22 +61,22 @@ const QuizEngine = ({ questions, onComplete }) => {
 
         setFeedback({
             isCorrect,
-            message: currentQuestion.explanation || (isCorrect ? 'Correct!' : 'Incorrect.')
+            message: currentQuestion.explanation || (isCorrect ? 'Correct!' : 'Incorrect.'),
         });
 
-        setAnswersLog(prev => [...prev, { questionIndex: currentIndex, selectedOption }]);
+        setAnswersLog((prev) => [...prev, { questionIndex: currentIndex, selectedOption }]);
 
         if (isCorrect) {
             const { multiplier } = useGamificationStore.getState().getXPMultiplier();
             const { xp: gainedXP, gotSpeedBonus } = calcMCQScore(timeTaken, multiplier);
-            setScore(s => s + gainedXP);
-            setCorrectCount(c => c + 1);
+            setScore((s) => s + gainedXP);
+            setCorrectCount((c) => c + 1);
             sounds.correct();
             setSpeedBonusActive(gotSpeedBonus);
-            setConsecutiveCorrect(prev => prev + 1);
+            setConsecutiveCorrect((prev) => prev + 1);
 
             if (gotSpeedBonus) incrementStat('fast_answers');
-            incrementStat('no_mistake_streak', prev => prev + 1);
+            incrementStat('no_mistake_streak', (prev) => prev + 1);
         } else {
             sounds.wrong();
             setConsecutiveCorrect(0);
@@ -90,22 +100,22 @@ const QuizEngine = ({ questions, onComplete }) => {
             setFeedback({
                 isCorrect: isGood,
                 message: isGood
-                    ? "Excellent answer! You captured the key concepts well."
-                    : "That's a bit brief. Try to elaborate on the core principles."
+                    ? 'Excellent answer! You captured the key concepts well.'
+                    : "That's a bit brief. Try to elaborate on the core principles.",
             });
 
-            setAnswersLog(prev => [...prev, { questionIndex: currentIndex, openAnswer }]);
+            setAnswersLog((prev) => [...prev, { questionIndex: currentIndex, openAnswer }]);
 
             if (isGood) {
                 const { multiplier } = useGamificationStore.getState().getXPMultiplier();
                 const { xp: gainedXP, gotSpeedBonus } = calcOpenScore(timeTaken, multiplier);
-                setScore(s => s + gainedXP);
-                setCorrectCount(c => c + 1);
+                setScore((s) => s + gainedXP);
+                setCorrectCount((c) => c + 1);
                 sounds.correct();
                 setSpeedBonusActive(gotSpeedBonus);
 
                 if (gotSpeedBonus) incrementStat('fast_answers');
-                incrementStat('no_mistake_streak', prev => prev + 1);
+                incrementStat('no_mistake_streak', (prev) => prev + 1);
             } else {
                 sounds.wrong();
                 incrementStat('no_mistake_streak', 0);
@@ -117,7 +127,7 @@ const QuizEngine = ({ questions, onComplete }) => {
     const handleNext = () => {
         sounds.click();
         if (currentIndex < questions.length - 1) {
-            setCurrentIndex(prev => prev + 1);
+            setCurrentIndex((prev) => prev + 1);
             setSelectedOption(null);
             setOpenAnswer('');
             setIsSubmitted(false);
@@ -126,7 +136,7 @@ const QuizEngine = ({ questions, onComplete }) => {
         } else {
             sounds.quizComplete();
 
-            const totalAnswerable = questions.filter(q => q.type !== 'summary').length;
+            const totalAnswerable = questions.filter((q) => q.type !== 'summary').length;
             const isPerfect = correctCount === totalAnswerable && totalAnswerable > 0;
 
             incrementStat('lessons_completed');
@@ -141,9 +151,17 @@ const QuizEngine = ({ questions, onComplete }) => {
         const onKey = (e) => {
             if (e.key !== 'Enter') return;
             if (isEvaluating) return;
-            if (isSummaryQuestion) { handleNext(); return; }
-            if (!isSubmitted && selectedOption !== null) { submitBtnRef.current?.click(); return; }
-            if (isSubmitted) { handleNext(); }
+            if (isSummaryQuestion) {
+                handleNext();
+                return;
+            }
+            if (!isSubmitted && selectedOption !== null) {
+                submitBtnRef.current?.click();
+                return;
+            }
+            if (isSubmitted) {
+                handleNext();
+            }
         };
         window.addEventListener('keydown', onKey);
         return () => window.removeEventListener('keydown', onKey);
@@ -170,12 +188,17 @@ const QuizEngine = ({ questions, onComplete }) => {
 
                     {/* Timer Circle */}
                     {!isSummaryQuestion && !isSubmitted && (
-                        <div className={`flex items-center gap-1.5 px-3 py-1 rounded-xl font-bold text-sm transition-colors ${
-                            timeLeft <= SPEED_BONUS_THRESHOLD
-                                ? 'bg-red-500/10 text-red-500 animate-pulse'
-                                : 'bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-white/60'
-                        }`}>
-                            <Clock size={16} className={timeLeft <= SPEED_BONUS_THRESHOLD? 'animate-spin' : ''} />
+                        <div
+                            className={`flex items-center gap-1.5 px-3 py-1 rounded-xl font-bold text-sm transition-colors ${
+                                timeLeft <= SPEED_BONUS_THRESHOLD
+                                    ? 'bg-red-500/10 text-red-500 animate-pulse'
+                                    : 'bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-white/60'
+                            }`}
+                        >
+                            <Clock
+                                size={16}
+                                className={timeLeft <= SPEED_BONUS_THRESHOLD ? 'animate-spin' : ''}
+                            />
                             <span>{timeLeft}s</span>
                         </div>
                     )}
@@ -200,8 +223,13 @@ const QuizEngine = ({ questions, onComplete }) => {
                             animate={{ opacity: 1, y: 0 }}
                             className="bg-indigo-500/5 dark:bg-indigo-500/10 p-6 rounded-3xl border border-indigo-500/10 dark:border-indigo-500/20"
                         >
-                            <h3 className="text-xl font-bold text-indigo-600 dark:text-indigo-400 mb-4">Lesson Summary</h3>
-                            <ContentRenderer content={currentQuestion.content} className="prose prose-indigo dark:prose-invert max-w-none text-slate-700 dark:text-slate-300 leading-relaxed" />
+                            <h3 className="text-xl font-bold text-indigo-600 dark:text-indigo-400 mb-4">
+                                Lesson Summary
+                            </h3>
+                            <ContentRenderer
+                                content={currentQuestion.content}
+                                className="prose prose-indigo dark:prose-invert max-w-none text-slate-700 dark:text-slate-300 leading-relaxed"
+                            />
                             <div className="mt-6 flex items-center gap-3 text-xs font-bold text-indigo-600 dark:text-indigo-400 bg-white dark:bg-slate-800 p-3.5 rounded-xl border border-indigo-100 dark:border-indigo-500/10 shadow-sm w-fit">
                                 <BrainCircuit size={16} />
                                 <span>Read this carefully before starting the quiz!</span>
@@ -219,47 +247,86 @@ const QuizEngine = ({ questions, onComplete }) => {
                                         className="flex items-center gap-2 mb-3 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-400/40 w-fit mx-auto"
                                     >
                                         <Flame size={14} className="text-amber-400" />
-                                        <span className="text-sm font-bold text-amber-300">{consecutiveCorrect}x Streak!</span>
+                                        <span className="text-sm font-bold text-amber-300">
+                                            {consecutiveCorrect}x Streak!
+                                        </span>
                                     </motion.div>
                                 )}
                             </AnimatePresence>
-                            <div className="space-y-3" role="radiogroup" aria-label="Answer options">
-                            {currentQuestion.options.map((opt, idx) => {
-                                const isSelected = selectedOption === idx;
-                                const showCorrect = isSubmitted && idx === currentQuestion.correctAnswerIndex;
-                                const showWrong = isSubmitted && isSelected && !feedback.isCorrect;
-                                const optDirection = isRTL(opt) ? 'rtl' : 'ltr';
+                            <div
+                                className="space-y-3"
+                                role="radiogroup"
+                                aria-label="Answer options"
+                            >
+                                {currentQuestion.options.map((opt, idx) => {
+                                    const isSelected = selectedOption === idx;
+                                    const showCorrect =
+                                        isSubmitted && idx === currentQuestion.correctAnswerIndex;
+                                    const showWrong =
+                                        isSubmitted && isSelected && !feedback.isCorrect;
+                                    const optDirection = isRTL(opt) ? 'rtl' : 'ltr';
 
-                                let baseStyle = "w-full p-4 rounded-2xl border-2 transition-all duration-200 flex items-center justify-between group shadow-sm text-sm font-bold focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 outline-none ";
-                                baseStyle += optDirection === 'rtl' ? 'text-right flex-row-reverse' : 'text-left';
+                                    let baseStyle =
+                                        'w-full p-4 rounded-2xl border-2 transition-all duration-200 flex items-center justify-between group shadow-sm text-sm font-bold focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 outline-none ';
+                                    baseStyle +=
+                                        optDirection === 'rtl'
+                                            ? 'text-right flex-row-reverse'
+                                            : 'text-left';
 
-                                if (isSubmitted) {
-                                    if (showCorrect) baseStyle += " border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-800 dark:text-emerald-300";
-                                    else if (showWrong) baseStyle += " border-red-500 bg-red-50 dark:bg-red-500/10 text-red-800 dark:text-red-300";
-                                    else baseStyle += " border-slate-100 dark:border-white/5 opacity-40";
-                                } else {
-                                    if (isSelected) baseStyle += " border-indigo-500 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 shadow-md";
-                                    else baseStyle += " border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-white/3 hover:border-indigo-300 hover:bg-slate-50 dark:hover:bg-white/8 text-slate-700 dark:text-white/80";
-                                }
+                                    if (isSubmitted) {
+                                        if (showCorrect)
+                                            baseStyle +=
+                                                ' border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-800 dark:text-emerald-300';
+                                        else if (showWrong)
+                                            baseStyle +=
+                                                ' border-red-500 bg-red-50 dark:bg-red-500/10 text-red-800 dark:text-red-300';
+                                        else
+                                            baseStyle +=
+                                                ' border-slate-100 dark:border-white/5 opacity-40';
+                                    } else {
+                                        if (isSelected)
+                                            baseStyle +=
+                                                ' border-indigo-500 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 shadow-md';
+                                        else
+                                            baseStyle +=
+                                                ' border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-white/3 hover:border-indigo-300 hover:bg-slate-50 dark:hover:bg-white/8 text-slate-700 dark:text-white/80';
+                                    }
 
-                                return (
-                                    <motion.button
-                                        key={idx}
-                                        role="radio"
-                                        aria-checked={isSelected}
-                                        onClick={() => { sounds.click(); !isSubmitted && setSelectedOption(idx); }}
-                                        disabled={isSubmitted}
-                                        whileHover={!isSubmitted ? { scale: 1.01 } : {}}
-                                        whileTap={!isSubmitted ? { scale: 0.99 } : {}}
-                                        className={baseStyle}
-                                        dir="auto"
-                                    >
-                                        <ContentRenderer inline content={opt} className="prose prose-sm dark:prose-invert max-w-none prose-p:my-0" />
-                                        {showCorrect && <CheckCircle size={20} className="text-emerald-500 shrink-0 mx-2" />}
-                                        {showWrong && <XCircle size={20} className="text-red-500 shrink-0 mx-2" />}
-                                    </motion.button>
-                                );
-                            })}
+                                    return (
+                                        <motion.button
+                                            key={idx}
+                                            role="radio"
+                                            aria-checked={isSelected}
+                                            onClick={() => {
+                                                sounds.click();
+                                                !isSubmitted && setSelectedOption(idx);
+                                            }}
+                                            disabled={isSubmitted}
+                                            whileHover={!isSubmitted ? { scale: 1.01 } : {}}
+                                            whileTap={!isSubmitted ? { scale: 0.99 } : {}}
+                                            className={baseStyle}
+                                            dir="auto"
+                                        >
+                                            <ContentRenderer
+                                                inline
+                                                content={opt}
+                                                className="prose prose-sm dark:prose-invert max-w-none prose-p:my-0"
+                                            />
+                                            {showCorrect && (
+                                                <CheckCircle
+                                                    size={20}
+                                                    className="text-emerald-500 shrink-0 mx-2"
+                                                />
+                                            )}
+                                            {showWrong && (
+                                                <XCircle
+                                                    size={20}
+                                                    className="text-red-500 shrink-0 mx-2"
+                                                />
+                                            )}
+                                        </motion.button>
+                                    );
+                                })}
                             </div>
                         </div>
                     ) : (
@@ -293,8 +360,8 @@ const QuizEngine = ({ questions, onComplete }) => {
                                 feedback.isCorrect
                                     ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-800 dark:text-emerald-300'
                                     : isTimeUp
-                                        ? 'bg-red-500/10 border-red-500/20 text-red-800 dark:text-red-300'
-                                        : 'bg-red-500/10 border-red-500/20 text-red-800 dark:text-red-300'
+                                      ? 'bg-red-500/10 border-red-500/20 text-red-800 dark:text-red-300'
+                                      : 'bg-red-500/10 border-red-500/20 text-red-800 dark:text-red-300'
                             }`}
                         >
                             <div className="flex items-center gap-2 font-black text-sm">
@@ -315,7 +382,10 @@ const QuizEngine = ({ questions, onComplete }) => {
                                     </span>
                                 )}
                             </div>
-                            <ContentRenderer content={feedback.message} className="prose prose-sm dark:prose-invert max-w-none text-xs leading-relaxed" />
+                            <ContentRenderer
+                                content={feedback.message}
+                                className="prose prose-sm dark:prose-invert max-w-none text-xs leading-relaxed"
+                            />
                         </motion.div>
                     )}
                 </AnimatePresence>
@@ -333,17 +403,28 @@ const QuizEngine = ({ questions, onComplete }) => {
                         <button
                             ref={submitBtnRef}
                             onClick={isOpenQuestion ? handleOpenSubmit : handleMCQSubmit}
-                            disabled={(isOpenQuestion && !openAnswer) || (!isOpenQuestion && selectedOption === null) || isEvaluating || isTimeUp}
+                            disabled={
+                                (isOpenQuestion && !openAnswer) ||
+                                (!isOpenQuestion && selectedOption === null) ||
+                                isEvaluating ||
+                                isTimeUp
+                            }
                             className="bg-indigo-500 hover:bg-indigo-600 text-white px-8 py-3.5 rounded-2xl font-bold transition-all shadow-[0_0_15px_rgba(99,102,241,0.3)] disabled:opacity-30 disabled:cursor-not-allowed disabled:shadow-none flex items-center gap-2"
                         >
-                            {isEvaluating ? <Loader2 className="animate-spin" size={20} /> : 'Check Answer'}
+                            {isEvaluating ? (
+                                <Loader2 className="animate-spin" size={20} />
+                            ) : (
+                                'Check Answer'
+                            )}
                         </button>
                     ) : (
                         <button
                             onClick={handleNext}
                             className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100 px-8 py-3.5 rounded-2xl font-bold transition-all flex items-center gap-2"
                         >
-                            {currentIndex === questions.length - 1 ? 'Finish Quiz' : 'Next Question'}
+                            {currentIndex === questions.length - 1
+                                ? 'Finish Quiz'
+                                : 'Next Question'}
                             <ArrowRight size={20} />
                         </button>
                     )}

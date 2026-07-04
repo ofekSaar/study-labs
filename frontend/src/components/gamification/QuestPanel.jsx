@@ -5,7 +5,8 @@ import useGamificationStore from '../../store/gamificationStore';
 import sounds from '../../utils/soundManager';
 
 const QuestPanel = () => {
-    const { activeQuests, questsProgress, questsClaimed, claimQuestReward, initializeQuests } = useGamificationStore();
+    const { activeQuests, questsProgress, questsClaimed, claimQuestReward, initializeQuests } =
+        useGamificationStore();
     const [activeTab, setActiveTab] = useState('daily'); // 'daily' | 'weekly' | 'milestone'
 
     useEffect(() => {
@@ -40,7 +41,10 @@ const QuestPanel = () => {
                     return (
                         <button
                             key={tab}
-                            onClick={() => { sounds.click(); setActiveTab(tab); }}
+                            onClick={() => {
+                                sounds.click();
+                                setActiveTab(tab);
+                            }}
                             className={`flex-1 py-2 text-center text-xs font-black uppercase tracking-wider rounded-xl transition-all ${
                                 isActive
                                     ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm border border-slate-100 dark:border-white/5'
@@ -82,8 +86,8 @@ const QuestPanel = () => {
                                         isClaimed
                                             ? 'bg-slate-50/50 dark:bg-black/10 border-slate-100 dark:border-white/5 opacity-60'
                                             : isCompleted
-                                                ? 'bg-gradient-to-br from-indigo-500/5 to-purple-500/5 border-indigo-500/30 dark:border-indigo-500/20 shadow-[0_0_15px_rgba(99,102,241,0.05)]'
-                                                : 'bg-white dark:bg-white/2 border-slate-100 dark:border-white/5 hover:border-slate-200 dark:hover:border-white/10'
+                                              ? 'bg-gradient-to-br from-indigo-500/5 to-purple-500/5 border-indigo-500/30 dark:border-indigo-500/20 shadow-[0_0_15px_rgba(99,102,241,0.05)]'
+                                              : 'bg-white dark:bg-white/2 border-slate-100 dark:border-white/5 hover:border-slate-200 dark:hover:border-white/10'
                                     }`}
                                 >
                                     {/* Reward particles underglow if completed but not claimed */}
@@ -93,21 +97,25 @@ const QuestPanel = () => {
 
                                     <div className="flex items-start justify-between gap-3 relative z-10">
                                         <div className="flex items-center gap-3">
-                                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl select-none ${
-                                                isClaimed
-                                                    ? 'bg-slate-200/50 dark:bg-white/5'
-                                                    : isCompleted
-                                                        ? 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 shadow-inner'
-                                                        : 'bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-white/80'
-                                            }`}>
+                                            <div
+                                                className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl select-none ${
+                                                    isClaimed
+                                                        ? 'bg-slate-200/50 dark:bg-white/5'
+                                                        : isCompleted
+                                                          ? 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 shadow-inner'
+                                                          : 'bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-white/80'
+                                                }`}
+                                            >
                                                 {isClaimed ? '✅' : quest.icon}
                                             </div>
                                             <div>
-                                                <h4 className={`text-xs sm:text-sm font-black leading-tight ${
-                                                    isClaimed
-                                                        ? 'text-slate-400 dark:text-white/30 line-through'
-                                                        : 'text-slate-800 dark:text-white'
-                                                }`}>
+                                                <h4
+                                                    className={`text-xs sm:text-sm font-black leading-tight ${
+                                                        isClaimed
+                                                            ? 'text-slate-400 dark:text-white/30 line-through'
+                                                            : 'text-slate-800 dark:text-white'
+                                                    }`}
+                                                >
                                                     {quest.title}
                                                 </h4>
                                                 <p className="text-[10px] text-slate-400 dark:text-white/30 font-bold uppercase tracking-wider mt-1">
@@ -116,12 +124,17 @@ const QuestPanel = () => {
                                             </div>
                                         </div>
 
-                                        <div className={`flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-lg shrink-0 ${
-                                            isClaimed
-                                                ? 'bg-slate-100 dark:bg-white/5 text-slate-400 dark:text-white/20'
-                                                : 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-sm'
-                                        }`}>
-                                            <Zap size={10} fill={isClaimed ? "none" : "currentColor"} />
+                                        <div
+                                            className={`flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-lg shrink-0 ${
+                                                isClaimed
+                                                    ? 'bg-slate-100 dark:bg-white/5 text-slate-400 dark:text-white/20'
+                                                    : 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-sm'
+                                            }`}
+                                        >
+                                            <Zap
+                                                size={10}
+                                                fill={isClaimed ? 'none' : 'currentColor'}
+                                            />
                                             <span>+{quest.xp} XP</span>
                                         </div>
                                     </div>
@@ -132,14 +145,16 @@ const QuestPanel = () => {
                                             <div className="h-1.5 bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden">
                                                 <motion.div
                                                     initial={{ width: 0 }}
-                                                    animate={{ width: `${(progress / quest.target) * 100}%` }}
+                                                    animate={{
+                                                        width: `${(progress / quest.target) * 100}%`,
+                                                    }}
                                                     transition={{ type: 'spring', stiffness: 80 }}
                                                     className={`h-full rounded-full ${
                                                         isClaimed
                                                             ? 'bg-slate-300 dark:bg-white/10'
                                                             : isCompleted
-                                                                ? 'bg-gradient-to-r from-emerald-400 to-teal-500'
-                                                                : 'bg-gradient-to-r from-indigo-500 to-purple-500'
+                                                              ? 'bg-gradient-to-r from-emerald-400 to-teal-500'
+                                                              : 'bg-gradient-to-r from-indigo-500 to-purple-500'
                                                     }`}
                                                 />
                                             </div>
@@ -165,7 +180,10 @@ const QuestPanel = () => {
 
                                     {isClaimed && (
                                         <div className="w-full mt-2 py-2 bg-slate-100 dark:bg-white/5 text-slate-400 dark:text-white/30 rounded-xl text-[10px] font-black uppercase tracking-wider text-center flex items-center justify-center gap-1 pointer-events-none relative z-10">
-                                            <CheckCircle2 size={12} className="text-slate-400 dark:text-white/20" />
+                                            <CheckCircle2
+                                                size={12}
+                                                className="text-slate-400 dark:text-white/20"
+                                            />
                                             Reward Claimed
                                         </div>
                                     )}

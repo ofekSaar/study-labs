@@ -36,11 +36,23 @@ const AnnouncementsPanel = () => {
                                 <Pin size={12} className="text-indigo-500 mt-0.5 shrink-0" />
                             )}
                             <div className="flex-1 min-w-0">
-                                <p className="text-sm font-bold text-slate-800 dark:text-white">{ann.title}</p>
-                                <p className="text-xs text-slate-600 dark:text-white/60 mt-0.5 whitespace-pre-line">{ann.content}</p>
+                                <p className="text-sm font-bold text-slate-800 dark:text-white">
+                                    {ann.title}
+                                </p>
+                                <p className="text-xs text-slate-600 dark:text-white/60 mt-0.5 whitespace-pre-line">
+                                    {ann.content}
+                                </p>
                                 <p className="text-[10px] text-slate-400 mt-1.5">
-                                    {ann.instructor?.name && <span className="font-semibold">{ann.instructor.name} · </span>}
-                                    {new Date(ann.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
+                                    {ann.instructor?.name && (
+                                        <span className="font-semibold">
+                                            {ann.instructor.name} ·{' '}
+                                        </span>
+                                    )}
+                                    {new Date(ann.createdAt).toLocaleDateString(undefined, {
+                                        day: 'numeric',
+                                        month: 'short',
+                                        year: 'numeric',
+                                    })}
                                 </p>
                             </div>
                         </div>
@@ -53,9 +65,13 @@ const AnnouncementsPanel = () => {
                     className="mt-2 flex items-center gap-1 text-xs font-bold text-indigo-500 hover:text-indigo-400 transition"
                 >
                     {expanded ? (
-                        <><ChevronUp size={14} /> Show less</>
+                        <>
+                            <ChevronUp size={14} /> Show less
+                        </>
                     ) : (
-                        <><ChevronDown size={14} /> Show all ({announcements.length})</>
+                        <>
+                            <ChevronDown size={14} /> Show all ({announcements.length})
+                        </>
                     )}
                 </button>
             )}

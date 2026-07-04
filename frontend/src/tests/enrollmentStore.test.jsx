@@ -18,9 +18,9 @@ const mockFetchResponse = (payload, ok = true, status = 200) => {
                     return 'application/json';
                 }
                 return null;
-            }
+            },
         },
-        json: () => Promise.resolve({ data: payload })
+        json: () => Promise.resolve({ data: payload }),
     });
 };
 
@@ -34,9 +34,9 @@ const mockFetchErrorResponse = (message, status = 400) => {
                     return 'application/json';
                 }
                 return null;
-            }
+            },
         },
-        json: () => Promise.resolve({ message })
+        json: () => Promise.resolve({ message }),
     });
 };
 
@@ -128,9 +128,7 @@ describe('useEnrollmentStore Zustand Store', () => {
     });
 
     test('should fetch course enrollments successfully without status', async () => {
-        const mockEnrollments = [
-            { _id: 'e1', courseId: 'c1', status: 'pending' },
-        ];
+        const mockEnrollments = [{ _id: 'e1', courseId: 'c1', status: 'pending' }];
 
         global.fetch.mockImplementationOnce(() =>
             mockFetchResponse({ enrollments: mockEnrollments })
@@ -153,9 +151,7 @@ describe('useEnrollmentStore Zustand Store', () => {
     });
 
     test('should fetch course enrollments successfully with status', async () => {
-        const mockEnrollments = [
-            { _id: 'e1', courseId: 'c1', status: 'pending' },
-        ];
+        const mockEnrollments = [{ _id: 'e1', courseId: 'c1', status: 'pending' }];
 
         global.fetch.mockImplementationOnce(() =>
             mockFetchResponse({ enrollments: mockEnrollments })
@@ -172,9 +168,7 @@ describe('useEnrollmentStore Zustand Store', () => {
     });
 
     test('should handle failure during fetch course enrollments', async () => {
-        global.fetch.mockImplementationOnce(() =>
-            mockFetchErrorResponse('Fetch failed', 400)
-        );
+        global.fetch.mockImplementationOnce(() => mockFetchErrorResponse('Fetch failed', 400));
 
         await act(async () => {
             await useEnrollmentStore.getState().fetchCourseEnrollments('c1');

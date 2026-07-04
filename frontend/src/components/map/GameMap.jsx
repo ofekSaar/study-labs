@@ -2,7 +2,19 @@ import React, { useRef, useEffect, useState } from 'react';
 import { BookOpen, HelpCircle, Trophy, Lock, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const MapNode = ({ status, x, y, label, onClick, index, type, xpReward = 150, isCurrent = false, completionCount, totalEnrolled }) => {
+const MapNode = ({
+    status,
+    x,
+    y,
+    label,
+    onClick,
+    index,
+    type,
+    xpReward = 150,
+    isCurrent = false,
+    completionCount,
+    totalEnrolled,
+}) => {
     const [isHovered, setIsHovered] = useState(false);
 
     const getStyles = () => {
@@ -50,18 +62,29 @@ const MapNode = ({ status, x, y, label, onClick, index, type, xpReward = 150, is
                         className="absolute bottom-16 p-3 rounded-2xl w-48 glass-card border border-indigo-500/20 shadow-lg text-slate-800 dark:text-white pointer-events-none z-50 text-right flex flex-col gap-1"
                         dir="rtl"
                     >
-                        <p className="text-[9px] font-black text-indigo-500 uppercase tracking-wider">שלב {index + 1} • {type === 'quiz' ? 'בוחן' : type === 'exam' ? 'מבחן מסכם' : 'שיעור'}</p>
+                        <p className="text-[9px] font-black text-indigo-500 uppercase tracking-wider">
+                            שלב {index + 1} •{' '}
+                            {type === 'quiz' ? 'בוחן' : type === 'exam' ? 'מבחן מסכם' : 'שיעור'}
+                        </p>
                         <p className="text-xs font-extrabold truncate">{label}</p>
                         <div className="flex items-center justify-between mt-1">
                             <span className="flex items-center gap-0.5 text-indigo-500 text-[10px] font-bold">
-                                <Zap size={10} className="fill-indigo-500/10" />
-                                +{xpReward} XP
+                                <Zap size={10} className="fill-indigo-500/10" />+{xpReward} XP
                             </span>
-                            <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
-                                status === 'completed' ? 'bg-emerald-500/10 text-emerald-500' :
-                                status === 'active' ? 'bg-amber-500/10 text-amber-500' : 'bg-slate-500/10 text-slate-500'
-                            }`}>
-                                {status === 'completed' ? 'הושלם' : status === 'active' ? 'זמין כעת' : 'נעול'}
+                            <span
+                                className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
+                                    status === 'completed'
+                                        ? 'bg-emerald-500/10 text-emerald-500'
+                                        : status === 'active'
+                                          ? 'bg-amber-500/10 text-amber-500'
+                                          : 'bg-slate-500/10 text-slate-500'
+                                }`}
+                            >
+                                {status === 'completed'
+                                    ? 'הושלם'
+                                    : status === 'active'
+                                      ? 'זמין כעת'
+                                      : 'נעול'}
                             </span>
                         </div>
                     </motion.div>
@@ -79,10 +102,15 @@ const MapNode = ({ status, x, y, label, onClick, index, type, xpReward = 150, is
                 {getIcon()}
 
                 {/* Micro level indicator circle */}
-                <div className={`absolute -top-1.5 -right-1.5 w-6 h-6 rounded-lg text-[10px] font-black flex items-center justify-center shadow border ${
-                    status === 'completed' ? 'bg-emerald-600 border-emerald-500 text-white' :
-                    status === 'active' ? 'bg-amber-500 border-amber-400 text-white' : 'bg-slate-300 dark:bg-slate-800 border-slate-400/30 text-slate-500'
-                }`}>
+                <div
+                    className={`absolute -top-1.5 -right-1.5 w-6 h-6 rounded-lg text-[10px] font-black flex items-center justify-center shadow border ${
+                        status === 'completed'
+                            ? 'bg-emerald-600 border-emerald-500 text-white'
+                            : status === 'active'
+                              ? 'bg-amber-500 border-amber-400 text-white'
+                              : 'bg-slate-300 dark:bg-slate-800 border-slate-400/30 text-slate-500'
+                    }`}
+                >
                     {index + 1}
                 </div>
 
@@ -94,7 +122,9 @@ const MapNode = ({ status, x, y, label, onClick, index, type, xpReward = 150, is
                 )}
             </button>
 
-            <span className={`text-[10px] font-black mt-2 px-2.5 py-1 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 text-slate-700 dark:text-slate-200 max-w-[120px] text-center shadow-sm truncate ${status === 'locked' ? 'opacity-40' : 'opacity-100'}`}>
+            <span
+                className={`text-[10px] font-black mt-2 px-2.5 py-1 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 text-slate-700 dark:text-slate-200 max-w-[120px] text-center shadow-sm truncate ${status === 'locked' ? 'opacity-40' : 'opacity-100'}`}
+            >
                 {label}
             </span>
         </div>
@@ -108,7 +138,9 @@ const GameMap = ({ nodes }) => {
     const NODE_SPACING = 120;
     const PATH_AMPLITUDE = dimensions.width > 0 && dimensions.width < 500 ? 40 : 85;
     const BASE_PADDING_TOP = 80;
-    const prefersReducedMotion = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const prefersReducedMotion =
+        typeof window !== 'undefined' &&
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     const totalHeight = Math.max(600, nodes.length * NODE_SPACING + BASE_PADDING_TOP * 2);
 
@@ -117,7 +149,7 @@ const GameMap = ({ nodes }) => {
             if (containerRef.current) {
                 setDimensions({
                     width: containerRef.current.clientWidth,
-                    height: totalHeight
+                    height: totalHeight,
                 });
             }
         };
@@ -133,12 +165,12 @@ const GameMap = ({ nodes }) => {
         const centerY = BASE_PADDING_TOP + index * NODE_SPACING;
         const centerX = dimensions.width / 2;
         // Winding sine curve
-        const offset = Math.sin(index * 2.5) * PATH_AMPLITUDE; 
+        const offset = Math.sin(index * 2.5) * PATH_AMPLITUDE;
 
         return {
             ...node,
             px: centerX + offset,
-            py: centerY
+            py: centerY,
         };
     });
 
@@ -157,16 +189,17 @@ const GameMap = ({ nodes }) => {
     };
 
     return (
-        <div
-            className="relative w-full overflow-hidden bg-slate-100/50 dark:bg-slate-950/20 rounded-3xl border border-slate-200 dark:border-white/5 h-[450px] sm:h-[550px] lg:h-[650px]"
-        >
+        <div className="relative w-full overflow-hidden bg-slate-100/50 dark:bg-slate-950/20 rounded-3xl border border-slate-200 dark:border-white/5 h-[450px] sm:h-[550px] lg:h-[650px]">
             <div
                 ref={containerRef}
                 className="absolute inset-x-0 overflow-y-auto h-full scrollbar-hide custom-scrollbar"
             >
                 <div style={{ height: `${totalHeight}px`, position: 'relative' }}>
                     {/* Path */}
-                    <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 0 }}>
+                    <svg
+                        className="absolute inset-0 w-full h-full pointer-events-none"
+                        style={{ zIndex: 0 }}
+                    >
                         <defs>
                             <linearGradient id="pathGradient" x1="0%" y1="0%" x2="0%" y2="100%">
                                 <stop offset="0%" stopColor="#D97757" />
@@ -174,7 +207,7 @@ const GameMap = ({ nodes }) => {
                                 <stop offset="100%" stopColor="#EC4899" />
                             </linearGradient>
                         </defs>
-                        
+
                         {/* Background Trail Shadow */}
                         <path
                             d={getPathD()}
@@ -185,7 +218,7 @@ const GameMap = ({ nodes }) => {
                             className="opacity-30 dark:opacity-10"
                             aria-hidden="true"
                         />
-                        
+
                         {/* Glowing flowing active path */}
                         <path
                             d={getPathD()}
@@ -194,7 +227,9 @@ const GameMap = ({ nodes }) => {
                             strokeWidth="8"
                             strokeLinecap="round"
                             strokeDasharray="16 12"
-                            className={prefersReducedMotion ? 'opacity-85' : 'map-path-animated opacity-85'}
+                            className={
+                                prefersReducedMotion ? 'opacity-85' : 'map-path-animated opacity-85'
+                            }
                             aria-hidden="true"
                         />
                     </svg>

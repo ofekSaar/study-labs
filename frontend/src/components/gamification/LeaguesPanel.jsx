@@ -5,11 +5,36 @@ import useCourseStore from '../../store/courseStore';
 import useGamificationStore from '../../store/gamificationStore';
 
 const LEAGUES = [
-    { name: 'Bronze League', color: 'from-amber-600 to-amber-700', shieldColor: '#cd7f32', border: 'border-amber-500/20' },
-    { name: 'Silver League', color: 'from-slate-300 to-slate-400', shieldColor: '#c0c0c0', border: 'border-slate-350/20' },
-    { name: 'Gold League', color: 'from-yellow-400 to-amber-500', shieldColor: '#ffd700', border: 'border-amber-400/30' },
-    { name: 'Platinum League', color: 'from-indigo-400 to-purple-500', shieldColor: '#a855f7', border: 'border-purple-400/30' },
-    { name: 'Diamond League', color: 'from-cyan-400 via-blue-500 to-indigo-600', shieldColor: '#22d3ee', border: 'border-cyan-400/40' }
+    {
+        name: 'Bronze League',
+        color: 'from-amber-600 to-amber-700',
+        shieldColor: '#cd7f32',
+        border: 'border-amber-500/20',
+    },
+    {
+        name: 'Silver League',
+        color: 'from-slate-300 to-slate-400',
+        shieldColor: '#c0c0c0',
+        border: 'border-slate-350/20',
+    },
+    {
+        name: 'Gold League',
+        color: 'from-yellow-400 to-amber-500',
+        shieldColor: '#ffd700',
+        border: 'border-amber-400/30',
+    },
+    {
+        name: 'Platinum League',
+        color: 'from-indigo-400 to-purple-500',
+        shieldColor: '#a855f7',
+        border: 'border-purple-400/30',
+    },
+    {
+        name: 'Diamond League',
+        color: 'from-cyan-400 via-blue-500 to-indigo-600',
+        shieldColor: '#22d3ee',
+        border: 'border-cyan-400/40',
+    },
 ];
 
 const LeaguesPanel = () => {
@@ -17,7 +42,7 @@ const LeaguesPanel = () => {
     const { stats } = useGamificationStore();
 
     const xp = currentUser?.totalXP ?? stats.total_xp ?? 0;
-    
+
     // Dynamically calculate which league the user is in based on level
     const userLevel = stats.level || 1;
     const leagueIndex = Math.min(Math.floor((userLevel - 1) / 2), LEAGUES.length - 1);
@@ -35,12 +60,12 @@ const LeaguesPanel = () => {
         { name: 'Ido Mizrahi', xp: 1720, avatar: '🧠' },
         { name: 'Shira Albaz', xp: 1250, avatar: '🦊' },
         { name: 'Amir Avraham', xp: 950, avatar: '🦁' },
-        { name: 'Michal Yosef', xp: 810, avatar: '🐼' }
+        { name: 'Michal Yosef', xp: 810, avatar: '🐼' },
     ];
 
     const allParticipants = [
         ...baseCompetitors,
-        { name: 'You', xp: xp, avatar: '🎓', isYou: true }
+        { name: 'You', xp: xp, avatar: '🎓', isYou: true },
     ].sort((a, b) => b.xp - a.xp);
 
     // Map ranks after sort
@@ -52,13 +77,19 @@ const LeaguesPanel = () => {
 
             {/* Header / Active League Shield Banner */}
             <div className="relative z-10 flex flex-col sm:flex-row items-center gap-4 pb-5 border-b border-slate-200/60 dark:border-white/10">
-                <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${activeLeague.color} flex items-center justify-center text-white shadow-md border-b-2 border-black/10 flex-shrink-0 animate-pulse`}>
+                <div
+                    className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${activeLeague.color} flex items-center justify-center text-white shadow-md border-b-2 border-black/10 flex-shrink-0 animate-pulse`}
+                >
                     <Shield size={32} fill="rgba(255,255,255,0.25)" className="stroke-[2]" />
                 </div>
                 <div className="text-center sm:text-left flex-1 min-w-0">
                     <h3 className="text-base font-black text-slate-800 dark:text-white leading-tight">
-                        <span className="text-slate-500 dark:text-white/50 font-semibold text-xs uppercase tracking-wider block mb-0.5">Your Weekly League</span>
-                        <span className={`bg-gradient-to-r ${activeLeague.color} bg-clip-text text-transparent`}>
+                        <span className="text-slate-500 dark:text-white/50 font-semibold text-xs uppercase tracking-wider block mb-0.5">
+                            Your Weekly League
+                        </span>
+                        <span
+                            className={`bg-gradient-to-r ${activeLeague.color} bg-clip-text text-transparent`}
+                        >
                             {activeLeague.name}
                         </span>
                     </h3>
@@ -74,7 +105,7 @@ const LeaguesPanel = () => {
                 {rankedList.map((entry) => {
                     const isPromotionZone = entry.rank <= 3;
                     const isDemotionZone = entry.rank >= rankedList.length - 1;
-                    
+
                     return (
                         <div
                             key={entry.name}
@@ -86,32 +117,46 @@ const LeaguesPanel = () => {
                         >
                             {/* Rank Indicator and Zone Arrows */}
                             <div className="w-8 flex flex-col items-center justify-center flex-shrink-0">
-                                <span className={`text-xs font-black ${entry.isYou ? 'text-indigo-500 font-extrabold' : 'text-slate-500 dark:text-white/40'}`}>
+                                <span
+                                    className={`text-xs font-black ${entry.isYou ? 'text-indigo-500 font-extrabold' : 'text-slate-500 dark:text-white/40'}`}
+                                >
                                     #{entry.rank}
                                 </span>
                                 {isPromotionZone && (
-                                    <ArrowUpCircle size={12} className="text-emerald-500 mt-0.5" title="Promotion zone" />
+                                    <ArrowUpCircle
+                                        size={12}
+                                        className="text-emerald-500 mt-0.5"
+                                        title="Promotion zone"
+                                    />
                                 )}
                                 {isDemotionZone && prevLeagueName && (
-                                    <ArrowDownCircle size={12} className="text-rose-500 mt-0.5" title="Demotion zone" />
+                                    <ArrowDownCircle
+                                        size={12}
+                                        className="text-rose-500 mt-0.5"
+                                        title="Demotion zone"
+                                    />
                                 )}
                             </div>
 
                             {/* User Avatar */}
-                            <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-xl flex-shrink-0 border transition-all duration-300 ${
-                                entry.isYou
-                                    ? 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white border-indigo-600 shadow-md'
-                                    : 'bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-white/70 border-slate-200/60 dark:border-white/10 shadow-sm'
-                            }`}>
+                            <div
+                                className={`w-9 h-9 rounded-xl flex items-center justify-center text-xl flex-shrink-0 border transition-all duration-300 ${
+                                    entry.isYou
+                                        ? 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white border-indigo-600 shadow-md'
+                                        : 'bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-white/70 border-slate-200/60 dark:border-white/10 shadow-sm'
+                                }`}
+                            >
                                 {entry.avatar}
                             </div>
 
                             {/* User Name */}
-                            <span className={`text-xs font-bold flex-1 min-w-0 truncate ${
-                                entry.isYou
-                                    ? 'text-indigo-600 dark:text-indigo-400 font-black'
-                                    : 'text-slate-800 dark:text-white/95'
-                            }`}>
+                            <span
+                                className={`text-xs font-bold flex-1 min-w-0 truncate ${
+                                    entry.isYou
+                                        ? 'text-indigo-600 dark:text-indigo-400 font-black'
+                                        : 'text-slate-800 dark:text-white/95'
+                                }`}
+                            >
                                 {entry.isYou ? currentUser?.name || 'You' : entry.name}
                                 {entry.isYou && (
                                     <span className="ml-1.5 text-[8px] font-black text-white bg-indigo-500/80 dark:bg-indigo-500/90 px-1.5 py-0.5 rounded-md uppercase shadow-sm">
@@ -136,7 +181,9 @@ const LeaguesPanel = () => {
                     <ArrowUpCircle size={14} className="mt-0.5 shrink-0" />
                     <div>
                         <p className="font-bold">Top 3: Promotion Zone</p>
-                        <p className="text-[10px] text-slate-400 dark:text-white/30">Move up to {nextLeagueName || 'the top league'}</p>
+                        <p className="text-[10px] text-slate-400 dark:text-white/30">
+                            Move up to {nextLeagueName || 'the top league'}
+                        </p>
                     </div>
                 </div>
                 {prevLeagueName && (
@@ -144,7 +191,9 @@ const LeaguesPanel = () => {
                         <ArrowDownCircle size={14} className="mt-0.5 shrink-0" />
                         <div>
                             <p className="font-bold">Bottom 2: Danger Zone</p>
-                            <p className="text-[10px] text-slate-400 dark:text-white/30">Drop to {prevLeagueName}</p>
+                            <p className="text-[10px] text-slate-400 dark:text-white/30">
+                                Drop to {prevLeagueName}
+                            </p>
                         </div>
                     </div>
                 )}

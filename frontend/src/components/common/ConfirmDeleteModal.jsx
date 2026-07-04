@@ -6,7 +6,9 @@ const ConfirmDeleteModal = ({ label, onConfirm, onCancel }) => (
         <div className="text-center space-y-4">
             <div className="text-4xl">🗑️</div>
             <p className="text-slate-800 dark:text-white font-bold text-sm">Delete {label}?</p>
-            <p className="text-slate-500 dark:text-white/50 text-xs">This action is permanent and cannot be undone.</p>
+            <p className="text-slate-500 dark:text-white/50 text-xs">
+                This action is permanent and cannot be undone.
+            </p>
             <div className="flex gap-3 justify-center pt-1">
                 <button
                     onClick={onCancel}

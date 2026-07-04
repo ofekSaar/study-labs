@@ -11,7 +11,9 @@ const EmptyState = ({ icon: Icon, title, description, action }) => (
         <div>
             <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-1">{title}</h3>
             {description && (
-                <p className="text-sm text-slate-500 dark:text-white/40 max-w-xs mx-auto">{description}</p>
+                <p className="text-sm text-slate-500 dark:text-white/40 max-w-xs mx-auto">
+                    {description}
+                </p>
             )}
         </div>
         {action && (

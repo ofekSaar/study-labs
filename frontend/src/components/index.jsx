@@ -4,6 +4,7 @@ export { default as StatCard } from './common/StatCard.jsx';
 export { default as CountUp } from './common/CountUp.jsx';
 export { default as EmptyState } from './common/EmptyState.jsx';
 export { default as LoadingSkeleton } from './common/LoadingSkeleton.jsx';
+export { default as Spinner } from './common/Spinner.jsx';
 export { default as ToastManager } from './common/ToastManager.jsx';
 
 export { default as CourseCard } from './dashboard/CourseCard.jsx';
