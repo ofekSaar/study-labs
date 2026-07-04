@@ -60,7 +60,11 @@ const StudentNotificationBell = ({ dropUp = false }) => {
 
             {open && (
                 <div
-                    className={`absolute ${dropUp ? 'left-0 bottom-full mb-2' : 'right-0 top-10'} w-80 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden`}
+                    className={`${
+                        dropUp
+                            ? 'absolute left-0 bottom-full mb-2 w-80 max-w-[calc(100vw-2rem)]'
+                            : 'fixed left-1/2 -translate-x-1/2 top-14 w-[min(20rem,calc(100vw-1.5rem))] sm:absolute sm:left-auto sm:right-0 sm:top-10 sm:translate-x-0 sm:w-80'
+                    } bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden`}
                 >
                     {/* Header */}
                     <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-white/10">
