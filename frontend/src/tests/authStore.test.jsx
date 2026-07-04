@@ -109,6 +109,22 @@ describe('useAuthStore Zustand Store', () => {
         expect(localStorage.getItem('studylabs_token')).toBeNull();
     });
 
+    test('should keep the stored token when /me fails with a transient error (429)', async () => {
+        localStorage.setItem('studylabs_token', 'still_valid_token');
+
+        global.fetch.mockImplementationOnce(() => mockFetchErrorResponse('Too many requests', 429));
+
+        await act(async () => {
+            await useAuthStore.getState().initialize();
+        });
+
+        const state = useAuthStore.getState();
+        expect(state.isLoading).toBe(false);
+        expect(state.isAuthenticated).toBe(false);
+        expect(state.user).toBeNull();
+        expect(localStorage.getItem('studylabs_token')).toBe('still_valid_token');
+    });
+
     test('should finish loading and remain unauthenticated when no token exists during initialization', async () => {
         await act(async () => {
             await useAuthStore.getState().initialize();

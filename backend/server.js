@@ -38,9 +38,19 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // ── Rate Limiters ─────────────────────────────
-const authLimiter = rateLimit({
+// Strict limit for login/OAuth attempts only — must NOT cover /api/auth/me,
+// which the frontend calls on every page load.
+const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { status: 'error', message: 'Too many requests, please try again later.' },
+});
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 300,
   standardHeaders: true,
   legacyHeaders: false,
   message: { status: 'error', message: 'Too many requests, please try again later.' },
@@ -103,6 +113,7 @@ app.get('/api/health', (req, res) => {
 });
 
 // ── API Routes ───────────────────────────────
+app.use('/api/auth/google', loginLimiter); // covers /google and /google/callback
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/courses', courseRoutes);
 app.use('/api/enrollments', enrollmentRoutes);
