@@ -4,7 +4,8 @@ import { Clock, Zap, CheckCircle2, Trophy } from 'lucide-react';
 import useGamificationStore from '../../store/gamificationStore';
 
 const DailyChallengeCard = () => {
-    const { dailyChallenge, dailyChallengeCompleted, generateDailyChallenge } = useGamificationStore();
+    const { dailyChallenge, dailyChallengeCompleted, generateDailyChallenge } =
+        useGamificationStore();
     const [timeLeft, setTimeLeft] = useState('');
 
     useEffect(() => {
@@ -39,19 +40,23 @@ const DailyChallengeCard = () => {
             }`}
         >
             {/* Background glow */}
-            <div className={`absolute inset-0 pointer-events-none transition-opacity duration-500 ${
-                dailyChallengeCompleted
-                    ? 'bg-gradient-to-br from-emerald-500/10 to-teal-500/5 opacity-100'
-                    : 'bg-gradient-to-br from-amber-500/5 to-orange-500/5 opacity-0 group-hover:opacity-100'
-            }`} />
+            <div
+                className={`absolute inset-0 pointer-events-none transition-opacity duration-500 ${
+                    dailyChallengeCompleted
+                        ? 'bg-gradient-to-br from-emerald-500/10 to-teal-500/5 opacity-100'
+                        : 'bg-gradient-to-br from-amber-500/5 to-orange-500/5 opacity-0 group-hover:opacity-100'
+                }`}
+            />
 
             <div className="relative z-10">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
-                        <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-lg ${
-                            dailyChallengeCompleted ? 'bg-emerald-500/20' : 'bg-amber-500/20'
-                        }`}>
+                        <div
+                            className={`w-8 h-8 rounded-xl flex items-center justify-center text-lg ${
+                                dailyChallengeCompleted ? 'bg-emerald-500/20' : 'bg-amber-500/20'
+                            }`}
+                        >
                             {dailyChallengeCompleted ? '✅' : dailyChallenge.icon}
                         </div>
                         <p className="text-[10px] font-black text-slate-400 dark:text-white/40 uppercase tracking-widest">
@@ -70,23 +75,26 @@ const DailyChallengeCard = () => {
                 </div>
 
                 {/* Challenge text */}
-                <p className={`font-bold text-xs leading-snug mb-2 ${
-                    dailyChallengeCompleted
-                        ? 'text-slate-400 dark:text-white/40 line-through'
-                        : 'text-slate-800 dark:text-white'
-                }`}>
+                <p
+                    className={`font-bold text-xs leading-snug mb-2 ${
+                        dailyChallengeCompleted
+                            ? 'text-slate-400 dark:text-white/40 line-through'
+                            : 'text-slate-800 dark:text-white'
+                    }`}
+                >
                     {dailyChallenge.title}
                 </p>
 
                 {/* XP reward */}
                 <div className="flex items-center gap-2">
-                    <div className={`flex items-center gap-1 text-xs font-black px-2.5 py-1 rounded-xl border ${
-                        dailyChallengeCompleted
-                            ? 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20'
-                            : 'text-amber-500 bg-amber-500/10 border-amber-500/20'
-                    }`}>
-                        <Zap size={12} fill="currentColor" />
-                        +{dailyChallenge.xp} XP
+                    <div
+                        className={`flex items-center gap-1 text-xs font-black px-2.5 py-1 rounded-xl border ${
+                            dailyChallengeCompleted
+                                ? 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20'
+                                : 'text-amber-500 bg-amber-500/10 border-amber-500/20'
+                        }`}
+                    >
+                        <Zap size={12} fill="currentColor" />+{dailyChallenge.xp} XP
                     </div>
                     {dailyChallengeCompleted && (
                         <span className="text-xs text-emerald-500 font-bold">Completed!</span>

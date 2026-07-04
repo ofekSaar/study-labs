@@ -18,9 +18,9 @@ const mockFetchResponse = (payload, ok = true, status = 200) => {
                     return 'application/json';
                 }
                 return null;
-            }
+            },
         },
-        json: () => Promise.resolve({ data: payload })
+        json: () => Promise.resolve({ data: payload }),
     });
 };
 
@@ -34,9 +34,9 @@ const mockFetchErrorResponse = (message, status = 400) => {
                     return 'application/json';
                 }
                 return null;
-            }
+            },
         },
-        json: () => Promise.resolve({ message })
+        json: () => Promise.resolve({ message }),
     });
 };
 
@@ -67,7 +67,7 @@ describe('useCourseStore Zustand Store', () => {
                 selectedCourseId: null,
                 selectedNode: null,
                 isLoading: false,
-                error: null
+                error: null,
             });
         });
     });
@@ -81,11 +81,11 @@ describe('useCourseStore Zustand Store', () => {
     });
 
     test('should fetch and update stats successfully', async () => {
-        global.fetch.mockImplementationOnce(() => 
+        global.fetch.mockImplementationOnce(() =>
             mockFetchResponse({
                 totalXP: 320,
                 streak: 4,
-                levelName: 'Intermediate'
+                levelName: 'Intermediate',
             })
         );
 
@@ -101,9 +101,7 @@ describe('useCourseStore Zustand Store', () => {
     });
 
     test('should handle stats fetch failure gracefully', async () => {
-        global.fetch.mockImplementationOnce(() =>
-            mockFetchErrorResponse('Network Error', 500)
-        );
+        global.fetch.mockImplementationOnce(() => mockFetchErrorResponse('Network Error', 500));
 
         await act(async () => {
             await useCourseStore.getState().fetchStats();
@@ -127,18 +125,23 @@ describe('useCourseStore Zustand Store', () => {
 
     test('should fetch enrolled student courses successfully', async () => {
         // Enrolled courses request
-        global.fetch.mockImplementationOnce(() => 
+        global.fetch.mockImplementationOnce(() =>
             mockFetchResponse({
                 courses: [
-                    { _id: 'course_1', title: 'Math 101', enrollmentStatus: 'approved', level: 'Beginner' }
-                ]
+                    {
+                        _id: 'course_1',
+                        title: 'Math 101',
+                        enrollmentStatus: 'approved',
+                        level: 'Beginner',
+                    },
+                ],
             })
         );
 
         // Course progress request
-        global.fetch.mockImplementationOnce(() => 
+        global.fetch.mockImplementationOnce(() =>
             mockFetchResponse({
-                progress: { percentComplete: 40, totalXP: 100 }
+                progress: { percentComplete: 40, totalXP: 100 },
             })
         );
 
@@ -156,15 +159,13 @@ describe('useCourseStore Zustand Store', () => {
     });
 
     test('should handle progress fetch error for courses in fetchCourses', async () => {
-        global.fetch.mockImplementationOnce(() => 
+        global.fetch.mockImplementationOnce(() =>
             mockFetchResponse({
-                courses: [
-                    { _id: 'course_1', title: 'Math 101', enrollmentStatus: 'approved' }
-                ]
+                courses: [{ _id: 'course_1', title: 'Math 101', enrollmentStatus: 'approved' }],
             })
         );
 
-        global.fetch.mockImplementationOnce(() => 
+        global.fetch.mockImplementationOnce(() =>
             mockFetchErrorResponse('Failed to fetch progress', 500)
         );
 
@@ -181,9 +182,7 @@ describe('useCourseStore Zustand Store', () => {
     });
 
     test('should handle overall fetchCourses failure', async () => {
-        global.fetch.mockImplementationOnce(() => 
-            mockFetchErrorResponse('Unauthorized', 401)
-        );
+        global.fetch.mockImplementationOnce(() => mockFetchErrorResponse('Unauthorized', 401));
 
         await act(async () => {
             await useCourseStore.getState().fetchCourses();
@@ -195,11 +194,16 @@ describe('useCourseStore Zustand Store', () => {
     });
 
     test('should fetch all courses for instructors successfully', async () => {
-        global.fetch.mockImplementationOnce(() => 
+        global.fetch.mockImplementationOnce(() =>
             mockFetchResponse({
                 courses: [
-                    { _id: 'course_inst', title: 'CS 101', level: 'Intermediate', color: 'bg-indigo-500' }
-                ]
+                    {
+                        _id: 'course_inst',
+                        title: 'CS 101',
+                        level: 'Intermediate',
+                        color: 'bg-indigo-500',
+                    },
+                ],
             })
         );
 
@@ -214,9 +218,7 @@ describe('useCourseStore Zustand Store', () => {
     });
 
     test('should handle fetchAllCourses failure', async () => {
-        global.fetch.mockImplementationOnce(() => 
-            mockFetchErrorResponse('Server Error', 500)
-        );
+        global.fetch.mockImplementationOnce(() => mockFetchErrorResponse('Server Error', 500));
 
         await act(async () => {
             await useCourseStore.getState().fetchAllCourses();
@@ -228,12 +230,10 @@ describe('useCourseStore Zustand Store', () => {
     });
 
     test('should fetch course nodes successfully when course does not exist in store', async () => {
-        global.fetch.mockImplementationOnce(() => 
+        global.fetch.mockImplementationOnce(() =>
             mockFetchResponse({
-                nodes: [
-                    { _id: 'node_1', title: 'Variables', type: 'lesson' }
-                ],
-                course: { title: 'JS Basics', level: 'Beginner', color: 'bg-green-500' }
+                nodes: [{ _id: 'node_1', title: 'Variables', type: 'lesson' }],
+                course: { title: 'JS Basics', level: 'Beginner', color: 'bg-green-500' },
             })
         );
 
@@ -252,17 +252,13 @@ describe('useCourseStore Zustand Store', () => {
     test('should update existing course nodes if course already exists in store', async () => {
         act(() => {
             useCourseStore.setState({
-                courses: [
-                    { id: 'course_js', _id: 'course_js', title: 'JS Basics', nodes: [] }
-                ]
+                courses: [{ id: 'course_js', _id: 'course_js', title: 'JS Basics', nodes: [] }],
             });
         });
 
-        global.fetch.mockImplementationOnce(() => 
+        global.fetch.mockImplementationOnce(() =>
             mockFetchResponse({
-                nodes: [
-                    { _id: 'node_updated', title: 'Functions', type: 'lesson' }
-                ]
+                nodes: [{ _id: 'node_updated', title: 'Functions', type: 'lesson' }],
             })
         );
 
@@ -277,9 +273,7 @@ describe('useCourseStore Zustand Store', () => {
     });
 
     test('should handle fetchCourseNodes failure gracefully', async () => {
-        global.fetch.mockImplementationOnce(() => 
-            mockFetchErrorResponse('Node Fetch Error', 400)
-        );
+        global.fetch.mockImplementationOnce(() => mockFetchErrorResponse('Node Fetch Error', 400));
 
         let result;
         await act(async () => {
@@ -292,7 +286,7 @@ describe('useCourseStore Zustand Store', () => {
 
     test('should manage drawer and select node actions correctly', () => {
         const mockNode = { _id: 'n1', title: 'Node 1' };
-        
+
         act(() => {
             useCourseStore.getState().setSelectedNode(mockNode);
         });
@@ -315,19 +309,19 @@ describe('useCourseStore Zustand Store', () => {
                         nodes: [
                             { _id: 'n_id', status: 'current' },
                             { _id: 'n_next', status: 'locked' },
-                            { _id: 'n_third', status: 'locked' }
-                        ]
-                    }
+                            { _id: 'n_third', status: 'locked' },
+                        ],
+                    },
                 ],
-                user: { totalXP: 100 }
+                user: { totalXP: 100 },
             });
         });
 
-        global.fetch.mockImplementationOnce(() => 
+        global.fetch.mockImplementationOnce(() =>
             mockFetchResponse({
                 percentComplete: 50,
                 xpEarned: 200,
-                nextNode: { _id: 'n_next', status: 'current' }
+                nextNode: { _id: 'n_next', status: 'current' },
             })
         );
 
@@ -361,15 +355,13 @@ describe('useCourseStore Zustand Store', () => {
             useCourseStore.setState({
                 courses: [
                     { id: 'c1', _id: 'c1' },
-                    { id: 'c2', _id: 'c2' }
+                    { id: 'c2', _id: 'c2' },
                 ],
-                selectedCourseId: 'c1'
+                selectedCourseId: 'c1',
             });
         });
 
-        global.fetch.mockImplementationOnce(() =>
-            mockFetchResponse({ success: true })
-        );
+        global.fetch.mockImplementationOnce(() => mockFetchResponse({ success: true }));
 
         await act(async () => {
             await useCourseStore.getState().deleteCourse('c1');
@@ -382,9 +374,7 @@ describe('useCourseStore Zustand Store', () => {
     });
 
     test('should handle deleteCourse failure and throw', async () => {
-        global.fetch.mockImplementationOnce(() =>
-            mockFetchErrorResponse('Delete Error', 400)
-        );
+        global.fetch.mockImplementationOnce(() => mockFetchErrorResponse('Delete Error', 400));
 
         await expect(async () => {
             await act(async () => {

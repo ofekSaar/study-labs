@@ -57,7 +57,10 @@ const ProgressBar = ({
                     transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                 />
             ) : (
-                <div className={`h-full rounded-full ${fill} ${fillClassName}`} style={{ width: `${pct}%` }} />
+                <div
+                    className={`h-full rounded-full ${fill} ${fillClassName}`}
+                    style={{ width: `${pct}%` }}
+                />
             )}
         </div>
     );

@@ -26,7 +26,15 @@ const ConfettiEffect = () => {
         canvas.height = window.innerHeight;
 
         const particles = [];
-        const colors = ['#8b5cf6', '#6366f1', '#ec4899', '#f59e0b', '#10b981', '#3b82f6', '#f97316'];
+        const colors = [
+            '#8b5cf6',
+            '#6366f1',
+            '#ec4899',
+            '#f59e0b',
+            '#10b981',
+            '#3b82f6',
+            '#f97316',
+        ];
         const shapes = ['circle', 'rect', 'triangle'];
         const count = confettiReason === 'perfect_score' ? 200 : 120;
 
@@ -50,7 +58,7 @@ const ConfettiEffect = () => {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             let alive = false;
 
-            particles.forEach(p => {
+            particles.forEach((p) => {
                 p.x += p.vx;
                 p.y += p.vy;
                 p.vy += p.gravity;

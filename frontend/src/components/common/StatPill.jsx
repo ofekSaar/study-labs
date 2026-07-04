@@ -66,10 +66,18 @@ const StatPill = ({
             className={`inline-flex items-center ${s.pad} rounded-xl border ${v.wrap} ${className}`}
         >
             {Icon && <Icon size={s.icon} className={v.icon} />}
-            {emoji && <span className="leading-none select-none" style={{ fontSize: s.icon }}>{emoji}</span>}
+            {emoji && (
+                <span className="leading-none select-none" style={{ fontSize: s.icon }}>
+                    {emoji}
+                </span>
+            )}
             <span className={`${s.text} font-black leading-none ${v.text}`}>{value}</span>
             {label && (
-                <span className={`${s.text} font-black uppercase tracking-widest leading-none opacity-60 ${v.text}`}>{label}</span>
+                <span
+                    className={`${s.text} font-black uppercase tracking-widest leading-none opacity-60 ${v.text}`}
+                >
+                    {label}
+                </span>
             )}
         </div>
     );

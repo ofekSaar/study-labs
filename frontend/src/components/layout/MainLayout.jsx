@@ -20,16 +20,20 @@ const MainLayout = ({ children }) => {
                         <div className="w-8 h-8 bg-studylabs-blue rounded-lg flex items-center justify-center text-white font-bold shadow-lg shadow-blue-200">
                             S
                         </div>
-                        <span className="font-display font-bold text-xl text-studylabs-dark">StudyLabs</span>
+                        <span className="font-display font-bold text-xl text-studylabs-dark">
+                            StudyLabs
+                        </span>
                     </div>
                 </div>
 
                 {/* Course Navigator - Scrollable Area */}
                 <div className="flex-1 overflow-y-auto px-4 py-2 space-y-4">
-                    <div className="mb-2 px-2 text-xs font-bold text-gray-400 uppercase tracking-wider">My Courses</div>
+                    <div className="mb-2 px-2 text-xs font-bold text-gray-400 uppercase tracking-wider">
+                        My Courses
+                    </div>
 
                     <div className="space-y-2">
-                        {courses.map(course => (
+                        {courses.map((course) => (
                             <CourseSidebarItem
                                 key={course.id}
                                 course={course}
@@ -42,7 +46,9 @@ const MainLayout = ({ children }) => {
                         ))}
                     </div>
 
-                    <div className="mt-8 mb-2 px-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Menu</div>
+                    <div className="mt-8 mb-2 px-2 text-xs font-bold text-gray-400 uppercase tracking-wider">
+                        Menu
+                    </div>
                     <button
                         onClick={() => navigate('/instructor')}
                         className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-500 hover:bg-gray-50 hover:text-gray-900 transition-colors"
@@ -75,17 +81,20 @@ const MainLayout = ({ children }) => {
                         <div className="w-8 h-8 bg-studylabs-blue rounded-lg flex items-center justify-center text-white font-bold">
                             S
                         </div>
-                        <span className="font-display font-bold text-lg text-studylabs-dark">StudyLabs</span>
+                        <span className="font-display font-bold text-lg text-studylabs-dark">
+                            StudyLabs
+                        </span>
                     </div>
-                    <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="p-2 hover:bg-gray-100 rounded-full">
+                    <button
+                        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                        className="p-2 hover:bg-gray-100 rounded-full"
+                    >
                         <Menu className="w-6 h-6 text-gray-600" />
                     </button>
                 </header>
 
                 {/* Content */}
-                <main className="flex-1 relative">
-                    {children}
-                </main>
+                <main className="flex-1 relative">{children}</main>
             </div>
 
             {/* Mobile Bottom Nav can be removed or adapted. For now, removing to focus on the 'Game Map' feel which usually doesn't have a bottom tab bar on desktop web apps, but keeping responsive considerations in mind. */}

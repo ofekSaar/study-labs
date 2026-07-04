@@ -22,17 +22,48 @@ const ContentRenderer = ({ content, className = '', inline = false }) => {
         // Apply dir="auto" to common block elements to let the browser handle RTL per-paragraph
         p: ({ node: _node, ...props }) => <p dir="auto" className="break-words" {...props} />,
         li: ({ node: _node, ...props }) => <li dir="auto" className="break-words" {...props} />,
-        h1: ({ node: _node, ...props }) => <h1 dir="auto" className="break-words" {...props} />,
-        h2: ({ node: _node, ...props }) => <h2 dir="auto" className="break-words" {...props} />,
-        h3: ({ node: _node, ...props }) => <h3 dir="auto" className="break-words" {...props} />,
-        h4: ({ node: _node, ...props }) => <h4 dir="auto" className="break-words" {...props} />,
-        h5: ({ node: _node, ...props }) => <h5 dir="auto" className="break-words" {...props} />,
-        h6: ({ node: _node, ...props }) => <h6 dir="auto" className="break-words" {...props} />,
-        pre: ({ node: _node, ...props }) => <pre className="overflow-x-auto max-w-full" {...props} />,
-        code: ({ node: _node, inline, ...props }) => inline
-            ? <code className="break-words" {...props} />
-            : <code className="block overflow-x-auto" {...props} />,
-        img: ({ node: _node, ...props }) => <img className="max-w-full h-auto" {...props} />,
+        h1: ({ node: _node, children, ...props }) => (
+            <h1 dir="auto" className="break-words" {...props}>
+                {children}
+            </h1>
+        ),
+        h2: ({ node: _node, children, ...props }) => (
+            <h2 dir="auto" className="break-words" {...props}>
+                {children}
+            </h2>
+        ),
+        h3: ({ node: _node, children, ...props }) => (
+            <h3 dir="auto" className="break-words" {...props}>
+                {children}
+            </h3>
+        ),
+        h4: ({ node: _node, children, ...props }) => (
+            <h4 dir="auto" className="break-words" {...props}>
+                {children}
+            </h4>
+        ),
+        h5: ({ node: _node, children, ...props }) => (
+            <h5 dir="auto" className="break-words" {...props}>
+                {children}
+            </h5>
+        ),
+        h6: ({ node: _node, children, ...props }) => (
+            <h6 dir="auto" className="break-words" {...props}>
+                {children}
+            </h6>
+        ),
+        pre: ({ node: _node, ...props }) => (
+            <pre className="overflow-x-auto max-w-full" {...props} />
+        ),
+        code: ({ node: _node, inline, ...props }) =>
+            inline ? (
+                <code className="break-words" {...props} />
+            ) : (
+                <code className="block overflow-x-auto" {...props} />
+            ),
+        img: ({ node: _node, alt, ...props }) => (
+            <img alt={alt ?? ''} className="max-w-full h-auto" {...props} />
+        ),
         table: ({ node: _node, ...props }) => (
             <div className="overflow-x-auto max-w-full">
                 <table {...props} />
@@ -44,8 +75,8 @@ const ContentRenderer = ({ content, className = '', inline = false }) => {
         // For inline rendering, we wrap in a span and override the 'p' tag to also be a span
         return (
             <span dir="auto" className={className}>
-                <ReactMarkdown 
-                    remarkPlugins={[remarkGfm, remarkMath]} 
+                <ReactMarkdown
+                    remarkPlugins={[remarkGfm, remarkMath]}
                     rehypePlugins={[rehypeKatex]}
                     components={{ p: ({ node: _node, ...props }) => <span {...props} /> }}
                 >
@@ -60,8 +91,8 @@ const ContentRenderer = ({ content, className = '', inline = false }) => {
             dir="auto"
             className={`content-renderer max-w-full overflow-hidden ${hasRTL ? 'rtl-content' : 'ltr-content'} ${className}`}
         >
-            <ReactMarkdown 
-                remarkPlugins={[remarkGfm, remarkMath]} 
+            <ReactMarkdown
+                remarkPlugins={[remarkGfm, remarkMath]}
                 rehypePlugins={[rehypeKatex]}
                 components={components}
             >

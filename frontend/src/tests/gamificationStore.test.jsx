@@ -12,8 +12,8 @@ jest.mock('../utils/api.js', () => ({
         get: jest.fn(() => Promise.resolve({ data: {} })),
         post: jest.fn(() => Promise.resolve({ data: {} })),
         put: jest.fn(() => Promise.resolve({ data: {} })),
-        delete: jest.fn(() => Promise.resolve({ data: {} }))
-    }
+        delete: jest.fn(() => Promise.resolve({ data: {} })),
+    },
 }));
 
 const useGamificationStore = useGamificationStoreModule.default || useGamificationStoreModule;
@@ -78,7 +78,7 @@ describe('useGamificationStore Zustand Store', () => {
                     night_study: 0,
                     early_study: 0,
                     daily_challenges: 0,
-                    courses_completed: 0
+                    courses_completed: 0,
                 },
                 activeAvatar: 'default',
                 activeTitle: 'beginner',
@@ -98,7 +98,7 @@ describe('useGamificationStore Zustand Store', () => {
                 confettiReason: null,
                 activeQuests: { daily: [], weekly: [], milestone: [] },
                 questsProgress: {},
-                questsClaimed: []
+                questsClaimed: [],
             });
         });
     });
@@ -149,7 +149,7 @@ describe('useGamificationStore Zustand Store', () => {
         // Test with 3-day streak (should be 1.2x)
         act(() => {
             useGamificationStore.setState({
-                stats: { ...useGamificationStore.getState().stats, streak: 3 }
+                stats: { ...useGamificationStore.getState().stats, streak: 3 },
             });
         });
         boost = useGamificationStore.getState().getXPMultiplier();
@@ -159,7 +159,7 @@ describe('useGamificationStore Zustand Store', () => {
         // Test with 5-day streak (should be 1.5x)
         act(() => {
             useGamificationStore.setState({
-                stats: { ...useGamificationStore.getState().stats, streak: 5 }
+                stats: { ...useGamificationStore.getState().stats, streak: 5 },
             });
         });
         boost = useGamificationStore.getState().getXPMultiplier();
@@ -279,7 +279,7 @@ describe('useGamificationStore Zustand Store', () => {
         // Test date pruning of items >60 days old
         act(() => {
             useGamificationStore.setState({
-                activityLog: ['2020-01-01', '2026-05-18']
+                activityLog: ['2020-01-01', '2026-05-18'],
             });
         });
         // Mock current date to 2026-05-19
@@ -405,7 +405,9 @@ describe('useGamificationStore Zustand Store', () => {
 
         // Restore
         act(() => {
-            useGamificationStore.setState({ incrementQuestProgress: originalIncrementQuestProgress });
+            useGamificationStore.setState({
+                incrementQuestProgress: originalIncrementQuestProgress,
+            });
         });
     });
 
@@ -439,7 +441,7 @@ describe('useGamificationStore Zustand Store', () => {
         });
         state = useGamificationStore.getState();
         // Since first daily quest (or any quest) is probably 'complete_lesson' (with ID daily_1)
-        const matchedQuest = state.activeQuests.daily.find(q => q.action === 'complete_lesson');
+        const matchedQuest = state.activeQuests.daily.find((q) => q.action === 'complete_lesson');
         if (matchedQuest) {
             expect(state.questsProgress[matchedQuest.id]).toBe(1);
 
@@ -447,17 +449,21 @@ describe('useGamificationStore Zustand Store', () => {
             act(() => {
                 useGamificationStore.getState().incrementQuestProgress('complete_lesson', 1);
             });
-            
+
             // Advance timers by 400ms to check toast
             act(() => {
                 jest.advanceTimersByTime(500);
             });
-            expect(mockToastState.success).toHaveBeenCalledWith('Quest Completed!', expect.any(String), 4000);
+            expect(mockToastState.success).toHaveBeenCalledWith(
+                'Quest Completed!',
+                expect.any(String),
+                4000
+            );
             expect(sounds.streak).toHaveBeenCalled();
         }
 
         // Test absolute quest progress for 'level' action type
-        const levelQuest = state.activeQuests.milestone.find(q => q.action === 'level');
+        const levelQuest = state.activeQuests.milestone.find((q) => q.action === 'level');
         if (levelQuest) {
             act(() => {
                 useGamificationStore.getState().incrementQuestProgress('level', 5);
@@ -468,12 +474,18 @@ describe('useGamificationStore Zustand Store', () => {
     });
 
     test('quest system: claim quest reward successfully', () => {
-        const testQuest = { id: 'q_test', title: 'Test Quest', action: 'complete_lesson', target: 2, xp: 500 };
+        const testQuest = {
+            id: 'q_test',
+            title: 'Test Quest',
+            action: 'complete_lesson',
+            target: 2,
+            xp: 500,
+        };
         act(() => {
             useGamificationStore.setState({
                 activeQuests: { daily: [testQuest], weekly: [], milestone: [] },
                 questsProgress: { q_test: 2 },
-                questsClaimed: []
+                questsClaimed: [],
             });
         });
 
@@ -487,7 +499,7 @@ describe('useGamificationStore Zustand Store', () => {
         act(() => {
             jest.advanceTimersByTime(200);
         });
-        
+
         const stateAfterReward = useGamificationStore.getState();
         expect(mockToastState.xp).toHaveBeenCalledWith(500, expect.stringContaining('Test Quest'));
         expect(sounds.perfectScore).toHaveBeenCalled();
@@ -503,14 +515,20 @@ describe('useGamificationStore Zustand Store', () => {
     });
 
     test('quest system: claim reward failing validation', () => {
-        const testQuest = { id: 'q_test', title: 'Test Quest', action: 'complete_lesson', target: 2, xp: 500 };
-        
+        const testQuest = {
+            id: 'q_test',
+            title: 'Test Quest',
+            action: 'complete_lesson',
+            target: 2,
+            xp: 500,
+        };
+
         // 1. Quest progress not enough
         act(() => {
             useGamificationStore.setState({
                 activeQuests: { daily: [testQuest], weekly: [], milestone: [] },
                 questsProgress: { q_test: 1 },
-                questsClaimed: []
+                questsClaimed: [],
             });
         });
 
@@ -532,25 +550,40 @@ describe('useGamificationStore Zustand Store', () => {
 
         let success;
         await act(async () => {
-            success = await useGamificationStore.getState().buyItem('avatars', 'wizard_scholar', 150);
+            success = await useGamificationStore
+                .getState()
+                .buyItem('avatars', 'wizard_scholar', 150);
         });
         expect(success).toBe(false);
         expect(useGamificationStore.getState().coins).toBe(50);
-        expect(mockToastState.success).toHaveBeenCalledWith('Insufficient Coins!', expect.any(String), 3500);
+        expect(mockToastState.success).toHaveBeenCalledWith(
+            'Insufficient Coins!',
+            expect.any(String),
+            3500
+        );
     });
 
     test('shop system: buyItem fails on already owned item', async () => {
         act(() => {
-            useGamificationStore.setState({ coins: 200, unlockedAvatars: ['default', 'wizard_scholar'] });
+            useGamificationStore.setState({
+                coins: 200,
+                unlockedAvatars: ['default', 'wizard_scholar'],
+            });
         });
 
         let success;
         await act(async () => {
-            success = await useGamificationStore.getState().buyItem('avatars', 'wizard_scholar', 150);
+            success = await useGamificationStore
+                .getState()
+                .buyItem('avatars', 'wizard_scholar', 150);
         });
         expect(success).toBe(false);
         expect(useGamificationStore.getState().coins).toBe(200);
-        expect(mockToastState.success).toHaveBeenCalledWith('Already Owned', expect.any(String), 3000);
+        expect(mockToastState.success).toHaveBeenCalledWith(
+            'Already Owned',
+            expect.any(String),
+            3000
+        );
     });
 
     test('shop system: buyItem successfully unlocks avatar', async () => {
@@ -568,13 +601,15 @@ describe('useGamificationStore Zustand Store', () => {
                 unlockedAvatars: ['default', 'wizard_scholar'],
                 unlockedTitles: ['beginner'],
                 unlockedThemes: ['default'],
-                unlockedFrames: ['default']
-            }
+                unlockedFrames: ['default'],
+            },
         });
 
         let success;
         await act(async () => {
-            success = await useGamificationStore.getState().buyItem('avatars', 'wizard_scholar', 150);
+            success = await useGamificationStore
+                .getState()
+                .buyItem('avatars', 'wizard_scholar', 150);
         });
         expect(success).toBe(true);
         expect(useGamificationStore.getState().coins).toBe(50);
@@ -599,13 +634,15 @@ describe('useGamificationStore Zustand Store', () => {
                 unlockedAvatars: ['default'],
                 unlockedTitles: ['beginner', 'knowledge_alchemist'],
                 unlockedThemes: ['default'],
-                unlockedFrames: ['default']
-            }
+                unlockedFrames: ['default'],
+            },
         });
 
         let success;
         await act(async () => {
-            success = await useGamificationStore.getState().buyItem('titles', 'knowledge_alchemist', 100);
+            success = await useGamificationStore
+                .getState()
+                .buyItem('titles', 'knowledge_alchemist', 100);
         });
         expect(success).toBe(true);
         expect(useGamificationStore.getState().coins).toBe(100);
@@ -627,13 +664,15 @@ describe('useGamificationStore Zustand Store', () => {
                 unlockedAvatars: ['default'],
                 unlockedTitles: ['beginner'],
                 unlockedThemes: ['default'],
-                unlockedFrames: ['default']
-            }
+                unlockedFrames: ['default'],
+            },
         });
 
         let success;
         await act(async () => {
-            success = await useGamificationStore.getState().buyItem('powerups', 'streak_shield', 75);
+            success = await useGamificationStore
+                .getState()
+                .buyItem('powerups', 'streak_shield', 75);
         });
         expect(success).toBe(true);
         expect(useGamificationStore.getState().coins).toBe(25);
@@ -656,8 +695,8 @@ describe('useGamificationStore Zustand Store', () => {
                 unlockedAvatars: ['default'],
                 unlockedTitles: ['beginner'],
                 unlockedThemes: ['default'],
-                unlockedFrames: ['default']
-            }
+                unlockedFrames: ['default'],
+            },
         });
 
         let success;

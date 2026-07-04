@@ -10,7 +10,7 @@ const BadgeDisplay = () => {
     const { unlockedBadges, stats } = useGamificationStore();
     const [activeTab, setActiveTab] = useState('all');
 
-    const filtered = activeTab === 'all' ? BADGES : BADGES.filter(b => b.rarity === activeTab);
+    const filtered = activeTab === 'all' ? BADGES : BADGES.filter((b) => b.rarity === activeTab);
 
     return (
         <div className="glass-card rounded-3xl p-5 sm:p-6 shadow-lg relative overflow-hidden h-full flex flex-col">
@@ -31,7 +31,7 @@ const BadgeDisplay = () => {
 
             {/* Rarity filter tabs */}
             <div className="flex gap-1 mb-4 relative z-10 overflow-x-auto pb-0.5">
-                {RARITY_TABS.map(tab => (
+                {RARITY_TABS.map((tab) => (
                     <button
                         key={tab}
                         onClick={() => setActiveTab(tab)}
@@ -51,9 +51,12 @@ const BadgeDisplay = () => {
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                     {filtered.map((badge, idx) => {
                         const isUnlocked = unlockedBadges.includes(badge.id);
-                        const rarity     = RARITY_STYLES[badge.rarity] || RARITY_STYLES.common;
-                        const statVal    = stats?.[badge.condition] ?? 0;
-                        const progressPct = Math.min(100, Math.round((statVal / badge.threshold) * 100));
+                        const rarity = RARITY_STYLES[badge.rarity] || RARITY_STYLES.common;
+                        const statVal = stats?.[badge.condition] ?? 0;
+                        const progressPct = Math.min(
+                            100,
+                            Math.round((statVal / badge.threshold) * 100)
+                        );
 
                         return (
                             <motion.div
@@ -74,19 +77,23 @@ const BadgeDisplay = () => {
                                     </div>
                                 )}
 
-                                <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-xl sm:text-2xl transition-transform duration-300 group-hover:scale-110 select-none ${
-                                    isUnlocked
-                                        ? 'bg-white dark:bg-slate-800 shadow-md border border-white/20'
-                                        : 'bg-slate-200/50 dark:bg-white/5'
-                                }`}>
+                                <div
+                                    className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-xl sm:text-2xl transition-transform duration-300 group-hover:scale-110 select-none ${
+                                        isUnlocked
+                                            ? 'bg-white dark:bg-slate-800 shadow-md border border-white/20'
+                                            : 'bg-slate-200/50 dark:bg-white/5'
+                                    }`}
+                                >
                                     {badge.icon}
                                 </div>
 
-                                <h4 className={`text-[10px] font-black uppercase tracking-wider mt-3 truncate w-full ${
-                                    isUnlocked
-                                        ? 'text-slate-800 dark:text-white'
-                                        : 'text-slate-500 dark:text-white/30'
-                                }`}>
+                                <h4
+                                    className={`text-[10px] font-black uppercase tracking-wider mt-3 truncate w-full ${
+                                        isUnlocked
+                                            ? 'text-slate-800 dark:text-white'
+                                            : 'text-slate-500 dark:text-white/30'
+                                    }`}
+                                >
                                     {badge.name}
                                 </h4>
 

@@ -8,11 +8,11 @@ import ShopPricesTab from './admin/ShopPricesTab';
 import InstructorsTab from './admin/InstructorsTab';
 
 const SECTION_LABELS = {
-    '/admin':              'Overview',
-    '/admin/users':        'User Management',
-    '/admin/courses':      'Course Management',
-    '/admin/instructors':  'Instructors',
-    '/admin/shop':         'Shop Prices',
+    '/admin': 'Overview',
+    '/admin/users': 'User Management',
+    '/admin/courses': 'Course Management',
+    '/admin/instructors': 'Instructors',
+    '/admin/shop': 'Shop Prices',
 };
 
 const AdminPage = () => {
@@ -21,11 +21,11 @@ const AdminPage = () => {
     return (
         <AdminLayout section={section}>
             <Routes>
-                <Route index              element={<OverviewTab />}    />
-                <Route path="users"       element={<UsersTab />}       />
-                <Route path="courses"      element={<CoursesTab />}      />
-                <Route path="instructors" element={<InstructorsTab />}  />
-                <Route path="shop"        element={<ShopPricesTab />}   />
+                <Route index element={<OverviewTab />} />
+                <Route path="users" element={<UsersTab />} />
+                <Route path="courses" element={<CoursesTab />} />
+                <Route path="instructors" element={<InstructorsTab />} />
+                <Route path="shop" element={<ShopPricesTab />} />
             </Routes>
         </AdminLayout>
     );

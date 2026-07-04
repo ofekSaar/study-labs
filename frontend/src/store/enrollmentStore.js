@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import api from '../utils/api.js';
+import logger from '../utils/logger.js';
 
 const useEnrollmentStore = create((set) => ({
     myEnrollments: [],
@@ -59,7 +60,7 @@ const useEnrollmentStore = create((set) => ({
             courseEnrollments: state.courseEnrollments.map((e) =>
                 e._id === enrollmentId ? { ...e, status: 'denied', respondedAt: new Date() } : e
             ),
-            pendingEnrollments: state.pendingEnrollments.filter(e => e._id !== enrollmentId),
+            pendingEnrollments: state.pendingEnrollments.filter((e) => e._id !== enrollmentId),
         }));
         return data.enrollment;
     },
@@ -71,7 +72,7 @@ const useEnrollmentStore = create((set) => ({
             set({ pendingEnrollments: data.enrollments || [] });
             return data.enrollments || [];
         } catch (error) {
-            console.error('Failed to fetch pending enrollments', error);
+            logger.error('Failed to fetch pending enrollments', error);
             return [];
         }
     },
@@ -80,7 +81,7 @@ const useEnrollmentStore = create((set) => ({
     approvePendingEnrollment: async (enrollmentId) => {
         const { data } = await api.put(`/api/enrollments/${enrollmentId}/approve`);
         set((state) => ({
-            pendingEnrollments: state.pendingEnrollments.filter(e => e._id !== enrollmentId),
+            pendingEnrollments: state.pendingEnrollments.filter((e) => e._id !== enrollmentId),
             courseEnrollments: state.courseEnrollments.map((e) =>
                 e._id === enrollmentId ? { ...e, status: 'approved', respondedAt: new Date() } : e
             ),
@@ -92,7 +93,7 @@ const useEnrollmentStore = create((set) => ({
     denyPendingEnrollment: async (enrollmentId) => {
         const { data } = await api.put(`/api/enrollments/${enrollmentId}/deny`);
         set((state) => ({
-            pendingEnrollments: state.pendingEnrollments.filter(e => e._id !== enrollmentId),
+            pendingEnrollments: state.pendingEnrollments.filter((e) => e._id !== enrollmentId),
             courseEnrollments: state.courseEnrollments.map((e) =>
                 e._id === enrollmentId ? { ...e, status: 'denied', respondedAt: new Date() } : e
             ),

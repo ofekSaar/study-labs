@@ -1,5 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { Save, Trash2, Loader2, ChevronDown, ChevronUp, AlertTriangle, CheckCircle } from 'lucide-react';
+import {
+    Save,
+    Trash2,
+    Loader2,
+    ChevronDown,
+    ChevronUp,
+    AlertTriangle,
+    CheckCircle,
+} from 'lucide-react';
 import api from '../../utils/api';
 import BaseModal from '../common/BaseModal';
 
@@ -21,22 +29,25 @@ const QuestionCard = ({ question, index, nodeId, onDelete }) => {
     const setOption = (i, value) => {
         const next = [...form.options];
         next[i] = value;
-        setForm(f => ({ ...f, options: next }));
+        setForm((f) => ({ ...f, options: next }));
     };
 
     const handleSave = async () => {
-        if (!form.question.trim()) { setErrorMsg('Question cannot be empty'); return; }
+        if (!form.question.trim()) {
+            setErrorMsg('Question cannot be empty');
+            return;
+        }
         setStatus(QUESTION_STATUSES.saving);
         setErrorMsg('');
         try {
             await api.put(`/api/quizzes/node/${nodeId}/question/${index}`, {
                 question: form.question.trim(),
-                options: form.options.map(o => o.trim()),
+                options: form.options.map((o) => o.trim()),
                 correctAnswerIndex: form.correctAnswerIndex,
                 explanation: form.explanation.trim(),
                 alignmentWarning: false, // manual edit clears the warning
             });
-            setForm(f => ({ ...f, alignmentWarning: false }));
+            setForm((f) => ({ ...f, alignmentWarning: false }));
             setStatus(QUESTION_STATUSES.saved);
             setTimeout(() => setStatus(QUESTION_STATUSES.idle), 2500);
         } catch (err) {
@@ -46,7 +57,10 @@ const QuestionCard = ({ question, index, nodeId, onDelete }) => {
     };
 
     const handleDelete = async () => {
-        if (!confirmDelete) { setConfirmDelete(true); return; }
+        if (!confirmDelete) {
+            setConfirmDelete(true);
+            return;
+        }
         try {
             await api.delete(`/api/quizzes/node/${nodeId}/question/${index}`);
             onDelete(index);
@@ -60,7 +74,7 @@ const QuestionCard = ({ question, index, nodeId, onDelete }) => {
         <div className="border border-slate-200 dark:border-white/10 rounded-2xl overflow-hidden">
             {/* Card header */}
             <button
-                onClick={() => setOpen(o => !o)}
+                onClick={() => setOpen((o) => !o)}
                 className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/8 transition-colors text-left"
             >
                 <div className="flex items-center gap-2 min-w-0">
@@ -76,7 +90,11 @@ const QuestionCard = ({ question, index, nodeId, onDelete }) => {
                         </span>
                     )}
                 </div>
-                {open ? <ChevronUp size={16} className="text-slate-400 shrink-0" /> : <ChevronDown size={16} className="text-slate-400 shrink-0" />}
+                {open ? (
+                    <ChevronUp size={16} className="text-slate-400 shrink-0" />
+                ) : (
+                    <ChevronDown size={16} className="text-slate-400 shrink-0" />
+                )}
             </button>
 
             {open && (
@@ -85,19 +103,23 @@ const QuestionCard = ({ question, index, nodeId, onDelete }) => {
                     {form.alignmentWarning && (
                         <div className="flex items-start gap-2 px-3 py-2 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/30 text-amber-700 dark:text-amber-400 text-xs font-medium">
                             <AlertTriangle size={14} className="mt-0.5 shrink-0" />
-                            This question was not found to directly align with the summary. Consider rewording it.
+                            This question was not found to directly align with the summary. Consider
+                            rewording it.
                         </div>
                     )}
 
                     {/* Question text */}
                     <div>
-                        <label htmlFor={`question-text-${nodeId}-${index}`} className="block text-xs font-bold text-slate-500 dark:text-white/50 uppercase tracking-wider mb-1.5">
+                        <label
+                            htmlFor={`question-text-${nodeId}-${index}`}
+                            className="block text-xs font-bold text-slate-500 dark:text-white/50 uppercase tracking-wider mb-1.5"
+                        >
                             Question Text
                         </label>
                         <textarea
                             id={`question-text-${nodeId}-${index}`}
                             value={form.question}
-                            onChange={e => setForm(f => ({ ...f, question: e.target.value }))}
+                            onChange={(e) => setForm((f) => ({ ...f, question: e.target.value }))}
                             rows={2}
                             className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 text-slate-800 dark:text-white text-sm focus:border-indigo-400 focus:outline-none transition-colors resize-none"
                             dir="auto"
@@ -106,9 +128,9 @@ const QuestionCard = ({ question, index, nodeId, onDelete }) => {
 
                     {/* Options */}
                     <div>
-                        <label className="block text-xs font-bold text-slate-500 dark:text-white/50 uppercase tracking-wider mb-1.5">
+                        <span className="block text-xs font-bold text-slate-500 dark:text-white/50 uppercase tracking-wider mb-1.5">
                             Answers (select the correct one)
-                        </label>
+                        </span>
                         <div className="space-y-2">
                             {form.options.map((opt, i) => (
                                 <div key={i} className="flex items-center gap-2">
@@ -116,13 +138,15 @@ const QuestionCard = ({ question, index, nodeId, onDelete }) => {
                                         type="radio"
                                         name={`correct-${nodeId}-${index}`}
                                         checked={form.correctAnswerIndex === i}
-                                        onChange={() => setForm(f => ({ ...f, correctAnswerIndex: i }))}
+                                        onChange={() =>
+                                            setForm((f) => ({ ...f, correctAnswerIndex: i }))
+                                        }
                                         aria-label={`Mark option ${i + 1} as correct`}
                                         className="accent-indigo-500 w-4 h-4 shrink-0 cursor-pointer"
                                     />
                                     <input
                                         value={opt}
-                                        onChange={e => setOption(i, e.target.value)}
+                                        onChange={(e) => setOption(i, e.target.value)}
                                         aria-label={`Option ${i + 1} text`}
                                         className="flex-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 text-slate-800 dark:text-white text-sm focus:border-indigo-400 focus:outline-none transition-colors"
                                         placeholder={`Option ${i + 1}`}
@@ -135,13 +159,18 @@ const QuestionCard = ({ question, index, nodeId, onDelete }) => {
 
                     {/* Explanation */}
                     <div>
-                        <label htmlFor={`question-explanation-${nodeId}-${index}`} className="block text-xs font-bold text-slate-500 dark:text-white/50 uppercase tracking-wider mb-1.5">
+                        <label
+                            htmlFor={`question-explanation-${nodeId}-${index}`}
+                            className="block text-xs font-bold text-slate-500 dark:text-white/50 uppercase tracking-wider mb-1.5"
+                        >
                             Explanation (shown after answer)
                         </label>
                         <textarea
                             id={`question-explanation-${nodeId}-${index}`}
                             value={form.explanation}
-                            onChange={e => setForm(f => ({ ...f, explanation: e.target.value }))}
+                            onChange={(e) =>
+                                setForm((f) => ({ ...f, explanation: e.target.value }))
+                            }
                             rows={2}
                             className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 text-slate-800 dark:text-white text-sm focus:border-indigo-400 focus:outline-none transition-colors resize-none"
                             dir="auto"
@@ -149,9 +178,7 @@ const QuestionCard = ({ question, index, nodeId, onDelete }) => {
                         />
                     </div>
 
-                    {errorMsg && (
-                        <p className="text-xs text-red-500 font-semibold">{errorMsg}</p>
-                    )}
+                    {errorMsg && <p className="text-xs text-red-500 font-semibold">{errorMsg}</p>}
 
                     {/* Actions */}
                     <div className="flex items-center justify-between pt-1">
@@ -179,7 +206,11 @@ const QuestionCard = ({ question, index, nodeId, onDelete }) => {
                             ) : (
                                 <Save size={13} />
                             )}
-                            {status === QUESTION_STATUSES.saving ? 'Saving...' : status === QUESTION_STATUSES.saved ? 'Saved!' : 'Save'}
+                            {status === QUESTION_STATUSES.saving
+                                ? 'Saving...'
+                                : status === QUESTION_STATUSES.saved
+                                  ? 'Saved!'
+                                  : 'Save'}
                         </button>
                     </div>
                 </div>
@@ -208,7 +239,7 @@ const QuizEditorModal = ({ nodeId, nodeTitle, onClose }) => {
     }, [nodeId]);
 
     const handleDelete = (deletedIndex) => {
-        setQuestions(prev => {
+        setQuestions((prev) => {
             const next = prev.filter((_, i) => i !== deletedIndex);
             return next;
         });
@@ -222,7 +253,7 @@ const QuizEditorModal = ({ nodeId, nodeTitle, onClose }) => {
             subtitle={nodeTitle}
             size="2xl"
             bodyClassName="px-6 py-5"
-            footer={(
+            footer={
                 <div className="flex justify-between items-center">
                     <span className="text-xs text-slate-400 dark:text-white/30">
                         {questions.length} {questions.length === 1 ? 'question' : 'questions'}
@@ -234,7 +265,7 @@ const QuizEditorModal = ({ nodeId, nodeTitle, onClose }) => {
                         Close
                     </button>
                 </div>
-            )}
+            }
         >
             <div className="space-y-3">
                 {loading ? (
@@ -242,9 +273,13 @@ const QuizEditorModal = ({ nodeId, nodeTitle, onClose }) => {
                         <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
                     </div>
                 ) : error ? (
-                    <div className="text-center py-12 text-red-500 font-semibold text-sm">{error}</div>
+                    <div className="text-center py-12 text-red-500 font-semibold text-sm">
+                        {error}
+                    </div>
                 ) : questions.length === 0 ? (
-                    <div className="text-center py-12 text-slate-400 text-sm">No questions in this quiz</div>
+                    <div className="text-center py-12 text-slate-400 text-sm">
+                        No questions in this quiz
+                    </div>
                 ) : (
                     questions.map((q, i) => (
                         <QuestionCard

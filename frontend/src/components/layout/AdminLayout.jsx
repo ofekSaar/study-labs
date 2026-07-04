@@ -22,7 +22,9 @@ const AdminLayout = ({ children, section }) => {
                     <div className="w-7 h-7 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center">
                         <Shield size={14} className="text-red-500" />
                     </div>
-                    <span className="font-black text-slate-800 dark:text-white text-sm">Admin Panel</span>
+                    <span className="font-black text-slate-800 dark:text-white text-sm">
+                        Admin Panel
+                    </span>
                 </div>
                 <span className="text-xs text-slate-500 dark:text-white/40">{user?.name}</span>
             </header>
@@ -57,19 +59,21 @@ const AdminLayout = ({ children, section }) => {
                     {NAV_ITEMS.map((navItem) => {
                         const NavIcon = navItem.icon;
                         return (
-                        <NavLink
-                            key={navItem.to}
-                            to={navItem.to}
-                            end={navItem.end}
-                            className={({ isActive }) =>
-                                `flex-1 flex flex-col items-center gap-0.5 py-2.5 text-[10px] font-bold transition-all ${
-                                    isActive ? 'text-orange-600 dark:text-orange-400' : 'text-slate-400 dark:text-white/30'
-                                }`
-                            }
-                        >
-                            <NavIcon size={18} />
-                            {navItem.label}
-                        </NavLink>
+                            <NavLink
+                                key={navItem.to}
+                                to={navItem.to}
+                                end={navItem.end}
+                                className={({ isActive }) =>
+                                    `flex-1 flex flex-col items-center gap-0.5 py-2.5 text-[10px] font-bold transition-all ${
+                                        isActive
+                                            ? 'text-orange-600 dark:text-orange-400'
+                                            : 'text-slate-400 dark:text-white/30'
+                                    }`
+                                }
+                            >
+                                <NavIcon size={18} />
+                                {navItem.label}
+                            </NavLink>
                         );
                     })}
                 </div>
@@ -77,7 +81,9 @@ const AdminLayout = ({ children, section }) => {
                 {/* Main content */}
                 <main className="flex-1 overflow-y-auto p-5 pb-24 md:pb-6">
                     {section && (
-                        <h2 className="text-xl font-black text-slate-800 dark:text-white mb-5">{section}</h2>
+                        <h2 className="text-xl font-black text-slate-800 dark:text-white mb-5">
+                            {section}
+                        </h2>
                     )}
                     {children}
                 </main>

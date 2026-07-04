@@ -60,22 +60,23 @@ const Toast = ({ toast }) => {
             <div className={`${style.bg} p-4 flex items-start gap-3`}>
                 {/* Icon or custom emoji */}
                 <div className="flex-shrink-0 mt-0.5">
-                    {toast.icon ? (
-                        <span className="text-xl">{toast.icon}</span>
-                    ) : style.icon}
+                    {toast.icon ? <span className="text-xl">{toast.icon}</span> : style.icon}
                 </div>
 
                 {/* Content */}
                 <div className="flex-1 min-w-0">
                     <p className="font-black text-white text-sm leading-tight">{toast.title}</p>
                     {toast.message && (
-                        <p className="text-white/80 text-xs mt-0.5 leading-tight">{toast.message}</p>
+                        <p className="text-white/80 text-xs mt-0.5 leading-tight">
+                            {toast.message}
+                        </p>
                     )}
                 </div>
 
                 {/* Dismiss */}
                 <button
                     onClick={() => removeToast(toast.id)}
+                    aria-label="Dismiss notification"
                     className="flex-shrink-0 text-white/60 hover:text-white transition-colors mt-0.5"
                 >
                     <X size={14} />
@@ -100,9 +101,13 @@ const ToastManager = () => {
     const visible = toasts.slice(0, MAX_VISIBLE_TOASTS);
 
     return (
-        <div className="fixed top-4 left-3 right-3 sm:top-auto sm:bottom-6 sm:left-auto sm:right-6 sm:w-80 z-[9999] flex flex-col gap-2 pointer-events-none">
+        <div
+            role="status"
+            aria-live="polite"
+            className="fixed top-4 left-3 right-3 sm:top-auto sm:bottom-6 sm:left-auto sm:right-6 sm:w-80 z-[9999] flex flex-col gap-2 pointer-events-none"
+        >
             <AnimatePresence mode="popLayout">
-                {visible.map(toast => (
+                {visible.map((toast) => (
                     <div key={toast.id} className="pointer-events-auto">
                         <Toast toast={toast} />
                     </div>

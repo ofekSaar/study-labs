@@ -1,35 +1,35 @@
 [
-  {
-    "question": "What is 'Authentication' (AuthN)?",
-    "options": [
-      "The process that checks what you are allowed to do.",
-      "The process where the user *proves* their identity to the system (e.g., via password or fingerprint 🧬).",
-      "The name of the permissions model in Linux.",
-      "The ability to access files."
-    ],
-    "correct_answer_index": 1,
-    "explanation": "Authentication (AuthN) always comes first and answers the question 'Who are you?' 👤. For example, the Windows login screen."
-  },
-  {
-    "question": "What is 'Authorization' (AuthZ)?",
-    "options": [
-      "The process of entering a password.",
-      "The process that determines *what* an authenticated user is allowed to do (e.g., 'Can they delete this file?').",
-      "The name of the system update process.",
-      "Proving the user's identity."
-    ],
-    "correct_answer_index": 1,
-    "explanation": "Authorization (AuthZ) always comes after authentication and answers the question 'What are you allowed to do?' 🔑. For example, checking if you are an 'Admin' or a 'User'."
-  },
-  {
-    "question": "What is the 'Principle of Least Privilege'?",
-    "options": [
-      "Giving all users Admin privileges for convenience.",
-      "Giving every process and user the *minimum* necessary permissions needed to work, and no more.",
-      "Ensuring every user has at least one permission.",
-      "Deleting permissions from users who haven't logged in recently."
-    ],
-    "correct_answer_index": 1,
-    "explanation": "This is a basic security principle. 🛡️ If a program only needs to read a file, do not give it write permission. That way, if the program is 'hijacked' by a virus, the damage it can cause is limited."
-  }
+    {
+        "question": "What is 'Authentication' (AuthN)?",
+        "options": [
+            "The process that checks what you are allowed to do.",
+            "The process where the user *proves* their identity to the system (e.g., via password or fingerprint 🧬).",
+            "The name of the permissions model in Linux.",
+            "The ability to access files."
+        ],
+        "correct_answer_index": 1,
+        "explanation": "Authentication (AuthN) always comes first and answers the question 'Who are you?' 👤. For example, the Windows login screen."
+    },
+    {
+        "question": "What is 'Authorization' (AuthZ)?",
+        "options": [
+            "The process of entering a password.",
+            "The process that determines *what* an authenticated user is allowed to do (e.g., 'Can they delete this file?').",
+            "The name of the system update process.",
+            "Proving the user's identity."
+        ],
+        "correct_answer_index": 1,
+        "explanation": "Authorization (AuthZ) always comes after authentication and answers the question 'What are you allowed to do?' 🔑. For example, checking if you are an 'Admin' or a 'User'."
+    },
+    {
+        "question": "What is the 'Principle of Least Privilege'?",
+        "options": [
+            "Giving all users Admin privileges for convenience.",
+            "Giving every process and user the *minimum* necessary permissions needed to work, and no more.",
+            "Ensuring every user has at least one permission.",
+            "Deleting permissions from users who haven't logged in recently."
+        ],
+        "correct_answer_index": 1,
+        "explanation": "This is a basic security principle. 🛡️ If a program only needs to read a file, do not give it write permission. That way, if the program is 'hijacked' by a virus, the damage it can cause is limited."
+    }
 ]
