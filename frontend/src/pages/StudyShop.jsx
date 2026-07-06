@@ -1,5 +1,4 @@
 import React, { useState, useMemo } from 'react';
-import StudentLayout from '../components/layout/StudentLayout';
 import useGamificationStore from '../store/gamificationStore';
 import { SHOP_ITEMS, RARITY, SHOP_CATEGORIES } from '../constants/gamification';
 import { getDailyFeaturedItem } from '../utils/gamification';
@@ -392,7 +391,7 @@ const StudyShop = () => {
     };
 
     return (
-        <StudentLayout title="Study Shop">
+        <>
             <ConfettiEffect />
 
             {previewItem && (
@@ -556,7 +555,7 @@ const StudyShop = () => {
                     </motion.div>
                 )}
             </div>
-        </StudentLayout>
+        </>
     );
 };
 

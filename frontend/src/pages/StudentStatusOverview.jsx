@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import InstructorLayout from '../components/layout/InstructorLayout';
 import {
     Users,
     BookOpen,
@@ -251,7 +250,7 @@ const StudentStatusOverview = () => {
     const topXP = leaderboard.length > 0 ? leaderboard[0].xp || 1 : 1;
 
     return (
-        <InstructorLayout title="Student Status Overview">
+        <>
             {/* Ambient background */}
             <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
                 <div className="absolute inset-0 dot-grid opacity-60" />
@@ -1123,7 +1122,7 @@ const StudentStatusOverview = () => {
                     </div>
                 )}
             </div>
-        </InstructorLayout>
+        </>
     );
 };
 

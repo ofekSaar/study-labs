@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trophy, Crown, Medal, Award, TrendingUp, Zap, Users, BookOpen } from 'lucide-react';
-import StudentLayout from '../components/layout/StudentLayout';
 import api from '../utils/api';
 import useCourseStore from '../store/courseStore';
 import useGamificationStore, { AVATARS } from '../store/gamificationStore';
@@ -187,7 +186,7 @@ const LeaderboardPage = () => {
     const myRank = entries.find((e) => e.isYou);
 
     return (
-        <StudentLayout title="Leaderboard">
+        <>
             {/* Ambient background */}
             <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
                 <div className="absolute inset-0 dot-grid opacity-50" />
@@ -378,7 +377,7 @@ const LeaderboardPage = () => {
                     </AnimatePresence>
                 </div>
             </div>
-        </StudentLayout>
+        </>
     );
 };
 
