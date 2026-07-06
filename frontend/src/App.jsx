@@ -8,25 +8,95 @@ import useAuthStore from './store/authStore';
 import useSettingsStore from './store/settingsStore';
 import useGamificationStore from './store/gamificationStore';
 
-// Route-level page screens — loaded only when their route is first visited.
-const LoginPage = lazy(() => import('./pages/LoginPage'));
-const AuthCallback = lazy(() => import('./pages/AuthCallback'));
-const RoleSelectPage = lazy(() => import('./pages/RoleSelectPage'));
-const Dashboard = lazy(() => import('./pages/Dashboard'));
-const MyCourses = lazy(() => import('./pages/MyCourses'));
-const MyEnrollments = lazy(() => import('./pages/MyEnrollments'));
-const CourseMap = lazy(() => import('./pages/CourseMap'));
-const LessonQuiz = lazy(() => import('./pages/LessonQuiz'));
-const StudentProfile = lazy(() => import('./pages/StudentProfile'));
-const StudyShop = lazy(() => import('./pages/StudyShop'));
-const LeaderboardPage = lazy(() => import('./pages/LeaderboardPage'));
-const InstructorDashboard = lazy(() => import('./pages/InstructorDashboard'));
-const StudentStatusOverview = lazy(() => import('./pages/StudentStatusOverview'));
-const CourseWizard = lazy(() => import('./pages/CourseWizard'));
-const ManagedCourses = lazy(() => import('./pages/ManagedCourses'));
-const ClassRoster = lazy(() => import('./pages/ClassRoster'));
-const InstructorStats = lazy(() => import('./pages/InstructorStats'));
-const AdminPage = lazy(() => import('./pages/AdminPage'));
+// Route-level page screens — loaded when their route is first visited, and
+// prefetched in the background once the user's role is known (RoutePrefetcher).
+const loadLoginPage = () => import('./pages/LoginPage');
+const loadAuthCallback = () => import('./pages/AuthCallback');
+const loadRoleSelectPage = () => import('./pages/RoleSelectPage');
+const loadDashboard = () => import('./pages/Dashboard');
+const loadMyCourses = () => import('./pages/MyCourses');
+const loadMyEnrollments = () => import('./pages/MyEnrollments');
+const loadCourseMap = () => import('./pages/CourseMap');
+const loadLessonQuiz = () => import('./pages/LessonQuiz');
+const loadStudentProfile = () => import('./pages/StudentProfile');
+const loadStudyShop = () => import('./pages/StudyShop');
+const loadLeaderboardPage = () => import('./pages/LeaderboardPage');
+const loadInstructorDashboard = () => import('./pages/InstructorDashboard');
+const loadStudentStatusOverview = () => import('./pages/StudentStatusOverview');
+const loadCourseWizard = () => import('./pages/CourseWizard');
+const loadManagedCourses = () => import('./pages/ManagedCourses');
+const loadClassRoster = () => import('./pages/ClassRoster');
+const loadInstructorStats = () => import('./pages/InstructorStats');
+const loadAdminPage = () => import('./pages/AdminPage');
+
+const LoginPage = lazy(loadLoginPage);
+const AuthCallback = lazy(loadAuthCallback);
+const RoleSelectPage = lazy(loadRoleSelectPage);
+const Dashboard = lazy(loadDashboard);
+const MyCourses = lazy(loadMyCourses);
+const MyEnrollments = lazy(loadMyEnrollments);
+const CourseMap = lazy(loadCourseMap);
+const LessonQuiz = lazy(loadLessonQuiz);
+const StudentProfile = lazy(loadStudentProfile);
+const StudyShop = lazy(loadStudyShop);
+const LeaderboardPage = lazy(loadLeaderboardPage);
+const InstructorDashboard = lazy(loadInstructorDashboard);
+const StudentStatusOverview = lazy(loadStudentStatusOverview);
+const CourseWizard = lazy(loadCourseWizard);
+const ManagedCourses = lazy(loadManagedCourses);
+const ClassRoster = lazy(loadClassRoster);
+const InstructorStats = lazy(loadInstructorStats);
+const AdminPage = lazy(loadAdminPage);
+
+const STUDENT_PAGE_LOADERS = [
+    loadDashboard,
+    loadMyCourses,
+    loadMyEnrollments,
+    loadCourseMap,
+    loadLessonQuiz,
+    loadStudentProfile,
+    loadStudyShop,
+    loadLeaderboardPage,
+];
+
+const INSTRUCTOR_PAGE_LOADERS = [
+    loadInstructorDashboard,
+    loadStudentStatusOverview,
+    loadCourseWizard,
+    loadManagedCourses,
+    loadClassRoster,
+    loadCourseMap,
+    loadLessonQuiz,
+    loadInstructorStats,
+];
+
+// Warm the page chunks for the user's role while the browser is idle, so the
+// first visit to each page doesn't wait on a network fetch.
+const RoutePrefetcher = () => {
+    const { isAuthenticated, role, user } = useAuthStore();
+
+    React.useEffect(() => {
+        if (!isAuthenticated) return undefined;
+
+        const userRoles = user?.roles?.length > 0 ? user.roles : role ? [role] : [];
+        const loaders = [
+            ...(role === 'student' ? STUDENT_PAGE_LOADERS : []),
+            ...(role === 'instructor' ? INSTRUCTOR_PAGE_LOADERS : []),
+            ...(userRoles.includes('admin') ? [loadAdminPage] : []),
+        ];
+        if (loaders.length === 0) return undefined;
+
+        // Safari has no requestIdleCallback; fall back to a delayed timeout.
+        const schedule = window.requestIdleCallback ?? ((cb) => setTimeout(cb, 2000));
+        const cancel = window.cancelIdleCallback ?? clearTimeout;
+        const handle = schedule(() => {
+            loaders.forEach((load) => load().catch(() => {}));
+        });
+        return () => cancel(handle);
+    }, [isAuthenticated, role, user]);
+
+    return null;
+};
 
 const ThemeWrapper = ({ children }) => {
     const { theme } = useSettingsStore();
@@ -123,6 +193,7 @@ function App() {
         <BrowserRouter>
             <ThemeWrapper>
                 <AuthWrapper>
+                    <RoutePrefetcher />
                     <Suspense fallback={<FullScreenLoader />}>
                         <Routes>
                             <Route path="/login" element={<LoginPage />} />
