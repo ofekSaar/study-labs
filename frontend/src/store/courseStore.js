@@ -60,38 +60,18 @@ const useCourseStore = create((set) => ({
             const { data } = await api.get('/api/courses?view=student');
             const courses = data.courses || [];
 
-            // For each enrolled course, fetch progress
-            const enrichedCourses = await Promise.all(
-                courses
-                    .filter(
-                        (c) => c.enrollmentStatus === 'approved' || c.enrollmentStatus === 'active'
-                    )
-                    .map(async (course) => {
-                        try {
-                            const progressRes = await api.get(`/api/progress/course/${course._id}`);
-                            const progress = progressRes.data.progress;
-                            return {
-                                ...course,
-                                id: course._id,
-                                progress: progress.percentComplete || 0,
-                                totalXP: progress.totalXP || 0,
-                                level: course.level || 'Beginner',
-                                color: course.color || 'bg-studylabs-blue',
-                                nodes: [], // Loaded on demand
-                            };
-                        } catch {
-                            return {
-                                ...course,
-                                id: course._id,
-                                progress: 0,
-                                totalXP: 0,
-                                level: course.level || 'Beginner',
-                                color: course.color || 'bg-studylabs-blue',
-                                nodes: [],
-                            };
-                        }
-                    })
-            );
+            // Progress ships embedded in the course list, so no per-course requests.
+            const enrichedCourses = courses
+                .filter((c) => c.enrollmentStatus === 'approved' || c.enrollmentStatus === 'active')
+                .map((course) => ({
+                    ...course,
+                    id: course._id,
+                    progress: course.progress?.percentComplete || 0,
+                    totalXP: course.progress?.totalXP || 0,
+                    level: course.level || 'Beginner',
+                    color: course.color || 'bg-studylabs-blue',
+                    nodes: [], // Loaded on demand
+                }));
 
             set({
                 courses: enrichedCourses,

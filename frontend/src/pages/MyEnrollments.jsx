@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import StudentLayout from '../components/layout/StudentLayout';
 import useEnrollmentStore from '../store/enrollmentStore';
 import useToastStore from '../store/toastStore';
 import api from '../utils/api';
@@ -109,7 +108,7 @@ const MyEnrollments = () => {
     };
 
     return (
-        <StudentLayout title="Find Courses">
+        <>
             {/* Ambient background */}
             <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
                 <div className="absolute inset-0 dot-grid opacity-60" />
@@ -311,7 +310,7 @@ const MyEnrollments = () => {
                     </div>
                 )}
             </div>
-        </StudentLayout>
+        </>
     );
 };
 

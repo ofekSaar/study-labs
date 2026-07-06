@@ -1,5 +1,4 @@
 import React from 'react';
-import StudentLayout from '../components/layout/StudentLayout';
 import useCourseStore from '../store/courseStore';
 import useAuthStore from '../store/authStore';
 import useGamificationStore from '../store/gamificationStore';
@@ -122,7 +121,7 @@ const StudentProfile = () => {
     ];
 
     return (
-        <StudentLayout title="Student Profile">
+        <>
             {/* Ambient background */}
             <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
                 <div className="absolute inset-0 dot-grid opacity-60" />
@@ -733,7 +732,7 @@ const StudentProfile = () => {
                     <StreakCalendar />
                 </div>
             </div>
-        </StudentLayout>
+        </>
     );
 };
 

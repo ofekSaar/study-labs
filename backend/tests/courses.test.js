@@ -3,6 +3,9 @@ import app from '../server.js';
 import { connectTestDB, closeTestDB, clearTestDB } from './utils/testSetup.js';
 import { generateTestUser } from './utils/authHelper.js';
 import Course from '../models/Course.js';
+import CourseNode from '../models/CourseNode.js';
+import Enrollment from '../models/Enrollment.js';
+import Progress from '../models/Progress.js';
 
 describe('Courses API', () => {
     let student, instructor, studentToken, instructorToken;
@@ -68,6 +71,62 @@ describe('Courses API', () => {
         it('should reject unauthenticated requests', async () => {
             const res = await request(app).get('/api/courses');
             expect(res.status).toBe(401);
+        });
+
+        it('should embed progress for enrolled courses and null for others', async () => {
+            const courseData = (title) => ({
+                title,
+                department: 'cs',
+                description: 'This is a test description of the course that is sufficiently long.',
+                instructor: instructor._id,
+                syllabus: {
+                    filename: 'syllabus-123.pdf',
+                    originalName: 'syllabus.pdf',
+                    mimetype: 'application/pdf',
+                    storagePath: 'uploads/syllabus-123.pdf',
+                    size: 1024
+                },
+                isPublished: true
+            });
+            const enrolledCourse = await Course.create(courseData('Enrolled Course'));
+            const otherCourse = await Course.create(courseData('Other Course'));
+
+            await Enrollment.create({
+                student: student._id,
+                course: enrolledCourse._id,
+                status: 'approved'
+            });
+
+            const nodes = await CourseNode.create(
+                [1, 2, 3, 4].map((order) => ({
+                    course: enrolledCourse._id,
+                    title: `Node ${order}`,
+                    type: 'lesson',
+                    order
+                }))
+            );
+
+            await Progress.create({
+                student: student._id,
+                course: enrolledCourse._id,
+                completedNodes: [nodes[0]._id],
+                totalXP: 150
+            });
+
+            const res = await request(app)
+                .get('/api/courses?view=student')
+                .set('Authorization', `Bearer ${studentToken}`);
+
+            expect(res.status).toBe(200);
+            const byTitle = Object.fromEntries(
+                res.body.data.courses.map((c) => [c.title, c])
+            );
+            expect(byTitle['Enrolled Course'].enrollmentStatus).toBe('approved');
+            expect(byTitle['Enrolled Course'].progress).toEqual({
+                percentComplete: 25,
+                totalXP: 150
+            });
+            expect(byTitle['Other Course'].progress).toBeNull();
         });
     });
 

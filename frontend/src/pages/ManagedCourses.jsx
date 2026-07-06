@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import InstructorLayout from '../components/layout/InstructorLayout';
 import useCourseStore from '../store/courseStore';
 import useEnrollmentStore from '../store/enrollmentStore';
 import useToastStore from '../store/toastStore';
@@ -525,7 +524,7 @@ const ManagedCourses = () => {
     );
 
     return (
-        <InstructorLayout title="Managed Courses">
+        <>
             {/* Ambient background */}
             <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
                 <div className="absolute inset-0 dot-grid opacity-60" />
@@ -871,7 +870,7 @@ const ManagedCourses = () => {
                     onSave={() => setEditingCourse(null)}
                 />
             )}
-        </InstructorLayout>
+        </>
     );
 };
 

@@ -63,10 +63,45 @@ export const listCourses = async (req, res, next) => {
 
       await ensureDemoEnrollments(req.user._id, enrollmentMap);
 
-      const coursesWithStatus = courses.map((course) => ({
-        ...course.toObject(),
-        enrollmentStatus: enrollmentMap[course._id.toString()] || null,
-      }));
+      // Attach per-course progress for enrolled courses in two batch queries,
+      // so the client doesn't need a follow-up request per course.
+      const enrolledIds = courses
+        .filter((c) => ['approved', 'active'].includes(enrollmentMap[c._id.toString()]))
+        .map((c) => c._id);
+
+      const [progressDocs, nodeCounts] = await Promise.all([
+        Progress.find({ student: req.user._id, course: { $in: enrolledIds } })
+          .select('course completedNodes totalXP'),
+        CourseNode.aggregate([
+          { $match: { course: { $in: enrolledIds } } },
+          { $group: { _id: '$course', count: { $sum: 1 } } },
+        ]),
+      ]);
+
+      const nodeCountMap = {};
+      nodeCounts.forEach(({ _id, count }) => {
+        nodeCountMap[_id.toString()] = count;
+      });
+
+      const progressMap = {};
+      progressDocs.forEach((p) => {
+        const totalNodes = nodeCountMap[p.course.toString()] || 0;
+        progressMap[p.course.toString()] = {
+          percentComplete: totalNodes > 0
+            ? Math.round((p.completedNodes.length / totalNodes) * 100)
+            : 0,
+          totalXP: p.totalXP || 0,
+        };
+      });
+
+      const coursesWithStatus = courses.map((course) => {
+        const courseId = course._id.toString();
+        return {
+          ...course.toObject(),
+          enrollmentStatus: enrollmentMap[courseId] || null,
+          progress: progressMap[courseId] || null,
+        };
+      });
 
       return res.json({ status: 'success', data: { courses: coursesWithStatus } });
     }

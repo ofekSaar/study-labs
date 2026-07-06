@@ -1,7 +1,9 @@
 import React, { Suspense, lazy } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import Spinner from './components/common/Spinner';
+import StudentLayout from './components/layout/StudentLayout';
+import InstructorLayout from './components/layout/InstructorLayout';
 import useAuthStore from './store/authStore';
 import useSettingsStore from './store/settingsStore';
 import useGamificationStore from './store/gamificationStore';
@@ -57,6 +59,51 @@ const FullScreenLoader = () => (
     </div>
 );
 
+// Shown inside the persistent layout while a lazy page chunk loads.
+const PageLoader = () => (
+    <div className="flex-1 flex items-center justify-center py-24">
+        <Spinner />
+    </div>
+);
+
+// Layout routes: the sidebar/header shell mounts once and persists across page
+// navigations — only the <Outlet/> content swaps.
+const StudentShell = () => (
+    <ProtectedRoute allowedRole="student">
+        <StudentLayout>
+            <Suspense fallback={<PageLoader />}>
+                <Outlet />
+            </Suspense>
+        </StudentLayout>
+    </ProtectedRoute>
+);
+
+const InstructorShell = () => (
+    <ProtectedRoute allowedRole="instructor">
+        <InstructorLayout>
+            <Suspense fallback={<PageLoader />}>
+                <Outlet />
+            </Suspense>
+        </InstructorLayout>
+    </ProtectedRoute>
+);
+
+// The student lesson route is open to any authenticated role, so the layout
+// follows the user's role rather than the route tree.
+const LessonShell = () => {
+    const { role } = useAuthStore();
+    const Layout = role === 'instructor' ? InstructorLayout : StudentLayout;
+    return (
+        <ProtectedRoute>
+            <Layout>
+                <Suspense fallback={<PageLoader />}>
+                    <Outlet />
+                </Suspense>
+            </Layout>
+        </ProtectedRoute>
+    );
+};
+
 const AuthWrapper = ({ children }) => {
     const { initialize, isLoading } = useAuthStore();
 
@@ -89,137 +136,42 @@ function App() {
                                 }
                             />
 
-                            {/* Student Routes */}
-                            <Route
-                                path="/"
-                                element={
-                                    <ProtectedRoute allowedRole="student">
-                                        <Dashboard />
-                                    </ProtectedRoute>
-                                }
-                            />
-                            <Route
-                                path="/my-courses"
-                                element={
-                                    <ProtectedRoute allowedRole="student">
-                                        <MyCourses />
-                                    </ProtectedRoute>
-                                }
-                            />
-                            <Route
-                                path="/enrollments"
-                                element={
-                                    <ProtectedRoute allowedRole="student">
-                                        <MyEnrollments />
-                                    </ProtectedRoute>
-                                }
-                            />
-                            <Route
-                                path="/course/:id"
-                                element={
-                                    <ProtectedRoute allowedRole="student">
-                                        <CourseMap />
-                                    </ProtectedRoute>
-                                }
-                            />
-                            <Route
-                                path="/course/:courseId/lesson/:id"
-                                element={
-                                    <ProtectedRoute>
-                                        <LessonQuiz />
-                                    </ProtectedRoute>
-                                }
-                            />
-                            <Route
-                                path="/profile"
-                                element={
-                                    <ProtectedRoute allowedRole="student">
-                                        <StudentProfile />
-                                    </ProtectedRoute>
-                                }
-                            />
-                            <Route
-                                path="/shop"
-                                element={
-                                    <ProtectedRoute allowedRole="student">
-                                        <StudyShop />
-                                    </ProtectedRoute>
-                                }
-                            />
-                            <Route
-                                path="/leaderboard"
-                                element={
-                                    <ProtectedRoute allowedRole="student">
-                                        <LeaderboardPage />
-                                    </ProtectedRoute>
-                                }
-                            />
+                            {/* Student Routes — share one persistent StudentLayout */}
+                            <Route element={<StudentShell />}>
+                                <Route path="/" element={<Dashboard />} />
+                                <Route path="/my-courses" element={<MyCourses />} />
+                                <Route path="/enrollments" element={<MyEnrollments />} />
+                                <Route path="/course/:id" element={<CourseMap />} />
+                                <Route path="/profile" element={<StudentProfile />} />
+                                <Route path="/shop" element={<StudyShop />} />
+                                <Route path="/leaderboard" element={<LeaderboardPage />} />
+                            </Route>
 
-                            {/* Instructor Routes */}
-                            <Route
-                                path="/instructor"
-                                element={
-                                    <ProtectedRoute allowedRole="instructor">
-                                        <InstructorDashboard />
-                                    </ProtectedRoute>
-                                }
-                            />
-                            <Route
-                                path="/instructor/status"
-                                element={
-                                    <ProtectedRoute allowedRole="instructor">
-                                        <StudentStatusOverview />
-                                    </ProtectedRoute>
-                                }
-                            />
-                            <Route
-                                path="/instructor/create"
-                                element={
-                                    <ProtectedRoute allowedRole="instructor">
-                                        <CourseWizard />
-                                    </ProtectedRoute>
-                                }
-                            />
-                            <Route
-                                path="/instructor/managed"
-                                element={
-                                    <ProtectedRoute allowedRole="instructor">
-                                        <ManagedCourses />
-                                    </ProtectedRoute>
-                                }
-                            />
-                            <Route
-                                path="/instructor/class"
-                                element={
-                                    <ProtectedRoute allowedRole="instructor">
-                                        <ClassRoster />
-                                    </ProtectedRoute>
-                                }
-                            />
-                            <Route
-                                path="/instructor/course/:id"
-                                element={
-                                    <ProtectedRoute allowedRole="instructor">
-                                        <CourseMap />
-                                    </ProtectedRoute>
-                                }
-                            />
-                            <Route
-                                path="/instructor/course/:courseId/lesson/:id"
-                                element={
-                                    <ProtectedRoute allowedRole="instructor">
-                                        <LessonQuiz />
-                                    </ProtectedRoute>
-                                }
-                            />
-                            <Route
-                                path="/instructor/stats"
-                                element={
-                                    <ProtectedRoute allowedRole="instructor">
-                                        <InstructorStats />
-                                    </ProtectedRoute>
-                                }
-                            />
+                            {/* Lesson route — any authenticated role, layout picked by role */}
+                            <Route element={<LessonShell />}>
+                                <Route
+                                    path="/course/:courseId/lesson/:id"
+                                    element={<LessonQuiz />}
+                                />
+                            </Route>
+
+                            {/* Instructor Routes — share one persistent InstructorLayout */}
+                            <Route element={<InstructorShell />}>
+                                <Route path="/instructor" element={<InstructorDashboard />} />
+                                <Route
+                                    path="/instructor/status"
+                                    element={<StudentStatusOverview />}
+                                />
+                                <Route path="/instructor/create" element={<CourseWizard />} />
+                                <Route path="/instructor/managed" element={<ManagedCourses />} />
+                                <Route path="/instructor/class" element={<ClassRoster />} />
+                                <Route path="/instructor/course/:id" element={<CourseMap />} />
+                                <Route
+                                    path="/instructor/course/:courseId/lesson/:id"
+                                    element={<LessonQuiz />}
+                                />
+                                <Route path="/instructor/stats" element={<InstructorStats />} />
+                            </Route>
 
                             {/* Admin routes — nested so /admin/* all go to AdminPage's internal router */}
                             <Route

@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import InstructorLayout from '../components/layout/InstructorLayout';
 import {
     Users,
     Zap,
@@ -129,7 +128,7 @@ const ClassRoster = () => {
     };
 
     return (
-        <InstructorLayout title="Class Roster">
+        <>
             <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
                 <div className="absolute inset-0 dot-grid opacity-60" />
                 <div
@@ -619,7 +618,7 @@ const ClassRoster = () => {
                     </div>
                 </div>
             )}
-        </InstructorLayout>
+        </>
     );
 };
 
