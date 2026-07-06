@@ -19,6 +19,12 @@ env/
 .vscode/
 .idea/
 
+# Claude Code (local tooling)
+.claude/
+
+# Local env overrides
+.env.local
+
 # Database / Storage
 mongo_data/
 shared_uploads/
