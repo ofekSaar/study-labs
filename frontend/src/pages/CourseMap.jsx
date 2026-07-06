@@ -232,7 +232,9 @@ const CourseMap = () => {
                     >
                         <ChevronLeft size={24} />
                     </button>
-                    <h1 className="font-display font-bold text-xl">{course.title}</h1>
+                    <h1 className="font-display font-bold text-xl flex-1 min-w-0 text-center truncate px-2">
+                        {course.title}
+                    </h1>
                     <div className="w-10" />
                 </div>
 
