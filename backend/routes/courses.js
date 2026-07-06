@@ -54,6 +54,9 @@ const upload = multer({
  * /api/courses:
  *   get:
  *     summary: List all published courses
+ *     description: >
+ *       For students, each course also carries `enrollmentStatus` and, when enrolled,
+ *       an embedded `progress` object (`percentComplete`, `totalXP`) — `null` otherwise.
  *     tags: [Courses]
  *     security: []
  *     responses:
