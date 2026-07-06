@@ -31,6 +31,20 @@ const clearAuth = (set) => {
     set({ user: null, role: null, isAuthenticated: false, isLoading: false });
 };
 
+/**
+ * Handle a failed /me fetch. Transient failures (rate limiting, server errors,
+ * network) keep the stored token so the session survives the next page load;
+ * anything else means the backend rejected the request, so discard it.
+ */
+const handleAuthError = (set, error) => {
+    const isTransient = !error?.status || error.status === 429 || error.status >= 500;
+    if (isTransient) {
+        set({ user: null, role: null, isAuthenticated: false, isLoading: false });
+    } else {
+        clearAuth(set);
+    }
+};
+
 const useAuthStore = create((set) => ({
     user: null,
     role: null,
@@ -51,8 +65,8 @@ const useAuthStore = create((set) => ({
 
         try {
             await loadCurrentUser(set);
-        } catch {
-            clearAuth(set);
+        } catch (error) {
+            handleAuthError(set, error);
         }
     },
 
@@ -63,8 +77,8 @@ const useAuthStore = create((set) => ({
         setToken(token);
         try {
             return await loadCurrentUser(set);
-        } catch {
-            clearAuth(set);
+        } catch (error) {
+            handleAuthError(set, error);
             return null;
         }
     },
