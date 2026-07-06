@@ -530,15 +530,14 @@ const StudentLayout = ({ children }) => {
                         onClick={() => setIsSidebarOpen(false)}
                         aria-hidden="true"
                     />
+                    <button
+                        onClick={() => setIsSidebarOpen(false)}
+                        aria-label="Close menu"
+                        className="absolute top-4 right-4 z-10 p-2 rounded-xl bg-white/15 text-white/80 hover:bg-white/25 hover:text-white transition-colors"
+                    >
+                        <X size={18} />
+                    </button>
                     <aside className="absolute left-0 top-0 bottom-0 w-[85vw] max-w-72 sidebar-theme shadow-2xl">
-                        <div className="absolute top-4 right-4 z-10">
-                            <button
-                                onClick={() => setIsSidebarOpen(false)}
-                                className="p-2 rounded-xl bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-white/60 hover:text-slate-800 dark:hover:text-white transition-colors"
-                            >
-                                <X size={18} />
-                            </button>
-                        </div>
                         <SidebarContent
                             onNavigate={() => setIsSidebarOpen(false)}
                             onOpenSettings={() => setIsSettingsOpen(true)}
@@ -550,7 +549,7 @@ const StudentLayout = ({ children }) => {
             {/* ── Main Content ── */}
             <div className="flex-1 flex flex-col min-w-0 relative">
                 {/* Mobile header with HUD pills */}
-                <header className="md:hidden px-3 sm:px-4 py-2.5 flex items-center justify-between sticky top-0 z-20 glass-card border-b border-slate-200 dark:border-white/10">
+                <header className="lg:hidden px-3 sm:px-4 py-2.5 flex items-center justify-between sticky top-0 z-20 glass-card border-b border-slate-200 dark:border-white/10">
                     <div className="flex items-center gap-2">
                         <Logo size={30} />
                         <span className="font-display font-bold text-base text-slate-800 dark:text-white">

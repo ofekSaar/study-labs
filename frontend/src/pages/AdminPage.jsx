@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import AdminLayout from '../components/layout/AdminLayout';
 import OverviewTab from './admin/OverviewTab';
 import UsersTab from './admin/UsersTab';
@@ -16,7 +16,8 @@ const SECTION_LABELS = {
 };
 
 const AdminPage = () => {
-    const section = SECTION_LABELS[window.location.pathname] ?? 'Admin';
+    const location = useLocation();
+    const section = SECTION_LABELS[location.pathname] ?? 'Admin';
 
     return (
         <AdminLayout section={section}>
