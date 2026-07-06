@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import StudentLayout from '../components/layout/StudentLayout';
 import useCourseStore from '../store/courseStore';
 import { Search, Play, GraduationCap, BookMarked } from 'lucide-react';
 import Spinner from '../components/common/Spinner';
@@ -22,7 +21,7 @@ const MyCourses = () => {
     );
 
     return (
-        <StudentLayout title="My Courses">
+        <>
             {/* Ambient background */}
             <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
                 <div className="absolute inset-0 dot-grid opacity-60" />
@@ -194,7 +193,7 @@ const MyCourses = () => {
                     </div>
                 )}
             </div>
-        </StudentLayout>
+        </>
     );
 };
 

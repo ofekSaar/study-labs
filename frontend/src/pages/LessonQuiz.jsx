@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import StudentLayout from '../components/layout/StudentLayout';
-import InstructorLayout from '../components/layout/InstructorLayout';
 import QuizEngine from '../components/quiz/QuizEngine';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
@@ -31,7 +29,6 @@ const LessonQuiz = () => {
     const navigate = useNavigate();
     const { role } = useAuthStore();
     const isInstructor = role === 'instructor';
-    const Layout = isInstructor ? InstructorLayout : StudentLayout;
     const courseMapPath = isInstructor ? `/instructor/course/${courseId}` : `/course/${courseId}`;
     const [quizData, setQuizData] = useState([]);
     const [nodeData, setNodeData] = useState(null);
@@ -156,7 +153,7 @@ const LessonQuiz = () => {
 
     if (isLoading) {
         return (
-            <Layout title="Loading Lesson...">
+            <>
                 <div
                     className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center gap-4 p-4 sm:p-8 md:p-12"
                     role="status"
@@ -167,13 +164,13 @@ const LessonQuiz = () => {
                         Preparing your lesson materials...
                     </p>
                 </div>
-            </Layout>
+            </>
         );
     }
 
     if (loadError) {
         return (
-            <Layout title="Lesson">
+            <>
                 <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center gap-4 p-4 sm:p-8 md:p-12 text-center">
                     <p className="text-slate-700 dark:text-white font-bold text-lg">
                         Couldn't load this lesson.
@@ -189,7 +186,7 @@ const LessonQuiz = () => {
                         Go Back
                     </button>
                 </div>
-            </Layout>
+            </>
         );
     }
 
@@ -202,7 +199,7 @@ const LessonQuiz = () => {
         const passed = pct >= 70;
 
         return (
-            <Layout title="Quiz Complete">
+            <>
                 <ConfettiEffect />
                 <LevelUpModal />
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-md">
@@ -308,14 +305,14 @@ const LessonQuiz = () => {
                         </motion.button>
                     </motion.div>
                 </div>
-            </Layout>
+            </>
         );
     }
 
     // ── Summary Step ──
     if (step === 'summary') {
         return (
-            <Layout title={nodeData?.title || 'Lesson'}>
+            <>
                 <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col">
                     <div className="bg-white dark:bg-slate-900 px-6 py-4 flex items-center gap-4 sticky top-0 z-10 border-b border-slate-200 dark:border-white/10">
                         <button
@@ -397,13 +394,13 @@ const LessonQuiz = () => {
                         </div>
                     </div>
                 </div>
-            </Layout>
+            </>
         );
     }
 
     // ── Quiz Step ──
     return (
-        <Layout title="Quiz">
+        <>
             <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col">
                 <div className="bg-white dark:bg-slate-900 px-4 py-3 flex items-center gap-3 sticky top-0 z-10 border-b border-slate-100 dark:border-white/10">
                     <button
@@ -446,7 +443,7 @@ const LessonQuiz = () => {
                     )}
                 </div>
             </div>
-        </Layout>
+        </>
     );
 };
 

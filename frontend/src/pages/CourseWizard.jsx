@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import InstructorLayout from '../components/layout/InstructorLayout';
 import { useForm, FormProvider } from 'react-hook-form';
 import {
     ChevronRight,
@@ -162,7 +161,7 @@ const CourseWizard = () => {
 
     if (isProcessing) {
         return (
-            <InstructorLayout title="Create Course">
+            <>
                 <div className="flex flex-col items-center justify-center min-h-[60vh] text-center animate-fade-in px-4">
                     <div className="glass-card rounded-3xl p-8 max-w-md w-full">
                         <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-studylabs-orange to-studylabs-purple flex items-center justify-center mx-auto mb-6 shadow-lg">
@@ -231,7 +230,7 @@ const CourseWizard = () => {
                         </div>
                     </div>
                 </div>
-            </InstructorLayout>
+            </>
         );
     }
 
@@ -241,7 +240,7 @@ const CourseWizard = () => {
         const title = courseSnapshot?.title || 'Your Course';
 
         return (
-            <InstructorLayout title="Create Course">
+            <>
                 <div className="flex flex-col items-center justify-center min-h-[60vh] text-center animate-fade-in px-4 py-8">
                     {/* Celebration */}
                     <div className="relative mb-6">
@@ -335,12 +334,12 @@ const CourseWizard = () => {
                         </button>
                     </div>
                 </div>
-            </InstructorLayout>
+            </>
         );
     }
 
     return (
-        <InstructorLayout title="New Course Wizard">
+        <>
             <div className="max-w-3xl mx-auto py-6 sm:py-10 px-4 sm:px-6 md:px-0 pb-40">
                 {/* XP Banner */}
                 <div className="flex items-center justify-center gap-2 mb-6">
@@ -460,7 +459,7 @@ const CourseWizard = () => {
                     </div>
                 </FormProvider>
             </div>
-        </InstructorLayout>
+        </>
     );
 };
 

@@ -7,7 +7,6 @@ import {
     HOUR_AFTERNOON_END,
     HOUR_EVENING_END,
 } from '../constants/config';
-import StudentLayout from '../components/layout/StudentLayout';
 import RoadmapView from '../components/dashboard/RoadmapView';
 import NodeDrawer from '../components/dashboard/NodeDrawer';
 import useCourseStore from '../store/courseStore';
@@ -141,7 +140,7 @@ const Dashboard = () => {
     // ── Loading skeleton ──
     if (isLoading && courses.length === 0) {
         return (
-            <StudentLayout title="Dashboard">
+            <>
                 <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
                     <div className="absolute inset-0 dot-grid opacity-60" />
                     <div
@@ -177,14 +176,14 @@ const Dashboard = () => {
                         </div>
                     </div>
                 </div>
-            </StudentLayout>
+            </>
         );
     }
 
     // ── Empty state ──
     if (!isLoading && courses.length === 0) {
         return (
-            <StudentLayout title="Dashboard">
+            <>
                 <div className="p-4 lg:p-12 max-w-xl mx-auto pt-24">
                     <EmptyState
                         icon={BookOpen}
@@ -193,7 +192,7 @@ const Dashboard = () => {
                         action={{ label: 'Browse Courses', onClick: () => navigate('/my-courses') }}
                     />
                 </div>
-            </StudentLayout>
+            </>
         );
     }
 
@@ -204,7 +203,7 @@ const Dashboard = () => {
     const completedCourses = courses.filter((c) => (c.progress ?? 0) >= 100);
 
     return (
-        <StudentLayout title="Dashboard">
+        <>
             <ConfettiEffect />
             <LevelUpModal />
 
@@ -540,7 +539,7 @@ const Dashboard = () => {
             </div>
 
             <NodeDrawer />
-        </StudentLayout>
+        </>
     );
 };
 

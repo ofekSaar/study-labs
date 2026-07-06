@@ -7459,16 +7459,14 @@ body {
     border: 1px solid #f59e0b26;
 }
 .page-enter {
-    animation: 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards pageEnter;
+    animation: 0.15s ease-out forwards pageEnter;
 }
 @keyframes pageEnter {
     0% {
         opacity: 0;
-        transform: translateY(16px);
     }
     to {
         opacity: 1;
-        transform: translateY(0);
     }
 }
 .shimmer {

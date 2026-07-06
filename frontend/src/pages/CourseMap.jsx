@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import StudentLayout from '../components/layout/StudentLayout';
-import InstructorLayout from '../components/layout/InstructorLayout';
 import GameMapComponent from '../components/map/GameMap';
 import QuizEditorModal from '../components/quiz/QuizEditorModal';
 import AnnouncementModal from '../components/course/AnnouncementModal';
@@ -77,8 +75,6 @@ const CourseMap = () => {
             setUploading(false);
         }
     };
-
-    const Layout = role === 'instructor' ? InstructorLayout : StudentLayout;
 
     useEffect(() => {
         const loadNodes = async () => {
@@ -194,18 +190,18 @@ const CourseMap = () => {
 
     if (localLoading || storeLoading) {
         return (
-            <Layout title="Loading Course...">
+            <>
                 <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
                     <Loader2 className="w-10 h-10 animate-spin text-studylabs-blue" />
                     <p className="text-gray-500 font-medium">Generating your learning path...</p>
                 </div>
-            </Layout>
+            </>
         );
     }
 
     if (!course) {
         return (
-            <Layout title="Course Not Found">
+            <>
                 <div className="text-center p-4 sm:p-8 md:p-12">
                     <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4">
                         Course Not Found
@@ -217,12 +213,12 @@ const CourseMap = () => {
                         <ChevronLeft size={20} /> Go Back
                     </button>
                 </div>
-            </Layout>
+            </>
         );
     }
 
     return (
-        <Layout title={course.title}>
+        <>
             <div className="min-h-screen md:min-h-0 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white transition-colors duration-300">
                 {/* Mobile-only Course Header */}
                 <div className="md:hidden px-4 py-4 flex items-center justify-between bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-white/5">
@@ -507,7 +503,7 @@ const CourseMap = () => {
                 courseId={courseId}
                 courseTitle={course?.title}
             />
-        </Layout>
+        </>
     );
 };
 

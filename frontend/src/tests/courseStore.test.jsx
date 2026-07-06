@@ -124,7 +124,7 @@ describe('useCourseStore Zustand Store', () => {
     });
 
     test('should fetch enrolled student courses successfully', async () => {
-        // Enrolled courses request
+        // Single request — progress ships embedded in the course list
         global.fetch.mockImplementationOnce(() =>
             mockFetchResponse({
                 courses: [
@@ -133,15 +133,9 @@ describe('useCourseStore Zustand Store', () => {
                         title: 'Math 101',
                         enrollmentStatus: 'approved',
                         level: 'Beginner',
+                        progress: { percentComplete: 40, totalXP: 100 },
                     },
                 ],
-            })
-        );
-
-        // Course progress request
-        global.fetch.mockImplementationOnce(() =>
-            mockFetchResponse({
-                progress: { percentComplete: 40, totalXP: 100 },
             })
         );
 
@@ -154,19 +148,23 @@ describe('useCourseStore Zustand Store', () => {
         expect(state.courses.length).toBe(1);
         expect(state.courses[0].title).toBe('Math 101');
         expect(state.courses[0].progress).toBe(40);
+        expect(state.courses[0].totalXP).toBe(100);
         expect(state.selectedCourseId).toBe('course_1');
-        expect(global.fetch).toHaveBeenCalledTimes(2);
+        expect(global.fetch).toHaveBeenCalledTimes(1);
     });
 
-    test('should handle progress fetch error for courses in fetchCourses', async () => {
+    test('should default progress to zero when the course has no embedded progress', async () => {
         global.fetch.mockImplementationOnce(() =>
             mockFetchResponse({
-                courses: [{ _id: 'course_1', title: 'Math 101', enrollmentStatus: 'approved' }],
+                courses: [
+                    {
+                        _id: 'course_1',
+                        title: 'Math 101',
+                        enrollmentStatus: 'approved',
+                        progress: null,
+                    },
+                ],
             })
-        );
-
-        global.fetch.mockImplementationOnce(() =>
-            mockFetchErrorResponse('Failed to fetch progress', 500)
         );
 
         await act(async () => {

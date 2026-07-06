@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import InstructorLayout from '../components/layout/InstructorLayout';
 import {
     Users,
     BookOpen,
@@ -285,7 +284,7 @@ const InstructorDashboard = () => {
     };
 
     return (
-        <InstructorLayout title="Instructor Dashboard">
+        <>
             {/* Ambient background */}
             <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
                 <div className="absolute inset-0 dot-grid opacity-60" />
@@ -565,7 +564,7 @@ const InstructorDashboard = () => {
                     </div>
                 </div>
             </div>
-        </InstructorLayout>
+        </>
     );
 };
 

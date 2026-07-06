@@ -18,7 +18,6 @@ import {
     GraduationCap,
     Pencil,
 } from 'lucide-react';
-import InstructorLayout from '../components/layout/InstructorLayout';
 import api from '../utils/api';
 
 const STATUS_STYLES = {
@@ -239,7 +238,7 @@ const InstructorStats = () => {
     }, []);
 
     return (
-        <InstructorLayout>
+        <>
             <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
                 {loading && (
                     <div className="flex items-center justify-center py-32 text-slate-400 gap-3">
@@ -502,7 +501,7 @@ const InstructorStats = () => {
                         );
                     })()}
             </div>
-        </InstructorLayout>
+        </>
     );
 };
 
