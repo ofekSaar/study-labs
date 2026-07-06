@@ -153,6 +153,101 @@ describe('useCourseStore Zustand Store', () => {
         expect(global.fetch).toHaveBeenCalledTimes(1);
     });
 
+    test('should refresh silently when courses are already cached', async () => {
+        act(() => {
+            useCourseStore.setState({
+                courses: [
+                    {
+                        _id: 'course_1',
+                        id: 'course_1',
+                        title: 'Math 101',
+                        progress: 0,
+                        nodes: [{ _id: 'node_1', title: 'Limits', status: 'current' }],
+                    },
+                    { _id: 'course_2', id: 'course_2', title: 'Physics', progress: 10, nodes: [] },
+                ],
+                selectedCourseId: 'course_2',
+            });
+        });
+
+        let resolveFetch;
+        global.fetch.mockImplementationOnce(
+            () =>
+                new Promise((resolve) => {
+                    resolveFetch = () =>
+                        resolve({
+                            ok: true,
+                            status: 200,
+                            headers: { get: () => 'application/json' },
+                            json: () =>
+                                Promise.resolve({
+                                    data: {
+                                        courses: [
+                                            {
+                                                _id: 'course_1',
+                                                title: 'Math 101',
+                                                enrollmentStatus: 'approved',
+                                                progress: { percentComplete: 25, totalXP: 150 },
+                                            },
+                                            {
+                                                _id: 'course_2',
+                                                title: 'Physics',
+                                                enrollmentStatus: 'approved',
+                                                progress: { percentComplete: 10, totalXP: 50 },
+                                            },
+                                        ],
+                                    },
+                                }),
+                        });
+                })
+        );
+
+        let fetchPromise;
+        act(() => {
+            fetchPromise = useCourseStore.getState().fetchCourses();
+        });
+
+        // While the refresh is in flight, cached data stays up and no skeleton shows
+        expect(useCourseStore.getState().isLoading).toBe(false);
+        expect(useCourseStore.getState().courses.length).toBe(2);
+
+        await act(async () => {
+            resolveFetch();
+            await fetchPromise;
+        });
+
+        const state = useCourseStore.getState();
+        expect(state.courses[0].progress).toBe(25);
+        // User's selection survives the refresh instead of resetting to the first course
+        expect(state.selectedCourseId).toBe('course_2');
+        // Nodes loaded on demand are not blanked out by the refresh
+        expect(state.courses[0].nodes).toEqual([
+            { _id: 'node_1', title: 'Limits', status: 'current' },
+        ]);
+    });
+
+    test('should keep cached courses when a background refresh fails', async () => {
+        act(() => {
+            useCourseStore.setState({
+                courses: [{ _id: 'course_1', id: 'course_1', title: 'Math 101', progress: 40 }],
+                selectedCourseId: 'course_1',
+            });
+        });
+
+        global.fetch.mockImplementationOnce(() => mockFetchErrorResponse('Network Error', 500));
+
+        await act(async () => {
+            await useCourseStore.getState().fetchCourses();
+        });
+
+        const state = useCourseStore.getState();
+        expect(state.courses.length).toBe(1);
+        expect(state.courses[0].progress).toBe(40);
+        expect(state.error).toBeNull();
+        expect(state.isLoading).toBe(false);
+        expect(console.error).toHaveBeenCalled();
+    });
+
     test('should default progress to zero when the course has no embedded progress', async () => {
         global.fetch.mockImplementationOnce(() =>
             mockFetchResponse({
