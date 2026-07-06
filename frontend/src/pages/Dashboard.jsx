@@ -428,7 +428,9 @@ const Dashboard = () => {
                         className={`${isRoadmapCollapsed ? 'lg:col-span-12 grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-5' : 'lg:col-span-4 flex flex-col'} gap-4`}
                     >
                         {/* XP Progress Card */}
-                        <div className="glass-card rounded-3xl p-5 shadow-lg relative overflow-hidden">
+                        {/* shrink-0: overflow-hidden zeroes the automatic min-height, so without it
+                            this card absorbs all the column's flex shrink and clips the coins row */}
+                        <div className="glass-card rounded-3xl p-5 shadow-lg relative overflow-hidden shrink-0">
                             <div className="absolute inset-0 bg-gradient-to-br from-orange-500/4 to-amber-500/4 pointer-events-none" />
                             <div className="flex items-center justify-between mb-3">
                                 <h3 className="text-xs font-black text-slate-500 dark:text-white/50 uppercase tracking-widest">

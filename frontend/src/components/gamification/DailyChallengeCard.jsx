@@ -35,7 +35,7 @@ const DailyChallengeCard = () => {
         <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className={`glass-card rounded-3xl p-4 relative overflow-hidden group transition-all ${
+            className={`glass-card rounded-3xl p-4 relative overflow-hidden shrink-0 group transition-all ${
                 dailyChallengeCompleted ? 'opacity-75' : ''
             }`}
         >
