@@ -20,7 +20,7 @@ function markSeen(ids) {
     localStorage.setItem(SEEN_ANNOUNCEMENTS_KEY, JSON.stringify([...seen]));
 }
 
-const useCourseStore = create((set) => ({
+const useCourseStore = create((set, get) => ({
     user: {
         name: 'Student',
         totalXP: 0,
@@ -55,7 +55,11 @@ const useCourseStore = create((set) => ({
 
     // ── Fetch enrolled courses ─────────────────────
     fetchCourses: async () => {
-        set({ isLoading: true, error: null });
+        // Stale-while-revalidate: when courses are already cached, keep showing
+        // them and refresh silently instead of flipping the page to a skeleton.
+        const isRefresh = get().courses.length > 0;
+        if (!isRefresh) set({ isLoading: true, error: null });
+
         try {
             const { data } = await api.get('/api/courses?view=student');
             const courses = data.courses || [];
@@ -63,23 +67,37 @@ const useCourseStore = create((set) => ({
             // Progress ships embedded in the course list, so no per-course requests.
             const enrichedCourses = courses
                 .filter((c) => c.enrollmentStatus === 'approved' || c.enrollmentStatus === 'active')
-                .map((course) => ({
-                    ...course,
-                    id: course._id,
-                    progress: course.progress?.percentComplete || 0,
-                    totalXP: course.progress?.totalXP || 0,
-                    level: course.level || 'Beginner',
-                    color: course.color || 'bg-studylabs-blue',
-                    nodes: [], // Loaded on demand
-                }));
+                .map((course) => {
+                    const cached = get().courses.find(
+                        (c) => c.id === course._id || c._id === course._id
+                    );
+                    return {
+                        ...course,
+                        id: course._id,
+                        progress: course.progress?.percentComplete || 0,
+                        totalXP: course.progress?.totalXP || 0,
+                        level: course.level || 'Beginner',
+                        color: course.color || 'bg-studylabs-blue',
+                        // A refresh must not blank out a roadmap that's on screen.
+                        nodes: cached?.nodes || [],
+                    };
+                });
 
-            set({
+            set((state) => ({
                 courses: enrichedCourses,
-                selectedCourseId: enrichedCourses.length > 0 ? enrichedCourses[0].id : null,
+                // Keep the user's selection when it survives the refresh.
+                selectedCourseId: enrichedCourses.some((c) => c.id === state.selectedCourseId)
+                    ? state.selectedCourseId
+                    : (enrichedCourses[0]?.id ?? null),
                 isLoading: false,
-            });
+            }));
         } catch (error) {
-            set({ error: error.message, isLoading: false });
+            if (isRefresh) {
+                // Keep showing cached data when a background refresh fails.
+                logger.error('Failed to refresh courses:', error);
+            } else {
+                set({ error: error.message, isLoading: false });
+            }
         }
     },
 
