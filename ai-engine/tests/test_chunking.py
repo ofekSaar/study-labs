@@ -34,3 +34,25 @@ def test_extract_in_chunks_pages():
         expected_end = min((idx + 1) * 10, 42)
         assert start_p == expected_start
         assert end_p == expected_end
+
+
+def test_extract_in_chunks_slides():
+    path = os.path.join(FIXTURES_DIR, "presentation.pptx")
+    assert os.path.exists(path), f"presentation.pptx not found at {path}"
+    
+    with open(path, "rb") as f:
+        file_bytes = f.read()
+        
+    chunks = list(extract_in_chunks(file_bytes, filename="presentation.pptx", chunk_size=1))
+    
+    # presentation.pptx has 66 slides, so with chunk_size=1 it should yield 66 chunks
+    assert len(chunks) == 66, f"Expected 66 chunks, but got {len(chunks)}"
+    
+    for idx, chunk in enumerate(chunks):
+        assert chunk is not None
+        meta = chunk.metadata or {}
+        assert "chunk_start" in meta
+        assert "chunk_end" in meta
+        assert meta["chunk_start"] == idx + 1
+        assert meta["chunk_end"] == idx + 1
+        assert meta["total_slides"] == 66

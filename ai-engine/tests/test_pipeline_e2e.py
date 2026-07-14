@@ -53,6 +53,53 @@ def test_sbert_tagging_logic():
     assert not any("chocolate cake" in m for m in topic_turing.matched_materials)
 
 
+def test_hebrew_sbert_tagging_logic():
+    # 1. Create a mock course in Hebrew
+    topic_dfa = Topic(
+        title="אוטומט סופי דטרמיניסטי (DFA)",
+        description="מעברי מצבים, א'-ב' של שפה, ומילים מתקבלות באוטומט סופי דטרמיניסטי."
+    )
+    topic_turing = Topic(
+        title="מכונות טיורינג ובעיית העצירה",
+        description="מכונת טיורינג, כוח חישובי, ובעיית העצירה שאינה ניתנת להכרעה."
+    )
+    
+    course = Course(
+        title="קורס מודלים חישוביים",
+        lessons=[
+            Lesson(
+                title="שיעור 1",
+                topics=[topic_dfa, topic_turing]
+            )
+        ]
+    )
+    
+    # 2. Materials in Hebrew
+    materials = [
+        "אוטומט סופי דטרמיניסטי מוגדר על ידי חמישייה הכוללת מצבים, אלפבית, פונקציית מעבר, מצב התחלתי ומצבים מקבלים.",
+        "בעיית העצירה של מכונת טיורינג היא בעיה שאינה ניתנת להכרעה (אלגוריתמית), כפי שהוכיח אלן טיורינג.",
+        "איך מכינים עוגת שוקולד חמה: מערבבים קמח, סוכר, קקאו, ביצים ואופים בתנור בחום בינוני."
+    ]
+    
+    # Run tagging
+    tag_materials_with_embeddings(course, materials)
+    
+    # 3. Assertions
+    # Topic DFA should match the Hebrew DFA text
+    assert len(topic_dfa.matched_materials) > 0
+    assert any("חמישייה" in m for m in topic_dfa.matched_materials)
+    assert topic_dfa.is_material_grounded is True
+    
+    # Topic Turing should match the Hebrew Turing text
+    assert len(topic_turing.matched_materials) > 0
+    assert any("להכרעה" in m for m in topic_turing.matched_materials)
+    assert topic_turing.is_material_grounded is True
+    
+    # Neither topic should match the chocolate cake recipe (similarity is too low)
+    assert not any("עוגת שוקולד" in m for m in topic_dfa.matched_materials)
+    assert not any("עוגת שוקולד" in m for m in topic_turing.matched_materials)
+
+
 @pytest.mark.asyncio
 async def test_validate_question_alignment_warning():
     # Test step 10: question alignment validation
