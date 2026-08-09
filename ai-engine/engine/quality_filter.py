@@ -3,7 +3,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-_NON_ALPHANUMERIC = re.compile(r'[^a-zA-Z0-9֐-׿\s]')
+_NON_ALPHANUMERIC = re.compile(r'[^a-zA-Z0-9֐-׿\u0370-\u03FF\u2200-\u22FF\s.,!?;:"\'()\[\]\{\}\-_+*/=|<>~^]')
 _NOISE_THRESHOLD = 0.15
 
 
