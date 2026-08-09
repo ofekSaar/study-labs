@@ -5,7 +5,7 @@ from engine.config import TOPIC_MATERIAL_THRESHOLD
 
 logger = logging.getLogger(__name__)
 
-_MODEL_NAME = "all-MiniLM-L6-v2"
+_MODEL_NAME = "paraphrase-multilingual-MiniLM-L12-v2"
 
 
 @lru_cache(maxsize=1)
