@@ -133,8 +133,8 @@ const Dashboard = () => {
     }, []); // eslint-disable-line
 
     // Derive level/XP from the same source as the profile so the two screens stay in sync.
-    const totalXP = stats.total_xp ?? user?.totalXP ?? 0;
-    const level = stats.level || calculateLevel(totalXP);
+    const totalXP = stats?.total_xp ?? user?.totalXP ?? 0;
+    const level = stats?.level || calculateLevel(totalXP);
     const progressToNextLevel = totalXP % XP_PER_LEVEL;
 
     // ── Loading skeleton ──

@@ -130,7 +130,7 @@ const SidebarContent = ({ onNavigate, onOpenSettings }) => {
         name: 'Student',
     };
     const currentTitle = TITLES.find((t) => t.id === activeTitle) || { name: 'Beginner' };
-    const xpInLevel = (stats.total_xp || 0) % XP_PER_LEVEL;
+    const xpInLevel = ((stats || {}).total_xp || 0) % XP_PER_LEVEL;
 
     return (
         <div className="flex flex-col h-full">
@@ -365,7 +365,7 @@ const SidebarContent = ({ onNavigate, onOpenSettings }) => {
                                         boxShadow: '0 2px 6px rgba(245,158,11,0.5)',
                                     }}
                                 >
-                                    LV {stats.level || 1}
+                                    LV {stats?.level || 1}
                                 </div>
                                 {/* Online dot */}
                                 <div className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-emerald-400 rounded-full border-2 border-white dark:border-[#1A1410]" />
@@ -384,7 +384,7 @@ const SidebarContent = ({ onNavigate, onOpenSettings }) => {
                                     <div className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-amber-500/10 dark:bg-amber-500/15 border border-amber-500/20">
                                         <Zap size={9} className="text-amber-500" />
                                         <span className="text-[8px] font-black text-amber-600 dark:text-amber-400">
-                                            {(stats.total_xp || 0).toLocaleString()}
+                                            {(stats?.total_xp || 0).toLocaleString()}
                                         </span>
                                     </div>
                                     <div className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-orange-500/10 dark:bg-orange-500/15 border border-orange-500/20">
@@ -393,7 +393,7 @@ const SidebarContent = ({ onNavigate, onOpenSettings }) => {
                                             className="text-orange-500 fill-orange-500"
                                         />
                                         <span className="text-[8px] font-black text-orange-600 dark:text-orange-400">
-                                            {stats.streak || 0}d
+                                            {stats?.streak || 0}d
                                         </span>
                                     </div>
                                 </div>
@@ -404,7 +404,7 @@ const SidebarContent = ({ onNavigate, onOpenSettings }) => {
                         <div className="space-y-1">
                             <div className="flex justify-between items-center">
                                 <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 dark:text-white/25">
-                                    XP to Level {(stats.level || 1) + 1}
+                                    XP to Level {(stats?.level || 1) + 1}
                                 </span>
                                 <span className="text-[8px] font-black text-orange-500">
                                     {xpInLevel}/{XP_PER_LEVEL}
@@ -423,9 +423,6 @@ const SidebarContent = ({ onNavigate, onOpenSettings }) => {
 
                 {/* Icon-only action row */}
                 <div className="flex items-center gap-1">
-                    <div className="flex-1 flex flex-col items-center gap-0.5 py-2">
-                        <StudentNotificationBell dropUp />
-                    </div>
                     {user?.roles?.includes('instructor') && (
                         <button
                             onClick={() => {
@@ -453,6 +450,7 @@ const SidebarContent = ({ onNavigate, onOpenSettings }) => {
                             </span>
                         </button>
                     )}
+                    <StudentNotificationBell dropUp />
                     <button
                         onClick={() => onOpenSettings()}
                         title="Settings"
