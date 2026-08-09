@@ -160,7 +160,7 @@ def parse_syllabus(syllabus_text: str, syllabus_name: str = "Unknown") -> Course
         logger.warning("All LLM providers failed for parse_syllabus.")
         return Course(title="Error Parsing Syllabus", lessons=[])
 
-async def generate_content_for_topic(topic: Topic) -> tuple[List[Question], str]:
+async def generate_content_for_topic(topic: Topic, course_title: str = None) -> tuple[List[Question], str]:
     """
     Generates questions and study summaries for the topic in a single LLM call.
     Uses semaphore for rate limiting and retry for 429 errors.
@@ -177,9 +177,11 @@ async def generate_content_for_topic(topic: Topic) -> tuple[List[Question], str]
         questions: List[Question] = Field(..., description="A list of exactly 3 multiple-choice questions testing key concepts of this topic.")
 
     matched_content = "\n".join(topic.matched_materials)
+    course_context = f"Course Context: {course_title}\n" if course_title else ""
     
     prompt_template_str = (
         "You are an expert tutor creating a study guide and a quiz for a student.\n"
+        f"{course_context}"
         "Topic: {topic_title}\n"
         "Description: {topic_desc}\n"
         "Material content:\n"
@@ -187,6 +189,10 @@ async def generate_content_for_topic(topic: Topic) -> tuple[List[Question], str]
         "Please generate:\n"
         "1. A concise but comprehensive study summary in Markdown format.\n"
         "2. Exactly 3 multiple-choice questions based on the topic and materials.\n\n"
+        "IMPORTANT: The content must be strictly tailored to the specific course context. "
+        "For example, if the course is 'Computational Models' and the topic is 'Regular Expressions' (or 'ביטויים רגולריים'), "
+        "focus on the mathematical and theoretical definitions (formal languages, DFA equivalence, union, Kleene star closure) "
+        "rather than general software engineering regex patterns (like pattern matching syntax in python/js, phone/email validation regex).\n"
         "IMPORTANT: Always use LaTeX for mathematical formulas, variables, and state transitions. "
         "Use single dollar signs $...$ for inline math (e.g., $E=mc^2$ or $q_0 \\rightarrow q_1$) and double dollar signs $$...$$ for block equations. "
         "Do NOT use parentheses ( ) or plain text for math symbols.\n"
@@ -348,7 +354,7 @@ async def create_course_pipeline(
         async def process_topic(lesson_title, t):
             nonlocal completed_topics
             logger.info(f"  → Generating content for: {lesson_title} / {t.title}")
-            t.questions, t.summary = await generate_content_for_topic(t)
+            t.questions, t.summary = await generate_content_for_topic(t, course_title=course.title)
             # Validate alignment of each question against the generated summary.
             # Costs one extra LLM call per question — gated behind a config flag.
             if VALIDATE_QUESTION_ALIGNMENT and t.summary and t.questions:

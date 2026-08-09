@@ -159,7 +159,7 @@ def _parse_inputs(request: "GenerateCourseRequest") -> tuple[str, list, list]:
             raise HTTPException(status_code=400, detail=f"Duplicate material file detected: {mat_name}. Processing aborted.")
         save_file_hash(mat_name, mat_hash, course_id=course_id)
 
-        chunk_generator = extract_in_chunks(mat_bytes, filename=mat_name, chunk_size=10)
+        chunk_generator = extract_in_chunks(mat_bytes, filename=mat_name, chunk_size=1)
 
         for chunk_idx, chunk_result in enumerate(chunk_generator):
             if chunk_result.text:
