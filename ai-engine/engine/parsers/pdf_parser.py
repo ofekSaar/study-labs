@@ -36,7 +36,7 @@ class PdfParser(BaseParser):
                 page = doc.load_page(page_num)
 
                 # --- Text Extraction ---
-                page_text = page.get_text()
+                page_text = page.get_text(sort=True)
 
                 # If text is too short or dirty, the page may have font encoding issues → use OCR
                 from engine.quality_filter import is_clean
@@ -93,7 +93,7 @@ class PdfParser(BaseParser):
                 
                 for page_num in range(chunk_start, chunk_end):
                     page = doc.load_page(page_num)
-                    page_text = page.get_text()
+                    page_text = page.get_text(sort=True)
                     
                     # --- Text Extraction ---
                     from engine.quality_filter import is_clean
