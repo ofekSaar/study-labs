@@ -38,9 +38,10 @@ class PdfParser(BaseParser):
                 # --- Text Extraction ---
                 page_text = page.get_text()
 
-                # If text is too short, the page is likely a scanned image → use OCR
-                if len(page_text.strip()) < 50:
-                    logger.debug(f"  Page {page_num + 1}: text too short, attempting OCR...")
+                # If text is too short or dirty, the page may have font encoding issues → use OCR
+                from engine.quality_filter import is_clean
+                if len(page_text.strip()) < 50 or not is_clean(page_text):
+                    logger.debug(f"  Page {page_num + 1}: text too short or dirty, attempting OCR...")
                     try:
                         pix = page.get_pixmap()
                         img_data = pix.tobytes("png")
@@ -95,8 +96,9 @@ class PdfParser(BaseParser):
                     page_text = page.get_text()
                     
                     # --- Text Extraction ---
-                    if len(page_text.strip()) < 50:
-                        logger.debug(f"  Page {page_num + 1}: text too short, attempting OCR...")
+                    from engine.quality_filter import is_clean
+                    if len(page_text.strip()) < 50 or not is_clean(page_text):
+                        logger.debug(f"  Page {page_num + 1}: text too short or dirty, attempting OCR...")
                         try:
                             pix = page.get_pixmap()
                             img_data = pix.tobytes("png")

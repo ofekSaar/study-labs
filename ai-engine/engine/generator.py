@@ -201,18 +201,47 @@ async def generate_content_for_topic(topic: Topic, course_title: str = None) -> 
     )
     
     async def _try(provider_name, llm_instance):
-        program = LLMTextCompletionProgram.from_defaults(
-            output_cls=TopicContent,
-            prompt_template_str=prompt_template_str,
-            llm=llm_instance
-        )
+        import re
         async def _call():
             async with _api_semaphore:
-                return await program.acall(
-                    topic_title=topic.title,
-                    topic_desc=topic.description or "",
-                    matched_content=matched_content
-                )
+                try:
+                    # Try the standard LlamaIndex structured program first
+                    program = LLMTextCompletionProgram.from_defaults(
+                        output_cls=TopicContent,
+                        prompt_template_str=prompt_template_str,
+                        llm=llm_instance
+                    )
+                    return await program.acall(
+                        topic_title=topic.title,
+                        topic_desc=topic.description or "",
+                        matched_content=matched_content
+                    )
+                except Exception as first_error:
+                    logger.warning(f"Standard LlamaIndex program failed in {provider_name}: {first_error}. Attempting direct raw completion and JSON repair...")
+                    # Fallback: call the LLM directly and repair JSON backslashes/LaTeX
+                    formatted_prompt = prompt_template_str.format(
+                        topic_title=topic.title,
+                        topic_desc=topic.description or "",
+                        matched_content=matched_content
+                    )
+                    response = await llm_instance.acomplete(formatted_prompt)
+                    raw_text = response.text.strip()
+                    
+                    # Extract JSON block
+                    json_match = re.search(r"```json\s*(.*?)\s*```", raw_text, re.DOTALL)
+                    json_str = json_match.group(1) if json_match else raw_text
+                    
+                    # Repair unescaped LaTeX backslashes (e.g. \delta -> \\delta)
+                    repaired_json = re.sub(r'\\(?!["\\/bfnrt]|u[0-9a-fA-F]{4})', r'\\\\', json_str)
+                    
+                    try:
+                        import json
+                        data = json.loads(repaired_json)
+                        return TopicContent.parse_obj(data)
+                    except Exception as parse_error:
+                        logger.error(f"Raw fallback parsing failed for {provider_name}: {parse_error}. Raw text: {raw_text[:500]}")
+                        raise first_error
+                        
         return await retry_with_backoff(_call)
 
     try:
