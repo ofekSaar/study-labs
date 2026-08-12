@@ -41,21 +41,24 @@ const StudentNotificationBell = ({ dropUp = false }) => {
     };
 
     return (
-        <div ref={ref} className="relative">
+        <div ref={ref} className="flex-1 relative">
             <button
                 type="button"
                 onClick={handleOpen}
-                className="relative p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 text-slate-500 dark:text-white/50 hover:text-slate-800 dark:hover:text-white transition-colors"
+                className="w-full flex flex-col items-center gap-0.5 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-white/5 text-slate-400 dark:text-white/30 hover:text-slate-600 dark:hover:text-white/60 transition-all border border-transparent hover:border-slate-200 dark:hover:border-white/10"
                 aria-label={unread > 0 ? `Notifications, ${unread} unread` : 'Notifications'}
                 aria-haspopup="true"
                 aria-expanded={open}
             >
-                <Bell size={20} />
-                {unread > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-indigo-500 text-white text-[9px] font-black flex items-center justify-center leading-none">
-                        {unread > 9 ? '9+' : unread}
-                    </span>
-                )}
+                <div className="relative">
+                    <Bell size={16} />
+                    {unread > 0 && (
+                        <span className="absolute -top-1.5 -right-2 min-w-[14px] h-3.5 px-0.5 bg-red-500 text-white text-[8px] font-black rounded-full flex items-center justify-center leading-none">
+                            {unread > 9 ? '9+' : unread}
+                        </span>
+                    )}
+                </div>
+                <span className="text-[8px] font-black uppercase tracking-wide">Alerts</span>
             </button>
 
             {open && (
