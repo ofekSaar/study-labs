@@ -185,135 +185,111 @@ async def generate_content_for_topic(topic: Topic, course_title: str = None) -> 
 
     matched_content = "\n".join(topic.matched_materials)
     course_context = f"Course Context: {course_title}\n" if course_title else ""
-    
-    prompt_template_str = (
-        "You are an expert tutor creating a comprehensive study guide and a quiz for a student.\n"
-        f"{course_context}"
-        "Topic: {topic_title}\n"
-        "Description: {topic_desc}\n"
-        "Material content:\n"
-        "{matched_content}\n\n"
-        "Please generate:\n"
-        "1. A detailed, multi-paragraph study summary in Markdown format, including Key Concepts, Definitions, Bullet Points, and LaTeX formulas ($...$ for inline, $$...$$ for block math).\n"
-        "2. Exactly 3 multiple-choice questions testing key concepts of this topic.\n\n"
-        "IMPORTANT: You MUST respond with ONLY a valid JSON object wrapped inside a ```json ... ``` code block conforming to this JSON schema:\n"
-        "{{\n"
-        '  "summary": "# Study Guide Title\\n\\n## Overview\\nDetailed text...",\n'
-        '  "questions": [\n'
-        '    {{\n'
-        '      "question_text": "...",\n'
-        '      "options": ["...", "...", "...", "..."],\n'
-        '      "correct_answer": 0\n'
-        '    }}\n'
-        '  ]\n'
-        "}}\n\n"
-        "Properly escape all internal quotes and backslashes (e.g. \\\\delta, \\\\rightarrow) so JSON parsing succeeds."
-    )
-    
-    async def _try(provider_name, llm_instance):
-        import re
-        async def _call():
-            async with _api_semaphore:
-                formatted_prompt = (
-                    f"You are an expert tutor creating a comprehensive study guide and a quiz for a student.\n"
-                    f"{course_context}"
-                    f"Topic: {topic.title}\n"
-                    f"Description: {topic.description or ''}\n"
-                    f"Material content:\n{matched_content}\n\n"
-                    "Please generate:\n"
-                    "1. A detailed, rich, multi-paragraph study summary in Markdown format (covering overview, key concepts, definitions, formal proofs, and LaTeX math formulas).\n"
-                    "2. Exactly 3 multiple-choice questions testing key concepts of this topic.\n\n"
-                    "IMPORTANT: Output ONLY a valid JSON object inside a ```json ... ``` code block with the schema:\n"
-                    "{\n"
-                    '  "summary": "# Topic Title\\n\\n## Overview\\nContent...",\n'
-                    '  "questions": [\n'
-                    '    {"question_text": "...", "options": ["A", "B", "C", "D"], "correct_answer": 0}\n'
-                    '  ]\n'
-                    "}"
-                )
-                try:
-                    # Try direct raw completion first for complete control over JSON formatting
-                    response = await llm_instance.acomplete(formatted_prompt)
-                    raw_text = response.text.strip()
-                    
-                    json_match = re.search(r"```json\s*(.*?)\s*```", raw_text, re.DOTALL)
-                    json_str = json_match.group(1) if json_match else raw_text
-                    
-                    # Double-escape any backslash NOT followed by valid quote escape (\") or escaped backslash (\\)
-                    repaired_json = re.sub(r'\\(?![\\"])', r'\\\\', json_str)
-                    
-                    import json
-                    data = json.loads(repaired_json)
-                    return TopicContent.parse_obj(data)
-                except Exception as first_error:
-                    logger.warning(f"Direct JSON completion failed in {provider_name}: {first_error}. Trying LlamaIndex structured program...")
-                    try:
-                        program = LLMTextCompletionProgram.from_defaults(
-                            output_cls=TopicContent,
-                            prompt_template_str=prompt_template_str,
-                            llm=llm_instance
-                        )
-                        return await program.acall(
-                            topic_title=topic.title,
-                            topic_desc=topic.description or "",
-                            matched_content=matched_content
-                        )
-                    except Exception as second_error:
-                        logger.error(f"Both completion methods failed for {provider_name}: {second_error}")
-                        raise first_error
-                        
-        return await retry_with_backoff(_call)
+    context_block = f"Relevant course material text:\n{matched_content}\n" if matched_content else ""
 
-    max_retries = 3
-    for attempt in range(1, max_retries + 1):
-        try:
-            result = await run_with_fallback(_try, op_name="generate_content_for_topic")
-            if not result.summary or len(result.summary.strip()) < 30 or "(Error generating summary)" in result.summary:
-                raise ValueError("Generated summary content is invalid or missing.")
-            return result.questions, result.summary
-        except Exception as e:
-            logger.warning(f"Attempt {attempt}/{max_retries} failed to generate content for topic '{topic.title}': {e}")
-            if attempt < max_retries:
-                await asyncio.sleep(2.0 * attempt)
-            else:
-                logger.error(f"All {max_retries} attempts failed to generate content for topic '{topic.title}'. Using fallback.")
-                fallback_summary = (
-                    f"# Study Guide: {topic.title}\n\n"
-                    f"## Overview\n"
-                    f"This lesson provides a comprehensive overview of **{topic.title}**, focusing on key theoretical foundations, formal definitions, and core principles within the course curriculum.\n\n"
-                    f"## Key Concepts\n"
-                    f"* **Definition**: Core properties and mathematical structure of {topic.title}.\n"
-                    f"* **Applications**: Main use cases and theoretical implications.\n"
-                    f"* **Formal Notations**: Standard mathematical and logical representations."
-                )
-                fallback_questions = [
-                    Question(
-                        question_text=f"What is the primary focus of {topic.title}?",
-                        options=[
-                            f"Understanding key concepts of {topic.title}",
-                            "Database query optimization",
-                            "Operating system thread scheduling",
-                            "Front-end layout styling"
-                        ],
-                        correct_answer=0
-                    ),
-                    Question(
-                        question_text=f"Which of the following is most relevant when studying {topic.title}?",
-                        options=[
-                            "Theoretical computer science and formal models",
-                            "Hardware wiring",
-                            "Network cabling",
-                            "Graphic design"
-                        ],
-                        correct_answer=0
-                    ),
-                    Question(
-                        question_text=f"True or False: {topic.title} is an essential component of this course curriculum.",
-                        options=["True", "False", "Neither", "Not applicable"],
-                        correct_answer=0
-                    )
-                ]
-                return fallback_questions, fallback_summary
+    # 1. Generate Summary (Pure Markdown Output — no JSON escaping needed!)
+    async def _try_summary(provider_name, llm_instance):
+        async with _api_semaphore:
+            prompt = (
+                f"You are an expert tutor creating a comprehensive study guide for a student.\n"
+                f"{course_context}"
+                f"Topic: {topic.title}\n"
+                f"Description: {topic.description or ''}\n"
+                f"{context_block}\n"
+                "Please generate a detailed, rich, multi-paragraph study guide in Markdown format.\n"
+                "Include:\n"
+                "1. An Overview explaining the topic thoroughly.\n"
+                "2. Key Concepts & Definitions with bullet points.\n"
+                "3. Theoretical / Mathematical Principles (use LaTeX $...$ for formulas if applicable).\n"
+                "4. Practical Examples / Summary Takeaways.\n\n"
+                "Respond with ONLY the Markdown study guide text (do NOT wrap in JSON)."
+            )
+            response = await llm_instance.acomplete(prompt)
+            summary_text = response.text.strip()
+            if summary_text.startswith("```markdown"):
+                summary_text = summary_text.replace("```markdown", "", 1).rstrip("` \n")
+            elif summary_text.startswith("```"):
+                summary_text = summary_text.replace("```", "", 1).rstrip("` \n")
+            return summary_text.strip()
+
+    # 2. Generate Quiz Questions (Clean JSON array of 3 questions)
+    async def _try_questions(provider_name, llm_instance):
+        import re
+        import json
+        async with _api_semaphore:
+            prompt = (
+                f"You are an expert tutor creating a quiz for a student.\n"
+                f"{course_context}"
+                f"Topic: {topic.title}\n"
+                f"Description: {topic.description or ''}\n"
+                f"{context_block}\n"
+                "Generate exactly 3 multiple-choice questions testing key concepts of this topic.\n\n"
+                "Respond ONLY with a JSON array wrapped inside a ```json ... ``` block:\n"
+                "[\n"
+                "  {\n"
+                '    "question_text": "...",\n'
+                '    "options": ["A", "B", "C", "D"],\n'
+                '    "correct_answer": 0\n'
+                "  }\n"
+                "]"
+            )
+            response = await llm_instance.acomplete(prompt)
+            raw_text = response.text.strip()
+            json_match = re.search(r"```json\s*(.*?)\s*```", raw_text, re.DOTALL)
+            json_str = json_match.group(1) if json_match else raw_text
+            repaired_json = re.sub(r'\\(?![\\"])', r'\\\\', json_str)
+            raw_questions = json.loads(repaired_json)
+            return [Question.parse_obj(q) for q in raw_questions]
+
+    # Run Summary Generation
+    try:
+        summary = await run_with_fallback(_try_summary, op_name="generate_summary")
+    except Exception as e:
+        logger.warning(f"Failed to generate custom summary for '{topic.title}': {e}. Using structured fallback.")
+        summary = (
+            f"# Study Guide: {topic.title}\n\n"
+            f"## Overview\n"
+            f"This lesson covers theoretical foundations, definitions, and core principles of **{topic.title}** within the curriculum.\n\n"
+            f"## Key Concepts\n"
+            f"* **Definition**: Core properties and mathematical structure of {topic.title}.\n"
+            f"* **Applications**: Main use cases and theoretical implications.\n"
+            f"* **Formal Notations**: Standard mathematical and logical representations."
+        )
+
+    # Run Questions Generation
+    try:
+        questions = await run_with_fallback(_try_questions, op_name="generate_questions")
+    except Exception as e:
+        logger.warning(f"Failed to generate questions for '{topic.title}': {e}. Using fallback questions.")
+        questions = [
+            Question(
+                question_text=f"What is the primary focus of {topic.title}?",
+                options=[
+                    f"Understanding key concepts of {topic.title}",
+                    "Database query optimization",
+                    "Operating system thread scheduling",
+                    "Front-end layout styling"
+                ],
+                correct_answer=0
+            ),
+            Question(
+                question_text=f"Which of the following is most relevant when studying {topic.title}?",
+                options=[
+                    "Theoretical computer science and formal models",
+                    "Hardware wiring",
+                    "Network cabling",
+                    "Graphic design"
+                ],
+                correct_answer=0
+            ),
+            Question(
+                question_text=f"True or False: {topic.title} is an essential component of this course curriculum.",
+                options=["True", "False", "Neither", "Not applicable"],
+                correct_answer=0
+            )
+        ]
+
+    return questions, summary
 
 
 async def validate_question_alignment(summary: str, question: Question) -> bool:
