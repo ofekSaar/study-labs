@@ -14,6 +14,7 @@ const MapNode = ({
     isCurrent = false,
     completionCount,
     totalEnrolled,
+    is_material_grounded,
 }) => {
     const [isHovered, setIsHovered] = useState(false);
 
@@ -59,13 +60,24 @@ const MapNode = ({
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
                         transition={{ duration: 0.15 }}
-                        className="absolute bottom-16 p-3 rounded-2xl w-48 glass-card border border-indigo-500/20 shadow-lg text-slate-800 dark:text-white pointer-events-none z-50 text-right flex flex-col gap-1"
+                        className="absolute bottom-16 p-3 rounded-2xl w-52 glass-card border border-indigo-500/20 shadow-lg text-slate-800 dark:text-white pointer-events-none z-50 text-right flex flex-col gap-1"
                         dir="rtl"
                     >
-                        <p className="text-[9px] font-black text-indigo-500 uppercase tracking-wider">
-                            שלב {index + 1} •{' '}
-                            {type === 'quiz' ? 'בוחן' : type === 'exam' ? 'מבחן מסכם' : 'שיעור'}
-                        </p>
+                        <div className="flex items-center justify-between">
+                            <p className="text-[9px] font-black text-indigo-500 uppercase tracking-wider">
+                                שלב {index + 1} •{' '}
+                                {type === 'quiz' ? 'בוחן' : type === 'exam' ? 'מבחן מסכם' : 'שיעור'}
+                            </p>
+                            {is_material_grounded === false ? (
+                                <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-600 dark:text-purple-300 border border-purple-500/30">
+                                    🤖 AI Generated
+                                </span>
+                            ) : (
+                                <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border border-emerald-500/30">
+                                    📄 Grounded
+                                </span>
+                            )}
+                        </div>
                         <p className="text-xs font-extrabold truncate">{label}</p>
                         <div className="flex items-center justify-between mt-1">
                             <span className="flex items-center gap-0.5 text-indigo-500 text-[10px] font-bold">
@@ -100,6 +112,22 @@ const MapNode = ({
                 className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 relative ${getStyles()}`}
             >
                 {getIcon()}
+
+                {/* Grounding Source Badge: 📄 Grounded vs 🤖 AI Generated */}
+                <div
+                    title={
+                        is_material_grounded === false
+                            ? 'Generated via AI general knowledge (no matching materials)'
+                            : 'Grounded in uploaded course materials'
+                    }
+                    className={`absolute -top-1.5 -left-1.5 w-6 h-6 rounded-lg text-[11px] font-black flex items-center justify-center shadow border ${
+                        is_material_grounded === false
+                            ? 'bg-purple-600 border-purple-400 text-white'
+                            : 'bg-emerald-600 border-emerald-400 text-white'
+                    }`}
+                >
+                    {is_material_grounded === false ? '🤖' : '📄'}
+                </div>
 
                 {/* Micro level indicator circle */}
                 <div
@@ -245,6 +273,7 @@ const GameMap = ({ nodes }) => {
                             isCurrent={node.status === 'active'}
                             completionCount={node.completionCount}
                             totalEnrolled={node.totalEnrolled}
+                            is_material_grounded={node.is_material_grounded}
                         />
                     ))}
                 </div>

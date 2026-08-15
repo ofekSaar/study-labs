@@ -42,8 +42,9 @@ jobs:
             echo "PR #$EXISTING already open — skipping creation."
             exit 0
           fi
+          TIMESTAMP=$(date +'%Y-%m-%d %H:%M')
           gh pr create \
             --base production \
             --head main \
-            --title "chore: sync main → production" \
-            --body "Automated PR created after push to main. Review and merge to trigger deployment."
+            --title "chore: release main → production ($TIMESTAMP)" \
+            --body "Automated PR created after push to main on $TIMESTAMP. Review and merge to trigger deployment."
