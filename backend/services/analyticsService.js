@@ -1,6 +1,7 @@
 import CourseNode from '../models/CourseNode.js';
 import Enrollment from '../models/Enrollment.js';
 import Progress from '../models/Progress.js';
+import QuizAttempt from '../models/QuizAttempt.js';
 import {
   AT_RISK_COMPLETION_PCT,
   AT_RISK_INACTIVITY_DAYS,
@@ -158,14 +159,21 @@ export const buildCourseAnalytics = async (courseId, course) => {
     students: nodeCompletionCounts[node._id.toString()] || 0,
   }));
 
-  const conceptMastery = nodes.map((node) => {
-    const mastery = hashMastery(node.title);
-    return {
-      topic: node.title,
-      masteryLevel: mastery,
-      status: mastery > MASTERY_EXCELLENT ? 'Excellent' : mastery > MASTERY_MODERATE ? 'Moderate' : 'Needs Focus',
-    };
-  });
+  const conceptMastery = await Promise.all(
+    nodes.map(async (node) => {
+      const attempts = await QuizAttempt.find({ courseNode: node._id });
+      let mastery = 100; // default to 100% if no attempts yet
+      if (attempts.length > 0) {
+        const sum = attempts.reduce((acc, att) => acc + att.score, 0);
+        mastery = Math.round(sum / attempts.length);
+      }
+      return {
+        topic: node.title,
+        masteryLevel: mastery,
+        status: mastery > MASTERY_EXCELLENT ? 'Excellent' : mastery > MASTERY_MODERATE ? 'Moderate' : 'Needs Focus',
+      };
+    })
+  );
 
   const quizNodes = nodes.filter((n) => n.type === 'quiz');
   const weakQuiz = quizNodes.length > 0 ? quizNodes[0].title : 'Quiz 1';
