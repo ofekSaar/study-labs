@@ -103,6 +103,15 @@ const ClassRoster = () => {
         }
     };
 
+    const handleSendMessage = () => {
+        const selectedEmails = Array.from(selected)
+            .map((id) => students.find((s) => s.student._id === id)?.student?.email)
+            .filter(Boolean);
+        if (selectedEmails.length > 0) {
+            window.open(`mailto:${selectedEmails.join(',')}`);
+        }
+    };
+
     const handleThresholdInput = (val) => {
         setThresholdInput(val);
         const num = parseInt(val);
@@ -304,7 +313,10 @@ const ClassRoster = () => {
                             {selected.size} student{selected.size > 1 ? 's' : ''} selected
                         </span>
                         <div className="flex items-center gap-3">
-                            <button className="flex items-center gap-2 bg-white/20 hover:bg-white/30 border border-white/30 px-4 py-2 rounded-xl text-sm font-bold transition-colors">
+                            <button
+                                onClick={handleSendMessage}
+                                className="flex items-center gap-2 bg-white/20 hover:bg-white/30 border border-white/30 px-4 py-2 rounded-xl text-sm font-bold transition-colors"
+                            >
                                 <Mail size={15} />
                                 Send Message
                             </button>
