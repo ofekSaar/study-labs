@@ -13,7 +13,14 @@ from llama_index.llms.gemini import Gemini
 from llama_index.llms.openai import OpenAI
 
 logger = logging.getLogger(__name__)
-from engine.db import update_course_progress, save_syllabus_blueprint, get_syllabus_blueprint
+from engine.db import (
+    update_course_progress,
+    save_syllabus_blueprint,
+    get_syllabus_blueprint,
+    get_db_handle,
+    save_initial_course_to_db,
+    save_topic_content_incremental,
+)
 from engine.semantic_filter import tag_materials_with_embeddings
 from engine.llm_utils import run_with_fallback, run_with_fallback_sync
 from engine.config import (
@@ -251,11 +258,20 @@ async def generate_content_for_topic(topic: Topic, course_title: str = None) -> 
                         
         return await retry_with_backoff(_call)
 
-    try:
-        result = await run_with_fallback(_try, op_name="generate_content_for_topic")
-        return result.questions, result.summary
-    except RuntimeError:
-        return [], f"# Summary for {topic.title}\n\n(Error generating summary)"
+    max_retries = 3
+    for attempt in range(1, max_retries + 1):
+        try:
+            result = await run_with_fallback(_try, op_name="generate_content_for_topic")
+            if not result.summary or "(Error generating summary)" in result.summary:
+                raise ValueError("Generated summary content is invalid or missing.")
+            return result.questions, result.summary
+        except Exception as e:
+            logger.warning(f"Attempt {attempt}/{max_retries} failed to generate content for topic '{topic.title}': {e}")
+            if attempt < max_retries:
+                await asyncio.sleep(2.0 * attempt)
+            else:
+                logger.error(f"All {max_retries} attempts failed to generate content for topic '{topic.title}'. Using fallback.")
+                return [], f"# Summary for {topic.title}\n\n(Error generating summary)"
 
 
 async def validate_question_alignment(summary: str, question: Question) -> bool:
@@ -373,16 +389,61 @@ async def create_course_pipeline(
         # Tag all materials using SBERT (CPU-heavy — run off the event loop)
         await asyncio.to_thread(tag_materials_with_embeddings, course, materials)
 
-        # In a new course, all topics are generated
+        # Pre-save initial course structure to DB to allow incremental generation
+        if course_id:
+            logger.info(f"Pre-saving initial course structure for course {course_id}...")
+            await asyncio.to_thread(save_initial_course_to_db, course, course_id)
+
+        # If course exists, load existing structure to identify already generated topics
+        existing_structure = {}
+        if course_id:
+            try:
+                db = get_db_handle()
+                if db is not None:
+                    from bson import ObjectId
+                    course_doc = db['courses'].find_one({"_id": ObjectId(course_id)})
+                    if course_doc and "course_structure" in course_doc:
+                        existing_structure = course_doc["course_structure"]
+            except Exception as db_err:
+                logger.warning(f"Failed to fetch existing course structure for caching: {db_err}")
+
+        # In a new course or retry, only generate topics that are missing or had errors
         updated_topics = []
         for lesson in course.lessons:
             for topic in lesson.topics:
-                updated_topics.append(topic)
+                topic_entry = existing_structure.get(lesson.title, {}).get(topic.title, {})
+                has_summary_id = topic_entry.get("summary_id")
+                has_quiz_id = topic_entry.get("quiz_id")
+                
+                is_valid = False
+                if has_summary_id and has_quiz_id:
+                    try:
+                        db = get_db_handle()
+                        sum_doc = db['summaries'].find_one({"_id": ObjectId(has_summary_id)})
+                        if sum_doc and sum_doc.get("content") and "(Error generating summary)" not in sum_doc.get("content"):
+                            is_valid = True
+                    except Exception:
+                        pass
+                
+                if is_valid:
+                    logger.info(f"Skipping generation for topic '{topic.title}' (already cached in DB)")
+                    try:
+                        db = get_db_handle()
+                        sum_doc = db['summaries'].find_one({"_id": ObjectId(has_summary_id)})
+                        quiz_doc = db['quizzes'].find_one({"_id": ObjectId(has_quiz_id)})
+                        topic.summary = sum_doc.get("content") if sum_doc else None
+                        topic.questions = quiz_doc.get("questions") if quiz_doc else []
+                    except Exception as cache_err:
+                        logger.error(f"Failed to load cached topic data for '{topic.title}': {cache_err}")
+                        updated_topics.append(topic)
+                else:
+                    updated_topics.append(topic)
+
         total_topics_to_gen = len(updated_topics)
 
     # Step 3: Generate Questions & Summaries (PARALLEL)
     if total_topics_to_gen > 0:
-        logger.info(f"Pipeline Step 3/3: Generating content (questions & summaries) for {total_topics_to_gen} topics in PARALLEL...")
+        logger.info(f"Pipeline Step 3/3: Generating content (questions & summaries) for {total_topics_to_gen} topics...")
         
         tasks = []
         completed_topics = 0
@@ -391,13 +452,28 @@ async def create_course_pipeline(
             nonlocal completed_topics
             logger.info(f"  → Generating content for: {lesson_title} / {t.title}")
             t.questions, t.summary = await generate_content_for_topic(t, course_title=course.title)
+            
             # Validate alignment of each question against the generated summary.
-            # Costs one extra LLM call per question — gated behind a config flag.
             if VALIDATE_QUESTION_ALIGNMENT and t.summary and t.questions:
                 alignment_tasks = [validate_question_alignment(t.summary, q) for q in t.questions]
                 warnings = await asyncio.gather(*alignment_tasks, return_exceptions=True)
                 for q, warning in zip(t.questions, warnings):
                     q.alignment_warning = bool(warning) if not isinstance(warning, Exception) else False
+            
+            # Save topic content incrementally
+            if course_id:
+                try:
+                    await asyncio.to_thread(
+                        save_topic_content_incremental,
+                        course_id,
+                        lesson_title,
+                        t.title,
+                        t.summary,
+                        t.questions
+                    )
+                except Exception as save_err:
+                    logger.error(f"Failed to save topic '{t.title}' incrementally: {save_err}")
+            
             logger.info(f"  ✓ Finished: {lesson_title} / {t.title} ({len(t.questions)} questions)")
             completed_topics += 1
             if course_id:
@@ -410,7 +486,7 @@ async def create_course_pipeline(
                     
         await asyncio.gather(*tasks)
     else:
-        logger.info("Differential Update: No topics matched the new materials. No content generation required.")
+        logger.info("Differential Update: All topics matched new materials and are cached. No content generation required.")
 
     logger.info("Pipeline COMPLETE.")
     return course, updated_topics

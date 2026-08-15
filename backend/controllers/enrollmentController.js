@@ -274,3 +274,39 @@ export const addStudentToCourse = async (req, res, next) => {
     next(error);
   }
 };
+
+/**
+ * Search students by name or email (Instructor only).
+ */
+export const searchStudents = async (req, res, next) => {
+  try {
+    const { query } = req.query;
+    if (!query || query.trim().length < 2) {
+      return res.json({ status: 'success', data: { students: [] } });
+    }
+
+    const searchRegex = new RegExp(query.trim(), 'i');
+    const students = await User.find({
+      $and: [
+        {
+          $or: [
+            { roles: 'student' },
+            { role: 'student' }
+          ]
+        },
+        {
+          $or: [
+            { name: searchRegex },
+            { email: searchRegex }
+          ]
+        }
+      ]
+    })
+    .select('name email avatar')
+    .limit(10);
+
+    res.json({ status: 'success', data: { students } });
+  } catch (error) {
+    next(error);
+  }
+};
