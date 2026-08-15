@@ -313,9 +313,20 @@ const CourseMap = () => {
                                                             key={n._id}
                                                             className="flex items-center justify-between px-4 py-3 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10"
                                                         >
-                                                            <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 truncate mr-3">
-                                                                {n.label}
-                                                            </span>
+                                                            <div className="flex items-center gap-2 truncate mr-3">
+                                                                <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 truncate">
+                                                                    {n.label}
+                                                                </span>
+                                                                {n.is_material_grounded ? (
+                                                                    <span className="shrink-0 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 border border-emerald-500/20">
+                                                                        📄 Grounded
+                                                                    </span>
+                                                                ) : (
+                                                                    <span className="shrink-0 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-purple-500/10 text-purple-600 dark:bg-purple-500/20 dark:text-purple-400 border border-purple-500/20">
+                                                                        🤖 AI Generated
+                                                                    </span>
+                                                                )}
+                                                            </div>
                                                             <button
                                                                 onClick={() =>
                                                                     setEditingQuizNode(n)
