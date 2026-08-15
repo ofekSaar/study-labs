@@ -8,7 +8,7 @@ import os
 
 # ── Semantic Filtering ────────────────────────────────────────────────────────
 SYLLABUS_SIMILARITY_THRESHOLD = 0.60   # minimum cosine similarity to keep a chunk
-TOPIC_MATERIAL_THRESHOLD = 0.30        # strict threshold: >= 0.30 grounds real course materials, < 0.30 rejects unrelated files
+TOPIC_MATERIAL_THRESHOLD = 0.25        # calibrated threshold: 0.25 grounds real Hebrew notes (0.27+) while rejecting math noise (<0.23)
 
 # ── MongoDB ───────────────────────────────────────────────────────────────────
 MONGO_CONNECTION_TIMEOUT_MS = 5000     # serverSelectionTimeoutMS for MongoClient
