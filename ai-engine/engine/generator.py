@@ -197,16 +197,16 @@ async def generate_content_for_topic(topic: Topic, course_title: str = None) -> 
         "1. A detailed, multi-paragraph study summary in Markdown format, including Key Concepts, Definitions, Bullet Points, and LaTeX formulas ($...$ for inline, $$...$$ for block math).\n"
         "2. Exactly 3 multiple-choice questions testing key concepts of this topic.\n\n"
         "IMPORTANT: You MUST respond with ONLY a valid JSON object wrapped inside a ```json ... ``` code block conforming to this JSON schema:\n"
-        "{\n"
+        "{{\n"
         '  "summary": "# Study Guide Title\\n\\n## Overview\\nDetailed text...",\n'
         '  "questions": [\n'
-        '    {\n'
+        '    {{\n'
         '      "question_text": "...",\n'
         '      "options": ["...", "...", "...", "..."],\n'
         '      "correct_answer": 0\n'
-        '    }\n'
+        '    }}\n'
         '  ]\n'
-        "}\n\n"
+        "}}\n\n"
         "Properly escape all internal quotes and backslashes (e.g. \\\\delta, \\\\rightarrow) so JSON parsing succeeds."
     )
     
@@ -214,10 +214,22 @@ async def generate_content_for_topic(topic: Topic, course_title: str = None) -> 
         import re
         async def _call():
             async with _api_semaphore:
-                formatted_prompt = prompt_template_str.format(
-                    topic_title=topic.title,
-                    topic_desc=topic.description or "",
-                    matched_content=matched_content
+                formatted_prompt = (
+                    f"You are an expert tutor creating a comprehensive study guide and a quiz for a student.\n"
+                    f"{course_context}"
+                    f"Topic: {topic.title}\n"
+                    f"Description: {topic.description or ''}\n"
+                    f"Material content:\n{matched_content}\n\n"
+                    "Please generate:\n"
+                    "1. A detailed, rich, multi-paragraph study summary in Markdown format (covering overview, key concepts, definitions, formal proofs, and LaTeX math formulas).\n"
+                    "2. Exactly 3 multiple-choice questions testing key concepts of this topic.\n\n"
+                    "IMPORTANT: Output ONLY a valid JSON object inside a ```json ... ``` code block with the schema:\n"
+                    "{\n"
+                    '  "summary": "# Topic Title\\n\\n## Overview\\nContent...",\n'
+                    '  "questions": [\n'
+                    '    {"question_text": "...", "options": ["A", "B", "C", "D"], "correct_answer": 0}\n'
+                    '  ]\n'
+                    "}"
                 )
                 try:
                     # Try direct raw completion first for complete control over JSON formatting
