@@ -116,17 +116,17 @@ const MapNode = ({
                 {/* Grounding Source Badge: 📄 Grounded vs 🤖 AI Generated */}
                 <div
                     title={
-                        is_material_grounded === false
+                        (isMaterialGrounded === false || is_material_grounded === false)
                             ? 'Generated via AI general knowledge (no matching materials)'
                             : 'Grounded in uploaded course materials'
                     }
                     className={`absolute -top-1.5 -left-1.5 w-6 h-6 rounded-lg text-[11px] font-black flex items-center justify-center shadow border ${
-                        is_material_grounded === false
+                        (isMaterialGrounded === false || is_material_grounded === false)
                             ? 'bg-purple-600 border-purple-400 text-white'
                             : 'bg-emerald-600 border-emerald-400 text-white'
                     }`}
                 >
-                    {is_material_grounded === false ? '🤖' : '📄'}
+                    {(isMaterialGrounded === false || is_material_grounded === false) ? '🤖' : '📄'}
                 </div>
 
                 {/* Micro level indicator circle */}
@@ -273,7 +273,8 @@ const GameMap = ({ nodes }) => {
                             isCurrent={node.status === 'active'}
                             completionCount={node.completionCount}
                             totalEnrolled={node.totalEnrolled}
-                            is_material_grounded={node.is_material_grounded}
+                            is_material_grounded={node.isMaterialGrounded ?? node.is_material_grounded}
+                            isMaterialGrounded={node.isMaterialGrounded ?? node.is_material_grounded}
                         />
                     ))}
                 </div>
