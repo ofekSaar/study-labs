@@ -72,7 +72,6 @@ const StepMaterials = () => {
     const syllabus = useMemo(() => watchedSyllabus || [], [watchedSyllabus]);
     const watchedMaterials = watch('materials');
     const materials = useMemo(() => watchedMaterials || [], [watchedMaterials]);
-    const analyzeImages = watch('analyzeImages');
 
     const quality = materialQuality(materials.length);
 
