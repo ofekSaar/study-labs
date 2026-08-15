@@ -101,7 +101,7 @@ export const generateRoadmapInBackground = async (
       xpReward: node.xpReward || 150,
       lessonContent: node.lessonContent || null,
       quizData: node.quizData || undefined,
-      isMaterialGrounded: node.isMaterialGrounded !== false,
+      isMaterialGrounded: Boolean(node.isMaterialGrounded),
     }));
 
     if (isUpdate) {

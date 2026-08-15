@@ -52,7 +52,7 @@ const LessonQuiz = () => {
             setLoadError(false);
             try {
                 const nodeRes = await api.get(`/api/courses/${courseId}/nodes/${id}/content`);
-                setNodeData(nodeRes.data);
+                setNodeData(nodeRes.data?.data || nodeRes.data);
                 try {
                     const quizRes = await api.get(`/api/quizzes/node/${id}`);
                     setQuizData(quizRes.data.questions || []);

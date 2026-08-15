@@ -459,7 +459,7 @@ export const getNodeContent = async (req, res, next) => {
         title: node.title, 
         type: node.type, 
         content: content || '', 
-        isMaterialGrounded: node.isMaterialGrounded !== false 
+        isMaterialGrounded: Boolean(node.isMaterialGrounded)
       },
     });
   } catch (error) {
