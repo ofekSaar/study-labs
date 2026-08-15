@@ -236,7 +236,7 @@ const MyEnrollments = () => {
                                             <img
                                                 src={
                                                     course.instructor?.avatar ||
-                                                    'https://via.placeholder.com/150'
+                                                    `https://ui-avatars.com/api/?name=${encodeURIComponent(course.instructor?.name || 'Instructor')}&background=random`
                                                 }
                                                 alt={
                                                     course.instructor?.name
