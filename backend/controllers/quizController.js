@@ -18,8 +18,10 @@ export const getQuizQuestions = async (req, res, next) => {
       throw createError(400, 'This node does not have quiz data');
     }
 
-    // Verify enrollment if student
-    if (req.user.role === 'student') {
+    // Verify enrollment if student and not the course instructor (creator)
+    const courseDoc = await Course.findById(node.course);
+    const isCreator = courseDoc && courseDoc.instructor && courseDoc.instructor.toString() === req.user._id.toString();
+    if (req.user.role === 'student' && !isCreator) {
       const enrollment = await Enrollment.findOne({
         student: req.user._id,
         course: node.course,
@@ -159,8 +161,10 @@ export const submitQuiz = async (req, res, next) => {
       throw createError(400, 'This node does not have quiz data');
     }
 
-    // Verify enrollment if student
-    if (req.user.role === 'student') {
+    // Verify enrollment if student and not the course instructor (creator)
+    const courseDoc = await Course.findById(node.course);
+    const isCreator = courseDoc && courseDoc.instructor && courseDoc.instructor.toString() === req.user._id.toString();
+    if (req.user.role === 'student' && !isCreator) {
       const enrollment = await Enrollment.findOne({
         student: req.user._id,
         course: node.course,

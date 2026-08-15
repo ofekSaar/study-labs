@@ -350,51 +350,6 @@ const StepMaterials = () => {
                     </div>
                 )}
             </div>
-
-            <div className="border-t border-gray-100" />
-
-            {/* Image Analysis Toggle */}
-            <div
-                className={`rounded-2xl border-2 p-4 transition-all duration-200 ${analyzeImages ? 'border-purple-200 bg-gradient-to-r from-purple-50 to-indigo-50' : 'border-gray-100 bg-gray-50'}`}
-            >
-                <div className="flex items-start justify-between gap-4">
-                    <div className="flex items-start gap-3">
-                        <div
-                            className={`p-2.5 rounded-xl shrink-0 mt-0.5 transition-colors ${analyzeImages ? 'bg-purple-100 text-studylabs-purple' : 'bg-gray-200 text-gray-400'}`}
-                        >
-                            <Eye size={18} />
-                        </div>
-                        <div>
-                            <div className="flex items-center gap-2 mb-0.5">
-                                <h4 className="font-bold text-gray-900 text-sm">
-                                    AI Image Analysis
-                                </h4>
-                                <span className="text-[10px] font-black bg-studylabs-purple text-white px-2 py-0.5 rounded-full uppercase tracking-wide">
-                                    PRO TIP
-                                </span>
-                            </div>
-                            <p className="text-xs text-gray-500 leading-relaxed">
-                                Analyzes charts, diagrams, and photos embedded in your documents to
-                                include their content in lessons.
-                            </p>
-                            <div className="flex items-center gap-1.5 mt-2 text-xs text-amber-600 bg-amber-50 border border-amber-100 px-2 py-1 rounded-lg w-fit">
-                                <Info size={11} />
-                                <span>Uses additional API credits (~$0.01 per image)</span>
-                            </div>
-                        </div>
-                    </div>
-                    <label className="relative inline-flex items-center cursor-pointer shrink-0 mt-1">
-                        <input
-                            type="checkbox"
-                            checked={analyzeImages || false}
-                            onChange={(e) => setValue('analyzeImages', e.target.checked)}
-                            aria-label="Analyze images in documents"
-                            className="sr-only peer"
-                        />
-                        <div className="w-12 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-6 after:content-[''] after:absolute after:top-0.5 after:start-0.5 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-studylabs-purple shadow-inner"></div>
-                    </label>
-                </div>
-            </div>
         </div>
     );
 };

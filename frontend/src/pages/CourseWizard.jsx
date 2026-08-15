@@ -20,14 +20,12 @@ import useToastStore from '../store/toastStore';
 
 import StepCoreDetails from '../components/wizard/StepCoreDetails';
 import StepMaterials from '../components/wizard/StepMaterials';
-import StepAIConfig from '../components/wizard/StepAIConfig';
 import StepGamification from '../components/wizard/StepGamification';
 import logger from '../utils/logger';
 
 const steps = [
     { title: 'Details', component: StepCoreDetails, icon: FileText, xp: 50 },
     { title: 'Materials', component: StepMaterials, icon: UploadCloud, xp: 50 },
-    { title: 'AI Config', component: StepAIConfig, icon: Brain, xp: 50 },
     { title: 'Launch', component: StepGamification, icon: Trophy, xp: 50 },
 ];
 
@@ -65,7 +63,6 @@ const CourseWizard = () => {
         let fieldsToValidate = [];
         if (currentStep === 0) fieldsToValidate = ['title', 'department', 'description'];
         else if (currentStep === 1) fieldsToValidate = ['syllabus', 'materials'];
-        else if (currentStep === 2) fieldsToValidate = ['nodeCount', 'quizFrequency'];
 
         const isValid = await methods.trigger(fieldsToValidate);
         if (isValid) setCurrentStep((prev) => Math.min(prev + 1, steps.length - 1));

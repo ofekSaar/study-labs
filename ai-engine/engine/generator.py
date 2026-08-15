@@ -232,7 +232,14 @@ async def generate_content_for_topic(topic: Topic, course_title: str = None) -> 
                     json_str = json_match.group(1) if json_match else raw_text
                     
                     # Repair unescaped LaTeX backslashes (e.g. \delta -> \\delta)
-                    repaired_json = re.sub(r'\\(?!["\\/bfnrt]|u[0-9a-fA-F]{4})', r'\\\\', json_str)
+                    # We escape any backslash NOT followed by valid JSON escape character sequences:
+                    # (", \, /, b, f, n, r, t, or uXXXX) while preserving already-escaped ones.
+                    pattern = re.compile(r'(\\(?:["\\/bfnrt]|u[0-9a-fA-F]{4}))|\\')
+                    def repl(match):
+                        if match.group(1):
+                            return match.group(1)
+                        return r'\\'
+                    repaired_json = pattern.sub(repl, json_str)
                     
                     try:
                         import json
