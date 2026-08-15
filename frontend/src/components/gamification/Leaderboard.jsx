@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trophy, Medal, Award, TrendingUp, Crown } from 'lucide-react';
 import api from '../../utils/api';
-import useCourseStore from '../../store/courseStore';
+import AvatarDisplay from '../instructor/AvatarDisplay';
 import useGamificationStore, { AVATARS } from '../../store/gamificationStore';
 import { io } from 'socket.io-client';
 
@@ -27,15 +27,11 @@ const RANK_STYLES = [
     },
 ];
 
-const MOCK_EMOJIS = ['🥷', '🦄', '🧠', '🎓', '🦊', '🦁'];
-
 const Leaderboard = ({ courseId }) => {
     const [entries, setEntries] = useState([]);
     const [period, setPeriod] = useState('weekly');
     const [isLoading, setIsLoading] = useState(true);
-    const [isMockData, setIsMockData] = useState(false);
     const [refreshKey, setRefreshKey] = useState(0);
-    const { user: currentUser } = useCourseStore();
     const { activeAvatar } = useGamificationStore();
 
     const currentUserEmoji = AVATARS.find((a) => a.id === activeAvatar)?.emoji || '🎓';
@@ -69,36 +65,21 @@ const Leaderboard = ({ courseId }) => {
                     : `/api/progress/leaderboard?period=${period}`;
                 const { data } = await api.get(endpoint);
 
-                // Map avatars/emojis if not present
-                const mapped = (data.leaderboard || []).map((e, idx) => ({
-                    ...e,
-                    avatar: e.isYou ? currentUserEmoji : MOCK_EMOJIS[idx % MOCK_EMOJIS.length],
-                }));
-                setEntries(mapped);
-                setIsMockData(false);
+                // The current user's avatar comes from their live shop selection, not the stored one
+                setEntries(
+                    (data.leaderboard || []).map((e) => ({
+                        ...e,
+                        avatar: e.isYou ? currentUserEmoji : e.avatar,
+                    }))
+                );
             } catch {
-                // Leaderboard API unavailable — fall back to demo data, but flag it so the UI can be transparent about it
-                setIsMockData(true);
-                setEntries([
-                    { rank: 1, name: 'Alex K.', xp: 1850, avatar: '🥷', isYou: false },
-                    { rank: 2, name: 'Sarah M.', xp: 1620, avatar: '🦄', isYou: false },
-                    { rank: 3, name: 'David L.', xp: 1410, avatar: '🧠', isYou: false },
-                    {
-                        rank: 4,
-                        name: 'You',
-                        xp: currentUser?.totalXP || 0,
-                        avatar: currentUserEmoji,
-                        isYou: true,
-                    },
-                    { rank: 5, name: 'Emma R.', xp: 980, avatar: '🦊', isYou: false },
-                    { rank: 6, name: 'Tom B.', xp: 760, avatar: '🦁', isYou: false },
-                ]);
+                setEntries([]);
             } finally {
                 setIsLoading(false);
             }
         };
         fetchLeaderboard();
-    }, [courseId, period, currentUserEmoji, currentUser?.totalXP, refreshKey]);
+    }, [courseId, period, currentUserEmoji, refreshKey]);
 
     return (
         <div
@@ -116,14 +97,6 @@ const Leaderboard = ({ courseId }) => {
                     <h3 className="text-sm font-black text-slate-800 dark:text-white">
                         Leaderboard
                     </h3>
-                    {!isLoading && isMockData && (
-                        <span
-                            className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20"
-                            title="Live leaderboard data is unavailable right now — showing demo data."
-                        >
-                            Demo
-                        </span>
-                    )}
                 </div>
                 {/* Period toggle */}
                 <div className="flex bg-slate-100 dark:bg-white/5 rounded-xl p-0.5 gap-0.5 border border-slate-200/50 dark:border-white/5">
@@ -146,14 +119,21 @@ const Leaderboard = ({ courseId }) => {
             {/* Entries */}
             <div className="relative z-10 flex-1 space-y-2">
                 <AnimatePresence mode="popLayout">
-                    {isLoading
-                        ? Array.from({ length: 6 }).map((_, i) => (
-                              <div
-                                  key={i}
-                                  className="h-12 rounded-2xl bg-slate-100 dark:bg-white/5 animate-pulse"
-                              />
-                          ))
-                        : entries.map((entry, i) => {
+                    {isLoading ? (
+                        Array.from({ length: 6 }).map((_, i) => (
+                            <div
+                                key={i}
+                                className="h-12 rounded-2xl bg-slate-100 dark:bg-white/5 animate-pulse"
+                            />
+                        ))
+                    ) : entries.length === 0 ? (
+                        <div className="py-10 flex flex-col items-center gap-2 text-slate-400 dark:text-white/30">
+                            <Trophy size={26} className="opacity-30" />
+                            <p className="text-xs font-bold">No rankings yet</p>
+                            <p className="text-[10px]">Earn XP to appear here!</p>
+                        </div>
+                    ) : (
+                        entries.map((entry, i) => {
                               const rankStyle = RANK_STYLES[entry.rank - 1] || null;
                               return (
                                   <motion.div
@@ -179,16 +159,12 @@ const Leaderboard = ({ courseId }) => {
                                           {rankStyle ? rankStyle.icon : entry.rank}
                                       </div>
 
-                                      {/* Avatar Emoji */}
-                                      <div
-                                          className={`w-9 h-9 rounded-xl flex items-center justify-center text-xl flex-shrink-0 border transition-all duration-300 ${
-                                              entry.isYou
-                                                  ? 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white border-indigo-600 shadow-md'
-                                                  : 'bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-white/70 border-slate-200/60 dark:border-white/10 shadow-sm'
-                                          }`}
-                                      >
-                                          {entry.avatar || '🎓'}
-                                      </div>
+                                      {/* Avatar — real profile picture, emoji, or initial */}
+                                      <AvatarDisplay
+                                          avatar={entry.avatar}
+                                          name={entry.name}
+                                          size="w-9 h-9"
+                                      />
 
                                       {/* Name */}
                                       <span
@@ -213,7 +189,8 @@ const Leaderboard = ({ courseId }) => {
                                       </div>
                                   </motion.div>
                               );
-                          })}
+                          })
+                    )}
                 </AnimatePresence>
             </div>
         </div>

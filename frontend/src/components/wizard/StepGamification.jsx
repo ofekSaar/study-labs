@@ -2,11 +2,8 @@ import React from 'react';
 import { useFormContext } from 'react-hook-form';
 import { Trophy, Star, Zap, Medal, Flame, Crown, Sparkles } from 'lucide-react';
 
-const MOCK_LEADERBOARD = [
-    { rank: 1, name: 'Alex K.', xp: 3840, avatar: '🦊' },
-    { rank: 2, name: 'Sarah M.', xp: 3210, avatar: '🐯' },
-    { rank: 3, name: 'James R.', xp: 2990, avatar: '🦅' },
-];
+// Layout preview only — the course has no students yet, so no names or scores are shown.
+const PREVIEW_ROWS = [1, 2, 3];
 
 const getEngagementScore = (xpMultiplier, leaderboardEnabled) => {
     const score = (parseFloat(xpMultiplier) - 1) * 4 + (leaderboardEnabled ? 3 : 0);
@@ -228,21 +225,19 @@ const StepGamification = () => {
                         </div>
                     )}
                     <div className="space-y-2">
-                        {MOCK_LEADERBOARD.map((entry) => (
+                        {PREVIEW_ROWS.map((rank) => (
                             <div
-                                key={entry.rank}
-                                className={`flex items-center gap-3 p-2.5 rounded-xl ${entry.rank === 1 ? 'bg-amber-50 border border-amber-100' : 'bg-white border border-gray-50'}`}
+                                key={rank}
+                                className={`flex items-center gap-3 p-2.5 rounded-xl ${rank === 1 ? 'bg-amber-50 border border-amber-100' : 'bg-white border border-gray-50'}`}
                             >
                                 <span className="text-base">
-                                    {entry.rank === 1 ? '🥇' : entry.rank === 2 ? '🥈' : '🥉'}
+                                    {rank === 1 ? '🥇' : rank === 2 ? '🥈' : '🥉'}
                                 </span>
-                                <span className="text-lg">{entry.avatar}</span>
-                                <span className="flex-1 font-medium text-gray-700 text-sm">
-                                    {entry.name}
-                                </span>
-                                <div className="flex items-center gap-1 text-amber-600 font-bold text-xs">
+                                <div className="w-7 h-7 rounded-full bg-gray-100" />
+                                <div className="flex-1 h-2.5 rounded-full bg-gray-100" />
+                                <div className="flex items-center gap-1 text-amber-300 font-bold text-xs">
                                     <Zap size={11} />
-                                    {entry.xp.toLocaleString()} XP
+                                    <span className="w-10 h-2.5 rounded-full bg-gray-100 inline-block" />
                                 </div>
                             </div>
                         ))}
