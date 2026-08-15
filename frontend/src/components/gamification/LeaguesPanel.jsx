@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { Shield, Trophy, ArrowUpCircle, ArrowDownCircle, AlertCircle, Clock } from 'lucide-react';
-import { motion } from 'framer-motion';
-import useCourseStore from '../../store/courseStore';
+import React, { useEffect, useState } from 'react';
+import { Shield, Trophy, ArrowUpCircle, ArrowDownCircle } from 'lucide-react';
+import api from '../../utils/api';
+import AvatarDisplay from '../instructor/AvatarDisplay';
 import useGamificationStore from '../../store/gamificationStore';
 
 const LEAGUES = [
@@ -38,10 +38,17 @@ const LEAGUES = [
 ];
 
 const LeaguesPanel = () => {
-    const { user: currentUser } = useCourseStore();
     const { stats } = useGamificationStore();
+    const [rankedList, setRankedList] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
 
-    const xp = currentUser?.totalXP ?? stats.total_xp ?? 0;
+    // Real weekly standings — same source as the leaderboard page
+    useEffect(() => {
+        api.get('/api/progress/leaderboard?period=weekly')
+            .then(({ data }) => setRankedList(data.leaderboard || []))
+            .catch(() => setRankedList([]))
+            .finally(() => setIsLoading(false));
+    }, []);
 
     // Dynamically calculate which league the user is in based on level
     const userLevel = stats.level || 1;
@@ -49,27 +56,6 @@ const LeaguesPanel = () => {
     const activeLeague = LEAGUES[leagueIndex];
     const nextLeagueName = leagueIndex < LEAGUES.length - 1 ? LEAGUES[leagueIndex + 1].name : null;
     const prevLeagueName = leagueIndex > 0 ? LEAGUES[leagueIndex - 1].name : null;
-
-    // Local countdown timer mockup
-    const [timeLeft] = useState('3 days, 11 hours left');
-
-    // Create league competitors where user is dynamically positioned based on their XP
-    const baseCompetitors = [
-        { name: 'Lior Cohen', xp: 2150, avatar: '🥷' },
-        { name: 'Noa Levi', xp: 1980, avatar: '🦄' },
-        { name: 'Ido Mizrahi', xp: 1720, avatar: '🧠' },
-        { name: 'Shira Albaz', xp: 1250, avatar: '🦊' },
-        { name: 'Amir Avraham', xp: 950, avatar: '🦁' },
-        { name: 'Michal Yosef', xp: 810, avatar: '🐼' },
-    ];
-
-    const allParticipants = [
-        ...baseCompetitors,
-        { name: 'You', xp: xp, avatar: '🎓', isYou: true },
-    ].sort((a, b) => b.xp - a.xp);
-
-    // Map ranks after sort
-    const rankedList = allParticipants.map((p, idx) => ({ ...p, rank: idx + 1 }));
 
     return (
         <div className="glass-card rounded-3xl p-5 shadow-lg relative overflow-hidden group flex flex-col h-full font-medium">
@@ -94,21 +80,35 @@ const LeaguesPanel = () => {
                         </span>
                     </h3>
                     <p className="text-xs text-slate-400 dark:text-white/40 mt-1 flex items-center justify-center sm:justify-start gap-1">
-                        <Clock size={12} />
-                        <span>{timeLeft} • Keep going to rank up!</span>
+                        <span>Last 7 days • Keep going to rank up!</span>
                     </p>
                 </div>
             </div>
 
             {/* Competitors List */}
             <div className="relative z-10 flex-1 space-y-2.5 mt-4 overflow-y-auto max-h-[320px] custom-scrollbar">
+                {isLoading &&
+                    Array.from({ length: 5 }).map((_, i) => (
+                        <div
+                            key={i}
+                            className="h-[60px] rounded-2xl bg-slate-100 dark:bg-white/5 animate-pulse"
+                        />
+                    ))}
+
+                {!isLoading && rankedList.length === 0 && (
+                    <div className="py-10 flex flex-col items-center gap-2 text-slate-400 dark:text-white/30">
+                        <Trophy size={26} className="opacity-30" />
+                        <p className="text-xs font-bold">No one has earned XP this week yet</p>
+                    </div>
+                )}
+
                 {rankedList.map((entry) => {
                     const isPromotionZone = entry.rank <= 3;
                     const isDemotionZone = entry.rank >= rankedList.length - 1;
 
                     return (
                         <div
-                            key={entry.name}
+                            key={entry.userId || entry.rank}
                             className={`flex items-center gap-3 p-3 rounded-2xl transition-all duration-300 border ${
                                 entry.isYou
                                     ? 'bg-gradient-to-l from-indigo-500/10 via-purple-500/10 to-transparent border-indigo-500/30 dark:border-indigo-400/40 shadow-md shadow-indigo-500/5'
@@ -139,15 +139,11 @@ const LeaguesPanel = () => {
                             </div>
 
                             {/* User Avatar */}
-                            <div
-                                className={`w-9 h-9 rounded-xl flex items-center justify-center text-xl flex-shrink-0 border transition-all duration-300 ${
-                                    entry.isYou
-                                        ? 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white border-indigo-600 shadow-md'
-                                        : 'bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-white/70 border-slate-200/60 dark:border-white/10 shadow-sm'
-                                }`}
-                            >
-                                {entry.avatar}
-                            </div>
+                            <AvatarDisplay
+                                avatar={entry.avatar}
+                                name={entry.name}
+                                size="w-9 h-9"
+                            />
 
                             {/* User Name */}
                             <span
@@ -157,7 +153,7 @@ const LeaguesPanel = () => {
                                         : 'text-slate-800 dark:text-white/95'
                                 }`}
                             >
-                                {entry.isYou ? currentUser?.name || 'You' : entry.name}
+                                {entry.name}
                                 {entry.isYou && (
                                     <span className="ml-1.5 text-[8px] font-black text-white bg-indigo-500/80 dark:bg-indigo-500/90 px-1.5 py-0.5 rounded-md uppercase shadow-sm">
                                         You
