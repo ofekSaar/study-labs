@@ -8,7 +8,7 @@ import os
 
 # ── Semantic Filtering ────────────────────────────────────────────────────────
 SYLLABUS_SIMILARITY_THRESHOLD = 0.60   # minimum cosine similarity to keep a chunk
-TOPIC_MATERIAL_THRESHOLD = 0.18        # optimal threshold: rejects unrelated files while grounding relevant notes
+TOPIC_MATERIAL_THRESHOLD = 0.20        # exact mathematical sweet spot: >= 0.20 grounds real notes, < 0.20 rejects unrelated files
 
 # ── MongoDB ───────────────────────────────────────────────────────────────────
 MONGO_CONNECTION_TIMEOUT_MS = 5000     # serverSelectionTimeoutMS for MongoClient

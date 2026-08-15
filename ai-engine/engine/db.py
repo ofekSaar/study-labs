@@ -216,13 +216,19 @@ def ensure_ttl_index():
 
 def save_to_staging(filename: str, content: str) -> str:
     """
-    Saves extracted text to the staging collection.
+    Saves parsed text or blueprint content to the 'staging_materials' collection.
     Returns the ObjectId as a string.
     """
     db = get_db_handle()
     if db is None:
         return None
         
+    # Safeguard against MongoDB BSON 16MB limit (16,793,598 bytes)
+    max_bytes = 12_000_000  # 12 MB safe margin
+    if content and len(content.encode('utf-8')) > max_bytes:
+        logger.warning(f"Staging content for '{filename}' is {len(content.encode('utf-8'))} bytes. Truncating for MongoDB BSON limit.")
+        content = content[:max_bytes]
+
     doc = {
         "filename": filename,
         "content": content,
@@ -275,6 +281,19 @@ def save_syllabus_blueprint(course_id: str, syllabus_name: str, blueprint: dict)
     db = get_db_handle()
     if db is None:
         return None
+
+    # Safeguard blueprint against MongoDB 16MB BSON limit
+    import json
+    try:
+        bp_bytes = len(json.dumps(blueprint, default=str).encode('utf-8'))
+        if bp_bytes > 12_000_000 and isinstance(blueprint, dict):
+            logger.warning(f"Blueprint size is {bp_bytes} bytes. Truncating matched_materials to enforce BSON limit.")
+            for l in blueprint.get("lessons", []):
+                for t in l.get("topics", []):
+                    if "matched_materials" in t and isinstance(t["matched_materials"], list):
+                        t["matched_materials"] = [m[:500] for m in t["matched_materials"]]
+    except Exception as e:
+        logger.warning(f"Blueprint BSON check error: {e}")
 
     doc = {
         "course_id": course_id,

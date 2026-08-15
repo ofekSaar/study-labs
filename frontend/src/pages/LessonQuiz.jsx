@@ -342,7 +342,7 @@ const LessonQuiz = () => {
                                     Study Guide
                                 </h2>
                             </div>
-                            {nodeData?.isMaterialGrounded === false && (
+                            {(nodeData?.isMaterialGrounded === false || nodeData?.is_material_grounded === false) && (
                                 <div className="bg-amber-500/10 border-b border-amber-500/20 px-6 sm:px-8 py-3.5 flex items-center gap-3 text-amber-800 dark:text-amber-300">
                                     <span className="text-xl">⚠️</span>
                                     <div className="text-xs sm:text-sm font-semibold leading-normal">
