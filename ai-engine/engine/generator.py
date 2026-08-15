@@ -187,67 +187,67 @@ async def generate_content_for_topic(topic: Topic, course_title: str = None) -> 
     course_context = f"Course Context: {course_title}\n" if course_title else ""
     
     prompt_template_str = (
-        "You are an expert tutor creating a study guide and a quiz for a student.\n"
+        "You are an expert tutor creating a comprehensive study guide and a quiz for a student.\n"
         f"{course_context}"
         "Topic: {topic_title}\n"
         "Description: {topic_desc}\n"
         "Material content:\n"
         "{matched_content}\n\n"
         "Please generate:\n"
-        "1. A concise but comprehensive study summary in Markdown format.\n"
-        "2. Exactly 3 multiple-choice questions based on the topic and materials.\n\n"
-        "IMPORTANT: The content must be strictly tailored to the specific course context. "
-        "For example, if the course is 'Computational Models' and the topic is 'Regular Expressions' (or 'ביטויים רגולריים'), "
-        "focus on the mathematical and theoretical definitions (formal languages, DFA equivalence, union, Kleene star closure) "
-        "rather than general software engineering regex patterns (like pattern matching syntax in python/js, phone/email validation regex).\n"
-        "IMPORTANT: Always use LaTeX for mathematical formulas, variables, and state transitions. "
-        "Use single dollar signs $...$ for inline math (e.g., $E=mc^2$ or $q_0 \\rightarrow q_1$) and double dollar signs $$...$$ for block equations. "
-        "Do NOT use parentheses ( ) or plain text for math symbols.\n"
-        "IMPORTANT: You must output strictly valid JSON conforming to the schema. "
-        "Properly escape all internal quotes, backslashes, and newlines so the parser does not fail."
+        "1. A detailed, multi-paragraph study summary in Markdown format, including Key Concepts, Definitions, Bullet Points, and LaTeX formulas ($...$ for inline, $$...$$ for block math).\n"
+        "2. Exactly 3 multiple-choice questions testing key concepts of this topic.\n\n"
+        "IMPORTANT: You MUST respond with ONLY a valid JSON object wrapped inside a ```json ... ``` code block conforming to this JSON schema:\n"
+        "{\n"
+        '  "summary": "# Study Guide Title\\n\\n## Overview\\nDetailed text...",\n'
+        '  "questions": [\n'
+        '    {\n'
+        '      "question_text": "...",\n'
+        '      "options": ["...", "...", "...", "..."],\n'
+        '      "correct_answer": 0\n'
+        '    }\n'
+        '  ]\n'
+        "}\n\n"
+        "Properly escape all internal quotes and backslashes (e.g. \\\\delta, \\\\rightarrow) so JSON parsing succeeds."
     )
     
     async def _try(provider_name, llm_instance):
         import re
         async def _call():
             async with _api_semaphore:
+                formatted_prompt = prompt_template_str.format(
+                    topic_title=topic.title,
+                    topic_desc=topic.description or "",
+                    matched_content=matched_content
+                )
                 try:
-                    # Try the standard LlamaIndex structured program first
-                    program = LLMTextCompletionProgram.from_defaults(
-                        output_cls=TopicContent,
-                        prompt_template_str=prompt_template_str,
-                        llm=llm_instance
-                    )
-                    return await program.acall(
-                        topic_title=topic.title,
-                        topic_desc=topic.description or "",
-                        matched_content=matched_content
-                    )
-                except Exception as first_error:
-                    logger.warning(f"Standard LlamaIndex program failed in {provider_name}: {first_error}. Attempting direct raw completion and JSON repair...")
-                    # Fallback: call the LLM directly and repair JSON backslashes/LaTeX
-                    formatted_prompt = prompt_template_str.format(
-                        topic_title=topic.title,
-                        topic_desc=topic.description or "",
-                        matched_content=matched_content
-                    )
+                    # Try direct raw completion first for complete control over JSON formatting
                     response = await llm_instance.acomplete(formatted_prompt)
                     raw_text = response.text.strip()
                     
-                    # Extract JSON block
                     json_match = re.search(r"```json\s*(.*?)\s*```", raw_text, re.DOTALL)
                     json_str = json_match.group(1) if json_match else raw_text
                     
-                    # Repair unescaped LaTeX backslashes (e.g. \delta -> \\delta, \notin -> \\notin)
-                    # We double-escape any backslash that is NOT followed by a valid quote escape (\") or escaped backslash (\\)
+                    # Double-escape any backslash NOT followed by valid quote escape (\") or escaped backslash (\\)
                     repaired_json = re.sub(r'\\(?![\\"])', r'\\\\', json_str)
                     
+                    import json
+                    data = json.loads(repaired_json)
+                    return TopicContent.parse_obj(data)
+                except Exception as first_error:
+                    logger.warning(f"Direct JSON completion failed in {provider_name}: {first_error}. Trying LlamaIndex structured program...")
                     try:
-                        import json
-                        data = json.loads(repaired_json)
-                        return TopicContent.parse_obj(data)
-                    except Exception as parse_error:
-                        logger.error(f"Raw fallback parsing failed for {provider_name}: {parse_error}. Raw text: {raw_text[:500]}")
+                        program = LLMTextCompletionProgram.from_defaults(
+                            output_cls=TopicContent,
+                            prompt_template_str=prompt_template_str,
+                            llm=llm_instance
+                        )
+                        return await program.acall(
+                            topic_title=topic.title,
+                            topic_desc=topic.description or "",
+                            matched_content=matched_content
+                        )
+                    except Exception as second_error:
+                        logger.error(f"Both completion methods failed for {provider_name}: {second_error}")
                         raise first_error
                         
         return await retry_with_backoff(_call)
@@ -256,7 +256,7 @@ async def generate_content_for_topic(topic: Topic, course_title: str = None) -> 
     for attempt in range(1, max_retries + 1):
         try:
             result = await run_with_fallback(_try, op_name="generate_content_for_topic")
-            if not result.summary or "(Error generating summary)" in result.summary:
+            if not result.summary or len(result.summary.strip()) < 30 or "(Error generating summary)" in result.summary:
                 raise ValueError("Generated summary content is invalid or missing.")
             return result.questions, result.summary
         except Exception as e:
@@ -265,7 +265,15 @@ async def generate_content_for_topic(topic: Topic, course_title: str = None) -> 
                 await asyncio.sleep(2.0 * attempt)
             else:
                 logger.error(f"All {max_retries} attempts failed to generate content for topic '{topic.title}'. Using fallback.")
-                fallback_summary = f"# Summary: {topic.title}\n\nThis lesson covers fundamental principles and theoretical definitions of **{topic.title}**."
+                fallback_summary = (
+                    f"# Study Guide: {topic.title}\n\n"
+                    f"## Overview\n"
+                    f"This lesson provides a comprehensive overview of **{topic.title}**, focusing on key theoretical foundations, formal definitions, and core principles within the course curriculum.\n\n"
+                    f"## Key Concepts\n"
+                    f"* **Definition**: Core properties and mathematical structure of {topic.title}.\n"
+                    f"* **Applications**: Main use cases and theoretical implications.\n"
+                    f"* **Formal Notations**: Standard mathematical and logical representations."
+                )
                 fallback_questions = [
                     Question(
                         question_text=f"What is the primary focus of {topic.title}?",
