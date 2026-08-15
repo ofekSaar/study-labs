@@ -38,6 +38,12 @@ const apiFetch = async (endpoint, options = {}) => {
         config.headers['Authorization'] = `Bearer ${token}`;
     }
 
+    // Add active role header if exists
+    const activeRole = localStorage.getItem('active_role');
+    if (activeRole) {
+        config.headers['X-Active-Role'] = activeRole;
+    }
+
     // Add JSON content-type for non-FormData bodies
     if (options.body && !(options.body instanceof FormData)) {
         config.headers['Content-Type'] = 'application/json';
