@@ -5,6 +5,7 @@ import Enrollment from '../models/Enrollment.js';
 import QuizAttempt from '../models/QuizAttempt.js';
 import XpEvent from '../models/XpEvent.js';
 import User from '../models/User.js';
+import Course from '../models/Course.js';
 import { evaluateNewBadges } from './badgeService.js';
 import { levelFromXp } from '../constants/badges.js';
 import {
@@ -152,23 +153,32 @@ export const getCourseProgress = async (studentId, courseId) => {
  * @param {string} nodeId Node ID
  * @returns {Promise<object>} Completion details
  */
-export const completeCourseNode = async (user, courseId, nodeId) => {
+export const completeCourseNode = async (user, courseId, nodeId, activeRole) => {
     // Instructors don't track progress
-    if (user.role === 'instructor') {
+    const currentRole = activeRole || user.role;
+    if (currentRole === 'instructor') {
         return {
             isInstructor: true,
             message: 'Progress tracking is disabled for instructors'
         };
     }
 
-    // Verify enrollment
-    const enrollment = await Enrollment.findOne({
-        student: user._id,
-        course: courseId,
-        status: 'approved',
-    });
-    if (!enrollment) {
-        throw createError(403, 'You are not enrolled in this course');
+    // Verify enrollment or if user is the course creator (instructor)
+    const courseDoc = await Course.findById(courseId);
+    if (!courseDoc) {
+        throw createError(404, 'Course not found');
+    }
+
+    const isCreator = courseDoc.instructor && courseDoc.instructor.toString() === user._id.toString();
+    if (!isCreator) {
+        const enrollment = await Enrollment.findOne({
+            student: user._id,
+            course: courseId,
+            status: 'approved',
+        });
+        if (!enrollment) {
+            throw createError(403, 'You are not enrolled in this course');
+        }
     }
 
     // Find the node
