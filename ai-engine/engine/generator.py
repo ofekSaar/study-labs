@@ -256,12 +256,35 @@ async def generate_content_for_topic(topic: Topic, course_title: str = None) -> 
             f"* **Formal Notations**: Standard mathematical and logical representations."
         )
 
+    def _shuffle_question_options(q: Question) -> Question:
+        import random
+        if not q.options or len(q.options) < 2:
+            return q
+        correct_text = (
+            q.options[q.correct_answer]
+            if 0 <= q.correct_answer < len(q.options)
+            else q.options[0]
+        )
+        
+        shuffled = list(q.options)
+        random.shuffle(shuffled)
+        
+        # Avoid biasing index 0: if correct_text ended up at index 0, swap it with a random non-zero index
+        if len(shuffled) > 1 and shuffled[0] == correct_text:
+            target_idx = random.randint(1, len(shuffled) - 1)
+            shuffled[0], shuffled[target_idx] = shuffled[target_idx], shuffled[0]
+
+        q.options = shuffled
+        q.correct_answer = shuffled.index(correct_text)
+        return q
+
     # Run Questions Generation
     try:
-        questions = await run_with_fallback(_try_questions, op_name="generate_questions")
+        raw_qs = await run_with_fallback(_try_questions, op_name="generate_questions")
+        questions = [_shuffle_question_options(q) for q in raw_qs]
     except Exception as e:
         logger.warning(f"Failed to generate questions for '{topic.title}': {e}. Using fallback questions.")
-        questions = [
+        fallback_qs = [
             Question(
                 question_text=f"What is the primary focus of {topic.title}?",
                 options=[
@@ -288,6 +311,7 @@ async def generate_content_for_topic(topic: Topic, course_title: str = None) -> 
                 correct_answer=0
             )
         ]
+        questions = [_shuffle_question_options(q) for q in fallback_qs]
 
     return questions, summary
 
