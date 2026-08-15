@@ -178,13 +178,9 @@ async def generate_content_for_topic(topic: Topic, course_title: str = None) -> 
         summary = topic.summary if topic.summary else f"# Summary for {topic.title}\n\nThis is a mock summary for {topic.title} generated because USE_MOCK_AI is True."
         return questions, summary
 
-    from pydantic import BaseModel, Field
-    class TopicContent(BaseModel):
-        summary: str = Field(..., description="A concise but comprehensive study summary/card in Markdown format, covering key concepts, definitions, and points.")
-        questions: List[Question] = Field(..., description="A list of exactly 3 multiple-choice questions testing key concepts of this topic.")
-
     matched_content = "\n".join(topic.matched_materials)
     course_context = f"Course Context: {course_title}\n" if course_title else ""
+    has_grounded_context = bool(topic.matched_materials) and topic.is_material_grounded
     context_block = f"Relevant course material text:\n{matched_content}\n" if matched_content else ""
 
     # 1. Generate Summary (Pure Markdown Output — no JSON escaping needed!)
@@ -196,9 +192,10 @@ async def generate_content_for_topic(topic: Topic, course_title: str = None) -> 
                 f"Topic: {topic.title}\n"
                 f"Description: {topic.description or ''}\n"
                 f"{context_block}\n"
-                "Please generate a detailed, rich, multi-paragraph study guide in Markdown format.\n"
+                "Using the course material text above as your primary source, generate a detailed, "
+                "rich, multi-paragraph study guide in Markdown format.\n"
                 "Include:\n"
-                "1. An Overview explaining the topic thoroughly.\n"
+                "1. An Overview explaining the topic thoroughly based on the provided materials.\n"
                 "2. Key Concepts & Definitions with bullet points.\n"
                 "3. Theoretical / Mathematical Principles (use LaTeX $...$ for formulas if applicable).\n"
                 "4. Practical Examples / Summary Takeaways.\n\n"
