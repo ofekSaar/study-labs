@@ -10,6 +10,7 @@ import {
   denyEnrollment,
   getPendingEnrollments,
   addStudentToCourse,
+  searchStudents,
 } from '../controllers/enrollmentController.js';
 
 const router = Router();
@@ -158,6 +159,8 @@ router.put('/:id/approve', authenticate, authorize('instructor'), approveEnrollm
 router.put('/:id/deny', authenticate, authorize('instructor'), denyEnrollment);
 
 router.get('/pending-all', authenticate, authorize('instructor'), getPendingEnrollments);
+
+router.get('/search-students', authenticate, authorize('instructor'), searchStudents);
 
 router.post(
   '/add-student',
