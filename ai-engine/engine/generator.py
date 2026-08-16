@@ -116,12 +116,26 @@ async def validate_syllabus_content(syllabus_text: str) -> dict:
     
     import json, re
     prompt = (
-        "Analyze the following document text and determine if it is a course syllabus or curriculum.\n"
-        "A syllabus typically contains: course topics/schedule, learning objectives, "
-        "grading criteria, weekly breakdown of subjects, or a list of lessons/units.\n"
-        "A document that is a summary, lecture notes, homework, exam, or general text is NOT a syllabus.\n\n"
-        f"Document text (first 2000 chars):\n{syllabus_text[:2000]}\n\n"
-        'Respond with ONLY a JSON object: {"is_syllabus": true, "reason": "..."} or {"is_syllabus": false, "reason": "..."}'
+        "You are classifying an academic document. Determine if it is a COURSE SYLLABUS or not.\n\n"
+        "A SYLLABUS (return is_syllabus=true) is a document that describes the STRUCTURE and "
+        "ADMINISTRATION of a course. It typically contains SOME of these signals:\n"
+        "- A list of topics/subjects organized by weeks, sessions, or units\n"
+        "- Course objectives, learning outcomes, or prerequisites\n"
+        "- Grading policy, exam dates, or assignment weights\n"
+        "- Instructor name, office hours, or course code\n"
+        "- A schedule or timeline of what will be taught\n"
+        "NOTE: A syllabus does NOT need ALL of these. Even a simple ordered list of course "
+        "topics or a curriculum outline counts as a syllabus.\n\n"
+        "NOT a syllabus (return is_syllabus=false):\n"
+        "- Study summaries or notes that EXPLAIN subject content (definitions, theorems, proofs, examples)\n"
+        "- Lecture notes, textbook excerpts, or tutorial materials\n"
+        "- Homework, exams, or problem sets\n"
+        "- Research papers or articles\n"
+        "The key difference: a syllabus says WHAT will be taught, a summary TEACHES the content.\n\n"
+        "This document may be in any language (English, Hebrew, Arabic, etc.).\n\n"
+        f"Document text (first 3000 chars):\n{syllabus_text[:3000]}\n\n"
+        'Respond with ONLY a JSON object: {"is_syllabus": true, "reason": "..."} '
+        'or {"is_syllabus": false, "reason": "..."}'
     )
     
     async def _try_validate(provider_name, llm_instance):
