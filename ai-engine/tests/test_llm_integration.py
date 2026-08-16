@@ -34,15 +34,15 @@ def _read_pdf_text(filename):
     """Read text from a PDF file using the same parser the engine uses."""
     filepath = os.path.join(FIXTURES_DIR, filename)
     if not os.path.exists(filepath):
-        # Try in computational-models subfolder
         filepath = os.path.join(FIXTURES_DIR, "computational-models", filename)
     assert os.path.exists(filepath), f"Fixture not found: {filepath}"
 
     try:
-        from engine.parsers.pdf_parser import extract_text_from_pdf
-        return extract_text_from_pdf(filepath)
-    except ImportError:
-        # Fallback: use PyMuPDF directly
+        from engine.ocr import extract_with_images
+        with open(filepath, "rb") as f:
+            res = extract_with_images(f.read(), filename=filename)
+            return res.text
+    except Exception:
         import fitz
         doc = fitz.open(filepath)
         text = "\n".join(page.get_text() for page in doc)

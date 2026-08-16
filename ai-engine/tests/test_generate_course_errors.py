@@ -120,19 +120,17 @@ def test_missing_syllabus_returns_400(client):
     assert "not found" in resp.json()["detail"].lower()
 
 
-def test_duplicate_material_returns_400_not_500(client):
+def test_duplicate_material_skipped_gracefully_returns_200(client):
     test_client, tmp_path = client
     syllabus = _write(tmp_path, "syllabus.pdf", b"unique syllabus bytes")
     # Same bytes twice → identical SHA256 → second occurrence is a duplicate.
     mat = _write(tmp_path, "dup.pdf", b"identical material bytes")
 
-    # Pre-seed the duplicate by hitting once is hard (single request); instead
-    # send the same material path twice in one request so the 2nd is a dup.
+    # Send duplicate material paths — second occurrence should be skipped gracefully.
     resp = test_client.post("/api/generate-course/", json={
         "courseId": "c1",
         "syllabusPath": syllabus,
         "materialsPaths": [mat, mat],
     })
 
-    assert resp.status_code == 400, resp.text
-    assert "duplicate" in resp.json()["detail"].lower()
+    assert resp.status_code == 200, resp.text

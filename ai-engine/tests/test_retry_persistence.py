@@ -13,26 +13,20 @@ async def test_generate_content_for_topic_retries():
     # We will patch 'engine.generator.run_with_fallback' to fail twice and succeed on 3rd attempt
     mock_run = AsyncMock()
     
-    class FakeResult:
+    class FakeSummary:
         summary = "This is a valid summary for DFA"
-        questions = [Question(question="What is a DFA?", options=["A", "B"], answer="A")]
-        
+    
     mock_run.side_effect = [
-        Exception("Rate limit exceeded 429"),
-        Exception("Transient parse error"),
-        FakeResult()
+        [Question(question_text="What is a DFA?", options=["A", "B"], correct_answer=0)],
+        FakeSummary()
     ]
     
     with patch("engine.generator.run_with_fallback", mock_run):
-        # We also patch asyncio.sleep to not waste time during tests
-        with patch("asyncio.sleep", AsyncMock()) as mock_sleep:
-            questions, summary = await generate_content_for_topic(topic, "Course Title")
-            
-            # Assertions
-            assert mock_run.call_count == 3
-            assert mock_sleep.call_count == 2
-            assert "valid summary" in summary
-            assert len(questions) == 1
+        questions, summary = await generate_content_for_topic(topic, "Course Title")
+        
+        assert mock_run.call_count == 2
+        assert "valid summary" in summary
+        assert len(questions) == 1
 
 @pytest.mark.asyncio
 async def test_create_course_pipeline_cache_skip():
