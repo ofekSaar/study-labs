@@ -25,6 +25,8 @@ jobs:
           echo "AI_SERVICE_API_KEY=${{ secrets.AI_SERVICE_API_KEY }}" >> .env
           echo "USE_MOCK_AI=False" >> .env
           echo "MAX_MATERIALS_COUNT=${{ vars.MAX_MATERIALS_COUNT || 20 }}" >> .env
+          echo "TOPIC_MATERIAL_THRESHOLD=${{ vars.TOPIC_MATERIAL_THRESHOLD || '0.225' }}" >> .env
+          echo "SYLLABUS_SIMILARITY_THRESHOLD=${{ vars.SYLLABUS_SIMILARITY_THRESHOLD || '0.60' }}" >> .env
           echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> .env
           echo "COLLEGE_API_BASE=https://10.10.248.21/v1" >> .env
           echo "COLLEGE_MODEL=gpt-oss-120b" >> .env

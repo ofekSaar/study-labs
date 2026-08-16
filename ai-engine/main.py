@@ -184,6 +184,19 @@ async def generate_course(request: GenerateCourseRequest, req: Request):
         # 1 & 2. Read + parse all files off the event loop (blocking CPU/IO work)
         syllabus_text, materials_text, all_images = await asyncio.to_thread(_parse_inputs, request)
 
+        # Validate syllabus content (skip for updates)
+        if not request.isUpdate:
+            from engine.generator import validate_syllabus_content
+            validation = await validate_syllabus_content(syllabus_text)
+            if not validation.get("is_syllabus", True):
+                reason = validation.get("reason", "Unknown reason")
+                logger.warning(f"Syllabus validation failed: {reason}")
+                update_course_progress(request.courseId, f"Invalid syllabus: {reason}")
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"The uploaded file doesn't appear to be a course syllabus. {reason} Please upload a file containing course topics, schedule, or curriculum."
+                )
+
         # 2.5. Analyze embedded images via Vision LLM (if enabled)
         if request.analyzeImages and all_images:
             logger.info(f"Image analysis enabled. Analyzing {len(all_images)} images...")

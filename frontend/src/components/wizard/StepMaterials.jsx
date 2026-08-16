@@ -251,6 +251,9 @@ const StepMaterials = () => {
                 {errors.syllabus && (
                     <p className="text-red-500 text-xs font-medium">{errors.syllabus.message}</p>
                 )}
+                <p className="text-xs text-slate-400 mt-2">
+                    💡 Uploading from Google Drive on mobile? Download the file first, then upload.
+                </p>
             </div>
 
             <div className="border-t border-gray-100" />
@@ -348,6 +351,9 @@ const StepMaterials = () => {
                         })}
                     </div>
                 )}
+                <p className="text-xs text-slate-400 mt-2">
+                    💡 Uploading from Google Drive on mobile? Download the file first, then upload.
+                </p>
             </div>
         </div>
     );
