@@ -130,9 +130,9 @@ def _parse_inputs(request: "GenerateCourseRequest") -> tuple[str, list, list]:
 
         syllabus_hash = hashlib.sha256(syllabus_bytes).hexdigest()
         if check_file_hash(syllabus_hash, course_id=course_id):
-            logger.error("Duplicate syllabus file detected based on SHA256 hash.")
-            raise HTTPException(status_code=400, detail="Duplicate syllabus file detected. Processing aborted.")
-        save_file_hash(syllabus_name, syllabus_hash, course_id=course_id)
+            logger.warning("Duplicate or existing syllabus file hash detected for course_id; allowing re-parse.")
+        else:
+            save_file_hash(syllabus_name, syllabus_hash, course_id=course_id)
 
         syllabus_result = extract_with_images(syllabus_bytes, filename=syllabus_name)
         syllabus_text = syllabus_result.text
@@ -155,8 +155,8 @@ def _parse_inputs(request: "GenerateCourseRequest") -> tuple[str, list, list]:
 
         mat_hash = hashlib.sha256(mat_bytes).hexdigest()
         if check_file_hash(mat_hash, course_id=course_id):
-            logger.error(f"Duplicate material file detected based on SHA256 hash: {mat_name}")
-            raise HTTPException(status_code=400, detail=f"Duplicate material file detected: {mat_name}. Processing aborted.")
+            logger.warning(f"Duplicate material file skipped based on SHA256 hash: {mat_name}")
+            continue
         save_file_hash(mat_name, mat_hash, course_id=course_id)
 
         chunk_generator = extract_in_chunks(mat_bytes, filename=mat_name, chunk_size=1)
