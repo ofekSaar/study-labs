@@ -347,7 +347,8 @@ const CourseMap = () => {
                                                                 <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 truncate">
                                                                     {n.label}
                                                                 </span>
-                                                                {n.is_material_grounded ? (
+                                                                {(n.isMaterialGrounded ??
+                                                                n.is_material_grounded) ? (
                                                                     <span className="shrink-0 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 border border-emerald-500/20">
                                                                         📄 Grounded
                                                                     </span>
