@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Save, Loader2, Edit3, Eye, FileText, CheckCircle2 } from 'lucide-react';
+import { Save, Loader2, Edit3, Eye, FileText } from 'lucide-react';
 import api from '../../utils/api';
 import BaseModal from '../common/BaseModal';
 import useToastStore from '../../store/toastStore';
+import ContentRenderer from '../common/ContentRenderer';
 
 const LessonEditorModal = ({ courseId, nodeId, nodeTitle, isGrounded, onClose }) => {
     const [loading, setLoading] = useState(true);
@@ -62,32 +63,35 @@ const LessonEditorModal = ({ courseId, nodeId, nodeTitle, isGrounded, onClose })
             onClose={onClose}
             title={
                 <div className="flex items-center gap-2 pr-6">
-                    <FileText size={18} className="text-purple-500" />
-                    <span className="truncate">{nodeTitle || 'Lesson Summary'}</span>
+                    <FileText size={20} className="text-purple-500 shrink-0" />
+                    <span className="truncate text-base sm:text-lg">
+                        {nodeTitle || 'Lesson Summary'}
+                    </span>
                 </div>
             }
             subtitle={
                 <div className="flex items-center gap-2 mt-1">
                     {isGrounded ? (
-                        <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-extrabold border border-emerald-500/20">
+                        <span className="px-2.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-extrabold border border-emerald-500/20">
                             📄 Grounded in Materials
                         </span>
                     ) : (
-                        <span className="px-2 py-0.5 rounded-md bg-purple-500/10 text-purple-600 dark:text-purple-400 text-[10px] font-extrabold border border-purple-500/20">
+                        <span className="px-2.5 py-0.5 rounded-md bg-purple-500/10 text-purple-600 dark:text-purple-400 text-xs font-extrabold border border-purple-500/20">
                             🤖 AI Generated Content
                         </span>
                     )}
                 </div>
             }
-            maxWidth="max-w-3xl"
+            maxWidth="max-w-5xl"
+            bodyClassName="p-4 sm:p-6 overflow-hidden flex flex-col"
         >
-            <div className="space-y-4">
+            <div className="space-y-4 flex flex-col min-h-[500px]">
                 {/* Actions Toolbar */}
-                <div className="flex items-center justify-between gap-3 bg-slate-50 dark:bg-white/5 p-2.5 rounded-2xl border border-slate-200 dark:border-white/8">
+                <div className="flex items-center justify-between gap-3 bg-slate-50 dark:bg-white/5 p-2.5 rounded-2xl border border-slate-200 dark:border-white/8 shrink-0">
                     <div className="flex items-center gap-1 bg-slate-200/60 dark:bg-white/10 p-1 rounded-xl">
                         <button
                             onClick={() => setIsEditing(false)}
-                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
                                 !isEditing
                                     ? 'bg-white dark:bg-slate-800 text-purple-600 dark:text-purple-300 shadow-sm'
                                     : 'text-slate-500 dark:text-white/50 hover:text-slate-800 dark:hover:text-white'
@@ -97,7 +101,7 @@ const LessonEditorModal = ({ courseId, nodeId, nodeTitle, isGrounded, onClose })
                         </button>
                         <button
                             onClick={() => setIsEditing(true)}
-                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
                                 isEditing
                                     ? 'bg-white dark:bg-slate-800 text-purple-600 dark:text-purple-300 shadow-sm'
                                     : 'text-slate-500 dark:text-white/50 hover:text-slate-800 dark:hover:text-white'
@@ -111,15 +115,15 @@ const LessonEditorModal = ({ courseId, nodeId, nodeTitle, isGrounded, onClose })
                         <button
                             onClick={handleSave}
                             disabled={saving}
-                            className="flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition-all shadow-md disabled:opacity-50 cursor-pointer"
+                            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition-all shadow-md disabled:opacity-50 cursor-pointer"
                         >
                             {saving ? (
                                 <>
-                                    <Loader2 size={13} className="animate-spin" /> Saving...
+                                    <Loader2 size={14} className="animate-spin" /> Saving...
                                 </>
                             ) : (
                                 <>
-                                    <Save size={13} /> Save Summary
+                                    <Save size={14} /> Save Summary
                                 </>
                             )}
                         </button>
@@ -127,86 +131,38 @@ const LessonEditorModal = ({ courseId, nodeId, nodeTitle, isGrounded, onClose })
                 </div>
 
                 {errorMsg && (
-                    <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-bold">
+                    <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-bold shrink-0">
                         {errorMsg}
                     </div>
                 )}
 
                 {/* Content View / Edit Area */}
                 {loading ? (
-                    <div className="py-16 flex flex-col items-center justify-center gap-2">
-                        <Loader2 size={24} className="animate-spin text-purple-500" />
+                    <div className="py-24 flex flex-col items-center justify-center gap-3">
+                        <Loader2 size={28} className="animate-spin text-purple-500" />
                         <span className="text-xs font-bold text-slate-400">
                             Loading lesson summary...
                         </span>
                     </div>
                 ) : isEditing ? (
-                    <div className="space-y-2">
+                    <div className="flex-1 flex flex-col space-y-2">
                         <textarea
                             value={content}
                             onChange={(e) => setContent(e.target.value)}
-                            rows={16}
                             placeholder="Write or edit the lesson summary markdown content..."
-                            className="w-full p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-xs font-mono text-slate-800 dark:text-white focus:outline-none focus:border-purple-500 transition-all resize-y"
+                            className="w-full h-[62vh] min-h-[420px] p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-xs font-mono text-slate-800 dark:text-white focus:outline-none focus:border-purple-500 transition-all resize-y leading-relaxed"
                         />
-                        <p className="text-[10px] text-slate-400 dark:text-white/40 font-medium">
-                            Supports standard Markdown formatting (headers `#`, lists `-`, bold
-                            `**`).
+                        <p className="text-[11px] text-slate-400 dark:text-white/40 font-medium">
+                            Supports standard Markdown (`#`, `-`, `**bold**`) & LaTeX math equations
+                            (`{'$\\Sigma = \\{a, b, c\\}$'}`).
                         </p>
                     </div>
                 ) : (
-                    <div className="max-h-[60vh] overflow-y-auto p-5 rounded-2xl bg-slate-50 dark:bg-white/3 border border-slate-200/60 dark:border-white/5 space-y-3 prose dark:prose-invert max-w-none text-xs text-slate-700 dark:text-slate-200 leading-relaxed font-sans select-text">
+                    <div className="flex-1 max-h-[68vh] min-h-[420px] overflow-y-auto p-6 rounded-2xl bg-slate-50 dark:bg-white/3 border border-slate-200/60 dark:border-white/5 custom-scrollbar">
                         {content ? (
-                            content.split('\n').map((line, idx) => {
-                                if (line.startsWith('# ')) {
-                                    return (
-                                        <h1
-                                            key={idx}
-                                            className="text-base font-black text-slate-900 dark:text-white mt-4 mb-2 pb-1 border-b border-slate-200 dark:border-white/10"
-                                        >
-                                            {line.replace('# ', '')}
-                                        </h1>
-                                    );
-                                }
-                                if (line.startsWith('## ')) {
-                                    return (
-                                        <h2
-                                            key={idx}
-                                            className="text-sm font-extrabold text-purple-600 dark:text-purple-400 mt-3 mb-1.5"
-                                        >
-                                            {line.replace('## ', '')}
-                                        </h2>
-                                    );
-                                }
-                                if (line.startsWith('### ')) {
-                                    return (
-                                        <h3
-                                            key={idx}
-                                            className="text-xs font-bold text-slate-800 dark:text-white mt-2.5 mb-1"
-                                        >
-                                            {line.replace('### ', '')}
-                                        </h3>
-                                    );
-                                }
-                                if (line.startsWith('* ') || line.startsWith('- ')) {
-                                    return (
-                                        <div key={idx} className="flex items-start gap-2 ml-2 my-1">
-                                            <div className="w-1.5 h-1.5 rounded-full bg-purple-500 mt-1.5 shrink-0" />
-                                            <span>{line.replace(/^[*|-]\s*/, '')}</span>
-                                        </div>
-                                    );
-                                }
-                                if (!line.trim()) {
-                                    return <div key={idx} className="h-2" />;
-                                }
-                                return (
-                                    <p key={idx} className="my-1">
-                                        {line}
-                                    </p>
-                                );
-                            })
+                            <ContentRenderer content={content} />
                         ) : (
-                            <div className="py-8 text-center text-slate-400">
+                            <div className="py-16 text-center text-slate-400">
                                 <p className="font-bold">No summary content found for this node.</p>
                                 <button
                                     onClick={() => setIsEditing(true)}
