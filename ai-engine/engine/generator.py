@@ -114,28 +114,41 @@ async def validate_syllabus_content(syllabus_text: str) -> dict:
     if USE_MOCK_AI:
         return {"is_syllabus": True, "reason": "Mock mode — skipping validation."}
     
-    import json, re
     prompt = (
-        "Analyze the following document text and determine if it is a course syllabus or curriculum.\n"
-        "A syllabus typically contains: course topics/schedule, learning objectives, "
-        "grading criteria, weekly breakdown of subjects, or a list of lessons/units.\n"
-        "A document that is a summary, lecture notes, homework, exam, or general text is NOT a syllabus.\n\n"
-        f"Document text (first 2000 chars):\n{syllabus_text[:2000]}\n\n"
-        'Respond with ONLY a JSON object: {"is_syllabus": true, "reason": "..."} or {"is_syllabus": false, "reason": "..."}'
+        "You are classifying an academic document. Is it a COURSE SYLLABUS?\n\n"
+        "A SYLLABUS describes the STRUCTURE and ADMINISTRATION of a course. "
+        "It typically contains SOME of these signals:\n"
+        "- A list of topics/subjects organized by weeks, sessions, or units\n"
+        "- Course objectives, learning outcomes, or prerequisites\n"
+        "- Grading policy, exam dates, or assignment weights\n"
+        "- Instructor name, office hours, or course code\n"
+        "- A schedule or timeline of what will be taught\n"
+        "A syllabus does NOT need ALL of these. Even a simple ordered list of "
+        "course topics or a curriculum outline counts.\n\n"
+        "NOT a syllabus:\n"
+        "- Study summaries or notes that EXPLAIN subject content (definitions, theorems, proofs)\n"
+        "- Lecture notes, textbook excerpts, or tutorial materials\n"
+        "- Homework, exams, or problem sets\n"
+        "- Research papers or articles\n"
+        "The key difference: a syllabus says WHAT will be taught, a summary TEACHES the content.\n\n"
+        "This document may be in any language (English, Hebrew, Arabic, etc.).\n\n"
+        f"Document text (first 3000 chars):\n{syllabus_text[:3000]}\n\n"
+        "Respond with ONLY one word: true or false"
     )
     
     async def _try_validate(provider_name, llm_instance):
         async with _api_semaphore:
             response = await llm_instance.acomplete(prompt)
-            raw = response.text.strip()
-            # Extract JSON from potential markdown wrapper
-            json_match = re.search(r'\{.*\}', raw, re.DOTALL)
-            if json_match:
-                return json.loads(json_match.group())
-            return {"is_syllabus": True, "reason": "Could not parse validation response."}
+            answer = response.text.strip().lower().rstrip(".")
+            is_syllabus = answer in ("true", "yes", "1")
+            return {"is_syllabus": is_syllabus}
     
     try:
         result = await run_with_fallback(_try_validate, op_name="validate_syllabus")
+        if result["is_syllabus"]:
+            result["reason"] = "Document recognized as a course syllabus."
+        else:
+            result["reason"] = "This document appears to be study material, not a course syllabus."
         return result
     except Exception as e:
         logger.warning(f"Syllabus validation failed: {e}. Allowing through.")
@@ -420,9 +433,12 @@ async def create_course_pipeline(
         logger.info(f"Pipeline Step 1/3 (Update): Loading existing syllabus blueprint for course {course_id}")
         blueprint_doc = get_syllabus_blueprint(course_id)
         if not blueprint_doc:
-            raise Exception(f"Syllabus blueprint not found for course {course_id}")
-        course = Course.model_validate(blueprint_doc["blueprint"])
-    else:
+            logger.warning(f"Syllabus blueprint not found for course {course_id}. Falling back to full course generation.")
+            is_update = False
+        else:
+            course = Course.model_validate(blueprint_doc["blueprint"])
+
+    if not is_update:
         # Step 1: Syllabus -> Structure
         logger.info("Pipeline Step 1/3: Parsing Syllabus")
         course = parse_syllabus(syllabus_text, syllabus_name=syllabus_name)

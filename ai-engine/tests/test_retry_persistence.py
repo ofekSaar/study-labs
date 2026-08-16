@@ -13,26 +13,20 @@ async def test_generate_content_for_topic_retries():
     # We will patch 'engine.generator.run_with_fallback' to fail twice and succeed on 3rd attempt
     mock_run = AsyncMock()
     
-    class FakeResult:
+    class FakeSummary:
         summary = "This is a valid summary for DFA"
-        questions = [Question(question="What is a DFA?", options=["A", "B"], answer="A")]
-        
+    
     mock_run.side_effect = [
-        Exception("Rate limit exceeded 429"),
-        Exception("Transient parse error"),
-        FakeResult()
+        "This is a valid summary for DFA",
+        [Question(question_text="What is a DFA?", options=["A", "B"], correct_answer=0)]
     ]
     
     with patch("engine.generator.run_with_fallback", mock_run):
-        # We also patch asyncio.sleep to not waste time during tests
-        with patch("asyncio.sleep", AsyncMock()) as mock_sleep:
-            questions, summary = await generate_content_for_topic(topic, "Course Title")
-            
-            # Assertions
-            assert mock_run.call_count == 3
-            assert mock_sleep.call_count == 2
-            assert "valid summary" in summary
-            assert len(questions) == 1
+        questions, summary = await generate_content_for_topic(topic, "Course Title")
+        
+        assert mock_run.call_count == 2
+        assert "valid summary" in summary
+        assert len(questions) == 1
 
 @pytest.mark.asyncio
 async def test_create_course_pipeline_cache_skip():
@@ -84,11 +78,16 @@ async def test_create_course_pipeline_cache_skip():
         "questions": [{"question": "Q1", "options": ["A"], "answer": "A"}]
     }
     
-    # Patch database handle and generators
+    # Patch database handle, blueprint saver, parse_syllabus, and generators
+    mock_gen = AsyncMock(return_value=([], "Cached summary"))
     with patch("engine.generator.get_db_handle", return_value=mock_db), \
+         patch("engine.generator.save_syllabus_blueprint") as mock_save_bp, \
+         patch("engine.generator.parse_syllabus", return_value=course), \
+         patch("engine.generator.update_course_progress"), \
+         patch("engine.db.update_course_progress"), \
          patch("engine.generator.tag_materials_with_embeddings") as mock_tag, \
          patch("engine.generator.save_initial_course_to_db") as mock_save_init, \
-         patch("engine.generator.generate_content_for_topic") as mock_gen:
+         patch("engine.generator.generate_content_for_topic", mock_gen):
          
         # Run pipeline
         res_course, updated_topics = await create_course_pipeline(

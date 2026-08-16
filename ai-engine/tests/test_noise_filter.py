@@ -2,7 +2,10 @@ import os
 from engine.quality_filter import is_clean
 from engine.ocr import extract_in_chunks
 
-FIXTURES_DIR = "/app/tests/fixtures/computational-models"
+BASE_FIXTURES = os.path.join(os.path.dirname(__file__), "fixtures")
+FIXTURES_DIR = os.path.join(BASE_FIXTURES, "computational-models")
+if not os.path.exists(FIXTURES_DIR):
+    FIXTURES_DIR = BASE_FIXTURES
 
 def test_is_clean_prose():
     # Regular text is clean

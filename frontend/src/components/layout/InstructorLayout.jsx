@@ -104,9 +104,11 @@ const NotificationBell = () => {
         approvePendingEnrollment,
         denyPendingEnrollment,
     } = useEnrollmentStore();
+    const { notifications, markAllRead } = useNotificationStore();
     const [isOpen, setIsOpen] = useState(false);
     const [actionLoading, setActionLoading] = useState(null);
     const panelRef = useRef(null);
+    const navigate = useNavigate();
 
     const refresh = useCallback(() => {
         fetchPendingEnrollments();
@@ -148,13 +150,22 @@ const NotificationBell = () => {
         }
     };
 
-    const count = pendingEnrollments.length;
+    const unreadNotifs = notifications.filter((n) => !n.read).length;
+    const count = unreadNotifs + pendingEnrollments.length;
+
+    const handleToggle = () => {
+        setIsOpen((o) => {
+            const next = !o;
+            if (next && unreadNotifs > 0) markAllRead();
+            return next;
+        });
+    };
 
     return (
         <div className="relative flex-1" ref={panelRef}>
             <button
-                onClick={() => setIsOpen((o) => !o)}
-                title="Enrollment Requests"
+                onClick={handleToggle}
+                title="Alerts & Requests"
                 className={`w-full flex flex-col items-center gap-0.5 py-2 rounded-xl relative transition-all border ${
                     count > 0
                         ? 'text-amber-500 hover:bg-amber-500/10 border-transparent hover:border-amber-500/20'
@@ -175,23 +186,50 @@ const NotificationBell = () => {
             {isOpen && (
                 <div
                     className="absolute bottom-full mb-2 bg-white dark:bg-[#1a1625] rounded-xl shadow-2xl border border-slate-200 dark:border-white/10 overflow-hidden z-50"
-                    style={{ maxHeight: '320px', width: '280px', left: 0 }}
+                    style={{ maxHeight: '360px', width: '300px', left: 0 }}
                 >
                     <div className="px-3 py-2 border-b border-slate-100 dark:border-white/8 flex items-center justify-between">
                         <span className="text-[11px] font-black text-slate-700 dark:text-white/80 uppercase tracking-wider">
-                            Enrollment Requests
+                            Alerts & Notifications
                         </span>
                         {count > 0 && (
                             <span className="px-1.5 py-0.5 rounded-md bg-amber-500/15 text-amber-600 dark:text-amber-400 text-[9px] font-black">
-                                {count} pending
+                                {count} new
                             </span>
                         )}
                     </div>
-                    <div className="overflow-y-auto" style={{ maxHeight: '260px' }}>
-                        {count === 0 ? (
+                    <div className="overflow-y-auto" style={{ maxHeight: '300px' }}>
+                        {/* Course Notifications Section */}
+                        {notifications.length > 0 && (
+                            <div className="border-b border-slate-100 dark:border-white/5">
+                                {notifications.slice(0, 5).map((n) => (
+                                    <button
+                                        type="button"
+                                        key={n.id || n._id}
+                                        onClick={() => {
+                                            if (n.courseId) navigate(`/course/${n.courseId}`);
+                                            setIsOpen(false);
+                                        }}
+                                        className="w-full text-left px-3 py-2 border-b border-slate-50 dark:border-white/5 last:border-0 hover:bg-slate-50 dark:hover:bg-white/3 transition-colors cursor-pointer"
+                                    >
+                                        <p className="text-[11px] font-bold text-slate-800 dark:text-white/90 leading-tight">
+                                            {n.message}
+                                        </p>
+                                        {n.courseTitle && (
+                                            <p className="text-[9px] text-slate-400 dark:text-white/40 mt-0.5">
+                                                {n.courseTitle}
+                                            </p>
+                                        )}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* Enrollment Requests Section */}
+                        {pendingEnrollments.length === 0 && notifications.length === 0 ? (
                             <div className="py-6 flex flex-col items-center gap-2 text-slate-400 dark:text-white/30">
                                 <Bell size={20} />
-                                <span className="text-[11px] font-bold">No pending requests</span>
+                                <span className="text-[11px] font-bold">No alerts or requests</span>
                             </div>
                         ) : (
                             pendingEnrollments.map((e) => (

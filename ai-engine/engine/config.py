@@ -8,7 +8,7 @@ import os
 
 # ── Semantic Filtering ────────────────────────────────────────────────────────
 SYLLABUS_SIMILARITY_THRESHOLD = float(os.environ.get('SYLLABUS_SIMILARITY_THRESHOLD', '0.60'))   # minimum cosine similarity to keep a chunk (can be overridden via env vars)
-TOPIC_MATERIAL_THRESHOLD = float(os.environ.get('TOPIC_MATERIAL_THRESHOLD', '0.225'))        # calibrated threshold: 0.25 grounds real Hebrew notes (0.27+) while rejecting math noise (<0.23) (can be overridden via env vars)
+TOPIC_MATERIAL_THRESHOLD = float(os.environ.get('TOPIC_MATERIAL_THRESHOLD', '0.28'))        # calibrated threshold: 0.28 grounds real course notes while rejecting unrelated academic material (can be overridden via env vars)
 
 # ── MongoDB ───────────────────────────────────────────────────────────────────
 MONGO_CONNECTION_TIMEOUT_MS = 5000     # serverSelectionTimeoutMS for MongoClient

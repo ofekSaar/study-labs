@@ -347,7 +347,8 @@ const CourseMap = () => {
                                                                 <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 truncate">
                                                                     {n.label}
                                                                 </span>
-                                                                {n.is_material_grounded ? (
+                                                                {(n.isMaterialGrounded ??
+                                                                n.is_material_grounded) ? (
                                                                     <span className="shrink-0 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 border border-emerald-500/20">
                                                                         📄 Grounded
                                                                     </span>
@@ -387,7 +388,7 @@ const CourseMap = () => {
                                             <button
                                                 onClick={handleRetry}
                                                 disabled={retrying}
-                                                className="mt-6 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-studylabs-blue text-white text-sm font-bold shadow-sm hover:bg-studylabs-dark transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                                                className="mt-6 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-bold shadow-md transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
                                             >
                                                 <RotateCcw
                                                     size={16}
@@ -395,7 +396,7 @@ const CourseMap = () => {
                                                 />
                                                 {retrying ? 'Restarting…' : 'Retry Generation'}
                                             </button>
-                                            <p className="text-xs text-red-300 dark:text-red-500/40 mt-3">
+                                            <p className="text-xs text-red-500 dark:text-red-400 mt-3 font-medium">
                                                 You have 1 retry available.
                                             </p>
                                         </>
