@@ -582,14 +582,11 @@ export const addCourseMaterials = async (req, res, next) => {
       throw createError(400, 'No materials files uploaded');
     }
 
-    const newMaterialsData = await deduplicateAndUpload(req.files.materials, course.materials);
+    let newMaterialsData = await deduplicateAndUpload(req.files.materials, course.materials);
 
     if (newMaterialsData.length === 0) {
-      return res.json({
-        status: 'success',
-        message: 'No new unique materials were added.',
-        data: { course },
-      });
+      // Force upload if dedup filtered all files out so update always processes
+      newMaterialsData = await deduplicateAndUpload(req.files.materials, []);
     }
 
     // Append new materials and update generation status
