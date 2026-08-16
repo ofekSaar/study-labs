@@ -19,6 +19,7 @@ import useAuthStore from '../store/authStore';
 import useCourseStore from '../store/courseStore';
 import { io } from 'socket.io-client';
 import api from '../utils/api';
+import useToastStore from '../store/toastStore';
 
 /** Total generation attempts allowed (1 initial + 1 retry) — mirrors the backend cap. */
 const MAX_GENERATION_ATTEMPTS = 2;
@@ -70,7 +71,19 @@ const CourseMap = () => {
             setIsUploadOpen(false);
             setUploadFiles([]);
         } catch (error) {
-            setUploadError(error.message || 'Failed to upload materials.');
+            const msg = error.message || 'Failed to upload materials.';
+            if (
+                msg.includes('network') ||
+                msg.includes('Failed to fetch') ||
+                error.name === 'TypeError' ||
+                msg.includes('NetworkError')
+            ) {
+                setUploadError(
+                    'Upload failed. If uploading from Google Drive on mobile, please download the file to your device first, then upload it.'
+                );
+            } else {
+                setUploadError(msg);
+            }
         } finally {
             setUploading(false);
         }
@@ -135,6 +148,14 @@ const CourseMap = () => {
         socket.on('course_generation_status', async (data) => {
             if (data.courseId === courseId) {
                 await fetchCourseNodes(courseId);
+                if (data.status === 'ready') {
+                    useToastStore
+                        .getState()
+                        .success(
+                            'Update Complete',
+                            'Course content has been updated with new materials.'
+                        );
+                }
             }
         });
 
@@ -295,6 +316,15 @@ const CourseMap = () => {
 
                     {/* Map Container - Centered and Contained on Desktop */}
                     <div className="px-4 pb-20 md:pb-0 max-w-xl mx-auto">
+                        {course?.generationStatus === 'generating' && nodes.length > 0 && (
+                            <div className="mx-4 mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl flex items-center gap-3">
+                                <div className="animate-spin rounded-full h-5 w-5 border-2 border-blue-500 border-t-transparent" />
+                                <p className="text-sm text-blue-700 dark:text-blue-300 font-medium">
+                                    🔄 Updating course content with new materials... This may take a
+                                    few minutes.
+                                </p>
+                            </div>
+                        )}
                         {nodes.length > 0 ? (
                             <>
                                 <GameMapComponent nodes={nodes} />

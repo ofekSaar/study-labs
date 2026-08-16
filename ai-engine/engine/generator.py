@@ -106,6 +106,41 @@ if os.environ.get("GEMINI_API_KEY"):
 if not LLMS:
     logger.warning("No API Keys found. AI features will fail unless Mock Mode is active.")
 
+async def validate_syllabus_content(syllabus_text: str) -> dict:
+    """
+    Quick LLM check: does this text look like a course syllabus?
+    Returns {"is_syllabus": bool, "reason": str}
+    """
+    if USE_MOCK_AI:
+        return {"is_syllabus": True, "reason": "Mock mode — skipping validation."}
+    
+    import json, re
+    prompt = (
+        "Analyze the following document text and determine if it is a course syllabus or curriculum.\n"
+        "A syllabus typically contains: course topics/schedule, learning objectives, "
+        "grading criteria, weekly breakdown of subjects, or a list of lessons/units.\n"
+        "A document that is a summary, lecture notes, homework, exam, or general text is NOT a syllabus.\n\n"
+        f"Document text (first 2000 chars):\n{syllabus_text[:2000]}\n\n"
+        'Respond with ONLY a JSON object: {"is_syllabus": true, "reason": "..."} or {"is_syllabus": false, "reason": "..."}'
+    )
+    
+    async def _try_validate(provider_name, llm_instance):
+        async with _api_semaphore:
+            response = await llm_instance.acomplete(prompt)
+            raw = response.text.strip()
+            # Extract JSON from potential markdown wrapper
+            json_match = re.search(r'\{.*\}', raw, re.DOTALL)
+            if json_match:
+                return json.loads(json_match.group())
+            return {"is_syllabus": True, "reason": "Could not parse validation response."}
+    
+    try:
+        result = await run_with_fallback(_try_validate, op_name="validate_syllabus")
+        return result
+    except Exception as e:
+        logger.warning(f"Syllabus validation failed: {e}. Allowing through.")
+        return {"is_syllabus": True, "reason": "Validation error — allowing through."}
+
 def parse_syllabus(syllabus_text: str, syllabus_name: str = "Unknown") -> Course:
     """
     Parses raw syllabus text into a structured Course object.

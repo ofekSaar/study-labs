@@ -88,6 +88,8 @@ services:
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       OPEN_ROUTE_API_KEY: ${OPEN_ROUTE_API_KEY:-}
       USE_MOCK_AI: ${USE_MOCK_AI:-False}
+      TOPIC_MATERIAL_THRESHOLD: ${TOPIC_MATERIAL_THRESHOLD:-0.225}
+      SYLLABUS_SIMILARITY_THRESHOLD: ${SYLLABUS_SIMILARITY_THRESHOLD:-0.60}
     depends_on:
       mongo:
         condition: service_healthy

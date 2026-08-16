@@ -24,7 +24,9 @@ import useCourseStore from '../../store/courseStore';
 import useEnrollmentStore from '../../store/enrollmentStore';
 import SettingsModal from './SettingsModal';
 import useGamificationStore, { INSTRUCTOR_AVATARS } from '../../store/gamificationStore';
-
+import { io } from 'socket.io-client';
+import useNotificationStore from '../../store/notificationStore';
+import useToastStore from '../../store/toastStore';
 /* ── Logo SVG ── */
 const Logo = ({ size = 32 }) => (
     <div
@@ -502,8 +504,45 @@ const MobileBellButton = () => {
 
 const InstructorLayout = ({ children }) => {
     const { fetchInstructorStats } = useCourseStore();
+    const { user } = useAuthStore();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
+    useEffect(() => {
+        if (!user?._id) return;
+        const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5005';
+        const token = localStorage.getItem('studylabs_token');
+        const socket = io(API_BASE_URL, { withCredentials: true, auth: { token } });
+
+        socket.on('connect', () => {
+            socket.emit('join_user', user._id);
+        });
+
+        socket.on('instructor_notification', (data) => {
+            useNotificationStore.getState().addNotification(data);
+
+            // Show toast based on type
+            const toastStore = useToastStore.getState();
+            switch (data.type) {
+                case 'generation_complete':
+                    toastStore.success('Course Ready', data.message);
+                    break;
+                case 'generation_failed':
+                    toastStore.error('Generation Failed', data.message);
+                    break;
+                case 'material_update_complete':
+                    toastStore.success('Materials Updated', data.message);
+                    break;
+                case 'low_quality_warning':
+                    toastStore.info('Quality Notice', data.message);
+                    break;
+                default:
+                    toastStore.info('Notification', data.message);
+            }
+        });
+
+        return () => socket.disconnect();
+    }, [user?._id]);
 
     useEffect(() => {
         fetchInstructorStats();
