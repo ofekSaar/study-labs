@@ -211,4 +211,86 @@ describe('Courses API', () => {
             expect(res.status).toBe(404);
         });
     });
+
+    describe('GET & PUT /api/courses/:id/nodes/:nodeId/content', () => {
+        let course, node;
+
+        beforeEach(async () => {
+            course = await Course.create({
+                title: 'Lesson Summary Test Course',
+                department: 'cs',
+                description: 'Course description for testing lesson content APIs.',
+                instructor: instructor._id,
+                syllabus: {
+                    filename: 'syllabus.pdf',
+                    originalName: 'syllabus.pdf',
+                    mimetype: 'application/pdf',
+                    storagePath: 'uploads/syllabus.pdf',
+                    size: 100
+                },
+                materials: [],
+                isPublished: true,
+                generationStatus: 'ready'
+            });
+
+            node = await CourseNode.create({
+                course: course._id,
+                title: 'Introduction to DFAs',
+                type: 'lesson',
+                order: 1,
+                sequenceOrder: 1,
+                lessonContent: '# DFAs\nDeterministic Finite Automata overview.',
+                isMaterialGrounded: true
+            });
+        });
+
+        it('should return lesson summary content for a node', async () => {
+            const res = await request(app)
+                .get(`/api/courses/${course._id}/nodes/${node._id}/content`)
+                .set('Authorization', `Bearer ${studentToken}`);
+
+            expect(res.status).toBe(200);
+            expect(res.body.status).toBe('success');
+            expect(res.body.data.nodeId.toString()).toBe(node._id.toString());
+            expect(res.body.data.title).toBe('Introduction to DFAs');
+            expect(res.body.data.content).toContain('Deterministic Finite Automata');
+            expect(res.body.data.isMaterialGrounded).toBe(true);
+        });
+
+        it('should allow course instructor to update lesson summary content', async () => {
+            const newContent = '# DFAs Updated\nUpdated summary text by instructor.';
+            const res = await request(app)
+                .put(`/api/courses/${course._id}/nodes/${node._id}/content`)
+                .set('Authorization', `Bearer ${instructorToken}`)
+                .send({ content: newContent });
+
+            expect(res.status).toBe(200);
+            expect(res.body.status).toBe('success');
+            expect(res.body.data.content).toBe(newContent);
+
+            const updatedNode = await CourseNode.findById(node._id);
+            expect(updatedNode.lessonContent).toBe(newContent);
+        });
+
+        it('should forbid non-owner instructors from editing lesson summary', async () => {
+            const otherInstructorSetup = await generateTestUser('instructor');
+            const newContent = 'Hacked summary';
+
+            const res = await request(app)
+                .put(`/api/courses/${course._id}/nodes/${node._id}/content`)
+                .set('Authorization', `Bearer ${otherInstructorSetup.token}`)
+                .send({ content: newContent });
+
+            expect(res.status).toBe(403);
+        });
+
+        it('should forbid students from editing lesson summary', async () => {
+            const res = await request(app)
+                .put(`/api/courses/${course._id}/nodes/${node._id}/content`)
+                .set('Authorization', `Bearer ${studentToken}`)
+                .send({ content: 'Student hack attempt' });
+
+            expect(res.status).toBe(403);
+        });
+    });
 });
