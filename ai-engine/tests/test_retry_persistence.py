@@ -78,10 +78,13 @@ async def test_create_course_pipeline_cache_skip():
         "questions": [{"question": "Q1", "options": ["A"], "answer": "A"}]
     }
     
-    # Patch database handle, blueprint saver, and generators
+    # Patch database handle, blueprint saver, parse_syllabus, and generators
     mock_gen = AsyncMock(return_value=([], "Cached summary"))
     with patch("engine.generator.get_db_handle", return_value=mock_db), \
          patch("engine.generator.save_syllabus_blueprint") as mock_save_bp, \
+         patch("engine.generator.parse_syllabus", return_value=course), \
+         patch("engine.generator.update_course_progress"), \
+         patch("engine.db.update_course_progress"), \
          patch("engine.generator.tag_materials_with_embeddings") as mock_tag, \
          patch("engine.generator.save_initial_course_to_db") as mock_save_init, \
          patch("engine.generator.generate_content_for_topic", mock_gen):
