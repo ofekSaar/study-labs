@@ -17,8 +17,8 @@ async def test_generate_content_for_topic_retries():
         summary = "This is a valid summary for DFA"
     
     mock_run.side_effect = [
-        [Question(question_text="What is a DFA?", options=["A", "B"], correct_answer=0)],
-        FakeSummary()
+        "This is a valid summary for DFA",
+        [Question(question_text="What is a DFA?", options=["A", "B"], correct_answer=0)]
     ]
     
     with patch("engine.generator.run_with_fallback", mock_run):
@@ -78,8 +78,9 @@ async def test_create_course_pipeline_cache_skip():
         "questions": [{"question": "Q1", "options": ["A"], "answer": "A"}]
     }
     
-    # Patch database handle and generators
+    # Patch database handle, blueprint saver, and generators
     with patch("engine.generator.get_db_handle", return_value=mock_db), \
+         patch("engine.generator.save_syllabus_blueprint") as mock_save_bp, \
          patch("engine.generator.tag_materials_with_embeddings") as mock_tag, \
          patch("engine.generator.save_initial_course_to_db") as mock_save_init, \
          patch("engine.generator.generate_content_for_topic") as mock_gen:

@@ -74,10 +74,14 @@ def client(tmp_path, monkeypatch):
     async def _evaluate_answer(*a, **k):
         return {}
 
+    async def _validate_syllabus_content(*a, **k):
+        return {"is_syllabus": True, "reason": "stub"}
+
     _mod(
         "engine.generator",
         create_course_pipeline=_create_course_pipeline,
         evaluate_answer=_evaluate_answer,
+        validate_syllabus_content=_validate_syllabus_content,
     )
 
     async def _evaluate_course(*a, **k):

@@ -32,10 +32,12 @@ FIXTURES_DIR = os.path.join(os.path.dirname(__file__), "fixtures")
 
 def _read_pdf_text(filename):
     """Read text from a PDF file using the same parser the engine uses."""
-    filepath = os.path.join(FIXTURES_DIR, filename)
-    if not os.path.exists(filepath):
-        filepath = os.path.join(FIXTURES_DIR, "computational-models", filename)
-    assert os.path.exists(filepath), f"Fixture not found: {filepath}"
+    candidate_paths = [
+        os.path.join(FIXTURES_DIR, filename),
+        os.path.join(FIXTURES_DIR, "computational-models", filename),
+    ]
+    filepath = next((p for p in candidate_paths if os.path.exists(p)), None)
+    assert filepath is not None and os.path.exists(filepath), f"Fixture not found: {filename} (searched: {candidate_paths})"
 
     try:
         from engine.ocr import extract_with_images
