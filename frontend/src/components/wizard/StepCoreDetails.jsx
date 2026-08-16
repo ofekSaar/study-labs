@@ -77,12 +77,14 @@ const StepCoreDetails = () => {
             {/* Header */}
             <div className="flex items-start justify-between">
                 <div>
-                    <h3 className="text-2xl font-display font-bold text-gray-900">
+                    <h3 className="text-2xl font-display font-bold text-gray-900 dark:text-white">
                         Course Details
                     </h3>
-                    <p className="text-gray-500 mt-1">Set the foundation for your new course.</p>
+                    <p className="text-gray-500 dark:text-white/60 mt-1">
+                        Set the foundation for your new course.
+                    </p>
                 </div>
-                <div className="flex items-center gap-1.5 bg-amber-50 border border-amber-200 text-amber-700 px-3 py-1.5 rounded-full text-xs font-bold shrink-0">
+                <div className="flex items-center gap-1.5 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 text-amber-700 dark:text-amber-400 px-3 py-1.5 rounded-full text-xs font-bold shrink-0">
                     <Sparkles size={12} />
                     +50 XP
                 </div>
@@ -95,7 +97,7 @@ const StepCoreDetails = () => {
                     <div>
                         <label
                             htmlFor="course-title"
-                            className="block text-sm font-bold text-gray-700 mb-1.5"
+                            className="block text-sm font-bold text-gray-700 dark:text-white/80 mb-1.5"
                         >
                             Course Name
                         </label>
@@ -106,8 +108,8 @@ const StepCoreDetails = () => {
                             className={`w-full px-4 py-3 rounded-xl border-2 font-medium transition-all duration-200 outline-none
                                 ${
                                     errors.title
-                                        ? 'border-red-400 bg-red-50 focus:border-red-500'
-                                        : 'border-gray-200 bg-white focus:border-studylabs-orange focus:shadow-[0_0_0_3px_rgba(217,119,87,0.12)]'
+                                        ? 'border-red-400 bg-red-50 dark:bg-red-950/20 focus:border-red-500 text-slate-800 dark:text-white'
+                                        : 'border-gray-200 dark:border-white/10 bg-white dark:bg-slate-900 text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/30 focus:border-studylabs-orange focus:shadow-[0_0_0_3px_rgba(217,119,87,0.12)]'
                                 }`}
                             placeholder="e.g. Advanced Data Structures"
                         />
@@ -122,7 +124,7 @@ const StepCoreDetails = () => {
                     <div role="group" aria-labelledby="dept-group-label">
                         <span
                             id="dept-group-label"
-                            className="block text-sm font-bold text-gray-700 mb-2"
+                            className="block text-sm font-bold text-gray-700 dark:text-white/80 mb-2"
                         >
                             Academic Department
                         </span>
@@ -147,22 +149,24 @@ const StepCoreDetails = () => {
                                         className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all duration-200 cursor-pointer
                                             ${
                                                 isSelected
-                                                    ? `border-transparent ${dept.bg} shadow-md scale-[1.02]`
-                                                    : 'border-gray-100 bg-white hover:border-gray-200 hover:bg-gray-50'
+                                                    ? `border-purple-500 dark:border-purple-400 ${dept.bg} dark:bg-purple-950/40 shadow-md scale-[1.02]`
+                                                    : 'border-gray-200 dark:border-white/10 bg-white dark:bg-slate-900/50 hover:border-gray-300 dark:hover:border-white/20 hover:bg-gray-50 dark:hover:bg-white/5'
                                             }`}
                                     >
                                         <div
-                                            className={`p-1.5 rounded-lg transition-colors ${isSelected ? dept.bg : 'bg-gray-100'}`}
+                                            className={`p-1.5 rounded-lg transition-colors ${isSelected ? dept.bg + ' dark:bg-purple-900/50' : 'bg-gray-100 dark:bg-white/10'}`}
                                         >
                                             <Icon
                                                 size={18}
                                                 className={
-                                                    isSelected ? dept.color : 'text-gray-400'
+                                                    isSelected
+                                                        ? dept.color + ' dark:text-purple-300'
+                                                        : 'text-gray-400 dark:text-white/40'
                                                 }
                                             />
                                         </div>
                                         <span
-                                            className={`text-[11px] font-bold leading-tight text-center ${isSelected ? dept.color : 'text-gray-500'}`}
+                                            className={`text-[11px] font-bold leading-tight text-center ${isSelected ? dept.color + ' dark:text-purple-300' : 'text-gray-600 dark:text-white/70'}`}
                                         >
                                             {dept.label}
                                         </span>
@@ -182,12 +186,12 @@ const StepCoreDetails = () => {
                         <div className="flex items-center justify-between mb-1.5">
                             <label
                                 htmlFor="course-description"
-                                className="text-sm font-bold text-gray-700"
+                                className="text-sm font-bold text-gray-700 dark:text-white/80"
                             >
                                 Description
                             </label>
                             <span
-                                className={`text-xs font-medium ${description.length >= 10 ? 'text-emerald-600' : 'text-gray-400'}`}
+                                className={`text-xs font-medium ${description.length >= 10 ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-400 dark:text-white/40'}`}
                             >
                                 {description.length}/200
                             </span>
@@ -203,8 +207,8 @@ const StepCoreDetails = () => {
                             className={`w-full px-4 py-3 rounded-xl border-2 transition-all duration-200 outline-none h-28 resize-none
                                 ${
                                     errors.description
-                                        ? 'border-red-400 bg-red-50 focus:border-red-500'
-                                        : 'border-gray-200 bg-white focus:border-studylabs-orange focus:shadow-[0_0_0_3px_rgba(217,119,87,0.12)]'
+                                        ? 'border-red-400 bg-red-50 dark:bg-red-950/20 focus:border-red-500 text-slate-800 dark:text-white'
+                                        : 'border-gray-200 dark:border-white/10 bg-white dark:bg-slate-900 text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/30 focus:border-studylabs-orange focus:shadow-[0_0_0_3px_rgba(217,119,87,0.12)]'
                                 }`}
                             placeholder="Briefly describe what students will learn in this course..."
                         />
@@ -218,44 +222,46 @@ const StepCoreDetails = () => {
 
                 {/* Right: Live Preview Card */}
                 <div className="lg:col-span-2">
-                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">
+                    <p className="text-xs font-bold text-gray-400 dark:text-white/40 uppercase tracking-wide mb-2">
                         Live Preview
                     </p>
                     <div className="glass-card rounded-2xl p-4 h-full min-h-[220px] flex flex-col">
                         {/* Department badge */}
                         {selectedDept ? (
                             <span
-                                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold w-fit mb-3 ${selectedDept.bg} ${selectedDept.color}`}
+                                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold w-fit mb-3 ${selectedDept.bg} dark:bg-purple-900/40 ${selectedDept.color} dark:text-purple-300`}
                             >
                                 <selectedDept.icon size={11} />
                                 {selectedDept.label}
                             </span>
                         ) : (
-                            <span className="inline-block px-2.5 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-400 w-fit mb-3">
+                            <span className="inline-block px-2.5 py-1 rounded-full text-xs font-bold bg-gray-100 dark:bg-white/10 text-gray-400 dark:text-white/40 w-fit mb-3">
                                 No department
                             </span>
                         )}
 
                         {/* Title */}
                         <h4
-                            className={`font-display font-bold leading-tight mb-2 ${title ? 'text-gray-900 text-base' : 'text-gray-300 text-sm italic'}`}
+                            className={`font-display font-bold leading-tight mb-2 ${title ? 'text-gray-900 dark:text-white text-base' : 'text-gray-400 dark:text-white/30 text-sm italic'}`}
                         >
                             {title || 'Your course title will appear here...'}
                         </h4>
 
                         {/* Description */}
                         <p
-                            className={`text-xs leading-relaxed flex-1 ${description ? 'text-gray-600' : 'text-gray-300 italic'}`}
+                            className={`text-xs leading-relaxed flex-1 ${description ? 'text-gray-600 dark:text-white/70' : 'text-gray-400 dark:text-white/30 italic'}`}
                         >
                             {description || 'Your course description will appear here...'}
                         </p>
 
                         {/* Footer */}
-                        <div className="mt-3 pt-3 border-t border-gray-100 flex items-center gap-2">
+                        <div className="mt-3 pt-3 border-t border-gray-100 dark:border-white/10 flex items-center gap-2">
                             <div className="w-6 h-6 rounded-full bg-gradient-to-br from-studylabs-orange to-studylabs-purple flex items-center justify-center text-white text-[10px] font-bold">
                                 {title ? title[0].toUpperCase() : '?'}
                             </div>
-                            <span className="text-xs text-gray-400">Your Course</span>
+                            <span className="text-xs text-gray-400 dark:text-white/40">
+                                Your Course
+                            </span>
                         </div>
                     </div>
                 </div>
