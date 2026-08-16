@@ -97,11 +97,7 @@ def tag_materials_with_embeddings(course, materials: List[str]) -> None:
         for m_idx, mat_text in enumerate(materials):
             score = similarity_matrix[t_idx, m_idx]
             if score >= THRESHOLD:
-                # Term verification: accept if score is very high (>= 0.40) OR chunk contains at least 1 subject term
-                chunk_lower = mat_text.lower()
-                has_term_overlap = any(term in chunk_lower for term in subject_terms) if subject_terms else True
-                if score >= 0.40 or has_term_overlap:
-                    matched_with_scores.append((mat_text, score))
+                matched_with_scores.append((mat_text, float(score)))
         
         # Sort by similarity score descending
         matched_with_scores.sort(key=lambda x: x[1], reverse=True)

@@ -166,14 +166,14 @@ const StepMaterials = () => {
             {/* Header */}
             <div className="flex items-start justify-between">
                 <div>
-                    <h3 className="text-2xl font-display font-bold text-gray-900">
+                    <h3 className="text-2xl font-display font-bold text-gray-900 dark:text-white">
                         Course Materials
                     </h3>
-                    <p className="text-gray-500 mt-1">
+                    <p className="text-gray-500 dark:text-white/60 mt-1">
                         Upload your syllabus and course materials below.
                     </p>
                 </div>
-                <div className="flex items-center gap-1.5 bg-amber-50 border border-amber-200 text-amber-700 px-3 py-1.5 rounded-full text-xs font-bold shrink-0">
+                <div className="flex items-center gap-1.5 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 text-amber-700 dark:text-amber-400 px-3 py-1.5 rounded-full text-xs font-bold shrink-0">
                     <Sparkles size={12} />
                     +50 XP
                 </div>
@@ -182,7 +182,9 @@ const StepMaterials = () => {
             {/* Syllabus Section */}
             <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                    <h4 className="font-bold text-gray-800 text-sm">Course Syllabus</h4>
+                    <h4 className="font-bold text-gray-800 dark:text-white text-sm">
+                        Course Syllabus
+                    </h4>
                     <span className="text-red-500 text-xs font-bold">Required</span>
                     {syllabus.length > 0 && (
                         <span className="flex items-center gap-1 text-emerald-600 text-xs font-bold">
