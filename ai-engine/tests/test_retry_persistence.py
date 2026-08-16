@@ -79,11 +79,12 @@ async def test_create_course_pipeline_cache_skip():
     }
     
     # Patch database handle, blueprint saver, and generators
+    mock_gen = AsyncMock(return_value=([], "Cached summary"))
     with patch("engine.generator.get_db_handle", return_value=mock_db), \
          patch("engine.generator.save_syllabus_blueprint") as mock_save_bp, \
          patch("engine.generator.tag_materials_with_embeddings") as mock_tag, \
          patch("engine.generator.save_initial_course_to_db") as mock_save_init, \
-         patch("engine.generator.generate_content_for_topic") as mock_gen:
+         patch("engine.generator.generate_content_for_topic", mock_gen):
          
         # Run pipeline
         res_course, updated_topics = await create_course_pipeline(

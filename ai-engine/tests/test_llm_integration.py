@@ -32,10 +32,17 @@ FIXTURES_DIR = os.path.join(os.path.dirname(__file__), "fixtures")
 
 def _read_pdf_text(filename):
     """Read text from a PDF file using the same parser the engine uses."""
-    candidate_paths = [
-        os.path.join(FIXTURES_DIR, filename),
-        os.path.join(FIXTURES_DIR, "computational-models", filename),
-    ]
+    candidates = [filename]
+    if filename == "sample_summary.pdf":
+        candidates.append("handwritten_summary.pdf")
+    elif filename == "sample_syllabus.pdf":
+        candidates.append("Syllabus.pdf")
+
+    candidate_paths = []
+    for f in candidates:
+        candidate_paths.append(os.path.join(FIXTURES_DIR, f))
+        candidate_paths.append(os.path.join(FIXTURES_DIR, "computational-models", f))
+
     filepath = next((p for p in candidate_paths if os.path.exists(p)), None)
     assert filepath is not None and os.path.exists(filepath), f"Fixture not found: {filename} (searched: {candidate_paths})"
 
