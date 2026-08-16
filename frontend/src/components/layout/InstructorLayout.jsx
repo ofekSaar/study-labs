@@ -111,6 +111,21 @@ const NotificationBell = () => {
     const panelRef = useRef(null);
     const navigate = useNavigate();
 
+    const formatError = (err) => {
+        if (!err) return '';
+        let text = err;
+        try {
+            if (text.includes('{')) {
+                const jsonStr = text.substring(text.indexOf('{'));
+                const parsed = JSON.parse(jsonStr);
+                if (parsed.detail) text = parsed.detail;
+            }
+        } catch {
+            // retain original string on parse failure
+        }
+        return text.replace(/^AI Service Error \(\d+\):\s*/i, '');
+    };
+
     const failedCourseNotifs = (courses || [])
         .filter((c) => c.generationStatus === 'failed' || c.generationError)
         .map((c) => ({
@@ -118,7 +133,7 @@ const NotificationBell = () => {
             courseId: c._id || c.id,
             courseTitle: c.title,
             message: c.generationError
-                ? `Course "${c.title}" error: ${c.generationError}`
+                ? `Course "${c.title}" error: ${formatError(c.generationError)}`
                 : `Course "${c.title}" generation failed`,
             type: 'generation_failed',
             read: false,
