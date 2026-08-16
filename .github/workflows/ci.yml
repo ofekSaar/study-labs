@@ -99,32 +99,35 @@ jobs:
         run: npm test
 
   # ---------------------------------------------------------------------------
-  # Job 3 (DISABLED): AI Engine — placeholder for future pytest suite
+  # Job 3: AI Engine — unit tests + real LLM integration tests
   #
-  # Uncomment when ai-engine/ gains tests. Steps needed:
-  #   1. actions/setup-python@v5 with python-version: "3.11"
-  #   2. pip install -r ai-engine/requirements.txt
-  #   3. pip install pytest pytest-asyncio httpx
-  #   4. pytest ai-engine/tests/ -v
-  #
-  # Also add USE_MOCK_AI: "True" to the env block so tests never call real LLMs.
+  # Unit tests use mocked SBERT vectors (no downloads needed).
+  # Integration tests use real OpenAI API calls to verify:
+  #   - Syllabus validation rejects non-syllabus documents
+  #   - Syllabus validation accepts real syllabi
+  #   - Unrelated materials → all topics ungrounded
+  # Integration tests auto-skip if OPENAI_API_KEY is not set.
   # ---------------------------------------------------------------------------
-  # ai-engine:
-  #   name: AI Engine (pytest)
-  #   runs-on: ubuntu-latest
-  #   defaults:
-  #     run:
-  #       working-directory: ai-engine
-  #   env:
-  #     CI: true
-  #     USE_MOCK_AI: "True"
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - uses: actions/setup-python@v5
-  #       with:
-  #         python-version: "3.11"
-  #         cache: pip
-  #     - name: Install dependencies
-  #       run: pip install -r requirements.txt && pip install pytest pytest-asyncio httpx
-  #     - name: Test
-  #       run: pytest tests/ -v
+  ai-engine:
+    name: AI Engine (pytest)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ai-engine
+    env:
+      CI: true
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      TOPIC_MATERIAL_THRESHOLD: ${{ vars.TOPIC_MATERIAL_THRESHOLD || '0.225' }}
+      SYLLABUS_SIMILARITY_THRESHOLD: ${{ vars.SYLLABUS_SIMILARITY_THRESHOLD || '0.60' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install system dependencies
+        run: sudo apt-get update && sudo apt-get install -y tesseract-ocr tesseract-ocr-heb tesseract-ocr-eng
+      - name: Install dependencies
+        run: pip install -r requirements.txt && pip install pytest pytest-asyncio httpx
+      - name: Run tests
+        run: pytest tests/ -v --tb=short
