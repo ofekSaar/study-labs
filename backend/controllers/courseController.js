@@ -592,6 +592,7 @@ export const addCourseMaterials = async (req, res, next) => {
     // Append new materials and update generation status
     course.materials.push(...newMaterialsData);
     course.generationStatus = 'generating';
+    course.generationError = null;
     course.generationStartedAt = new Date();
     await course.save();
 

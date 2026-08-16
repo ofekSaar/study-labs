@@ -433,9 +433,12 @@ async def create_course_pipeline(
         logger.info(f"Pipeline Step 1/3 (Update): Loading existing syllabus blueprint for course {course_id}")
         blueprint_doc = get_syllabus_blueprint(course_id)
         if not blueprint_doc:
-            raise Exception(f"Syllabus blueprint not found for course {course_id}")
-        course = Course.model_validate(blueprint_doc["blueprint"])
-    else:
+            logger.warning(f"Syllabus blueprint not found for course {course_id}. Falling back to full course generation.")
+            is_update = False
+        else:
+            course = Course.model_validate(blueprint_doc["blueprint"])
+
+    if not is_update:
         # Step 1: Syllabus -> Structure
         logger.info("Pipeline Step 1/3: Parsing Syllabus")
         course = parse_syllabus(syllabus_text, syllabus_name=syllabus_name)
