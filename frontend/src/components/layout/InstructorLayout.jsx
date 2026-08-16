@@ -104,11 +104,32 @@ const NotificationBell = () => {
         approvePendingEnrollment,
         denyPendingEnrollment,
     } = useEnrollmentStore();
+    const { courses } = useCourseStore();
     const { notifications, markAllRead } = useNotificationStore();
     const [isOpen, setIsOpen] = useState(false);
     const [actionLoading, setActionLoading] = useState(null);
     const panelRef = useRef(null);
     const navigate = useNavigate();
+
+    const failedCourseNotifs = (courses || [])
+        .filter((c) => c.generationStatus === 'failed' || c.generationError)
+        .map((c) => ({
+            id: `failed-${c._id || c.id}`,
+            courseId: c._id || c.id,
+            courseTitle: c.title,
+            message: c.generationError
+                ? `Course "${c.title}" error: ${c.generationError}`
+                : `Course "${c.title}" generation failed`,
+            type: 'generation_failed',
+            read: false,
+        }));
+
+    const allNotifications = [
+        ...failedCourseNotifs,
+        ...notifications.filter(
+            (n) => !failedCourseNotifs.some((fc) => fc.courseId === n.courseId)
+        ),
+    ];
 
     const refresh = useCallback(() => {
         fetchPendingEnrollments();
@@ -150,7 +171,7 @@ const NotificationBell = () => {
         }
     };
 
-    const unreadNotifs = notifications.filter((n) => !n.read).length;
+    const unreadNotifs = allNotifications.filter((n) => !n.read).length;
     const count = unreadNotifs + pendingEnrollments.length;
 
     const handleToggle = () => {
@@ -200,9 +221,9 @@ const NotificationBell = () => {
                     </div>
                     <div className="overflow-y-auto" style={{ maxHeight: '300px' }}>
                         {/* Course Notifications Section */}
-                        {notifications.length > 0 && (
+                        {allNotifications.length > 0 && (
                             <div className="border-b border-slate-100 dark:border-white/5">
-                                {notifications.slice(0, 5).map((n) => (
+                                {allNotifications.slice(0, 5).map((n) => (
                                     <button
                                         type="button"
                                         key={n.id || n._id}
@@ -226,7 +247,7 @@ const NotificationBell = () => {
                         )}
 
                         {/* Enrollment Requests Section */}
-                        {pendingEnrollments.length === 0 && notifications.length === 0 ? (
+                        {pendingEnrollments.length === 0 && allNotifications.length === 0 ? (
                             <div className="py-6 flex flex-col items-center gap-2 text-slate-400 dark:text-white/30">
                                 <Bell size={20} />
                                 <span className="text-[11px] font-bold">No alerts or requests</span>
