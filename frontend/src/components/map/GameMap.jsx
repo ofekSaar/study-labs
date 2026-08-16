@@ -62,13 +62,9 @@ const MapNode = ({
                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
                         transition={{ duration: 0.15 }}
                         className="absolute bottom-16 p-3 rounded-2xl w-52 glass-card border border-indigo-500/20 shadow-lg text-slate-800 dark:text-white pointer-events-none z-50 text-right flex flex-col gap-1"
-                        dir="rtl"
+                        dir="ltr"
                     >
-                        <div className="flex items-center justify-between">
-                            <p className="text-[9px] font-black text-indigo-500 uppercase tracking-wider">
-                                שלב {index + 1} •{' '}
-                                {type === 'quiz' ? 'בוחן' : type === 'exam' ? 'מבחן מסכם' : 'שיעור'}
-                            </p>
+                        <div className="flex items-center justify-between gap-1">
                             {is_material_grounded === false ? (
                                 <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-600 dark:text-purple-300 border border-purple-500/30">
                                     🤖 AI Generated
@@ -78,12 +74,13 @@ const MapNode = ({
                                     📄 Grounded
                                 </span>
                             )}
+                            <p className="text-[9px] font-black text-indigo-500 uppercase tracking-wider">
+                                Step {index + 1} •{' '}
+                                {type === 'quiz' ? 'Quiz' : type === 'exam' ? 'Exam' : 'Lesson'}
+                            </p>
                         </div>
-                        <p className="text-xs font-extrabold truncate">{label}</p>
+                        <p className="text-xs font-extrabold truncate text-left">{label}</p>
                         <div className="flex items-center justify-between mt-1">
-                            <span className="flex items-center gap-0.5 text-indigo-500 text-[10px] font-bold">
-                                <Zap size={10} className="fill-indigo-500/10" />+{xpReward} XP
-                            </span>
                             <span
                                 className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
                                     status === 'completed'
@@ -94,10 +91,13 @@ const MapNode = ({
                                 }`}
                             >
                                 {status === 'completed'
-                                    ? 'הושלם'
+                                    ? 'Completed'
                                     : status === 'active'
-                                      ? 'זמין כעת'
-                                      : 'נעול'}
+                                      ? 'Available'
+                                      : 'Locked'}
+                            </span>
+                            <span className="flex items-center gap-0.5 text-indigo-500 text-[10px] font-bold">
+                                <Zap size={10} className="fill-indigo-500/10" />+{xpReward} XP
                             </span>
                         </div>
                     </motion.div>

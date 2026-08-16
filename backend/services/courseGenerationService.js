@@ -201,7 +201,7 @@ export const generateRoadmapInBackground = async (
     try {
       const { getIO } = await import('../config/socket.js');
       const io = getIO();
-      const instructorId = course.instructor?.toString() || course.instructor;
+      const instructorId = course.instructor?._id ? course.instructor._id.toString() : course.instructor?.toString();
       
       if (isUpdate) {
         io.to(`user_${instructorId}`).emit('instructor_notification', {
@@ -248,7 +248,7 @@ export const generateRoadmapInBackground = async (
       try {
         const { getIO } = await import('../config/socket.js');
         const io = getIO();
-        const instructorId = course.instructor?.toString() || course.instructor;
+        const instructorId = course.instructor?._id ? course.instructor._id.toString() : course.instructor?.toString();
         io.to(`user_${instructorId}`).emit('instructor_notification', {
           type: 'generation_failed',
           message: `Course "${course.title}" generation failed: ${error.message}`,
