@@ -25,6 +25,9 @@ import useEnrollmentStore from '../../store/enrollmentStore';
 import SettingsModal from './SettingsModal';
 import useGamificationStore, { INSTRUCTOR_AVATARS } from '../../store/gamificationStore';
 import AvatarDisplay from '../instructor/AvatarDisplay';
+import { io } from 'socket.io-client';
+import useNotificationStore from '../../store/notificationStore';
+import useToastStore from '../../store/toastStore';
 
 /* ── Logo SVG ── */
 const Logo = ({ size = 32 }) => (
