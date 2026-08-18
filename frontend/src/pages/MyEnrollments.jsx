@@ -7,7 +7,6 @@ import Button from '../components/common/Button';
 import Spinner from '../components/common/Spinner';
 import AvatarDisplay from '../components/instructor/AvatarDisplay';
 import logger from '../utils/logger';
-import AvatarDisplay from '../components/instructor/AvatarDisplay';
 
 // Values must match the Course model's `department` enum — courses store slugs, not labels.
 const DEPARTMENTS = [
