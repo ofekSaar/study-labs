@@ -39,7 +39,7 @@ export const requestEnrollment = async (req, res, next) => {
 
         const populated = await Enrollment.findById(existing._id)
           .populate('course', 'title color level')
-          .populate('student', 'name email avatar');
+          .populate('student', 'name email avatar photoUrl');
 
         return res.json({ status: 'success', data: { enrollment: populated } });
       }
@@ -61,7 +61,7 @@ export const requestEnrollment = async (req, res, next) => {
 
     const populated = await Enrollment.findById(enrollment._id)
       .populate('course', 'title color level')
-      .populate('student', 'name email avatar');
+      .populate('student', 'name email avatar photoUrl');
 
     res.status(201).json({ status: 'success', data: { enrollment: populated } });
   } catch (error) {
@@ -82,7 +82,7 @@ export const getMyEnrollments = async (req, res, next) => {
       .populate('course', 'title department color level description instructor')
       .populate({
         path: 'course',
-        populate: { path: 'instructor', select: 'name avatar' },
+        populate: { path: 'instructor', select: 'name avatar photoUrl' },
       })
       .sort({ requestedAt: -1 });
 
@@ -111,7 +111,7 @@ export const getCourseEnrollments = async (req, res, next) => {
     if (status) query.status = status;
 
     const enrollments = await Enrollment.find(query)
-      .populate('student', 'name email avatar')
+      .populate('student', 'name email avatar photoUrl')
       .sort({ requestedAt: -1 });
 
     res.json({ status: 'success', data: { enrollments, course: { title: course.title } } });
@@ -143,7 +143,7 @@ export const approveEnrollment = async (req, res, next) => {
     await createInitialProgress(enrollment.student, enrollment.course._id);
 
     const populated = await Enrollment.findById(enrollment._id)
-      .populate('student', 'name email avatar')
+      .populate('student', 'name email avatar photoUrl')
       .populate('course', 'title');
 
     // Notify the student in real-time
@@ -185,7 +185,7 @@ export const denyEnrollment = async (req, res, next) => {
     await enrollment.save();
 
     const populated = await Enrollment.findById(enrollment._id)
-      .populate('student', 'name email avatar')
+      .populate('student', 'name email avatar photoUrl')
       .populate('course', 'title');
 
     // Notify the student in real-time
@@ -215,7 +215,7 @@ export const getPendingEnrollments = async (req, res, next) => {
     const courseIds = courses.map(c => c._id);
 
     const enrollments = await Enrollment.find({ course: { $in: courseIds }, status: 'pending' })
-      .populate('student', 'name email avatar')
+      .populate('student', 'name email avatar photoUrl')
       .populate('course', 'title color')
       .sort({ requestedAt: -1 });
 
@@ -266,7 +266,7 @@ export const addStudentToCourse = async (req, res, next) => {
     await createInitialProgress(student._id, courseId);
 
     const populated = await Enrollment.findById(enrollment._id)
-      .populate('student', 'name email avatar')
+      .populate('student', 'name email avatar photoUrl')
       .populate('course', 'title');
 
     res.status(201).json({ status: 'success', data: { enrollment: populated } });

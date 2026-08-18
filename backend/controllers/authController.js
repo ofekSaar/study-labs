@@ -40,7 +40,7 @@ const mockLogin = async (req, res, next) => {
         providerId: 'mock-dev-user',
         name: 'Dev User',
         email: DEV_EMAIL,
-        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=dev',
+        photoUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=dev',
         role: 'instructor',
         roles: ['instructor', 'student'],
       });
@@ -165,7 +165,14 @@ export const updateProfile = async (req, res, next) => {
     const { name, avatar } = req.body;
     const updates = {};
     if (name !== undefined) updates.name = name;
-    if (avatar !== undefined) updates.avatar = avatar;
+    if (avatar !== undefined) {
+      // `avatar` is the cosmetic emoji picker only — the provider photo lives in
+      // `photoUrl` and is not user-editable.
+      if (typeof avatar === 'string' && /^https?:\/\//.test(avatar)) {
+        throw createError(400, 'avatar must be an emoji, not a URL');
+      }
+      updates.avatar = avatar;
+    }
 
     const user = await User.findByIdAndUpdate(
       req.user._id,

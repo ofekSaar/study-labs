@@ -131,9 +131,15 @@ router.post('/logout', authenticate, logout);
  *                 type: string
  *               avatar:
  *                 type: string
+ *                 description: >
+ *                   Cosmetic emoji avatar. URLs are rejected — the OAuth profile
+ *                   picture is stored in the read-only `photoUrl` field.
+ *                 example: "🦊"
  *     responses:
  *       200:
  *         description: Profile updated successfully
+ *       400:
+ *         description: avatar was a URL rather than an emoji
  */
 router.put('/profile', authenticate, updateProfile);
 

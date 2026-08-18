@@ -608,6 +608,7 @@ const StudentStatusOverview = () => {
                                                         className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 dark:bg-black/20 border border-slate-200/60 dark:border-white/5 hover:bg-slate-100/50 dark:hover:bg-white/5 transition-colors"
                                                     >
                                                         <AvatarDisplay
+                                                            photoUrl={item.student?.photoUrl}
                                                             avatar={item.student?.avatar}
                                                             size="w-9 h-9"
                                                             name={item.student?.name}
@@ -829,6 +830,7 @@ const StudentStatusOverview = () => {
                                                         <td className="px-4 py-4">
                                                             <div className="flex items-center gap-3">
                                                                 <AvatarDisplay
+                                                                    photoUrl={s.student?.photoUrl}
                                                                     avatar={s.student?.avatar}
                                                                     size="w-8 h-8"
                                                                     name={s.student?.name}
@@ -1062,6 +1064,7 @@ const StudentStatusOverview = () => {
                                                 </div>
                                                 {/* Avatar */}
                                                 <AvatarDisplay
+                                                    photoUrl={s.photoUrl}
                                                     avatar={s.avatar}
                                                     size="w-10 h-10"
                                                     name={s.name}

@@ -7,6 +7,7 @@ import { getDeptStyle } from '../utils/departmentStyles';
 import Button from '../components/common/Button';
 import Spinner from '../components/common/Spinner';
 import PanelEmptyState from '../components/instructor/PanelEmptyState';
+import AvatarDisplay from '../components/instructor/AvatarDisplay';
 import {
     Search,
     BookOpen,
@@ -370,13 +371,11 @@ const EnrollmentTab = ({ courses, preselectedCourseId }) => {
                                     >
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
-                                                <img
-                                                    src={
-                                                        req.student?.avatar ||
-                                                        `https://ui-avatars.com/api/?name=${encodeURIComponent(req.student?.name || 'S')}&background=7C3AED&color=fff`
-                                                    }
-                                                    alt="Avatar"
-                                                    className="w-9 h-9 rounded-full border border-slate-200 dark:border-white/10 object-cover"
+                                                <AvatarDisplay
+                                                    photoUrl={req.student?.photoUrl}
+                                                    avatar={req.student?.avatar}
+                                                    name={req.student?.name}
+                                                    size="w-9 h-9 text-sm"
                                                 />
                                                 <div>
                                                     <div className="font-bold text-slate-800 dark:text-white">

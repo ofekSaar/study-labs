@@ -134,7 +134,7 @@ export const buildCourseAnalytics = async (courseId, course) => {
   });
 
   const progressRecords = await Progress.find({ course: courseId })
-    .populate('student', 'name email avatar');
+    .populate('student', 'name email avatar photoUrl');
 
   const nodes = await CourseNode.find({ course: courseId }).sort({ order: 1 });
   const totalNodes = nodes.length;

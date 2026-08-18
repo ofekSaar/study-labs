@@ -256,7 +256,7 @@ export const getInstructors = async (req, res, next) => {
     };
 
     const instructors = await User.find(filter)
-      .select('name email avatar roles role createdAt')
+      .select('name email avatar photoUrl roles role createdAt')
       .sort({ createdAt: -1 })
       .lean();
 
