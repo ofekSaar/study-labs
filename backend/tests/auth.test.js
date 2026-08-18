@@ -134,15 +134,31 @@ describe('Auth API', () => {
             const res = await request(app)
                 .put('/api/auth/profile')
                 .set('Authorization', `Bearer ${token}`)
-                .send({ name: 'New Name', avatar: 'http://example.com/new.png' });
+                .send({ name: 'New Name', avatar: '🦊' });
 
             expect(res.status).toBe(200);
             expect(res.body.status).toBe('success');
             expect(res.body.data.user.name).toBe('New Name');
-            expect(res.body.data.user.avatar).toBe('http://example.com/new.png');
+            expect(res.body.data.user.avatar).toBe('🦊');
 
             const dbUser = await User.findById(user._id);
             expect(dbUser.name).toBe('New Name');
+        });
+
+        // `avatar` is the emoji picker; the provider photo lives in `photoUrl` and
+        // must not be overwritable, or the Google picture is lost on first edit.
+        it('should reject a URL as the avatar', async () => {
+            const { user, token } = await generateTestUser('student');
+
+            const res = await request(app)
+                .put('/api/auth/profile')
+                .set('Authorization', `Bearer ${token}`)
+                .send({ avatar: 'http://example.com/new.png' });
+
+            expect(res.status).toBe(400);
+
+            const dbUser = await User.findById(user._id);
+            expect(dbUser.avatar).not.toBe('http://example.com/new.png');
         });
 
         it('should update only name when avatar is omitted', async () => {

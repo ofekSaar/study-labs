@@ -24,7 +24,7 @@ async function seed() {
         providerId: 'mock-dev-user',
         name: 'Dev User',
         email: DEV_EMAIL,
-        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=dev',
+        photoUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=dev',
         roles: ['student', 'instructor'],
         role: 'instructor'
       });

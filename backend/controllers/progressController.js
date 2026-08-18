@@ -89,7 +89,7 @@ export const completeNode = async (req, res, next) => {
 
 /**
  * Shape a raw aggregation result into the leaderboard entry the frontend expects.
- * Rows must expose `_id` (student), `totalXP`, `name`, and `avatar`.
+ * Rows must expose `_id` (student), `totalXP`, `name`, `avatar`, and `photoUrl`.
  *
  * @param {object[]} rows   - Aggregation pipeline results
  * @param {string}   userId - Current user's _id string for isYou flagging
@@ -101,6 +101,7 @@ const shapeLeaderboardEntries = (rows, userId) =>
     userId: row._id,
     name: row.name,
     avatar: row.avatar || null,
+    photoUrl: row.photoUrl || null,
     xp: row.totalXP,
     level: gamificationService.getLevelName(row.totalXP),
     isYou: row._id.toString() === userId.toString(),

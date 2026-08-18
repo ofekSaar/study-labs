@@ -24,7 +24,13 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
     },
+    // Cosmetic avatar picked by the user (emoji). Only shown when photoUrl is empty.
     avatar: {
+      type: String,
+      default: null,
+    },
+    // Profile picture from the OAuth provider, refreshed on every login.
+    photoUrl: {
       type: String,
       default: null,
     },

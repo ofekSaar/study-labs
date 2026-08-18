@@ -6,6 +6,7 @@ import { Search } from 'lucide-react';
 import Button from '../components/common/Button';
 import Spinner from '../components/common/Spinner';
 import logger from '../utils/logger';
+import AvatarDisplay from '../components/instructor/AvatarDisplay';
 
 const DEPARTMENTS = ['All', 'Computer Science', 'Mathematics', 'Science', 'Business'];
 
@@ -233,17 +234,11 @@ const MyEnrollments = () => {
                                         </p>
 
                                         <div className="flex items-center gap-3 mb-5 bg-slate-100 dark:bg-black/20 p-3 rounded-2xl border border-slate-200/50 dark:border-white/5">
-                                            <img
-                                                src={
-                                                    course.instructor?.avatar ||
-                                                    'https://via.placeholder.com/150'
-                                                }
-                                                alt={
-                                                    course.instructor?.name
-                                                        ? `${course.instructor.name}'s avatar`
-                                                        : 'Instructor avatar'
-                                                }
-                                                className="w-10 h-10 rounded-full bg-slate-200 dark:bg-white/10 border border-slate-300 dark:border-white/20"
+                                            <AvatarDisplay
+                                                photoUrl={course.instructor?.photoUrl}
+                                                avatar={course.instructor?.avatar}
+                                                name={course.instructor?.name}
+                                                size="w-10 h-10"
                                             />
                                             <div className="text-sm">
                                                 <p className="text-slate-800 dark:text-white font-bold">

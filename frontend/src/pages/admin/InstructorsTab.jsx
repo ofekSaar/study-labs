@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Loader2, Search, Users, BookOpen, GraduationCap, CheckCircle } from 'lucide-react';
 import api from '../../utils/api';
+import AvatarDisplay from '../../components/instructor/AvatarDisplay';
 
 function SummaryCard({ icon, label, value, accent = 'orange' }) {
     const ACCENT = {
@@ -155,21 +156,13 @@ const InstructorsTab = () => {
                                     >
                                         <td className="px-4 py-3">
                                             <div className="flex items-center gap-3">
-                                                {inst.avatar ? (
-                                                    <img
-                                                        src={inst.avatar}
-                                                        alt={
-                                                            inst.name
-                                                                ? `${inst.name}'s avatar`
-                                                                : 'Instructor avatar'
-                                                        }
-                                                        className="w-8 h-8 rounded-lg object-cover flex-shrink-0"
-                                                    />
-                                                ) : (
-                                                    <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center flex-shrink-0 text-purple-600 dark:text-purple-400 font-black text-sm">
-                                                        {inst.name?.[0]?.toUpperCase() ?? '?'}
-                                                    </div>
-                                                )}
+                                                <AvatarDisplay
+                                                    photoUrl={inst.photoUrl}
+                                                    avatar={inst.avatar}
+                                                    name={inst.name}
+                                                    size="w-8 h-8 text-sm"
+                                                    shape="rounded-lg"
+                                                />
                                                 <div className="min-w-0">
                                                     <p className="font-black text-slate-800 dark:text-white truncate">
                                                         {inst.name}
