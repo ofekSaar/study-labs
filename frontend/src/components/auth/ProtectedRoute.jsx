@@ -32,12 +32,14 @@ const ProtectedRoute = ({ children, allowedRole }) => {
                   : userRoles.includes(allowedRole);
 
         if (!hasRequiredRole) {
-            // Redirect to the user's primary dashboard
+            // Redirect to the user's active role dashboard, or default to first available
             if (isAdmin) return <Navigate to="/admin" replace />;
-            if (role === 'instructor' || userRoles.includes('instructor')) {
+            
+            const activeRole = role || (userRoles.includes('instructor') ? 'instructor' : 'student');
+            if (activeRole === 'instructor') {
                 return <Navigate to="/instructor" replace />;
             }
-            if (role === 'student' || userRoles.includes('student')) {
+            if (activeRole === 'student') {
                 return <Navigate to="/" replace />;
             }
             return <Navigate to="/role-select" replace />;

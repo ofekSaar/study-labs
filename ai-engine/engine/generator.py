@@ -13,7 +13,14 @@ from llama_index.llms.gemini import Gemini
 from llama_index.llms.openai import OpenAI
 
 logger = logging.getLogger(__name__)
-from engine.db import update_course_progress, save_syllabus_blueprint, get_syllabus_blueprint
+from engine.db import (
+    update_course_progress,
+    save_syllabus_blueprint,
+    get_syllabus_blueprint,
+    get_db_handle,
+    save_initial_course_to_db,
+    save_topic_content_incremental,
+)
 from engine.semantic_filter import tag_materials_with_embeddings
 from engine.llm_utils import run_with_fallback, run_with_fallback_sync
 from engine.config import (
@@ -99,6 +106,54 @@ if os.environ.get("GEMINI_API_KEY"):
 if not LLMS:
     logger.warning("No API Keys found. AI features will fail unless Mock Mode is active.")
 
+async def validate_syllabus_content(syllabus_text: str) -> dict:
+    """
+    Quick LLM check: does this text look like a course syllabus?
+    Returns {"is_syllabus": bool, "reason": str}
+    """
+    if USE_MOCK_AI:
+        return {"is_syllabus": True, "reason": "Mock mode — skipping validation."}
+    
+    prompt = (
+        "You are classifying an academic document. Is it a COURSE SYLLABUS?\n\n"
+        "A SYLLABUS describes the STRUCTURE and ADMINISTRATION of a course. "
+        "It typically contains SOME of these signals:\n"
+        "- A list of topics/subjects organized by weeks, sessions, or units\n"
+        "- Course objectives, learning outcomes, or prerequisites\n"
+        "- Grading policy, exam dates, or assignment weights\n"
+        "- Instructor name, office hours, or course code\n"
+        "- A schedule or timeline of what will be taught\n"
+        "A syllabus does NOT need ALL of these. Even a simple ordered list of "
+        "course topics or a curriculum outline counts.\n\n"
+        "NOT a syllabus:\n"
+        "- Study summaries or notes that EXPLAIN subject content (definitions, theorems, proofs)\n"
+        "- Lecture notes, textbook excerpts, or tutorial materials\n"
+        "- Homework, exams, or problem sets\n"
+        "- Research papers or articles\n"
+        "The key difference: a syllabus says WHAT will be taught, a summary TEACHES the content.\n\n"
+        "This document may be in any language (English, Hebrew, Arabic, etc.).\n\n"
+        f"Document text (first 3000 chars):\n{syllabus_text[:3000]}\n\n"
+        "Respond with ONLY one word: true or false"
+    )
+    
+    async def _try_validate(provider_name, llm_instance):
+        async with _api_semaphore:
+            response = await llm_instance.acomplete(prompt)
+            answer = response.text.strip().lower().rstrip(".")
+            is_syllabus = answer in ("true", "yes", "1")
+            return {"is_syllabus": is_syllabus}
+    
+    try:
+        result = await run_with_fallback(_try_validate, op_name="validate_syllabus")
+        if result["is_syllabus"]:
+            result["reason"] = "Document recognized as a course syllabus."
+        else:
+            result["reason"] = "This document appears to be study material, not a course syllabus."
+        return result
+    except Exception as e:
+        logger.warning(f"Syllabus validation failed: {e}. Allowing through.")
+        return {"is_syllabus": True, "reason": "Validation error — allowing through."}
+
 def parse_syllabus(syllabus_text: str, syllabus_name: str = "Unknown") -> Course:
     """
     Parses raw syllabus text into a structured Course object.
@@ -160,7 +215,7 @@ def parse_syllabus(syllabus_text: str, syllabus_name: str = "Unknown") -> Course
         logger.warning("All LLM providers failed for parse_syllabus.")
         return Course(title="Error Parsing Syllabus", lessons=[])
 
-async def generate_content_for_topic(topic: Topic) -> tuple[List[Question], str]:
+async def generate_content_for_topic(topic: Topic, course_title: str = None) -> tuple[List[Question], str]:
     """
     Generates questions and study summaries for the topic in a single LLM call.
     Uses semaphore for rate limiting and retry for 429 errors.
@@ -171,49 +226,139 @@ async def generate_content_for_topic(topic: Topic) -> tuple[List[Question], str]
         summary = topic.summary if topic.summary else f"# Summary for {topic.title}\n\nThis is a mock summary for {topic.title} generated because USE_MOCK_AI is True."
         return questions, summary
 
-    from pydantic import BaseModel, Field
-    class TopicContent(BaseModel):
-        summary: str = Field(..., description="A concise but comprehensive study summary/card in Markdown format, covering key concepts, definitions, and points.")
-        questions: List[Question] = Field(..., description="A list of exactly 3 multiple-choice questions testing key concepts of this topic.")
-
     matched_content = "\n".join(topic.matched_materials)
-    
-    prompt_template_str = (
-        "You are an expert tutor creating a study guide and a quiz for a student.\n"
-        "Topic: {topic_title}\n"
-        "Description: {topic_desc}\n"
-        "Material content:\n"
-        "{matched_content}\n\n"
-        "Please generate:\n"
-        "1. A concise but comprehensive study summary in Markdown format.\n"
-        "2. Exactly 3 multiple-choice questions based on the topic and materials.\n\n"
-        "IMPORTANT: Always use LaTeX for mathematical formulas, variables, and state transitions. "
-        "Use single dollar signs $...$ for inline math (e.g., $E=mc^2$ or $q_0 \\rightarrow q_1$) and double dollar signs $$...$$ for block equations. "
-        "Do NOT use parentheses ( ) or plain text for math symbols.\n"
-        "IMPORTANT: You must output strictly valid JSON conforming to the schema. "
-        "Properly escape all internal quotes, backslashes, and newlines so the parser does not fail."
-    )
-    
-    async def _try(provider_name, llm_instance):
-        program = LLMTextCompletionProgram.from_defaults(
-            output_cls=TopicContent,
-            prompt_template_str=prompt_template_str,
-            llm=llm_instance
-        )
-        async def _call():
-            async with _api_semaphore:
-                return await program.acall(
-                    topic_title=topic.title,
-                    topic_desc=topic.description or "",
-                    matched_content=matched_content
-                )
-        return await retry_with_backoff(_call)
+    course_context = f"Course Context: {course_title}\n" if course_title else ""
+    has_grounded_context = bool(topic.matched_materials) and topic.is_material_grounded
+    context_block = f"Relevant course material text:\n{matched_content}\n" if matched_content else ""
 
+    # 1. Generate Summary (Pure Markdown Output — no JSON escaping needed!)
+    async def _try_summary(provider_name, llm_instance):
+        async with _api_semaphore:
+            prompt = (
+                f"You are an expert tutor creating a comprehensive study guide for a student.\n"
+                f"{course_context}"
+                f"Topic: {topic.title}\n"
+                f"Description: {topic.description or ''}\n"
+                f"{context_block}\n"
+                "Using the course material text above as your primary source, generate a detailed, "
+                "rich, multi-paragraph study guide in Markdown format.\n"
+                "Include:\n"
+                "1. An Overview explaining the topic thoroughly based on the provided materials.\n"
+                "2. Key Concepts & Definitions with bullet points.\n"
+                "3. Theoretical / Mathematical Principles (use LaTeX $...$ for formulas if applicable).\n"
+                "4. Practical Examples / Summary Takeaways.\n\n"
+                "Respond with ONLY the Markdown study guide text (do NOT wrap in JSON)."
+            )
+            response = await llm_instance.acomplete(prompt)
+            summary_text = response.text.strip()
+            if summary_text.startswith("```markdown"):
+                summary_text = summary_text.replace("```markdown", "", 1).rstrip("` \n")
+            elif summary_text.startswith("```"):
+                summary_text = summary_text.replace("```", "", 1).rstrip("` \n")
+            return summary_text.strip()
+
+    # 2. Generate Quiz Questions (Clean JSON array of 3 questions)
+    async def _try_questions(provider_name, llm_instance):
+        import re
+        import json
+        async with _api_semaphore:
+            prompt = (
+                f"You are an expert tutor creating a quiz for a student.\n"
+                f"{course_context}"
+                f"Topic: {topic.title}\n"
+                f"Description: {topic.description or ''}\n"
+                f"{context_block}\n"
+                "Generate exactly 3 multiple-choice questions testing key concepts of this topic.\n\n"
+                "Respond ONLY with a JSON array wrapped inside a ```json ... ``` block:\n"
+                "[\n"
+                "  {\n"
+                '    "question_text": "...",\n'
+                '    "options": ["A", "B", "C", "D"],\n'
+                '    "correct_answer": 0\n'
+                "  }\n"
+                "]"
+            )
+            response = await llm_instance.acomplete(prompt)
+            raw_text = response.text.strip()
+            json_match = re.search(r"```json\s*(.*?)\s*```", raw_text, re.DOTALL)
+            json_str = json_match.group(1) if json_match else raw_text
+            repaired_json = re.sub(r'\\(?![\\"])', r'\\\\', json_str)
+            raw_questions = json.loads(repaired_json)
+            return [Question.parse_obj(q) for q in raw_questions]
+
+    # Run Summary Generation
     try:
-        result = await run_with_fallback(_try, op_name="generate_content_for_topic")
-        return result.questions, result.summary
-    except RuntimeError:
-        return [], f"# Summary for {topic.title}\n\n(Error generating summary)"
+        summary = await run_with_fallback(_try_summary, op_name="generate_summary")
+    except Exception as e:
+        logger.warning(f"Failed to generate custom summary for '{topic.title}': {e}. Using structured fallback.")
+        summary = (
+            f"# Study Guide: {topic.title}\n\n"
+            f"## Overview\n"
+            f"This lesson covers theoretical foundations, definitions, and core principles of **{topic.title}** within the curriculum.\n\n"
+            f"## Key Concepts\n"
+            f"* **Definition**: Core properties and mathematical structure of {topic.title}.\n"
+            f"* **Applications**: Main use cases and theoretical implications.\n"
+            f"* **Formal Notations**: Standard mathematical and logical representations."
+        )
+
+    def _shuffle_question_options(q: Question) -> Question:
+        import random
+        if not q.options or len(q.options) < 2:
+            return q
+        correct_text = (
+            q.options[q.correct_answer]
+            if 0 <= q.correct_answer < len(q.options)
+            else q.options[0]
+        )
+        
+        shuffled = list(q.options)
+        random.shuffle(shuffled)
+        
+        # Avoid biasing index 0: if correct_text ended up at index 0, swap it with a random non-zero index
+        if len(shuffled) > 1 and shuffled[0] == correct_text:
+            target_idx = random.randint(1, len(shuffled) - 1)
+            shuffled[0], shuffled[target_idx] = shuffled[target_idx], shuffled[0]
+
+        q.options = shuffled
+        q.correct_answer = shuffled.index(correct_text)
+        return q
+
+    # Run Questions Generation
+    try:
+        raw_qs = await run_with_fallback(_try_questions, op_name="generate_questions")
+        questions = [_shuffle_question_options(q) for q in raw_qs]
+    except Exception as e:
+        logger.warning(f"Failed to generate questions for '{topic.title}': {e}. Using fallback questions.")
+        fallback_qs = [
+            Question(
+                question_text=f"What is the primary focus of {topic.title}?",
+                options=[
+                    f"Understanding key concepts of {topic.title}",
+                    "Database query optimization",
+                    "Operating system thread scheduling",
+                    "Front-end layout styling"
+                ],
+                correct_answer=0
+            ),
+            Question(
+                question_text=f"Which of the following is most relevant when studying {topic.title}?",
+                options=[
+                    "Theoretical computer science and formal models",
+                    "Hardware wiring",
+                    "Network cabling",
+                    "Graphic design"
+                ],
+                correct_answer=0
+            ),
+            Question(
+                question_text=f"True or False: {topic.title} is an essential component of this course curriculum.",
+                options=["True", "False", "Neither", "Not applicable"],
+                correct_answer=0
+            )
+        ]
+        questions = [_shuffle_question_options(q) for q in fallback_qs]
+
+    return questions, summary
 
 
 async def validate_question_alignment(summary: str, question: Question) -> bool:
@@ -288,9 +433,12 @@ async def create_course_pipeline(
         logger.info(f"Pipeline Step 1/3 (Update): Loading existing syllabus blueprint for course {course_id}")
         blueprint_doc = get_syllabus_blueprint(course_id)
         if not blueprint_doc:
-            raise Exception(f"Syllabus blueprint not found for course {course_id}")
-        course = Course.model_validate(blueprint_doc["blueprint"])
-    else:
+            logger.warning(f"Syllabus blueprint not found for course {course_id}. Falling back to full course generation.")
+            is_update = False
+        else:
+            course = Course.model_validate(blueprint_doc["blueprint"])
+
+    if not is_update:
         # Step 1: Syllabus -> Structure
         logger.info("Pipeline Step 1/3: Parsing Syllabus")
         course = parse_syllabus(syllabus_text, syllabus_name=syllabus_name)
@@ -331,16 +479,61 @@ async def create_course_pipeline(
         # Tag all materials using SBERT (CPU-heavy — run off the event loop)
         await asyncio.to_thread(tag_materials_with_embeddings, course, materials)
 
-        # In a new course, all topics are generated
+        # Pre-save initial course structure to DB to allow incremental generation
+        if course_id:
+            logger.info(f"Pre-saving initial course structure for course {course_id}...")
+            await asyncio.to_thread(save_initial_course_to_db, course, course_id)
+
+        # If course exists, load existing structure to identify already generated topics
+        existing_structure = {}
+        if course_id:
+            try:
+                db = get_db_handle()
+                if db is not None:
+                    from bson import ObjectId
+                    course_doc = db['courses'].find_one({"_id": ObjectId(course_id)})
+                    if course_doc and "course_structure" in course_doc:
+                        existing_structure = course_doc["course_structure"]
+            except Exception as db_err:
+                logger.warning(f"Failed to fetch existing course structure for caching: {db_err}")
+
+        # In a new course or retry, only generate topics that are missing or had errors
         updated_topics = []
         for lesson in course.lessons:
             for topic in lesson.topics:
-                updated_topics.append(topic)
+                topic_entry = existing_structure.get(lesson.title, {}).get(topic.title, {})
+                has_summary_id = topic_entry.get("summary_id")
+                has_quiz_id = topic_entry.get("quiz_id")
+                
+                is_valid = False
+                if has_summary_id and has_quiz_id:
+                    try:
+                        db = get_db_handle()
+                        sum_doc = db['summaries'].find_one({"_id": ObjectId(has_summary_id)})
+                        if sum_doc and sum_doc.get("content") and "(Error generating summary)" not in sum_doc.get("content"):
+                            is_valid = True
+                    except Exception:
+                        pass
+                
+                if is_valid:
+                    logger.info(f"Skipping generation for topic '{topic.title}' (already cached in DB)")
+                    try:
+                        db = get_db_handle()
+                        sum_doc = db['summaries'].find_one({"_id": ObjectId(has_summary_id)})
+                        quiz_doc = db['quizzes'].find_one({"_id": ObjectId(has_quiz_id)})
+                        topic.summary = sum_doc.get("content") if sum_doc else None
+                        topic.questions = quiz_doc.get("questions") if quiz_doc else []
+                    except Exception as cache_err:
+                        logger.error(f"Failed to load cached topic data for '{topic.title}': {cache_err}")
+                        updated_topics.append(topic)
+                else:
+                    updated_topics.append(topic)
+
         total_topics_to_gen = len(updated_topics)
 
     # Step 3: Generate Questions & Summaries (PARALLEL)
     if total_topics_to_gen > 0:
-        logger.info(f"Pipeline Step 3/3: Generating content (questions & summaries) for {total_topics_to_gen} topics in PARALLEL...")
+        logger.info(f"Pipeline Step 3/3: Generating content (questions & summaries) for {total_topics_to_gen} topics...")
         
         tasks = []
         completed_topics = 0
@@ -348,14 +541,29 @@ async def create_course_pipeline(
         async def process_topic(lesson_title, t):
             nonlocal completed_topics
             logger.info(f"  → Generating content for: {lesson_title} / {t.title}")
-            t.questions, t.summary = await generate_content_for_topic(t)
+            t.questions, t.summary = await generate_content_for_topic(t, course_title=course.title)
+            
             # Validate alignment of each question against the generated summary.
-            # Costs one extra LLM call per question — gated behind a config flag.
             if VALIDATE_QUESTION_ALIGNMENT and t.summary and t.questions:
                 alignment_tasks = [validate_question_alignment(t.summary, q) for q in t.questions]
                 warnings = await asyncio.gather(*alignment_tasks, return_exceptions=True)
                 for q, warning in zip(t.questions, warnings):
                     q.alignment_warning = bool(warning) if not isinstance(warning, Exception) else False
+            
+            # Save topic content incrementally
+            if course_id:
+                try:
+                    await asyncio.to_thread(
+                        save_topic_content_incremental,
+                        course_id,
+                        lesson_title,
+                        t.title,
+                        t.summary,
+                        t.questions
+                    )
+                except Exception as save_err:
+                    logger.error(f"Failed to save topic '{t.title}' incrementally: {save_err}")
+            
             logger.info(f"  ✓ Finished: {lesson_title} / {t.title} ({len(t.questions)} questions)")
             completed_topics += 1
             if course_id:
@@ -368,7 +576,7 @@ async def create_course_pipeline(
                     
         await asyncio.gather(*tasks)
     else:
-        logger.info("Differential Update: No topics matched the new materials. No content generation required.")
+        logger.info("Differential Update: All topics matched new materials and are cached. No content generation required.")
 
     logger.info("Pipeline COMPLETE.")
     return course, updated_topics

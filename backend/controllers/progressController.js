@@ -59,10 +59,12 @@ export const getCourseProgress = async (req, res, next) => {
 export const completeNode = async (req, res, next) => {
   try {
     const { courseId, nodeId } = req.body;
+    const activeRole = req.headers['x-active-role'] || req.user.role;
     const result = await gamificationService.completeCourseNode(
       req.user,
       courseId,
-      nodeId
+      nodeId,
+      activeRole
     );
 
     res.json({

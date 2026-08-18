@@ -41,6 +41,29 @@ const ClassRoster = () => {
     const [addError, setAddError] = useState('');
     const [addSuccess, setAddSuccess] = useState('');
     const [isAdding, setIsAdding] = useState(false);
+    const [searchResults, setSearchResults] = useState([]);
+    const [isSearching, setIsSearching] = useState(false);
+
+    useEffect(() => {
+        if (!addEmail.trim() || addEmail.trim().length < 2) {
+            setSearchResults([]);
+            return;
+        }
+
+        const delayDebounceFn = setTimeout(async () => {
+            setIsSearching(true);
+            try {
+                const { data } = await api.get(`/api/enrollments/search-students?query=${encodeURIComponent(addEmail)}`);
+                setSearchResults(data.students || []);
+            } catch (err) {
+                logger.error('Failed to search students', err);
+            } finally {
+                setIsSearching(false);
+            }
+        }, 300);
+
+        return () => clearTimeout(delayDebounceFn);
+    }, [addEmail]);
 
     useEffect(() => {
         fetchAllCourses();
@@ -101,6 +124,15 @@ const ClassRoster = () => {
             setSelected(new Set());
         } else {
             setSelected(new Set(students.map((s) => s.student._id)));
+        }
+    };
+
+    const handleSendMessage = () => {
+        const selectedEmails = Array.from(selected)
+            .map((id) => students.find((s) => s.student._id === id)?.student?.email)
+            .filter(Boolean);
+        if (selectedEmails.length > 0) {
+            window.open(`mailto:${selectedEmails.join(',')}`);
         }
     };
 
@@ -305,7 +337,10 @@ const ClassRoster = () => {
                             {selected.size} student{selected.size > 1 ? 's' : ''} selected
                         </span>
                         <div className="flex items-center gap-3">
-                            <button className="flex items-center gap-2 bg-white/20 hover:bg-white/30 border border-white/30 px-4 py-2 rounded-xl text-sm font-bold transition-colors">
+                            <button
+                                onClick={handleSendMessage}
+                                className="flex items-center gap-2 bg-white/20 hover:bg-white/30 border border-white/30 px-4 py-2 rounded-xl text-sm font-bold transition-colors"
+                            >
                                 <Mail size={15} />
                                 Send Message
                             </button>
@@ -544,21 +579,56 @@ const ClassRoster = () => {
                                     htmlFor="add-student-email"
                                     className="block text-xs font-black text-slate-500 dark:text-white/50 uppercase tracking-wider mb-2"
                                 >
-                                    Student Email
+                                    Student Email or Name Search
                                 </label>
-                                <input
-                                    id="add-student-email"
-                                    type="email"
-                                    value={addEmail}
-                                    onChange={(e) => {
-                                        setAddEmail(e.target.value);
-                                        setAddError('');
-                                        setAddSuccess('');
-                                    }}
-                                    placeholder="student@example.com"
-                                    required
-                                    className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-black/30 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-white/25 text-sm font-medium focus:outline-none focus:border-purple-500 dark:focus:border-purple-400 transition-colors"
-                                />
+                                <div className="relative">
+                                    <input
+                                        id="add-student-email"
+                                        type="text"
+                                        value={addEmail}
+                                        onChange={(e) => {
+                                            setAddEmail(e.target.value);
+                                            setAddError('');
+                                            setAddSuccess('');
+                                        }}
+                                        placeholder="Type name or email to search..."
+                                        required
+                                        autoComplete="off"
+                                        className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-black/30 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-white/25 text-sm font-medium focus:outline-none focus:border-purple-500 dark:focus:border-purple-400 transition-colors"
+                                    />
+                                    {isSearching && (
+                                        <div className="absolute right-3 top-3.5 flex items-center justify-center">
+                                            <div className="w-4 h-4 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
+                                        </div>
+                                    )}
+                                    {searchResults.length > 0 && (
+                                        <div className="absolute left-0 right-0 z-50 mt-1 max-h-48 overflow-y-auto bg-white dark:bg-[#252033] border border-slate-200 dark:border-white/10 rounded-xl shadow-lg divide-y divide-slate-100 dark:divide-white/5">
+                                            {searchResults.map((user) => (
+                                                <button
+                                                    key={user._id}
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setAddEmail(user.email);
+                                                        setSearchResults([]);
+                                                    }}
+                                                    className="w-full text-left flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-white/5 cursor-pointer transition-colors"
+                                                >
+                                                    <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-white/10 flex items-center justify-center text-lg flex-shrink-0 select-none">
+                                                        {user.avatar || '🎓'}
+                                                    </div>
+                                                    <div className="min-w-0 flex-1">
+                                                        <p className="text-xs font-bold text-slate-800 dark:text-white truncate">
+                                                            {user.name}
+                                                        </p>
+                                                        <p className="text-[10px] text-slate-400 dark:text-white/40 truncate">
+                                                            {user.email}
+                                                        </p>
+                                                    </div>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
                             </div>
 
                             {addError && (

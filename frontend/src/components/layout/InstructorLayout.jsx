@@ -103,9 +103,54 @@ const NotificationBell = () => {
         approvePendingEnrollment,
         denyPendingEnrollment,
     } = useEnrollmentStore();
+    const { courses } = useCourseStore();
+    const { notifications, markAllRead } = useNotificationStore();
     const [isOpen, setIsOpen] = useState(false);
     const [actionLoading, setActionLoading] = useState(null);
     const panelRef = useRef(null);
+    const navigate = useNavigate();
+
+    const formatError = (err) => {
+        if (!err) return '';
+        let text = err;
+        try {
+            if (text.includes('{')) {
+                const jsonStr = text.substring(text.indexOf('{'));
+                const parsed = JSON.parse(jsonStr);
+                if (parsed.detail) text = parsed.detail;
+            }
+        } catch {
+            // retain original string on parse failure
+        }
+        return text.replace(/^AI Service Error \(\d+\):\s*/i, '');
+    };
+
+    const failedCourseNotifs = (courses || [])
+        .filter((c) => c.generationStatus === 'failed' || c.generationError)
+        .map((c) => ({
+            id: `failed-${c._id || c.id}`,
+            courseId: c._id || c.id,
+            courseTitle: c.title,
+            message: c.generationError
+                ? `Course "${c.title}" error: ${formatError(c.generationError)}`
+                : `Course "${c.title}" generation failed`,
+            type: 'generation_failed',
+            read: false,
+        }));
+
+    const [dismissedAlerts, setDismissedAlerts] = useState([]);
+
+    const handleDismissAlert = (e, notifId) => {
+        e.stopPropagation();
+        setDismissedAlerts((prev) => [...prev, notifId]);
+    };
+
+    const allNotifications = [
+        ...failedCourseNotifs,
+        ...notifications.filter(
+            (n) => !failedCourseNotifs.some((fc) => fc.courseId === n.courseId)
+        ),
+    ].filter((n) => !dismissedAlerts.includes(n.id || n._id));
 
     const refresh = useCallback(() => {
         fetchPendingEnrollments();
@@ -147,13 +192,22 @@ const NotificationBell = () => {
         }
     };
 
-    const count = pendingEnrollments.length;
+    const unreadNotifs = allNotifications.filter((n) => !n.read).length;
+    const count = unreadNotifs + pendingEnrollments.length;
+
+    const handleToggle = () => {
+        setIsOpen((o) => {
+            const next = !o;
+            if (next && unreadNotifs > 0) markAllRead();
+            return next;
+        });
+    };
 
     return (
         <div className="relative flex-1" ref={panelRef}>
             <button
-                onClick={() => setIsOpen((o) => !o)}
-                title="Enrollment Requests"
+                onClick={handleToggle}
+                title="Alerts & Requests"
                 className={`w-full flex flex-col items-center gap-0.5 py-2 rounded-xl relative transition-all border ${
                     count > 0
                         ? 'text-amber-500 hover:bg-amber-500/10 border-transparent hover:border-amber-500/20'
@@ -174,23 +228,67 @@ const NotificationBell = () => {
             {isOpen && (
                 <div
                     className="absolute bottom-full mb-2 bg-white dark:bg-[#1a1625] rounded-xl shadow-2xl border border-slate-200 dark:border-white/10 overflow-hidden z-50"
-                    style={{ maxHeight: '320px', width: '280px', left: 0 }}
+                    style={{ maxHeight: '360px', width: '300px', left: 0 }}
                 >
                     <div className="px-3 py-2 border-b border-slate-100 dark:border-white/8 flex items-center justify-between">
                         <span className="text-[11px] font-black text-slate-700 dark:text-white/80 uppercase tracking-wider">
-                            Enrollment Requests
+                            Alerts & Notifications
                         </span>
                         {count > 0 && (
                             <span className="px-1.5 py-0.5 rounded-md bg-amber-500/15 text-amber-600 dark:text-amber-400 text-[9px] font-black">
-                                {count} pending
+                                {count} new
                             </span>
                         )}
                     </div>
-                    <div className="overflow-y-auto" style={{ maxHeight: '260px' }}>
-                        {count === 0 ? (
+                    <div className="overflow-y-auto" style={{ maxHeight: '300px' }}>
+                        {/* Course Notifications Section */}
+                        {allNotifications.length > 0 && (
+                            <div className="border-b border-slate-100 dark:border-white/5">
+                                {allNotifications.slice(0, 5).map((n) => (
+                                    <div
+                                        key={n.id || n._id}
+                                        role="button"
+                                        tabIndex={0}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter' || e.key === ' ') {
+                                                if (n.courseId) navigate(`/course/${n.courseId}`);
+                                                setIsOpen(false);
+                                            }
+                                        }}
+                                        onClick={() => {
+                                            if (n.courseId) navigate(`/course/${n.courseId}`);
+                                            setIsOpen(false);
+                                        }}
+                                        className="w-full flex items-start justify-between gap-2 px-3 py-2 border-b border-slate-50 dark:border-white/5 last:border-0 hover:bg-slate-50 dark:hover:bg-white/3 transition-colors cursor-pointer group"
+                                    >
+                                        <div className="min-w-0 flex-1">
+                                            <p className="text-[11px] font-bold text-slate-800 dark:text-white/90 leading-tight">
+                                                {n.message}
+                                            </p>
+                                            {n.courseTitle && (
+                                                <p className="text-[9px] text-slate-400 dark:text-white/40 mt-0.5">
+                                                    {n.courseTitle}
+                                                </p>
+                                            )}
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={(e) => handleDismissAlert(e, n.id || n._id)}
+                                            title="Dismiss notification"
+                                            className="p-1 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-white/10 transition-colors"
+                                        >
+                                            <X size={12} />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* Enrollment Requests Section */}
+                        {pendingEnrollments.length === 0 && allNotifications.length === 0 ? (
                             <div className="py-6 flex flex-col items-center gap-2 text-slate-400 dark:text-white/30">
                                 <Bell size={20} />
-                                <span className="text-[11px] font-bold">No pending requests</span>
+                                <span className="text-[11px] font-bold">No alerts or requests</span>
                             </div>
                         ) : (
                             pendingEnrollments.map((e) => (
@@ -493,8 +591,45 @@ const MobileBellButton = () => {
 
 const InstructorLayout = ({ children }) => {
     const { fetchInstructorStats } = useCourseStore();
+    const { user } = useAuthStore();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
+    useEffect(() => {
+        if (!user?._id) return;
+        const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5005';
+        const token = localStorage.getItem('studylabs_token');
+        const socket = io(API_BASE_URL, { withCredentials: true, auth: { token } });
+
+        socket.on('connect', () => {
+            socket.emit('join_user', user._id);
+        });
+
+        socket.on('instructor_notification', (data) => {
+            useNotificationStore.getState().addNotification(data);
+
+            // Show toast based on type
+            const toastStore = useToastStore.getState();
+            switch (data.type) {
+                case 'generation_complete':
+                    toastStore.success('Course Ready', data.message);
+                    break;
+                case 'generation_failed':
+                    toastStore.error('Generation Failed', data.message);
+                    break;
+                case 'material_update_complete':
+                    toastStore.success('Materials Updated', data.message);
+                    break;
+                case 'low_quality_warning':
+                    toastStore.info('Quality Notice', data.message);
+                    break;
+                default:
+                    toastStore.info('Notification', data.message);
+            }
+        });
+
+        return () => socket.disconnect();
+    }, [user?._id]);
 
     useEffect(() => {
         fetchInstructorStats();

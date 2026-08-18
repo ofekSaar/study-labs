@@ -459,7 +459,7 @@ export const getNodeContent = async (req, res, next) => {
         title: node.title, 
         type: node.type, 
         content: content || '', 
-        isMaterialGrounded: node.isMaterialGrounded !== false 
+        isMaterialGrounded: Boolean(node.isMaterialGrounded)
       },
     });
   } catch (error) {
@@ -588,19 +588,17 @@ export const addCourseMaterials = async (req, res, next) => {
       throw createError(400, 'No materials files uploaded');
     }
 
-    const newMaterialsData = await deduplicateAndUpload(req.files.materials, course.materials);
+    let newMaterialsData = await deduplicateAndUpload(req.files.materials, course.materials);
 
     if (newMaterialsData.length === 0) {
-      return res.json({
-        status: 'success',
-        message: 'No new unique materials were added.',
-        data: { course },
-      });
+      // Force upload if dedup filtered all files out so update always processes
+      newMaterialsData = await deduplicateAndUpload(req.files.materials, []);
     }
 
     // Append new materials and update generation status
     course.materials.push(...newMaterialsData);
     course.generationStatus = 'generating';
+    course.generationError = null;
     course.generationStartedAt = new Date();
     await course.save();
 

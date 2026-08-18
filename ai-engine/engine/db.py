@@ -3,6 +3,7 @@ import os
 import datetime
 import logging
 from engine.config import MONGO_CONNECTION_TIMEOUT_MS, TTL_STAGING_SECONDS
+from bson import ObjectId
 
 logger = logging.getLogger(__name__)
 
@@ -94,6 +95,110 @@ def save_course_to_db(course) -> dict:
     course_doc["_id"] = str(res.inserted_id) # Convert ObjectId to str for return
     return course_doc
 
+def save_initial_course_to_db(course, course_id: str = None) -> dict:
+    """
+    Saves the initial course structure (lessons and topic titles) to MongoDB
+    without summaries/quizzes yet. This permits incremental generation.
+    """
+    db = get_db_handle()
+    if db is None:
+        raise Exception("Database connection failed")
+
+    courses_col = db['courses']
+    
+    # We will build a structure skeleton
+    structure = {}
+    for lesson in course.lessons:
+        structure[lesson.title] = {}
+        for topic in lesson.topics:
+            structure[lesson.title][topic.title] = {
+                "description": topic.description,
+                "is_material_grounded": getattr(topic, "is_material_grounded", True)
+            }
+
+    course_doc = {
+        "title": course.title,
+        "created_at": _utcnow(),
+        "course_structure": structure
+    }
+
+    if course_id:
+        courses_col.update_one(
+            {"_id": ObjectId(course_id)},
+            {"$set": {
+                "title": course.title,
+                "course_structure": structure
+            }},
+            upsert=True
+        )
+        course_doc["_id"] = course_id
+    else:
+        res = courses_col.insert_one(course_doc)
+        course_doc["_id"] = str(res.inserted_id)
+
+    return course_doc
+
+def save_topic_content_incremental(course_id: str, lesson_title: str, topic_title: str, summary_text: str, questions_list: list) -> dict:
+    """
+    Saves the summary and quiz for a single topic and updates the course document.
+    """
+    db = get_db_handle()
+    if db is None:
+        raise Exception("Database connection failed")
+
+    quizzes_col = db['quizzes']
+    summaries_col = db['summaries']
+    courses_col = db['courses']
+
+    # 1. Insert/Update Quiz
+    quiz_id = None
+    if questions_list:
+        quiz_doc = {
+            "topic": topic_title,
+            "questions": [q.model_dump() if hasattr(q, "model_dump") else q for q in questions_list],
+            "created_at": _utcnow()
+        }
+        # Check if already exists in existing course structure
+        course_doc = courses_col.find_one({"_id": ObjectId(course_id)})
+        existing_quiz_id = course_doc.get("course_structure", {}).get(lesson_title, {}).get(topic_title, {}).get("quiz_id") if course_doc else None
+        
+        if existing_quiz_id:
+            quizzes_col.update_one({"_id": ObjectId(existing_quiz_id)}, {"$set": quiz_doc}, upsert=True)
+            quiz_id = existing_quiz_id
+        else:
+            res = quizzes_col.insert_one(quiz_doc)
+            quiz_id = str(res.inserted_id)
+
+    # 2. Insert/Update Summary
+    summary_id = None
+    if summary_text:
+        summary_doc = {
+            "topic": topic_title,
+            "content": summary_text,
+            "created_at": _utcnow()
+        }
+        course_doc = courses_col.find_one({"_id": ObjectId(course_id)})
+        existing_summary_id = course_doc.get("course_structure", {}).get(lesson_title, {}).get(topic_title, {}).get("summary_id") if course_doc else None
+        
+        if existing_summary_id:
+            summaries_col.update_one({"_id": ObjectId(existing_summary_id)}, {"$set": summary_doc}, upsert=True)
+            summary_id = existing_summary_id
+        else:
+            res = summaries_col.insert_one(summary_doc)
+            summary_id = str(res.inserted_id)
+
+    # 3. Update Course
+    update_fields = {}
+    if quiz_id:
+        update_fields[f"course_structure.{lesson_title}.{topic_title}.quiz_id"] = quiz_id
+    if summary_id:
+        update_fields[f"course_structure.{lesson_title}.{topic_title}.summary_id"] = summary_id
+
+    if update_fields:
+        courses_col.update_one({"_id": ObjectId(course_id)}, {"$set": update_fields})
+
+    return {"quiz_id": quiz_id, "summary_id": summary_id}
+
 def ensure_ttl_index():
     """
     Ensures that the 'staging_materials' collection has a TTL index.
@@ -111,13 +216,19 @@ def ensure_ttl_index():
 
 def save_to_staging(filename: str, content: str) -> str:
     """
-    Saves extracted text to the staging collection.
+    Saves parsed text or blueprint content to the 'staging_materials' collection.
     Returns the ObjectId as a string.
     """
     db = get_db_handle()
     if db is None:
         return None
         
+    # Safeguard against MongoDB BSON 16MB limit (16,793,598 bytes)
+    max_bytes = 12_000_000  # 12 MB safe margin
+    if content and len(content.encode('utf-8')) > max_bytes:
+        logger.warning(f"Staging content for '{filename}' is {len(content.encode('utf-8'))} bytes. Truncating for MongoDB BSON limit.")
+        content = content[:max_bytes]
+
     doc = {
         "filename": filename,
         "content": content,
@@ -170,6 +281,19 @@ def save_syllabus_blueprint(course_id: str, syllabus_name: str, blueprint: dict)
     db = get_db_handle()
     if db is None:
         return None
+
+    # Safeguard blueprint against MongoDB 16MB BSON limit
+    import json
+    try:
+        bp_bytes = len(json.dumps(blueprint, default=str).encode('utf-8'))
+        if bp_bytes > 12_000_000 and isinstance(blueprint, dict):
+            logger.warning(f"Blueprint size is {bp_bytes} bytes. Truncating matched_materials to enforce BSON limit.")
+            for l in blueprint.get("lessons", []):
+                for t in l.get("topics", []):
+                    if "matched_materials" in t and isinstance(t["matched_materials"], list):
+                        t["matched_materials"] = [m[:500] for m in t["matched_materials"]]
+    except Exception as e:
+        logger.warning(f"Blueprint BSON check error: {e}")
 
     doc = {
         "course_id": course_id,

@@ -130,9 +130,9 @@ def _parse_inputs(request: "GenerateCourseRequest") -> tuple[str, list, list]:
 
         syllabus_hash = hashlib.sha256(syllabus_bytes).hexdigest()
         if check_file_hash(syllabus_hash, course_id=course_id):
-            logger.error("Duplicate syllabus file detected based on SHA256 hash.")
-            raise HTTPException(status_code=400, detail="Duplicate syllabus file detected. Processing aborted.")
-        save_file_hash(syllabus_name, syllabus_hash, course_id=course_id)
+            logger.warning("Duplicate or existing syllabus file hash detected for course_id; allowing re-parse.")
+        else:
+            save_file_hash(syllabus_name, syllabus_hash, course_id=course_id)
 
         syllabus_result = extract_with_images(syllabus_bytes, filename=syllabus_name)
         syllabus_text = syllabus_result.text
@@ -155,11 +155,11 @@ def _parse_inputs(request: "GenerateCourseRequest") -> tuple[str, list, list]:
 
         mat_hash = hashlib.sha256(mat_bytes).hexdigest()
         if check_file_hash(mat_hash, course_id=course_id):
-            logger.error(f"Duplicate material file detected based on SHA256 hash: {mat_name}")
-            raise HTTPException(status_code=400, detail=f"Duplicate material file detected: {mat_name}. Processing aborted.")
+            logger.warning(f"Duplicate material file skipped based on SHA256 hash: {mat_name}")
+            continue
         save_file_hash(mat_name, mat_hash, course_id=course_id)
 
-        chunk_generator = extract_in_chunks(mat_bytes, filename=mat_name, chunk_size=10)
+        chunk_generator = extract_in_chunks(mat_bytes, filename=mat_name, chunk_size=1)
 
         for chunk_idx, chunk_result in enumerate(chunk_generator):
             if chunk_result.text:
@@ -183,6 +183,19 @@ async def generate_course(request: GenerateCourseRequest, req: Request):
 
         # 1 & 2. Read + parse all files off the event loop (blocking CPU/IO work)
         syllabus_text, materials_text, all_images = await asyncio.to_thread(_parse_inputs, request)
+
+        # Validate syllabus content (skip for updates)
+        if not request.isUpdate:
+            from engine.generator import validate_syllabus_content
+            validation = await validate_syllabus_content(syllabus_text)
+            if not validation.get("is_syllabus", True):
+                reason = validation.get("reason", "Unknown reason")
+                logger.warning(f"Syllabus validation failed: {reason}")
+                update_course_progress(request.courseId, f"Invalid syllabus: {reason}")
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"The uploaded file doesn't appear to be a course syllabus. {reason} Please upload a file containing course topics, schedule, or curriculum."
+                )
 
         # 2.5. Analyze embedded images via Vision LLM (if enabled)
         if request.analyzeImages and all_images:

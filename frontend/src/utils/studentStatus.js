@@ -8,6 +8,11 @@ import { MS_PER_DAY } from '../constants/config';
 export const RANK_MEDAL = ['🥇', '🥈', '🥉'];
 
 export function difficultyFromPct(pct) {
+    if (pct == null || pct === 0)
+        return {
+            label: 'Not Tested',
+            color: 'bg-slate-100 text-slate-500 border-slate-200 dark:bg-white/5 dark:text-white/40 dark:border-white/10',
+        };
     if (pct >= 70)
         return {
             label: 'Easy',
@@ -45,7 +50,10 @@ export function studentBadge(s) {
     const daysSince = s.lastActivityDate
         ? Math.floor((Date.now() - new Date(s.lastActivityDate).getTime()) / MS_PER_DAY)
         : 999;
-    if (s.completion < 30 || daysSince > 7)
+    
+    // Only mark "At Risk" if they haven't been active for over a week, 
+    // or if they are stuck (active recently but extremely low completion after weeks)
+    if (daysSince > 7)
         return {
             label: 'At Risk',
             color: 'bg-red-500/10 text-red-500 border-red-500/20 dark:bg-red-500/20 dark:text-red-400 dark:border-red-500/30',

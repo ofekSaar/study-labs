@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trophy, Crown, Medal, Award, TrendingUp, Zap, Users, BookOpen } from 'lucide-react';
 import api from '../utils/api';
+import AvatarDisplay from '../components/instructor/AvatarDisplay';
 import useCourseStore from '../store/courseStore';
 import useGamificationStore, { AVATARS } from '../store/gamificationStore';
 import { io } from 'socket.io-client';
@@ -26,8 +27,6 @@ const RANK_STYLES = [
         shadow: 'shadow-[0_4px_10px_rgba(249,115,22,0.35)]',
     },
 ];
-
-const MOCK_EMOJIS = ['🥷', '🦄', '🧠', '🎓', '🦊', '🦁', '🐯', '🦅', '🐉', '⚡'];
 
 const PERIODS = [
     { id: 'weekly', label: 'This Week' },
@@ -61,16 +60,8 @@ const LeaderboardEntry = ({ entry, index }) => {
                 {rankStyle ? rankStyle.icon : `#${entry.rank}`}
             </div>
 
-            {/* Avatar */}
-            <div
-                className={`w-11 h-11 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0 border transition-all ${
-                    entry.isYou
-                        ? 'bg-gradient-to-br from-indigo-500 to-purple-600 border-indigo-400/50 shadow-lg shadow-indigo-500/25'
-                        : 'bg-slate-50 dark:bg-white/5 border-slate-200/60 dark:border-white/10 shadow-sm'
-                }`}
-            >
-                {entry.avatar || '🎓'}
-            </div>
+            {/* Avatar — real profile picture, emoji, or initial */}
+            <AvatarDisplay avatar={entry.avatar} name={entry.name} size="w-11 h-11" />
 
             {/* Name + You badge */}
             <div className="flex-1 min-w-0">
@@ -145,11 +136,12 @@ const LeaderboardPage = () => {
             setIsLoading(true);
             try {
                 const { data } = await api.get(`/api/progress/leaderboard?period=${period}`);
-                const mapped = (data.leaderboard || []).map((e, idx) => ({
-                    ...e,
-                    avatar: e.isYou ? currentUserEmoji : MOCK_EMOJIS[idx % MOCK_EMOJIS.length],
-                }));
-                setGlobalEntries(mapped);
+                setGlobalEntries(
+                    (data.leaderboard || []).map((e) => ({
+                        ...e,
+                        avatar: e.isYou ? currentUserEmoji : e.avatar,
+                    }))
+                );
             } catch {
                 setGlobalEntries([]);
             } finally {
@@ -168,11 +160,12 @@ const LeaderboardPage = () => {
                 const { data } = await api.get(
                     `/api/progress/course/${selectedCourseId}/leaderboard?period=${period}`
                 );
-                const mapped = (data.leaderboard || []).map((e, idx) => ({
-                    ...e,
-                    avatar: e.isYou ? currentUserEmoji : MOCK_EMOJIS[idx % MOCK_EMOJIS.length],
-                }));
-                setCourseEntries(mapped);
+                setCourseEntries(
+                    (data.leaderboard || []).map((e) => ({
+                        ...e,
+                        avatar: e.isYou ? currentUserEmoji : e.avatar,
+                    }))
+                );
             } catch {
                 setCourseEntries([]);
             } finally {

@@ -7,8 +7,8 @@ Override any value via environment variables where noted.
 import os
 
 # ── Semantic Filtering ────────────────────────────────────────────────────────
-SYLLABUS_SIMILARITY_THRESHOLD = 0.60   # minimum cosine similarity to keep a chunk
-TOPIC_MATERIAL_THRESHOLD = 0.40        # minimum cosine similarity to assign a chunk to a topic
+SYLLABUS_SIMILARITY_THRESHOLD = float(os.environ.get('SYLLABUS_SIMILARITY_THRESHOLD', '0.60'))   # minimum cosine similarity to keep a chunk (can be overridden via env vars)
+TOPIC_MATERIAL_THRESHOLD = float(os.environ.get('TOPIC_MATERIAL_THRESHOLD', '0.28'))        # calibrated threshold: 0.28 grounds real course notes while rejecting unrelated academic material (can be overridden via env vars)
 
 # ── MongoDB ───────────────────────────────────────────────────────────────────
 MONGO_CONNECTION_TIMEOUT_MS = 5000     # serverSelectionTimeoutMS for MongoClient
@@ -31,11 +31,11 @@ VALIDATE_QUESTION_ALIGNMENT = os.environ.get(
 USE_MOCK_AI = os.environ.get("USE_MOCK_AI", "").strip().lower() in ("true", "1", "yes")
 
 # ── Model names (override via env) ────────────────────────────────────────────
-OPENAI_MODEL = os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
+OPENAI_MODEL = os.environ.get("OPENAI_MODEL", "gpt-4o")
 OPENROUTER_MODEL = os.environ.get("OPENROUTER_MODEL", "gpt-4o")
 GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "models/gemini-flash-latest")
 COLLEGE_MODEL = os.environ.get("COLLEGE_MODEL", "gpt-oss-120b")
-VISION_MODEL = os.environ.get("VISION_MODEL", "gpt-4o-mini")
+VISION_MODEL = os.environ.get("VISION_MODEL", "gpt-4o")
 
 # ── Image analysis ───────────────────────────────────────────────────────────
 MIN_IMAGE_SIZE = 5000                  # ~5 KB; images smaller than this are skipped

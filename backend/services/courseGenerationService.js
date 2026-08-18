@@ -101,7 +101,7 @@ export const generateRoadmapInBackground = async (
       xpReward: node.xpReward || 150,
       lessonContent: node.lessonContent || null,
       quizData: node.quizData || undefined,
-      isMaterialGrounded: node.isMaterialGrounded !== false,
+      isMaterialGrounded: Boolean(node.isMaterialGrounded),
     }));
 
     if (isUpdate) {
@@ -198,6 +198,43 @@ export const generateRoadmapInBackground = async (
 
     console.log(`[Background] ✅ Course ${course._id} generation complete! ${roadmapResult.nodes?.length || 0} nodes processed.`);
     emitGenerationStatus(course._id, 'ready');
+    try {
+      const { getIO } = await import('../config/socket.js');
+      const io = getIO();
+      const instructorId = course.instructor?._id ? course.instructor._id.toString() : course.instructor?.toString();
+      
+      if (isUpdate) {
+        io.to(`user_${instructorId}`).emit('instructor_notification', {
+          type: 'material_update_complete',
+          message: `Materials update for "${course.title}" is complete.`,
+          courseId: course._id.toString(),
+          courseTitle: course.title,
+          createdAt: new Date(),
+        });
+      } else {
+        const scoreMsg = course.aiEvaluation?.score ? ` AI Score: ${course.aiEvaluation.score}/100.` : '';
+        io.to(`user_${instructorId}`).emit('instructor_notification', {
+          type: 'generation_complete',
+          message: `Course "${course.title}" is ready!${scoreMsg}`,
+          courseId: course._id.toString(),
+          courseTitle: course.title,
+          createdAt: new Date(),
+        });
+      }
+      
+      // Low quality warning
+      if (course.aiEvaluation?.score && course.aiEvaluation.score < 70) {
+        io.to(`user_${instructorId}`).emit('instructor_notification', {
+          type: 'low_quality_warning',
+          message: `Course "${course.title}" scored ${course.aiEvaluation.score}/100. Consider reviewing materials.`,
+          courseId: course._id.toString(),
+          courseTitle: course.title,
+          createdAt: new Date(),
+        });
+      }
+    } catch (notifErr) {
+      console.warn('[Background] Failed to send instructor notification:', notifErr.message);
+    }
   } catch (error) {
     console.error(`[Background] ❌ Course ${course._id} generation failed:`, error.message);
     try {
@@ -208,6 +245,20 @@ export const generateRoadmapInBackground = async (
         generationCompletedAt: new Date(),
       });
       emitGenerationStatus(course._id, 'failed', error.message);
+      try {
+        const { getIO } = await import('../config/socket.js');
+        const io = getIO();
+        const instructorId = course.instructor?._id ? course.instructor._id.toString() : course.instructor?.toString();
+        io.to(`user_${instructorId}`).emit('instructor_notification', {
+          type: 'generation_failed',
+          message: `Course "${course.title}" generation failed: ${error.message}`,
+          courseId: course._id.toString(),
+          courseTitle: course.title,
+          createdAt: new Date(),
+        });
+      } catch (notifErr) {
+        console.warn('[Background] Failed to send failure notification:', notifErr.message);
+      }
     } catch (persistError) {
       console.error(
         `[Background] ❌ Failed to record generation failure for course ${course._id}:`,

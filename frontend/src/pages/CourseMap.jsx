@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import GameMapComponent from '../components/map/GameMap';
 import QuizEditorModal from '../components/quiz/QuizEditorModal';
+import LessonEditorModal from '../components/quiz/LessonEditorModal';
 import AnnouncementModal from '../components/course/AnnouncementModal';
 import AnnouncementsPanel from '../components/course/AnnouncementsPanel';
 import {
@@ -13,12 +14,14 @@ import {
     Pencil,
     Megaphone,
     Star,
+    FileText,
 } from 'lucide-react';
 import ReviewModal from '../components/course/ReviewModal';
 import useAuthStore from '../store/authStore';
 import useCourseStore from '../store/courseStore';
 import { io } from 'socket.io-client';
 import api from '../utils/api';
+import useToastStore from '../store/toastStore';
 
 /** Total generation attempts allowed (1 initial + 1 retry) — mirrors the backend cap. */
 const MAX_GENERATION_ATTEMPTS = 2;
@@ -48,6 +51,9 @@ const CourseMap = () => {
     // Quiz editor state (instructor only)
     const [editingQuizNode, setEditingQuizNode] = useState(null);
 
+    // Lesson summary editor state (instructor only)
+    const [editingLessonNode, setEditingLessonNode] = useState(null);
+
     // Announcement modal state (instructor only)
     const [isAnnouncementOpen, setIsAnnouncementOpen] = useState(false);
 
@@ -70,7 +76,19 @@ const CourseMap = () => {
             setIsUploadOpen(false);
             setUploadFiles([]);
         } catch (error) {
-            setUploadError(error.message || 'Failed to upload materials.');
+            const msg = error.message || 'Failed to upload materials.';
+            if (
+                msg.includes('network') ||
+                msg.includes('Failed to fetch') ||
+                error.name === 'TypeError' ||
+                msg.includes('NetworkError')
+            ) {
+                setUploadError(
+                    'Upload failed. If uploading from Google Drive on mobile, please download the file to your device first, then upload it.'
+                );
+            } else {
+                setUploadError(msg);
+            }
         } finally {
             setUploading(false);
         }
@@ -135,6 +153,14 @@ const CourseMap = () => {
         socket.on('course_generation_status', async (data) => {
             if (data.courseId === courseId) {
                 await fetchCourseNodes(courseId);
+                if (data.status === 'ready') {
+                    useToastStore
+                        .getState()
+                        .success(
+                            'Update Complete',
+                            'Course content has been updated with new materials.'
+                        );
+                }
             }
         });
 
@@ -295,40 +321,70 @@ const CourseMap = () => {
 
                     {/* Map Container - Centered and Contained on Desktop */}
                     <div className="px-4 pb-20 md:pb-0 max-w-xl mx-auto">
+                        {course?.generationStatus === 'generating' && nodes.length > 0 && (
+                            <div className="mx-4 mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl flex items-center gap-3">
+                                <div className="animate-spin rounded-full h-5 w-5 border-2 border-blue-500 border-t-transparent" />
+                                <p className="text-sm text-blue-700 dark:text-blue-300 font-medium">
+                                    🔄 Updating course content with new materials... This may take a
+                                    few minutes.
+                                </p>
+                            </div>
+                        )}
                         {nodes.length > 0 ? (
                             <>
                                 <GameMapComponent nodes={nodes} />
-                                {/* Quiz management panel — instructor only */}
-                                {role === 'instructor' &&
-                                    nodes.filter((n) => n.type === 'quiz').length > 0 && (
-                                        <div className="mt-8 border-t border-slate-200 dark:border-white/10 pt-6">
-                                            <h3 className="text-xs font-black text-slate-500 dark:text-white/40 uppercase tracking-widest mb-3">
-                                                Quiz Management
-                                            </h3>
-                                            <div className="space-y-2">
-                                                {nodes
-                                                    .filter((n) => n.type === 'quiz')
-                                                    .map((n) => (
-                                                        <div
-                                                            key={n._id}
-                                                            className="flex items-center justify-between px-4 py-3 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10"
-                                                        >
-                                                            <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 truncate mr-3">
-                                                                {n.label}
+                                {/* Content & Quiz management panel — instructor only */}
+                                {role === 'instructor' && nodes.length > 0 && (
+                                    <div className="mt-8 border-t border-slate-200 dark:border-white/10 pt-6">
+                                        <h3 className="text-xs font-black text-slate-500 dark:text-white/40 uppercase tracking-widest mb-3">
+                                            Course Content & Quiz Management
+                                        </h3>
+                                        <div className="space-y-2">
+                                            {nodes.map((n) => (
+                                                <div
+                                                    key={n._id}
+                                                    className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10"
+                                                >
+                                                    <div className="flex items-center gap-2 truncate mr-3 min-w-[200px] flex-1">
+                                                        <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 truncate">
+                                                            {n.label}
+                                                        </span>
+                                                        {(n.isMaterialGrounded ??
+                                                        n.is_material_grounded) ? (
+                                                            <span className="shrink-0 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 border border-emerald-500/20">
+                                                                📄 Grounded
                                                             </span>
+                                                        ) : (
+                                                            <span className="shrink-0 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-purple-500/10 text-purple-600 dark:bg-purple-500/20 dark:text-purple-400 border border-purple-500/20">
+                                                                🤖 AI Generated
+                                                            </span>
+                                                        )}
+                                                    </div>
+
+                                                    <div className="flex items-center gap-2 shrink-0">
+                                                        <button
+                                                            onClick={() => setEditingLessonNode(n)}
+                                                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 text-xs font-bold transition-colors cursor-pointer"
+                                                        >
+                                                            <FileText size={13} /> View / Edit
+                                                            Summary
+                                                        </button>
+                                                        {n.type === 'quiz' && (
                                                             <button
                                                                 onClick={() =>
                                                                     setEditingQuizNode(n)
                                                                 }
-                                                                className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 text-xs font-bold transition-colors"
+                                                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 text-xs font-bold transition-colors cursor-pointer"
                                                             >
                                                                 <Pencil size={13} /> Edit Questions
                                                             </button>
-                                                        </div>
-                                                    ))}
-                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ))}
                                         </div>
-                                    )}
+                                    </div>
+                                )}
                             </>
                         ) : course?.generationStatus === 'failed' ? (
                             <div className="text-center py-12 sm:py-16 px-4 bg-red-50 dark:bg-red-950/10 rounded-2xl border-2 border-dashed border-red-200 dark:border-red-900/20">
@@ -346,7 +402,7 @@ const CourseMap = () => {
                                             <button
                                                 onClick={handleRetry}
                                                 disabled={retrying}
-                                                className="mt-6 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-studylabs-blue text-white text-sm font-bold shadow-sm hover:bg-studylabs-dark transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                                                className="mt-6 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-bold shadow-md transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
                                             >
                                                 <RotateCcw
                                                     size={16}
@@ -354,7 +410,7 @@ const CourseMap = () => {
                                                 />
                                                 {retrying ? 'Restarting…' : 'Retry Generation'}
                                             </button>
-                                            <p className="text-xs text-red-300 dark:text-red-500/40 mt-3">
+                                            <p className="text-xs text-red-500 dark:text-red-400 mt-3 font-medium">
                                                 You have 1 retry available.
                                             </p>
                                         </>
@@ -484,6 +540,20 @@ const CourseMap = () => {
                 <AnnouncementModal
                     courseId={courseId}
                     onClose={() => setIsAnnouncementOpen(false)}
+                />
+            )}
+
+            {/* Lesson Summary Editor Modal */}
+            {editingLessonNode && (
+                <LessonEditorModal
+                    courseId={courseId}
+                    nodeId={editingLessonNode._id}
+                    nodeTitle={editingLessonNode.label || editingLessonNode.title}
+                    isGrounded={
+                        editingLessonNode.isMaterialGrounded ??
+                        editingLessonNode.is_material_grounded
+                    }
+                    onClose={() => setEditingLessonNode(null)}
                 />
             )}
 

@@ -44,3 +44,6 @@ course_output_real.json
 *.pptx
 example_materials/
 
+# Do not ignore test fixtures
+!tests/fixtures/**
+

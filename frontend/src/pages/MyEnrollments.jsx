@@ -5,10 +5,19 @@ import api from '../utils/api';
 import { Search } from 'lucide-react';
 import Button from '../components/common/Button';
 import Spinner from '../components/common/Spinner';
+import AvatarDisplay from '../components/instructor/AvatarDisplay';
 import logger from '../utils/logger';
 import AvatarDisplay from '../components/instructor/AvatarDisplay';
 
-const DEPARTMENTS = ['All', 'Computer Science', 'Mathematics', 'Science', 'Business'];
+// Values must match the Course model's `department` enum — courses store slugs, not labels.
+const DEPARTMENTS = [
+    { value: 'all', label: 'All' },
+    { value: 'cs', label: 'Computer Science' },
+    { value: 'math', label: 'Mathematics' },
+    { value: 'physics', label: 'Physics' },
+    { value: 'bio', label: 'Biology' },
+    { value: 'other', label: 'Other' },
+];
 
 const getDeptGradient = (dept) => {
     const d = dept?.toLowerCase() || '';
@@ -17,7 +26,7 @@ const getDeptGradient = (dept) => {
     if (d.includes('math')) return 'from-blue-500 to-cyan-500';
     if (
         d.includes('science') ||
-        d.includes('biology') ||
+        d.includes('bio') ||
         d.includes('chemistry') ||
         d.includes('physics')
     )
@@ -34,7 +43,7 @@ const MyEnrollments = () => {
     const [loadError, setLoadError] = useState(false);
     const [requestingId, setRequestingId] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
-    const [activeDept, setActiveDept] = useState('All');
+    const [activeDept, setActiveDept] = useState('all');
 
     useEffect(() => {
         const loadData = async () => {
@@ -77,9 +86,7 @@ const MyEnrollments = () => {
         const matchesSearch =
             course.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             course.description?.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesDept =
-            activeDept === 'All' ||
-            course.department?.toLowerCase().includes(activeDept.toLowerCase());
+        const matchesDept = activeDept === 'all' || course.department === activeDept;
         return matchesSearch && matchesDept;
     });
 
@@ -160,15 +167,16 @@ const MyEnrollments = () => {
                     <div className="flex items-center gap-2 flex-wrap">
                         {DEPARTMENTS.map((dept) => (
                             <button
-                                key={dept}
-                                onClick={() => setActiveDept(dept)}
+                                key={dept.value}
+                                onClick={() => setActiveDept(dept.value)}
+                                aria-pressed={activeDept === dept.value}
                                 className={`px-4 py-2 rounded-full text-sm font-bold border transition-all ${
-                                    activeDept === dept
+                                    activeDept === dept.value
                                         ? 'bg-[#D97757] text-white border-[#D97757] shadow-[0_0_12px_rgba(217,119,87,0.35)]'
                                         : 'bg-white/60 dark:bg-white/5 text-slate-600 dark:text-white/60 border-slate-200 dark:border-white/10 hover:border-[#D97757]/40 hover:text-[#D97757]'
                                 }`}
                             >
-                                {dept}
+                                {dept.label}
                             </button>
                         ))}
                     </div>
@@ -217,7 +225,9 @@ const MyEnrollments = () => {
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                                         <div className="absolute bottom-4 left-5">
                                             <span className="px-3 py-1.5 bg-white/15 backdrop-blur-md text-white text-[10px] font-black tracking-widest rounded-full border border-white/25 shadow-inner uppercase">
-                                                {course.department?.toUpperCase() || 'GENERAL'}
+                                                {DEPARTMENTS.find(
+                                                    (d) => d.value === course.department
+                                                )?.label || 'General'}
                                             </span>
                                         </div>
                                         <div className="absolute top-4 right-4 w-9 h-9 rounded-xl bg-white/15 backdrop-blur-sm border border-white/25 flex items-center justify-center text-xl">
@@ -296,7 +306,7 @@ const MyEnrollments = () => {
                                     No Courses Found
                                 </h3>
                                 <p className="text-slate-500 dark:text-white/40 max-w-md">
-                                    {searchTerm || activeDept !== 'All'
+                                    {searchTerm || activeDept !== 'all'
                                         ? 'Try adjusting your search or filters.'
                                         : 'There are currently no published courses available. Check back later!'}
                                 </p>

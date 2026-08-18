@@ -104,19 +104,40 @@ const ThemeWrapper = ({ children }) => {
 
     React.useEffect(() => {
         const root = window.document.documentElement;
-        root.classList.remove('light', 'dark', 'theme-arcade', 'theme-space', 'theme-cyberpunk');
+
+        const applyTheme = () => {
+            root.classList.remove(
+                'light',
+                'dark',
+                'theme-arcade',
+                'theme-space',
+                'theme-cyberpunk'
+            );
+
+            if (theme === 'system') {
+                const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                root.classList.add(systemDark ? 'dark' : 'light');
+            } else {
+                root.classList.add(theme);
+            }
+
+            if (activeTheme && activeTheme !== 'default') {
+                root.classList.add(`theme-${activeTheme}`);
+            }
+        };
+
+        applyTheme();
 
         if (theme === 'system') {
-            const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches
-                ? 'dark'
-                : 'light';
-            root.classList.add(systemTheme);
-        } else {
-            root.classList.add(theme);
-        }
-
-        if (activeTheme && activeTheme !== 'default') {
-            root.classList.add(`theme-${activeTheme}`);
+            const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+            const handleChange = () => applyTheme();
+            if (mediaQuery.addEventListener) {
+                mediaQuery.addEventListener('change', handleChange);
+                return () => mediaQuery.removeEventListener('change', handleChange);
+            } else if (mediaQuery.addListener) {
+                mediaQuery.addListener(handleChange);
+                return () => mediaQuery.removeListener(handleChange);
+            }
         }
     }, [theme, activeTheme]);
 
