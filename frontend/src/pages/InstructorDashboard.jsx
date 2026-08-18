@@ -21,6 +21,7 @@ import Spinner from '../components/common/Spinner';
 import useEnrollmentStore from '../store/enrollmentStore';
 import useAuthStore from '../store/authStore';
 import AtRiskStudentsWidget from '../components/analytics/AtRiskStudentsWidget';
+import AvatarDisplay from '../components/instructor/AvatarDisplay';
 
 /* ── Helpers ── */
 function getGreeting() {
@@ -170,23 +171,13 @@ const PendingRow = ({ enrollment, onApprove, onDeny, loadingId }) => {
     const denying = loadingId === enrollment._id + '-deny';
     return (
         <div className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-100 to-violet-100 dark:from-purple-900/40 dark:to-violet-900/40 flex items-center justify-center flex-shrink-0 text-sm">
-                {enrollment.student?.avatar ? (
-                    <img
-                        src={enrollment.student.avatar}
-                        alt={
-                            enrollment.student?.name
-                                ? `${enrollment.student.name}'s avatar`
-                                : 'Student avatar'
-                        }
-                        className="w-8 h-8 rounded-lg object-cover"
-                    />
-                ) : (
-                    <span className="text-[11px] font-black text-purple-600 dark:text-purple-400">
-                        {enrollment.student?.name?.[0]?.toUpperCase() || '?'}
-                    </span>
-                )}
-            </div>
+            <AvatarDisplay
+                photoUrl={enrollment.student?.photoUrl}
+                avatar={enrollment.student?.avatar}
+                name={enrollment.student?.name}
+                size="w-8 h-8 text-[11px]"
+                shape="rounded-lg"
+            />
             <div className="min-w-0 flex-1">
                 <p className="text-[12px] font-bold text-slate-800 dark:text-white truncate leading-tight">
                     {enrollment.student?.name}

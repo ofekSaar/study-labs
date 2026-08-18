@@ -31,7 +31,7 @@ export const buildLeaderboardRows = async ({
       { $limit: topN },
       { $lookup: { from: 'users', localField: '_id', foreignField: '_id', as: 'userDoc' } },
       { $unwind: '$userDoc' },
-      { $project: { _id: 1, totalXP: 1, name: '$userDoc.name', avatar: '$userDoc.avatar' } },
+      { $project: { _id: 1, totalXP: 1, name: '$userDoc.name', avatar: '$userDoc.avatar', photoUrl: '$userDoc.photoUrl' } },
     ]);
   }
 
@@ -61,7 +61,7 @@ export const buildLeaderboardRows = async ({
         _id: courseFilter ? '$student' : 1,
         totalXP: 1,
         name: '$userDoc.name',
-        avatar: '$userDoc.avatar',
+        avatar: '$userDoc.avatar', photoUrl: '$userDoc.photoUrl',
       },
     },
   ];

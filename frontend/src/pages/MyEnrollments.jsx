@@ -244,6 +244,7 @@ const MyEnrollments = () => {
 
                                         <div className="flex items-center gap-3 mb-5 bg-slate-100 dark:bg-black/20 p-3 rounded-2xl border border-slate-200/50 dark:border-white/5">
                                             <AvatarDisplay
+                                                photoUrl={course.instructor?.photoUrl}
                                                 avatar={course.instructor?.avatar}
                                                 name={course.instructor?.name}
                                                 size="w-10 h-10"

@@ -46,7 +46,7 @@ export const listCourses = async (req, res, next) => {
     }
 
     const courses = await Course.find(query)
-      .populate('instructor', 'name email avatar')
+      .populate('instructor', 'name email avatar photoUrl')
       .select('-materials')
       .sort({ createdAt: -1 });
 
@@ -129,7 +129,7 @@ export const listCourses = async (req, res, next) => {
 export const getCourse = async (req, res, next) => {
   try {
     const course = await Course.findById(req.params.id)
-      .populate('instructor', 'name email avatar');
+      .populate('instructor', 'name email avatar photoUrl');
 
     if (!course) throw createError(404, 'Course not found');
 
@@ -189,7 +189,7 @@ export const createCourse = async (req, res, next) => {
     });
 
     const populatedCourse = await Course.findById(course._id)
-      .populate('instructor', 'name email avatar');
+      .populate('instructor', 'name email avatar photoUrl');
 
     res.status(201).json({
       status: 'success',
@@ -297,7 +297,7 @@ export const updateCourse = async (req, res, next) => {
     const updated = await Course.findByIdAndUpdate(req.params.id, updates, {
       new: true,
       runValidators: true,
-    }).populate('instructor', 'name email avatar');
+    }).populate('instructor', 'name email avatar photoUrl');
 
     res.json({ status: 'success', data: { course: updated } });
   } catch (error) {
@@ -517,7 +517,7 @@ export const getCourseStudents = async (req, res, next) => {
     assertOwner(course, 'instructor', req.user._id, 'Access denied');
 
     const [enrollments, progressRecords, totalNodes] = await Promise.all([
-      Enrollment.find({ course: course._id, status: 'approved' }).populate('student', 'name email avatar'),
+      Enrollment.find({ course: course._id, status: 'approved' }).populate('student', 'name email avatar photoUrl'),
       Progress.find({ course: course._id }),
       CourseNode.countDocuments({ course: course._id }),
     ]);
@@ -532,7 +532,13 @@ export const getCourseStudents = async (req, res, next) => {
         const p = progressMap[student._id.toString()];
         const completedNodes = p ? p.completedNodes.length : 0;
         return {
-          student: { _id: student._id, name: student.name, email: student.email, avatar: student.avatar },
+          student: {
+            _id: student._id,
+            name: student.name,
+            email: student.email,
+            avatar: student.avatar,
+            photoUrl: student.photoUrl,
+          },
           completion: totalNodes > 0 ? Math.round((completedNodes / totalNodes) * 100) : 0,
           completedNodes,
           totalNodes,
@@ -732,7 +738,7 @@ export const searchCourses = async (req, res, next) => {
       $or: [{ title: regex }, { description: regex }, { department: regex }],
     })
       .select('title department description color level instructor')
-      .populate('instructor', 'name avatar')
+      .populate('instructor', 'name avatar photoUrl')
       .limit(10)
       .lean();
 
@@ -749,7 +755,7 @@ export const searchCourses = async (req, res, next) => {
 export const getCourseReviews = async (req, res, next) => {
   try {
     const reviews = await Review.find({ course: req.params.id })
-      .populate('student', 'name avatar')
+      .populate('student', 'name avatar photoUrl')
       .sort({ createdAt: -1 });
 
     const avg = reviews.length > 0
@@ -791,7 +797,7 @@ export const createReview = async (req, res, next) => {
       { upsert: true, new: true }
     );
 
-    const populated = await Review.findById(review._id).populate('student', 'name avatar');
+    const populated = await Review.findById(review._id).populate('student', 'name avatar photoUrl');
 
     res.status(201).json({ status: 'success', data: { review: populated } });
   } catch (error) {

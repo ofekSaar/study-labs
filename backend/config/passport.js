@@ -24,6 +24,10 @@ const configurePassport = () => {
         },
         async (accessToken, refreshToken, profile, done) => {
           try {
+            // Google rotates these URLs, so re-read it on every login rather than
+            // trusting whatever was stored the first time round.
+            const photoUrl = profile.photos?.[0]?.value || null;
+
             // Find existing user or create new one
             let user = await User.findOne({
               provider: 'google',
@@ -38,19 +42,30 @@ const configurePassport = () => {
                 // Link Google to existing account
                 user.provider = 'google';
                 user.providerId = profile.id;
-                user.avatar = user.avatar || profile.photos?.[0]?.value;
-                await user.save();
               } else {
                 // Create brand new user
-                user = await User.create({
+                user = new User({
                   provider: 'google',
                   providerId: profile.id,
                   name: profile.displayName,
                   email: profile.emails?.[0]?.value,
-                  avatar: profile.photos?.[0]?.value,
                   role: null, // Will be set on first role selection
                 });
               }
+            }
+
+            if (user.photoUrl !== photoUrl) {
+              user.photoUrl = photoUrl;
+            }
+
+            // Accounts created before `photoUrl` existed kept the Google URL in
+            // `avatar`, which is now emoji-only. Clear it so it can't reach an <img>.
+            if (typeof user.avatar === 'string' && /^https?:\/\//.test(user.avatar)) {
+              user.avatar = null;
+            }
+
+            if (user.isNew || user.isModified()) {
+              await user.save();
             }
 
             return done(null, user);

@@ -22,6 +22,7 @@ import Spinner from '../components/common/Spinner';
 import Button from '../components/common/Button';
 import EmptyState from '../components/common/EmptyState';
 import logger from '../utils/logger';
+import AvatarDisplay from '../components/instructor/AvatarDisplay';
 
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
 const daysSince = (date) => (date ? Math.floor((Date.now() - new Date(date)) / MS_PER_DAY) : null);
@@ -448,23 +449,13 @@ const ClassRoster = () => {
 
                                         {/* Avatar + Info */}
                                         <div className="flex items-center gap-3 mb-4">
-                                            {student.avatar &&
-                                            (student.avatar.startsWith('http') ||
-                                                student.avatar.startsWith('/')) ? (
-                                                <img
-                                                    src={student.avatar}
-                                                    alt={
-                                                        student.name
-                                                            ? `${student.name}'s avatar`
-                                                            : 'Student avatar'
-                                                    }
-                                                    className="w-12 h-12 rounded-2xl object-cover border border-slate-200 dark:border-white/10 flex-shrink-0"
-                                                />
-                                            ) : (
-                                                <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-white/10 border border-slate-200 dark:border-white/5 flex items-center justify-center text-2xl flex-shrink-0 select-none">
-                                                    {student.avatar || '🎓'}
-                                                </div>
-                                            )}
+                                            <AvatarDisplay
+                                                photoUrl={student.photoUrl}
+                                                avatar={student.avatar}
+                                                name={student.name}
+                                                size="w-12 h-12 text-2xl"
+                                                shape="rounded-2xl"
+                                            />
                                             <div className="min-w-0">
                                                 <p className="font-bold text-slate-800 dark:text-white truncate leading-tight">
                                                     {student.name}

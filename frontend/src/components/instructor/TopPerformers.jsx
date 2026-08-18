@@ -38,7 +38,12 @@ const TopPerformers = ({ leaderboard, loading }) => {
                             <span className="text-2xl w-8 text-center flex-shrink-0 select-none">
                                 {RANK_MEDAL[i]}
                             </span>
-                            <AvatarDisplay avatar={s.avatar} size="w-9 h-9" name={s.name} />
+                            <AvatarDisplay
+                                photoUrl={s.photoUrl}
+                                avatar={s.avatar}
+                                size="w-9 h-9"
+                                name={s.name}
+                            />
                             <div className="flex-1 min-w-0">
                                 <p className="text-sm font-bold text-slate-800 dark:text-white truncate leading-tight">
                                     {s.name || 'Student'}
