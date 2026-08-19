@@ -1,7 +1,7 @@
 """
 Tests for engine.semantic_filter.tag_materials_with_embeddings.
 
-The SBERT model is never loaded — we monkeypatch the local `_embed` function
+The SBERT model is never loaded — we monkeypatch the `embed_texts` function
 with deterministic unit vectors so the cosine-similarity math is exercised
 without downloading models or importing torch.
 """
@@ -43,7 +43,7 @@ def test_tagging_assigns_relevant_materials(monkeypatch):
     # mat_far's cosine (0.2) must sit below the configured threshold for the
     # "dropped" assertion below to be meaningful.
     assert TOPIC_MATERIAL_THRESHOLD > 0.2
-    monkeypatch.setattr(sf, "_embed", _fake_embed)
+    monkeypatch.setattr(sf, "embed_texts", _fake_embed)
     course, topic_a, topic_b = _make_course()
 
     sf.tag_materials_with_embeddings(course, ["mat_a", "mat_b", "mat_far"])
@@ -56,7 +56,7 @@ def test_tagging_assigns_relevant_materials(monkeypatch):
 
 
 def test_no_materials_marks_all_ungrounded(monkeypatch):
-    monkeypatch.setattr(sf, "_embed", _fake_embed)
+    monkeypatch.setattr(sf, "embed_texts", _fake_embed)
     course, topic_a, topic_b = _make_course()
 
     sf.tag_materials_with_embeddings(course, [])
@@ -69,7 +69,7 @@ def test_no_materials_marks_all_ungrounded(monkeypatch):
 
 def test_matches_are_capped_at_15(monkeypatch):
     # 20 identical-to-Topic-A materials should be truncated to the top 15.
-    monkeypatch.setattr(sf, "_embed", lambda texts: np.array(
+    monkeypatch.setattr(sf, "embed_texts", lambda texts: np.array(
         [[1.0, 0.0]] * len(texts), dtype=float))
     course, topic_a, _ = _make_course()
 
