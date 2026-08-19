@@ -102,6 +102,7 @@ export const generateRoadmapInBackground = async (
       lessonContent: node.lessonContent || null,
       quizData: node.quizData || undefined,
       isMaterialGrounded: Boolean(node.isMaterialGrounded),
+      qualityWarning: Boolean(node.qualityWarning),
     }));
 
     if (isUpdate) {

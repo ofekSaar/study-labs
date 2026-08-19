@@ -194,18 +194,20 @@ async def test_generate_content_combined():
     Test that generate_content_for_topic generates both summary and questions in one call.
     """
     from engine.generator import generate_content_for_topic
+    from engine.pydantic_models import Topic
     
-    # Using a simple topic that the LLM can easily generate a small summary and quiz for
-    result = await generate_content_for_topic(
-        topic_title="Introduction to Python",
-        topic_description="Basic syntax and variable types in Python.",
+    topic = Topic(
+        title="Introduction to Python",
+        description="Basic syntax and variable types in Python.",
         matched_materials=[]
     )
     
-    assert result is not None
-    assert hasattr(result, 'summary')
-    assert len(result.summary) > 100, "Should generate a valid summary"
+    questions, summary = await generate_content_for_topic(topic)
     
-    assert hasattr(result, 'questions')
-    assert len(result.questions) > 0, "Should generate questions"
-    assert hasattr(result.questions[0], 'question_text')
+    assert summary is not None
+    assert len(summary) > 100, "Should generate a valid summary"
+    
+    assert questions is not None
+    assert len(questions) > 0, "Should generate questions"
+    assert hasattr(questions[0], 'question_text')
+

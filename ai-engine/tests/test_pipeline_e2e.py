@@ -3,7 +3,7 @@ import asyncio
 from unittest.mock import AsyncMock, patch, MagicMock
 from engine.pydantic_models import Course, Lesson, Topic, Question
 from engine.semantic_filter import tag_materials_with_embeddings
-from engine.generator import validate_question_alignment, evaluate_answer
+from engine.generator import evaluate_answer
 from engine.judge import evaluate_course
 
 def test_sbert_tagging_logic():
@@ -102,10 +102,13 @@ def test_hebrew_sbert_tagging_logic():
 
 @pytest.mark.asyncio
 async def test_validate_question_alignment_warning():
-    # Test step 10: question alignment validation
+    # Test step 10: question alignment validation via SBERT quality check
     from engine.quality_validator import validate_topic_quality
     
-    summary = "A Deterministic Finite Automata (DFA) has a finite set of states and accepts or rejects strings."
+    # Create a long enough summary to pass format checks
+    summary = ("A Deterministic Finite Automata (DFA) has a finite set of states and accepts or rejects strings. "
+               "DFAs are used in compiler design and pattern matching. ") * 30
+    summary = "## Overview\n" + summary + "\n\n## Key Concepts\n- **DFA**: automaton\n- **States**: configs\n- **Transitions**: mappings\n- **Alphabet**: symbols\n- **Accept**: final\n\n## Theory\nFormal definitions.\n"
     
     # Question directly answerable from summary
     aligned_q = Question(
@@ -123,22 +126,22 @@ async def test_validate_question_alignment_warning():
     
     with patch('engine.quality_validator.embed_texts') as mock_embed:
         import numpy as np
-        # Summary (0), Topic (1), Aligned Q (2), Unaligned Q (3)
-        mock_embed.return_value = np.array([
-            [1.0, 0.0, 0.0],  # summary
-            [0.95, 0.31, 0.0], # topic
-            [1.0, 0.0, 0.0],  # aligned_q (cosine 1.0)
-            [0.0, 1.0, 0.0],  # unaligned_q (cosine 0.0)
-        ])
+        # For aligned question test:
+        # Call 1: embed_texts([summary, topic]) → coherence check
+        # Call 2: embed_texts([aligned_q_text]) → alignment check
+        coherence_pass = np.array([[1.0, 0.0], [0.95, 0.31]])  # coherence = 0.95
+        aligned_emb = np.array([[0.9, 0.44]])  # alignment = dot([1,0], [0.9,0.44]) = 0.9
+        unaligned_emb = np.array([[0.0, 1.0]])  # alignment = dot([1,0], [0,1]) = 0.0
         
-        # Test with aligned question only
-        result_aligned = validate_topic_quality("Topic", "Desc", summary * 100, [aligned_q], None, False)
-        # We just care about alignment warnings, ignore format failures if any
+        # Test with aligned question
+        mock_embed.side_effect = [coherence_pass, aligned_emb]
+        result_aligned = validate_topic_quality("Topic", None, summary, [aligned_q], None, False)
         
-        # Test with unaligned question only
-        result_unaligned = validate_topic_quality("Topic", "Desc", summary * 100, [unaligned_q], None, False)
+        # Test with unaligned question
+        mock_embed.side_effect = [coherence_pass, unaligned_emb]
+        result_unaligned = validate_topic_quality("Topic", None, summary, [unaligned_q], None, False)
         
-        # The first question (aligned) shouldn't be in warnings
+        # The aligned question shouldn't be in warnings
         assert 0 not in result_aligned.alignment_warnings
         # The unaligned question should be in warnings
         assert 0 in result_unaligned.alignment_warnings
