@@ -240,7 +240,8 @@ describe('Courses API', () => {
                 order: 1,
                 sequenceOrder: 1,
                 lessonContent: '# DFAs\nDeterministic Finite Automata overview.',
-                isMaterialGrounded: true
+                isMaterialGrounded: true,
+                qualityWarning: true
             });
         });
 
@@ -255,6 +256,7 @@ describe('Courses API', () => {
             expect(res.body.data.title).toBe('Introduction to DFAs');
             expect(res.body.data.content).toContain('Deterministic Finite Automata');
             expect(res.body.data.isMaterialGrounded).toBe(true);
+            expect(res.body.data.qualityWarning).toBe(true);
         });
 
         it('should allow course instructor to update lesson summary content', async () => {

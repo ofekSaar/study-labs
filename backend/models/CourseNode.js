@@ -94,6 +94,10 @@ const courseNodeSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    qualityWarning: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,

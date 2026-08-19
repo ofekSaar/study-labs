@@ -178,7 +178,7 @@ export const generateRoadmapInBackground = async (
       };
       console.log(`[Background] AI Judge evaluation complete. Score: ${evaluationResult.score}`);
 
-      if (evaluationResult.score < 50 && !isUpdate) {
+      if (evaluationResult.score < 80 && !isUpdate) {
         throw new Error(
           `Course generation failed quality check. AI Judge Score: ${evaluationResult.score}. Feedback: ${evaluationResult.feedback}`
         );
@@ -223,7 +223,7 @@ export const generateRoadmapInBackground = async (
       }
       
       // Low quality warning
-      if (course.aiEvaluation?.score && course.aiEvaluation.score < 70) {
+      if (course.aiEvaluation?.score && course.aiEvaluation.score < 90) {
         io.to(`user_${instructorId}`).emit('instructor_notification', {
           type: 'low_quality_warning',
           message: `Course "${course.title}" scored ${course.aiEvaluation.score}/100. Consider reviewing materials.`,

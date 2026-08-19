@@ -103,6 +103,8 @@ def test_hebrew_sbert_tagging_logic():
 @pytest.mark.asyncio
 async def test_validate_question_alignment_warning():
     # Test step 10: question alignment validation
+    from engine.quality_validator import validate_topic_quality
+    
     summary = "A Deterministic Finite Automata (DFA) has a finite set of states and accepts or rejects strings."
     
     # Question directly answerable from summary
@@ -119,29 +121,27 @@ async def test_validate_question_alignment_warning():
         correct_answer=1
     )
     
-    # We patch validate_question_alignment's LLM completion program to return aligned vs unaligned results
-    # Since validate_question_alignment calls run_with_fallback, we can patch run_with_fallback directly
-    with patch("engine.generator.run_with_fallback") as mock_fallback:
-        # Mocking first call (aligned) to return aligned=True, confidence=0.9
-        # Mocking second call (unaligned) to return aligned=False, confidence=0.3
-        class MockAlignmentResult:
-            def __init__(self, aligned, confidence):
-                self.aligned = aligned
-                self.confidence = confidence
-                
-        mock_fallback.side_effect = [
-            MockAlignmentResult(aligned=True, confidence=0.9),
-            MockAlignmentResult(aligned=False, confidence=0.3)
-        ]
+    with patch('engine.quality_validator.embed_texts') as mock_embed:
+        import numpy as np
+        # Summary (0), Topic (1), Aligned Q (2), Unaligned Q (3)
+        mock_embed.return_value = np.array([
+            [1.0, 0.0, 0.0],  # summary
+            [0.95, 0.31, 0.0], # topic
+            [1.0, 0.0, 0.0],  # aligned_q (cosine 1.0)
+            [0.0, 1.0, 0.0],  # unaligned_q (cosine 0.0)
+        ])
         
-        with patch("engine.generator.USE_MOCK_AI", False):
-            warn_aligned = await validate_question_alignment(summary, aligned_q)
-            warn_unaligned = await validate_question_alignment(summary, unaligned_q)
-            
-            # Aligned question should NOT have a warning
-            assert warn_aligned is False
-            # Unaligned question SHOULD have a warning
-            assert warn_unaligned is True
+        # Test with aligned question only
+        result_aligned = validate_topic_quality("Topic", "Desc", summary * 100, [aligned_q], None, False)
+        # We just care about alignment warnings, ignore format failures if any
+        
+        # Test with unaligned question only
+        result_unaligned = validate_topic_quality("Topic", "Desc", summary * 100, [unaligned_q], None, False)
+        
+        # The first question (aligned) shouldn't be in warnings
+        assert 0 not in result_aligned.alignment_warnings
+        # The unaligned question should be in warnings
+        assert 0 in result_unaligned.alignment_warnings
 
 
 @pytest.mark.asyncio
