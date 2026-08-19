@@ -223,6 +223,7 @@ export const generateRoadmap = async ({
               lessonContent: summaryContent || topicData.description || '', 
               quizData: quizData && quizData.length > 0 ? quizData : undefined,
               isMaterialGrounded: topicData.is_material_grounded !== false,
+              qualityWarning: topicData.quality_warning === true,
           });
       }
   }

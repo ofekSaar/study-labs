@@ -1,5 +1,5 @@
 from typing import List
-from engine.pydantic_models import Course, Lesson, Topic, Question
+from engine.pydantic_models import Course, Lesson, Topic, Question, TopicContent
 
 from llama_index.core.program import LLMTextCompletionProgram
 from llama_index.llms.openai import OpenAI
@@ -26,7 +26,7 @@ from engine.llm_utils import run_with_fallback, run_with_fallback_sync
 from engine.config import (
     MAX_CONCURRENT_AI_CALLS,
     USE_MOCK_AI,
-    VALIDATE_QUESTION_ALIGNMENT,
+    MAX_QUALITY_RETRIES,
     OPENAI_MODEL,
     OPENROUTER_MODEL,
     GEMINI_MODEL,
@@ -215,10 +215,10 @@ def parse_syllabus(syllabus_text: str, syllabus_name: str = "Unknown") -> Course
         logger.warning("All LLM providers failed for parse_syllabus.")
         return Course(title="Error Parsing Syllabus", lessons=[])
 
-async def generate_content_for_topic(topic: Topic, course_title: str = None) -> tuple[List[Question], str]:
+async def generate_content_for_topic(topic: Topic, course_title: str = None, retry_feedback: str = None) -> tuple[List[Question], str]:
     """
-    Generates questions and study summaries for the topic in a single LLM call.
-    Uses semaphore for rate limiting and retry for 429 errors.
+    Generates questions and study summary for a topic in a SINGLE LLM call.
+    Optionally accepts retry_feedback from quality validation to improve output.
     """
     if USE_MOCK_AI:
         logger.info(f"Using MOCK AI Mode for generate_content_for_topic: {topic.title}")
@@ -228,69 +228,68 @@ async def generate_content_for_topic(topic: Topic, course_title: str = None) -> 
 
     matched_content = "\n".join(topic.matched_materials)
     course_context = f"Course Context: {course_title}\n" if course_title else ""
-    has_grounded_context = bool(topic.matched_materials) and topic.is_material_grounded
     context_block = f"Relevant course material text:\n{matched_content}\n" if matched_content else ""
+    feedback_block = f"\nIMPORTANT FEEDBACK FROM QUALITY CHECK:\n{retry_feedback}\n" if retry_feedback else ""
 
-    # 1. Generate Summary (Pure Markdown Output — no JSON escaping needed!)
-    async def _try_summary(provider_name, llm_instance):
+    async def _try_combined(provider_name, llm_instance):
+        import re, json
         async with _api_semaphore:
             prompt = (
-                f"You are an expert tutor creating a comprehensive study guide for a student.\n"
+                f"You are an expert tutor creating a comprehensive study guide AND quiz for a student.\n"
                 f"{course_context}"
                 f"Topic: {topic.title}\n"
                 f"Description: {topic.description or ''}\n"
-                f"{context_block}\n"
-                "Using the course material text above as your primary source, generate a detailed, "
-                "rich, multi-paragraph study guide in Markdown format.\n"
-                "Include:\n"
-                "1. An Overview explaining the topic thoroughly based on the provided materials.\n"
-                "2. Key Concepts & Definitions with bullet points.\n"
-                "3. Theoretical / Mathematical Principles (use LaTeX $...$ for formulas if applicable).\n"
-                "4. Practical Examples / Summary Takeaways.\n\n"
-                "Respond with ONLY the Markdown study guide text (do NOT wrap in JSON)."
-            )
-            response = await llm_instance.acomplete(prompt)
-            summary_text = response.text.strip()
-            if summary_text.startswith("```markdown"):
-                summary_text = summary_text.replace("```markdown", "", 1).rstrip("` \n")
-            elif summary_text.startswith("```"):
-                summary_text = summary_text.replace("```", "", 1).rstrip("` \n")
-            return summary_text.strip()
-
-    # 2. Generate Quiz Questions (Clean JSON array of 3 questions)
-    async def _try_questions(provider_name, llm_instance):
-        import re
-        import json
-        async with _api_semaphore:
-            prompt = (
-                f"You are an expert tutor creating a quiz for a student.\n"
-                f"{course_context}"
-                f"Topic: {topic.title}\n"
-                f"Description: {topic.description or ''}\n"
-                f"{context_block}\n"
-                "Generate exactly 3 multiple-choice questions testing key concepts of this topic.\n\n"
-                "Respond ONLY with a JSON array wrapped inside a ```json ... ``` block:\n"
-                "[\n"
-                "  {\n"
-                '    "question_text": "...",\n'
-                '    "options": ["A", "B", "C", "D"],\n'
-                '    "correct_answer": 0\n'
-                "  }\n"
-                "]"
+                f"{context_block}"
+                f"{feedback_block}"
+                "Generate BOTH a study guide and quiz questions as a JSON object with two fields:\n\n"
+                'FIELD "summary" — A comprehensive Markdown study guide with these REQUIRED sections:\n'
+                "1. ## Overview (at least 2 full paragraphs explaining the topic thoroughly)\n"
+                "2. ## Key Concepts & Definitions (at least 5 bullet points with **bold** key terms)\n"
+                "3. ## Theory / Mathematical Principles (use LaTeX $...$ for formulas if applicable)\n"
+                "4. ## Worked Examples or Applications (at least 2 concrete examples)\n"
+                "5. ## Summary & Key Takeaways\n"
+                "The study guide MUST be at least 500 words. Be detailed, thorough, and educational.\n"
+                "Use the provided course materials as your PRIMARY source when available.\n\n"
+                'FIELD "questions" — Exactly 3 multiple-choice questions:\n'
+                "Each question must have: question_text, options (4 choices), correct_answer (0-3 index).\n"
+                "Questions must test understanding (not just terminology recall) and be answerable from the study guide.\n\n"
+                "Respond ONLY with a JSON object wrapped in ```json ... ``` block:\n"
+                '{\n'
+                '  "summary": "# Topic Title\\n\\n## Overview\\n...",\n'
+                '  "questions": [\n'
+                '    { "question_text": "...", "options": ["A","B","C","D"], "correct_answer": 0 }\n'
+                '  ]\n'
+                '}'
             )
             response = await llm_instance.acomplete(prompt)
             raw_text = response.text.strip()
+            
+            # Extract JSON from ```json ... ``` block
             json_match = re.search(r"```json\s*(.*?)\s*```", raw_text, re.DOTALL)
             json_str = json_match.group(1) if json_match else raw_text
-            repaired_json = re.sub(r'\\(?![\\"])', r'\\\\', json_str)
-            raw_questions = json.loads(repaired_json)
-            return [Question.parse_obj(q) for q in raw_questions]
+            
+            # Repair common LLM JSON issues
+            repaired_json = re.sub(r'\\(?![\\"nrt])', r'\\\\', json_str)
+            parsed = json.loads(repaired_json)
+            
+            summary = parsed.get("summary", "")
+            raw_questions = parsed.get("questions", [])
+            
+            # Strip markdown code fences from summary if present
+            if summary.startswith("```markdown"):
+                summary = summary.replace("```markdown", "", 1).rstrip("` \n")
+            elif summary.startswith("```"):
+                summary = summary.replace("```", "", 1).rstrip("` \n")
+            
+            questions = [Question.parse_obj(q) for q in raw_questions]
+            return questions, summary.strip()
 
-    # Run Summary Generation
+    # Run combined generation with LLM fallback chain
     try:
-        summary = await run_with_fallback(_try_summary, op_name="generate_summary")
+        questions, summary = await run_with_fallback(_try_combined, op_name="generate_topic_content")
     except Exception as e:
-        logger.warning(f"Failed to generate custom summary for '{topic.title}': {e}. Using structured fallback.")
+        logger.warning(f"Failed to generate combined content for '{topic.title}': {e}. Using fallbacks.")
+        # Fallback summary
         summary = (
             f"# Study Guide: {topic.title}\n\n"
             f"## Overview\n"
@@ -300,36 +299,8 @@ async def generate_content_for_topic(topic: Topic, course_title: str = None) -> 
             f"* **Applications**: Main use cases and theoretical implications.\n"
             f"* **Formal Notations**: Standard mathematical and logical representations."
         )
-
-    def _shuffle_question_options(q: Question) -> Question:
-        import random
-        if not q.options or len(q.options) < 2:
-            return q
-        correct_text = (
-            q.options[q.correct_answer]
-            if 0 <= q.correct_answer < len(q.options)
-            else q.options[0]
-        )
-        
-        shuffled = list(q.options)
-        random.shuffle(shuffled)
-        
-        # Avoid biasing index 0: if correct_text ended up at index 0, swap it with a random non-zero index
-        if len(shuffled) > 1 and shuffled[0] == correct_text:
-            target_idx = random.randint(1, len(shuffled) - 1)
-            shuffled[0], shuffled[target_idx] = shuffled[target_idx], shuffled[0]
-
-        q.options = shuffled
-        q.correct_answer = shuffled.index(correct_text)
-        return q
-
-    # Run Questions Generation
-    try:
-        raw_qs = await run_with_fallback(_try_questions, op_name="generate_questions")
-        questions = [_shuffle_question_options(q) for q in raw_qs]
-    except Exception as e:
-        logger.warning(f"Failed to generate questions for '{topic.title}': {e}. Using fallback questions.")
-        fallback_qs = [
+        # Fallback questions
+        questions = [
             Question(
                 question_text=f"What is the primary focus of {topic.title}?",
                 options=[
@@ -356,54 +327,30 @@ async def generate_content_for_topic(topic: Topic, course_title: str = None) -> 
                 correct_answer=0
             )
         ]
-        questions = [_shuffle_question_options(q) for q in fallback_qs]
 
+    def _shuffle_question_options(q: Question) -> Question:
+        import random
+        if not q.options or len(q.options) < 2:
+            return q
+        correct_text = (
+            q.options[q.correct_answer]
+            if 0 <= q.correct_answer < len(q.options)
+            else q.options[0]
+        )
+        shuffled = list(q.options)
+        random.shuffle(shuffled)
+        if len(shuffled) > 1 and shuffled[0] == correct_text:
+            target_idx = random.randint(1, len(shuffled) - 1)
+            shuffled[0], shuffled[target_idx] = shuffled[target_idx], shuffled[0]
+        q.options = shuffled
+        q.correct_answer = shuffled.index(correct_text)
+        return q
+
+    questions = [_shuffle_question_options(q) for q in questions]
     return questions, summary
 
 
-async def validate_question_alignment(summary: str, question: Question) -> bool:
-    """
-    Checks whether a quiz question is directly answerable from the given summary.
-    Returns True if there is an alignment warning (i.e. question is NOT grounded in summary).
-    """
-    if USE_MOCK_AI:
-        return False
 
-    from pydantic import BaseModel, Field as PField
-
-    class AlignmentResult(BaseModel):
-        aligned: bool = PField(..., description="True if the question is directly answerable from the summary")
-        confidence: float = PField(..., description="Confidence score between 0 and 1")
-
-    prompt_template_str = (
-        "You are an educational content quality checker.\n"
-        "Study Summary:\n{summary}\n\n"
-        "Quiz Question: {question_text}\n\n"
-        "Is this question directly answerable from the study summary above?\n"
-        "Return 'aligned: true' only if the answer can be found in the summary. "
-        "'confidence' should reflect how certain you are (0.0 to 1.0)."
-    )
-
-    async def _try(provider_name, llm_instance):
-        program = LLMTextCompletionProgram.from_defaults(
-            output_cls=AlignmentResult,
-            prompt_template_str=prompt_template_str,
-            llm=llm_instance
-        )
-        async def _call():
-            async with _api_semaphore:
-                return await program.acall(
-                    summary=summary[:3000],
-                    question_text=question.question_text
-                )
-        return await retry_with_backoff(_call)
-
-    try:
-        result = await run_with_fallback(_try, op_name="validate_question_alignment")
-        # Warning when not aligned or low confidence
-        return not result.aligned or result.confidence < 0.6
-    except RuntimeError:
-        return False  # Default: no warning on error
 
 
 def sanitize_filename(name: str) -> str:
@@ -541,14 +488,40 @@ async def create_course_pipeline(
         async def process_topic(lesson_title, t):
             nonlocal completed_topics
             logger.info(f"  → Generating content for: {lesson_title} / {t.title}")
-            t.questions, t.summary = await generate_content_for_topic(t, course_title=course.title)
             
-            # Validate alignment of each question against the generated summary.
-            if VALIDATE_QUESTION_ALIGNMENT and t.summary and t.questions:
-                alignment_tasks = [validate_question_alignment(t.summary, q) for q in t.questions]
-                warnings = await asyncio.gather(*alignment_tasks, return_exceptions=True)
-                for q, warning in zip(t.questions, warnings):
-                    q.alignment_warning = bool(warning) if not isinstance(warning, Exception) else False
+            retry_feedback = None
+            for attempt in range(1 + MAX_QUALITY_RETRIES):
+                t.questions, t.summary = await generate_content_for_topic(
+                    t, course_title=course.title, retry_feedback=retry_feedback
+                )
+                
+                # Run quality validation (format + SBERT checks, no LLM calls)
+                from engine.quality_validator import validate_topic_quality, build_retry_feedback
+                quality = validate_topic_quality(
+                    topic_title=t.title,
+                    topic_description=t.description,
+                    summary=t.summary,
+                    questions=t.questions,
+                    matched_materials=t.matched_materials,
+                    is_material_grounded=t.is_material_grounded,
+                )
+                
+                # Set alignment warnings on individual questions
+                for idx in quality.alignment_warnings:
+                    if idx < len(t.questions):
+                        t.questions[idx].alignment_warning = True
+                
+                if quality.passed:
+                    t.quality_warning = quality.quality_warning
+                    logger.info(f"  ✓ Quality check passed for '{t.title}' (words: {quality.word_count}, headers: {quality.header_count})")
+                    break
+                
+                if attempt < MAX_QUALITY_RETRIES:
+                    retry_feedback = build_retry_feedback(quality)
+                    logger.warning(f"  ⚠ Quality check failed for '{t.title}' (attempt {attempt+1}/{1+MAX_QUALITY_RETRIES}): {quality.failures}. Retrying...")
+                else:
+                    t.quality_warning = True
+                    logger.warning(f"  ✗ Quality check failed after {1+MAX_QUALITY_RETRIES} attempts for '{t.title}': {quality.failures}. Saving with quality_warning=True.")
             
             # Save topic content incrementally
             if course_id:

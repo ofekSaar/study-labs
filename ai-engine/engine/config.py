@@ -7,7 +7,6 @@ Override any value via environment variables where noted.
 import os
 
 # ── Semantic Filtering ────────────────────────────────────────────────────────
-SYLLABUS_SIMILARITY_THRESHOLD = float(os.environ.get('SYLLABUS_SIMILARITY_THRESHOLD', '0.60'))   # minimum cosine similarity to keep a chunk (can be overridden via env vars)
 TOPIC_MATERIAL_THRESHOLD = float(os.environ.get('TOPIC_MATERIAL_THRESHOLD', '0.28'))        # calibrated threshold: 0.28 grounds real course notes while rejecting unrelated academic material (can be overridden via env vars)
 
 # ── MongoDB ───────────────────────────────────────────────────────────────────
@@ -19,12 +18,16 @@ TTL_STAGING_SECONDS = 86400            # 24 hours — auto-delete staging docume
 # ── LLM concurrency ──────────────────────────────────────────────────────────
 MAX_CONCURRENT_AI_CALLS = int(os.environ.get("MAX_CONCURRENT_AI_CALLS", "15"))
 
-# ── Question/summary alignment check ──────────────────────────────────────────
-# Each enabled topic fires one extra LLM call per question to flag questions not
-# answerable from the summary. Disable to cut LLM cost/latency roughly in half.
-VALIDATE_QUESTION_ALIGNMENT = os.environ.get(
-    "VALIDATE_QUESTION_ALIGNMENT", "true"
-).strip().lower() in ("true", "1", "yes")
+# ── Content quality validation ────────────────────────────────────────────────
+# Per-topic quality checks run after LLM generation using SBERT (free, no LLM calls).
+MIN_SUMMARY_WORDS = int(os.environ.get('MIN_SUMMARY_WORDS', '500'))
+MIN_SUMMARY_HEADERS = int(os.environ.get('MIN_SUMMARY_HEADERS', '3'))
+MIN_SUMMARY_BULLETS = int(os.environ.get('MIN_SUMMARY_BULLETS', '5'))
+SUMMARY_COHERENCE_THRESHOLD = float(os.environ.get('SUMMARY_COHERENCE_THRESHOLD', '0.45'))
+SUMMARY_GROUNDING_THRESHOLD = float(os.environ.get('SUMMARY_GROUNDING_THRESHOLD', '0.35'))
+KEYWORD_COVERAGE_THRESHOLD = float(os.environ.get('KEYWORD_COVERAGE_THRESHOLD', '0.60'))
+QUESTION_ALIGNMENT_THRESHOLD = float(os.environ.get('QUESTION_ALIGNMENT_THRESHOLD', '0.35'))
+MAX_QUALITY_RETRIES = int(os.environ.get('MAX_QUALITY_RETRIES', '2'))
 
 # ── Mock mode ─────────────────────────────────────────────────────────────────
 # Single source of truth for "is the AI mocked?" — accepts True/true/1/yes.

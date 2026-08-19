@@ -33,7 +33,8 @@ const mockGenerateRoadmap = jest.fn(async (params) => {
             alignmentWarning: false
           }
         ],
-        isMaterialGrounded: params.isUpdate ? true : false
+        isMaterialGrounded: params.isUpdate ? true : false,
+        qualityWarning: true
       }
     ],
     courseStructure: {
@@ -49,8 +50,8 @@ const mockGenerateRoadmap = jest.fn(async (params) => {
 });
 
 const mockEvaluateCourse = jest.fn(async (params) => {
-  if (mockEvaluationScore < 50 && !params.isUpdate) {
-    // Quality check throws for creation if score < 50
+  if (mockEvaluationScore < 80 && !params.isUpdate) {
+    // Quality check throws for creation if score < 80
     throw new Error(`AI Judge quality check failed. Score: ${mockEvaluationScore}/100. Feedback: Mocked failure`);
   }
   return {
@@ -151,6 +152,7 @@ describe('Course Generation & Update Integration Tests', () => {
       expect(nodes[0].title).toBe('Lesson 1: Introduction: Topic 1.1: Basics');
       expect(nodes[0].xpReward).toBe(200);
       expect(nodes[0].isMaterialGrounded).toBe(false); // starts as false in mock for creation
+      expect(nodes[0].qualityWarning).toBe(true);
 
       // Verify Socket.io emission
       expect(mockTo).toHaveBeenCalledWith(`course_${course._id}`);
@@ -232,9 +234,9 @@ describe('Course Generation & Update Integration Tests', () => {
       expect(storage.delete).toHaveBeenCalledWith('uploads/old-summary.md');
     });
 
-    it('should not block or throw errors on updates if AI Judge score is below 50', async () => {
+    it('should not block or throw errors on updates if AI Judge score is below 80', async () => {
       // Step 18: Verify update is non-blocking on low judge score
-      mockEvaluationScore = 40; // low score
+      mockEvaluationScore = 79; // low score
 
       await request(app)
         .post(`/api/courses/${existingCourse._id}/materials`)

@@ -22,15 +22,17 @@ GENERIC_HEADER_PATTERNS = [
 
 
 @lru_cache(maxsize=1)
-def _get_model():
+def get_sbert_model():
+    """Returns the cached SentenceTransformer model instance (lazy singleton)."""
     from sentence_transformers import SentenceTransformer
     logger.info(f"Loading sentence-transformer model: {_MODEL_NAME}")
     return SentenceTransformer(_MODEL_NAME)
 
 
-def _embed(texts: List[str]):
+def embed_texts(texts: List[str]):
+    """Encode a list of texts into normalized SBERT embeddings (numpy array)."""
     import numpy as np
-    model = _get_model()
+    model = get_sbert_model()
     return model.encode(texts, convert_to_numpy=True, normalize_embeddings=True)
 
 
@@ -83,8 +85,8 @@ def tag_materials_with_embeddings(course, materials: List[str]) -> None:
     cleaned_materials = [_clean_text_for_embedding(m) for m in materials]
 
     # 3. Compute embeddings
-    topic_embeddings = _embed(cleaned_topics)       # (n_topics, dim)
-    material_embeddings = _embed(cleaned_materials)  # (n_materials, dim)
+    topic_embeddings = embed_texts(cleaned_topics)       # (n_topics, dim)
+    material_embeddings = embed_texts(cleaned_materials)  # (n_materials, dim)
 
     # 4. Calculate similarity matrix
     similarity_matrix = topic_embeddings @ material_embeddings.T  # (n_topics, n_materials)

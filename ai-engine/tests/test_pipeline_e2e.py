@@ -3,7 +3,7 @@ import asyncio
 from unittest.mock import AsyncMock, patch, MagicMock
 from engine.pydantic_models import Course, Lesson, Topic, Question
 from engine.semantic_filter import tag_materials_with_embeddings
-from engine.generator import validate_question_alignment, evaluate_answer
+from engine.generator import evaluate_answer
 from engine.judge import evaluate_course
 
 def test_sbert_tagging_logic():
@@ -102,8 +102,13 @@ def test_hebrew_sbert_tagging_logic():
 
 @pytest.mark.asyncio
 async def test_validate_question_alignment_warning():
-    # Test step 10: question alignment validation
-    summary = "A Deterministic Finite Automata (DFA) has a finite set of states and accepts or rejects strings."
+    # Test step 10: question alignment validation via SBERT quality check
+    from engine.quality_validator import validate_topic_quality
+    
+    # Create a long enough summary to pass format checks
+    summary = ("A Deterministic Finite Automata (DFA) has a finite set of states and accepts or rejects strings. "
+               "DFAs are used in compiler design and pattern matching. ") * 30
+    summary = "## Overview\n" + summary + "\n\n## Key Concepts\n- **DFA**: automaton\n- **States**: configs\n- **Transitions**: mappings\n- **Alphabet**: symbols\n- **Accept**: final\n\n## Theory\nFormal definitions.\n"
     
     # Question directly answerable from summary
     aligned_q = Question(
@@ -119,29 +124,27 @@ async def test_validate_question_alignment_warning():
         correct_answer=1
     )
     
-    # We patch validate_question_alignment's LLM completion program to return aligned vs unaligned results
-    # Since validate_question_alignment calls run_with_fallback, we can patch run_with_fallback directly
-    with patch("engine.generator.run_with_fallback") as mock_fallback:
-        # Mocking first call (aligned) to return aligned=True, confidence=0.9
-        # Mocking second call (unaligned) to return aligned=False, confidence=0.3
-        class MockAlignmentResult:
-            def __init__(self, aligned, confidence):
-                self.aligned = aligned
-                self.confidence = confidence
-                
-        mock_fallback.side_effect = [
-            MockAlignmentResult(aligned=True, confidence=0.9),
-            MockAlignmentResult(aligned=False, confidence=0.3)
-        ]
+    with patch('engine.quality_validator.embed_texts') as mock_embed:
+        import numpy as np
+        # For aligned question test:
+        # Call 1: embed_texts([summary, topic]) → coherence check
+        # Call 2: embed_texts([aligned_q_text]) → alignment check
+        coherence_pass = np.array([[1.0, 0.0], [0.95, 0.31]])  # coherence = 0.95
+        aligned_emb = np.array([[0.9, 0.44]])  # alignment = dot([1,0], [0.9,0.44]) = 0.9
+        unaligned_emb = np.array([[0.0, 1.0]])  # alignment = dot([1,0], [0,1]) = 0.0
         
-        with patch("engine.generator.USE_MOCK_AI", False):
-            warn_aligned = await validate_question_alignment(summary, aligned_q)
-            warn_unaligned = await validate_question_alignment(summary, unaligned_q)
-            
-            # Aligned question should NOT have a warning
-            assert warn_aligned is False
-            # Unaligned question SHOULD have a warning
-            assert warn_unaligned is True
+        # Test with aligned question
+        mock_embed.side_effect = [coherence_pass, aligned_emb]
+        result_aligned = validate_topic_quality("Topic", None, summary, [aligned_q], None, False)
+        
+        # Test with unaligned question
+        mock_embed.side_effect = [coherence_pass, unaligned_emb]
+        result_unaligned = validate_topic_quality("Topic", None, summary, [unaligned_q], None, False)
+        
+        # The aligned question shouldn't be in warnings
+        assert 0 not in result_aligned.alignment_warnings
+        # The unaligned question should be in warnings
+        assert 0 in result_unaligned.alignment_warnings
 
 
 @pytest.mark.asyncio

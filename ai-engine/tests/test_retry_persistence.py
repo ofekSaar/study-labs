@@ -10,21 +10,18 @@ async def test_generate_content_for_topic_retries():
     # Create mock topic and run_with_fallback
     topic = Topic(title="Test DFA", description="DFA transitions")
     
-    # We will patch 'engine.generator.run_with_fallback' to fail twice and succeed on 3rd attempt
+    # run_with_fallback is now called ONCE (combined summary+quiz in single call)
+    # It returns (questions, summary) tuple
     mock_run = AsyncMock()
-    
-    class FakeSummary:
-        summary = "This is a valid summary for DFA"
-    
-    mock_run.side_effect = [
-        "This is a valid summary for DFA",
-        [Question(question_text="What is a DFA?", options=["A", "B"], correct_answer=0)]
-    ]
+    mock_run.return_value = (
+        [Question(question_text="What is a DFA?", options=["A", "B"], correct_answer=0)],
+        "This is a valid summary for DFA"
+    )
     
     with patch("engine.generator.run_with_fallback", mock_run):
         questions, summary = await generate_content_for_topic(topic, "Course Title")
         
-        assert mock_run.call_count == 2
+        assert mock_run.call_count == 1  # Single combined call
         assert "valid summary" in summary
         assert len(questions) == 1
 

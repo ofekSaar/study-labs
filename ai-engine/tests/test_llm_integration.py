@@ -187,3 +187,27 @@ def test_related_materials_get_grounded():
     assert topic_turing.is_material_grounded is True, "Turing topic should be grounded"
     assert len(topic_dfa.matched_materials) > 0
     assert len(topic_turing.matched_materials) > 0
+
+@pytest.mark.asyncio
+async def test_generate_content_combined():
+    """
+    Test that generate_content_for_topic generates both summary and questions in one call.
+    """
+    from engine.generator import generate_content_for_topic
+    from engine.pydantic_models import Topic
+    
+    topic = Topic(
+        title="Introduction to Python",
+        description="Basic syntax and variable types in Python.",
+        matched_materials=[]
+    )
+    
+    questions, summary = await generate_content_for_topic(topic)
+    
+    assert summary is not None
+    assert len(summary) > 100, "Should generate a valid summary"
+    
+    assert questions is not None
+    assert len(questions) > 0, "Should generate questions"
+    assert hasattr(questions[0], 'question_text')
+

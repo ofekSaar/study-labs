@@ -118,7 +118,12 @@ jobs:
       CI: true
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       TOPIC_MATERIAL_THRESHOLD: ${{ vars.TOPIC_MATERIAL_THRESHOLD || '0.225' }}
-      SYLLABUS_SIMILARITY_THRESHOLD: ${{ vars.SYLLABUS_SIMILARITY_THRESHOLD || '0.60' }}
+      MIN_SUMMARY_WORDS: 500
+      SUMMARY_COHERENCE_THRESHOLD: '0.45'
+      SUMMARY_GROUNDING_THRESHOLD: '0.35'
+      KEYWORD_COVERAGE_THRESHOLD: '0.60'
+      QUESTION_ALIGNMENT_THRESHOLD: '0.35'
+      MAX_QUALITY_RETRIES: '2'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
